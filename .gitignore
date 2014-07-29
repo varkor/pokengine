@@ -11,3 +11,8 @@ Thumbs.db
 # Database files #
 ######################
 .php
+
+# Private files #
+######################
+.html
+images/
