@@ -2,8 +2,21 @@ Items = {
 	Other : {
 		LuckyEgg : {
 			name : "Lucky Egg",
+			use : Item.use.experience,
+			targets : Move.targets.self,
 			onetime : false,
-			direct : false
+			direct : false,
+			effect : function (self) {
+				return 1.5;
+			},
+			effects : [
+				{
+					event : Events.experience,
+					action : function (data) {
+						return true;
+					}
+				}
+			]
 		},
 	},
 	Balls : {
@@ -47,7 +60,7 @@ Items = {
 			use : Item.use.healing,
 			targets : Move.targets.party,
 			onetime : true,
-			direct : true, // Whether you can use it as a trainer, directly
+			direct : true // Whether you can use it as a trainer, directly (rather than just being a held item)
 		},
 		Sitrus : {
 			name : "Sitrus",

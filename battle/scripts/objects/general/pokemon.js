@@ -128,7 +128,8 @@ function pokemon (species) {
 	self.gainExperience = function (defeated) {
 		if (self.trainer === null || self.trainer.isAnNPC())
 			return;
-		var participated = true, gain = Math.floor((((Battle.situation === Battles.situation.trainer ? 1.5 : 1) * defeated.species.yield.experience * defeated.level) / (5 * (participated ? 1 : 2)) * Math.pow((2 * defeated.level + 10) / (defeated.level + self.level + 10), 2.5) + 1) * (self.trainer === self.originalTrainer ? 1 : self.trainer.nationality === self.nationality ? 1.5 : 1.7) * (self.item === Items.LuckyEgg ? 1.5 : 1));
+		var participated = true, eventModifiers = product(Battle.triggerEvent(Events.experience, {}, defeated, self));
+		var gain = Math.floor((((Battle.situation === Battles.situation.trainer ? 1.5 : 1) * defeated.species.yield.experience * defeated.level) / (5 * (participated ? 1 : 2)) * Math.pow((2 * defeated.level + 10) / (defeated.level + self.level + 10), 2.5) + 1) * (self.trainer === self.originalTrainer ? 1 : self.trainer.nationality === self.nationality ? 1.5 : 1.7) * eventModifiers);
 		if (Battle.active)
 			Textbox.state(self.name() + " gained " + gain + " experience!");
 		while (self.experience + gain >= self.experienceFromLevelToNextLevel()) {

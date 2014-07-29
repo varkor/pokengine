@@ -786,7 +786,7 @@ Battle = {
 		var actions = ["Pokémon", "Run", "Bag"];
 		if (Battle.style === Battles.style.double && Battle.selection > 0)
 			actions.insert(0, "Back");
-		Textbox.ask(/*"What do you want " + currentBattler.name() + " to do?"*/"", moves, function (response, i, major) {
+		Textbox.ask("What do you want " + currentBattler.name() + " to do?", moves, function (response, i, major) {
 			if (major) {
 				Battle.input("Fight", i);
 			} else
@@ -1194,6 +1194,9 @@ Battle = {
 	},
 	removeFromBattle : function (poke) {
 		// Stops a Pokémon battling, either because they've fainted, or because they've been caught in a Poké ball
+		foreach(Battle.opponentsTo(poke).filter(onlyPokemon), function (gainer) { //? This is not how expeience should be gained. What about catching pokemon?
+			gainer.gainExperience(poke);
+		});
 		var place;
 		if (poke.battler.side === Battles.side.near) {
 			place = Battle.allies.indexOf(poke);
@@ -1203,9 +1206,6 @@ Battle = {
 			Battle.opponents[place] = NoPokemon;
 		}
 		poke.battler.reset();
-		foreach(Battle.opponentsTo(poke).filter(onlyPokemon), function (gainer) { //? This is not how expeience should be gained. What about catching pokemon?
-			gainer.gainExperience(poke);
-		});
 		if (!poke.trainer.hasHealthyPokemon(true, poke) && !poke.trainer.hasHealthyPokemon(false, poke)) {
 			var defeatedMessage;
 			if (poke.trainer === Game.player)

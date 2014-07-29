@@ -164,7 +164,14 @@ Events = {
 		returns:
 			The new effectiveness multipler to use.
 	*/
-	effectiveness : ++ q
+	effectiveness : ++ q,
+
+	/*
+		Triggered when a Pokémon is gaining experience, and can modify the amount of experience gained.
+		returns:
+			What to multiply the experience by.
+	*/
+	experience : ++ q
 };
 
 Genders = {
@@ -193,7 +200,8 @@ Item = {
 	use : {
 		healing : q = 0, // Restore health
 		curing : ++ q, // Cure a status effect
-		capture : ++ q // Captures a Pokémon
+		capture : ++ q, // Captures a Pokémon
+		experience : ++ q // Modifies received experience
 	}
 };
 
