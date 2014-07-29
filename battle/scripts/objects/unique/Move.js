@@ -71,8 +71,7 @@ Move = {
 				}, mover, targetted).contains(true)) {
 					failed = true;
 					statedFailureReason = true;
-				}
-				else {
+				} else {
 					if (!move.classification.contains("_")) {
 						accuracy = (mover.battler.statLevel[Stats.accuracy] === 0 ? 1 : mover.battler.statLevel[Stats.accuracy] > 0 ? 1 + (1 / 3) * mover.battler.statLevel[Stats.accuracy] : 3 / (Math.abs(mover.battler.statLevel[Stats.accuracy]) + 3));
 						evasion = (targetted.battler.statLevel[Stats.evasion] === 0 ? 1 : targetted.battler.statLevel[Stats.evasion] > 0 ? 1 + (1 / 3) * targetted.battler.statLevel[Stats.evasion] : 3 / (Math.abs(targetted.battler.statLevel[Stats.evasion]) + 3));

@@ -39,14 +39,12 @@ function battler (pokemon) {
 		self.cursed = false; // Whether an enemy has used Curse on the Pokémon
 		self.recharging = 0;
 		self.infatuated = false;
-		self.nightmare = false; // Whether the Pokémon is suffering from a nightmare (from Darkrai)
 		self.protected = false; // Whether the Pokémon is protecting itself using Protect or Detect
 		self.switching = false;
-		self.ingrained = false; // Whether the Pokémon has used Ingrain
 		self.substitute = 0;
 		self.grounded = false; // Whether Flying-type Pokémon have been grounded by a move
 		self.invulnerable = null;
-		self.trapped = null;
+		self.trapped = false; // Whether the Pokémon is prevented from escaping
 		self.disobeying = false; // Whether the Pokémon is about to disobey their trainer
 		self.damaged = [];
 		self.damaged[Move.category.physical] = 0;

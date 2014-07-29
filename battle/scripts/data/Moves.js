@@ -167,7 +167,7 @@ Moves = {
 		effect : {
 			use : [
 				function (self, target) {
-					if (!target.trapped) {
+					if (!target.trapped || target.ofType(Types.Ghost)) {
 						if (Battle.situation === Battles.situation.wild) {
 							Textbox.state(self.name() + " blew " + target.name() + " away!", function () { Battle.end(); });
 							Battle.finish();
@@ -207,17 +207,23 @@ Moves = {
 				function (self, target) {
 					Battle.damage(target, Move.damage(self, target, Moves.Wrap));
 					Textbox.state(target.name() + " was wrapped by " + self.name() + "!");
-					target.trapped = Moves.Wrap;
-					Battle.moveHaveEffect(Moves.Wrap, srandom.int(2, 5) - 0.5, target);
+					target.trapped = true;
+					if (!Battle.moveHasEffect(Moves.Wrap, target)) {
+						var turns = srandom.int(2, 5);
+						for (var i = 0; i < turns; ++ i)
+							Battle.moveHaveEffect(Moves.Wrap, i + 0.5, target, {freed : false});
+						Battle.moveHaveEffect(Moves.Wrap, turns + 0.5, target, {freed : true});
+					}
 				}
 			],
-			trap : function (target) {
-				Textbox.state(target.name() + " is hurt by " + Moves.Wrap.name + ".");
-				Battle.damage(target, Move.percentageDamage(target, 1 / 16));
-			},
-			effect : function (target) {
-				Textbox.state(target.name() + " was freed from " + Moves.Wrap.name + ".");
-				target.trapped = null;
+			effect : function (target, data) {
+				if (!data.freed) {
+					Textbox.state(target.name() + " is hurt by " + target.possessivePronoun() + " " + Moves.Wrap.name + ".");
+					Battle.damage(target, Move.percentageDamage(target, 1 / 16));
+				} else {
+					Textbox.state(target.name() + " was freed from " + target.possessivePronoun() + " " + Moves.Wrap.name + ".");
+					target.trapped = false; //? What if they use Ingrain with Wrap?
+				}
 			}
 		},
 	},
@@ -1037,11 +1043,21 @@ Moves = {
 		effect : {
 			use : [
 				function (self) {
-					Textbox.state(self.name() + " rooted itself firmly.");
-					self.battler.ingrained = true;
-					self.battler.grounded = true;
+					if (!Battle.moveHasEffect(Moves.Ingrain, self)) {
+						Textbox.state(self.name() + " rooted " + self.selfPronoun() + " firmly.");
+						self.battler.grounded = true;
+						self.battler.trapped = true;
+						Battle.moveHaveRepeatingEffect(Moves.Ingrain, Battles.when.endOfThisTurn, self);
+					} else
+						return {
+							failed : true
+						};
 				}
-			]
+			],
+			effect : function (poke) {
+				Textbox.state(poke.name() + " recovered some of " + poke.possessivePronoun() + " health through " + poke.possessivePronoun() + " ingrained roots!");
+				Battle.healPercentage(poke, 1 / 16);
+			}
 		}
 	},
 	Curse : { //? Doesn't work properly for different typings

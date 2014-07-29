@@ -238,6 +238,9 @@ Battles = {
 		far : ++ q
 	},
 	when : {
+		startOfTurn : 0, // The start of every turn
+		endOfTurn : 0.5, // The end of every turn
+
 		endOfThisTurn : 0.5, // End of the turn in which the effect was caused (0 turns, excluding current)
 		startOfNextTurn : 1,
 		endOfNextTurn : 1.5, // The turn after the effect was caused (1 turn, excluding current)

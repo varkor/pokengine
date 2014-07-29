@@ -553,33 +553,6 @@ Battle = {
 						Textbox.state("All your Pokémon are already battling!");
 						reprompt = true;
 					}
-				} else {
-					if (secondary >= Game.player.pokemon()) {
-						Textbox.state("There's no Pokémon in that slot!");
-						advance = false;
-					} else if (Game.player.party.pokemon[secondary].health === 0) {
-						Textbox.state("That Pokémon has fainted — you can't use that one!");
-						advance = false;
-					} else if (currentBattler.trapped && !currentBattler.ofType(Types.ghost)) {
-						Textbox.state(currentBattler.name + " is trapped and can't switch out!");
-						advance = false;
-					} else if (!foreach(Game.player.battlers(), function (battler) {
-						if (battler.pokemon === Game.player.party.pokemon[secondary]) {
-							Textbox.state("That Pokémon is already battling — you can't send it out again!");
-							advance = false;
-						}
-					})) {
-						currentBattler.battler.switching = true;
-						Battle.actions.push({
-							poke : currentBattler,
-							priority : 6,
-							action : function (poke) {
-								Battle.swap(currentBattler, Game.player.party.pokemon[secondary]); 
-							}
-						});
-					}
-					else
-						advance = false;
 				}
 				break;
 			case "Run":
@@ -800,22 +773,17 @@ Battle = {
 		foreach(Battle.effects.specific, function (effect, i, deletion) {
 			if (!effect.target.battler.battling) {
 				deletion.push(i);
-			} else if (Battle.turns >= effect.due) {
+			} else if ((effect.repeating && effect.due === Battles.when.startOfTurn) || (!effect.repeating && Battle.turns >= effect.due)) {
 				if (effect.hasOwnProperty("data"))
 					effect.type(effect.target, effect.data);
 				else
 					effect.type(effect.target);
-				deletion.push(i);
+				if (!effect.repeating)
+					deletion.push(i);
 			}
 		});
 		var all = Battle.all(true)
 		foreach(all, function (poke) {
-			if (poke.status === Statuses.frozen) {
-				if (srandom.chance(5)) {
-					poke.status = Statuses.none;
-					Textbox.state(poke.name() + " thawed!");
-				}
-			}
 			if (poke.battler.recharging) {
 				if (poke.battler.recharging > 1)
 					poke.battler.recharging = 0;
@@ -863,14 +831,15 @@ Battle = {
 		foreach(Battle.effects.specific, function (effect, i, deletion) {
 			if (!effect.target.battler.battling) {
 				deletion.push(i);
-			} else if (Battle.turns >= Math.floor(effect.due)) {
+			} else if ((effect.repeating && effect.due === Battles.when.endOfTurn) || (!effect.repeating && Battle.turns >= Math.floor(effect.due))) {
 				if (!effect.expired) {
 					if (effect.hasOwnProperty("data"))
 						effect.type(effect.target, effect.data);
 					else
 						effect.type(effect.target);
 				}
-				deletion.push(i);
+				if (!effect.repeating)
+					deletion.push(i);
 			}
 		});
 		var all = Battle.all(true)
@@ -902,9 +871,6 @@ Battle = {
 					++ poke.poison;
 					break;
 			}
-			if (poke.battler.trapped) {
-				poke.battler.trapped.effect.trap(poke);
-			}
 			if (poke.battler.recharging)
 				++ poke.battler.recharging;
 			if (poke.battler.protected)
@@ -919,10 +885,6 @@ Battle = {
 			if (poke.battler.cursed) {
 				Textbox.state(poke.name() + " lost a quarter of " + poke.possessivePronoun() + " health to " + poke.possessivePronoun() + " curse!");
 				Battle.damage(poke, Move.percentageDamage(target, 1 / 4));
-			}
-			if (poke.battler.ingrained) {
-				Textbox.state(poke.name() + " recovered some of " + poke.possessivePronoun() + " health through " + poke.possessivePronoun() + " ingrained roots!");
-				Battle.healPercentage(poke, 1 / 16);
 			}
 			poke.battler.damaged[Move.category.physical] = 0;
 			poke.battler.damaged[Move.category.special] = 0;
@@ -1106,7 +1068,7 @@ Battle = {
 			Textbox.state("You can't run from a trainer battle!");
 			return true;
 		}
-		if (currentBattler.battler.trapped) {
+		if (currentBattler.battler.trapped && !currentBattler.ofType(Types.Ghost)) {
 			Battle.queue.push({
 				priority : 6, action : function () {
 					Textbox.state(currentBattler.name() + " is trapped and can't escape!");
@@ -1378,11 +1340,16 @@ Battle = {
 		}))
 			effectSide.push({type : effect, expiration : Battle.turns + duration});
 	},
-	moveHaveEffect : function (move, when, target, data) {
+	moveHaveEffect : function (move, when, target, data, repeating) {
+		if (!repeating)
+			repeating = false;
 		if (data)
-			Battle.effects.specific.push({type : move.effect.effect, due : Battle.turns + when, target : target, data : data, expired : false});
+			Battle.effects.specific.push({type : move.effect.effect, due : Battle.turns + when, target : target, data : data, expired : false, repeating : repeating});
 		else
-			Battle.effects.specific.push({type : move.effect.effect, due : Battle.turns + when, target : target, expired : false});
+			Battle.effects.specific.push({type : move.effect.effect, due : Battle.turns + when, target : target, expired : false, repeating : repeating});
+	},
+	moveHaveRepeatingEffect : function (move, when, target, data) {
+		Battle.moveHaveEffect(move, when, target, data, true);
 	},
 	moveHasEffect : function (move, target) {
 		return Battle.hasEffect(move.effect.effect, target);
@@ -1405,7 +1372,16 @@ Battle = {
 	inflict : function (poke, status) {
 		poke.status = status;
 		if (status === Statuses.asleep) {
-			Battle.haveEffect(function (target) { Textbox.state(target.name + " woke up!"); target.status = Statuses.none; }, srandom.int(1, 5), poke);
+			Battle.haveEffect(function (target) {
+				Textbox.state(target.name + " woke up!");
+				target.status = Statuses.none;
+			}, srandom.int(1, 5), poke);
+		}
+		if (status === Statuses.frozen) {
+			Battle.haveEffect(function (target) {
+				Textbox.state(target.name + " thawed!");
+				target.status = Statuses.none;
+			}, srandom.int(1, 5), poke);
 		}
 	}
 };
