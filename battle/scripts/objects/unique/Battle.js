@@ -32,23 +32,19 @@ Battle = {
 	},
 	draw : {
 		bar : function (poke, right, y, detailed) {
-			var context = Game.canvas.context;
-			context.font = "lighter 14px Helvetica Neue";
-			var transition = poke.battler.display.transition, nameWidth = context.measureText(poke.name()).width, side = (right ? 1 : 0);
-			context.fillStyle = "hsla(0, 0%, 0%, 0.8)";
-			context.beginPath();
-			context.moveTo(Game.canvas.element.width * side + (0 - (1 - transition) * 160) * (right ? -1 : 1), y - 10);
-			context.lineTo(Game.canvas.element.width * side + (Textbox.padding - 12 - (1 - transition) * 160) * (right ? -1 : 1), y - 10);
-			context.lineTo(Game.canvas.element.width * side + (Textbox.padding - (1 - transition) * 160) * (right ? -1 : 1), y - 20);
-			context.lineTo(Game.canvas.element.width * side + (Textbox.padding + nameWidth - (1 - transition) * 160) * (right ? -1 : 1), y - 20);
-			context.lineTo(Game.canvas.element.width * side + (Textbox.padding + nameWidth + 12 - (1 - transition) * 160) * (right ? -1 : 1), y - 10);
+			
+			/*context.beginPath();
+			context.moveTo(Game.canvas.element.width * side + (0 - (1 - transition) * 160) * (right ? -1 : 1), y - 20);
+			context.lineTo(Game.canvas.element.width * side + (Textbox.padding - 12 - (1 - transition) * 160) * (right ? -1 : 1), y - 20);
+			//context.lineTo(Game.canvas.element.width * side + (Textbox.padding - (1 - transition) * 160) * (right ? -1 : 1), y - 20);
+			context.lineTo(Game.canvas.element.width * side + (Textbox.padding + 80 - (1 - transition) * 160) * (right ? -1 : 1), y - 20);
+			context.lineTo(Game.canvas.element.width * side + (Textbox.padding + 80 + 12 - (1 - transition) * 160) * (right ? -1 : 1), y - 10);
 			context.lineTo(Game.canvas.element.width * side + (140 - (1 - transition) * 160) * (right ? -1 : 1), y - 10);
 			context.lineTo(Game.canvas.element.width * side + (160 - (1 - transition) * 160) * (right ? -1 : 1), y);
 			context.lineTo(Game.canvas.element.width * side + (140 - (1 - transition) * 160) * (right ? -1 : 1), y + 10);
 			context.lineTo(Game.canvas.element.width * side + (0 - (1 - transition) * 160) * (right ? -1 : 1), y + 10);
-			context.moveTo(Game.canvas.element.width * side + (0 - (1 - transition) * 160) * (right ? -1 : 1), y - 10);
 			context.fill();
-			var percentageHealth = poke.health / poke.stats[Stats.health]();
+			var percentageHealth = ;
 			context.fillStyle = (percentageHealth > 1 / 2 ? "hsl(110, 100%, 40%)" : percentageHealth > 1 / 4 ? "hsl(40, 100%, 50%)" : "hsl(0, 100%, 50%)");
 			context.fillRect((Game.canvas.element.width - 140 * percentageHealth) * side - (1 - transition) * 160 * (right ? -1 : 1), y - 1, 140 * percentageHealth, 2);
 			if (detailed) {
@@ -59,8 +55,110 @@ Battle = {
 			context.fillStyle = Textbox.colour;
 			context.textBaseline = "bottom";
 			context.textAlign = (right ? "right" : "left");
-			context.fillText(poke.name(), Game.canvas.element.width * side + (Textbox.padding - (1 - transition) * 160) * (right ? -1 : 1), y - 10 + Textbox.padding / 2);
-			context.textAlign = "left";
+			context.fillText(poke.name(), Game.canvas.element.width * side + (Textbox.padding + 40 - (1 - transition) * 160) * (right ? -1 : 1), y - 10 + Textbox.padding / 2);
+			context.textAlign = (right ? "left" : "right");
+			context.fillText(poke.level, Game.canvas.element.width * side + (Textbox.padding - (1 - transition) * 20) * (right ? -1 : 1), y - 10 + Textbox.padding / 2);
+			context.textAlign = "left";*/
+			var context = Game.canvas.context, pixelWidth = 14, percentageHealth = poke.health / poke.stats[Stats.health](), percentageExperience = poke.experience / poke.experienceFromLevelToNextLevel();
+			do {
+				context.font = "lighter " + pixelWidth + "px Helvetica Neue";
+				pixelWidth -= 2;
+			} while (context.measureText(poke.name()).width > 60);
+			var shapes = [
+				{
+					points : [{x : 0, y : -16}, {x : 82}, {x : 98, y : 0}, {x : 162}, {x : 146, y : 16}, {x : 0}],
+					colour : "hsla(0, 0%, 0%, 0.6)"
+				},
+				{
+					text :  poke.name(),
+					position : {x : (78 + 20) / 2, y : (-16 + 4) / 2},
+					align : {x : "center" , y : "middle"},
+					colour : "white",
+					font : "lighter " + pixelWidth + "px Helvetica Neue"
+				},
+				{
+					points : [{x : 0, y : 6}, {x : 148 - 148 * (1 - percentageHealth)}, {x : 144 - 148 * (1 - percentageHealth), y : 10}, {x : 0}],
+					colour : (percentageHealth > 1 / 2 ? "hsl(110, 100%, 40%)" : percentageHealth > 1 / 4 ? "hsl(40, 100%, 50%)" : "hsl(0, 100%, 50%)")
+				},
+				{
+					text :  "Lv.",
+					position : {x : 4, y : -16},
+					align : {x : (right ? "right" : "left") , y : "top"},
+					colour : "white",
+					font : "lighter 8px Helvetica Neue"
+				},
+				{
+					text :  poke.level,
+					position : {x : 4, y : -8},
+					align : {x : (right ? "right" : "left") , y : "top"},
+					colour : "white",
+					font : "lighter 10px Helvetica Neue"
+				},
+			], width = 0, current = {x : 0, y : 0};
+			if (poke.gender !== Genders.neuter)
+				shapes = shapes.concat([
+					{
+						points : [{x : 82, y : -16}, {x : 106}, {x : 122, y : 0}, {x : 98}],
+						colour : (poke.gender === Genders.male ? "hsl(195, 100%, 45%)" : "hsl(325, 100%, 80%)")
+					},
+					{
+						text :  (poke.gender === Genders.male ? "♂" : "♀"),
+						position : {x : (82 + 122) / 2, y : (-16 + 0) / 2},
+						align : {x : "center", y : "middle"},
+						colour : (poke.gender === Genders.male ? "hsl(195, 100%, 5%)" : "hsl(325, 100%, 40%)"),
+						font : "lighter 12px Helvetica Neue"
+					}
+				]);
+			if (right)
+				shapes = shapes.concat([
+					{
+						points : [{x : 146, y : 16}, {x : 138, y : 24}, {x : 90}, {x : 82, y : 16}],
+						colour : "hsla(0, 0%, 0%, 0.6)"
+					},
+					{
+						text :  poke.health + " / " + poke.stats[Stats.health](),
+						position : {x : (138 + 90) / 2, y : 22},
+						align : {x : "center" , y : "bottom"},
+						colour : "white",
+						font : "lighter 10px Helvetica Neue"
+					},
+					{
+						points : [{x : 0, y : 18}, {x : 84}, {x : 90, y : 24}, {x : 0}],
+						colour : "hsla(0, 0%, 0%, 0.6)"
+					},
+					{
+						points : [{x : 0, y : 20}, {x : 86 - 148 * (1 - percentageExperience)}, {x : 88 - 148 * (1 - percentageExperience), y : 22}, {x : 0}],
+						colour : "hsl(190, 100%, 50%)"
+					}
+				])
+			foreach(shapes, function (shape) {
+				if (shape.hasOwnProperty("points")) {
+					foreach(shape.points, function (point) {
+						if (point.x > width)
+							width = point.x;
+					});
+				}
+			});
+			foreach(shapes, function (shape) {
+				context.fillStyle = shape.colour;
+				if (shape.hasOwnProperty("points")) {
+					context.beginPath();
+					foreach(shape.points, function (point) {
+						if (point.hasOwnProperty("x"))
+							current.x = point.x;
+						if (point.hasOwnProperty("y"))
+							current.y = point.y;
+						context.lineTo(Game.canvas.element.width * (right ? 1 : 0) + (current.x - width * (1 - poke.battler.display.transition)) * (right ? -1 : 1), y + current.y);
+					});
+					context.fill();
+				}
+				if (shape.hasOwnProperty("text")) {
+					context.font = shape.font;
+					context.textAlign = shape.align.x;
+					context.textBaseline = shape.align.y;
+					context.fillText(shape.text, Game.canvas.element.width * (right ? 1 : 0) + (shape.position.x - width * (1 - poke.battler.display.transition)) * (right ? -1 : 1), y + shape.position.y);
+				}
+			});
 		},
 		position : function (poke, display) {
 			display = display || Display.state.current;
@@ -653,9 +751,9 @@ Battle = {
 		if (poke.battler.moveStage > 0) {
 			Battle.queue.push({
 				poke : poke,
-				priority : poke.battler.previousMove.priority,
+				priority : poke.battler.previousMoves.last().move.priority,
 				action : function (poke) {
-					poke.use(poke.battler.previousMove, poke.battler.previousTarget);
+					poke.use(poke.battler.previousMoves.last().move, poke.battler.previousTarget);
 				}
 			});
 			return true;
@@ -688,7 +786,7 @@ Battle = {
 		var actions = ["Pokémon", "Run", "Bag"];
 		if (Battle.style === Battles.style.double && Battle.selection > 0)
 			actions.insert(0, "Back");
-		Textbox.ask("What do you want " + currentBattler.name() + " to do?", moves, function (response, i, major) {
+		Textbox.ask(/*"What do you want " + currentBattler.name() + " to do?"*/"", moves, function (response, i, major) {
 			if (major) {
 				Battle.input("Fight", i);
 			} else
@@ -805,8 +903,8 @@ Battle = {
 			}
 			if (poke.battler.recharging)
 				++ poke.battler.recharging;
-			if (poke.protected)
-				poke.protected = false;
+			if (poke.battler.protected)
+				poke.battler.protected = false;
 			if (poke.battler.nightmare) {
 				if (poke.status === Statuses.asleep) {
 					Textbox.state(poke.name() + " lost a quarter of " + poke.possessivePronoun() + " health to " + poke.possessivePronoun() + " nightmare!");

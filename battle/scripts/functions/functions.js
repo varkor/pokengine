@@ -180,7 +180,11 @@ Array.prototype.choose = function () {
 
 Array.prototype.notEmpty = function () {
 	return this.length > 0;
-}
+};
+
+Array.prototype.last = function () {
+	return this[this.length - 1];
+};
 
 deepCopy = function (source, list, initial) { // If an object contains a variable referencing itself (like self), that variable references the old object, not the new one. Needs to be fixed
 	var destination = initial;

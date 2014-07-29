@@ -3,7 +3,7 @@ Display = {
 		if (poke === NoPokemon)
 			return NoPokemon;
 		var newPoke = new pokemon(poke.species);
-		foreach(["name", "species", "level", "health", "experience", "experienceFromLevelToNextLevel"], function (property) {
+		foreach(["name", "gender", "species", "level", "health", "experience", "experienceFromLevelToNextLevel"], function (property) {
 			newPoke[property] = (typeof poke[property] === "function" ? function (value) { return function () { return value; }; }(poke[property]()) : poke[property]);
 		});
 		if (poke.hasOwnProperty("original"))

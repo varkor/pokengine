@@ -169,6 +169,8 @@ Textbox = {
 		var self = Textbox;
 		var fullHeight = self.height * self.slide, context = Game.canvas.context;
 		context.fillStyle = "hsla(0, 0%, 0%, 0.8)";
+		if (self.dialogue.length && self.dialogue[0].text === "")
+			fullHeight = 0;
 		context.fillRect(0, Game.canvas.element.height - fullHeight, Game.canvas.element.width, fullHeight);
 		context.textAlign = "left";
 		context.textBaseline = "top";

@@ -31,7 +31,7 @@ function battler (pokemon) {
 		self.sleep = 0;
 		self.speed = 0; // A small modifer used to determinate randomly which Pokémon goes first if they both have exactly the same speed.
 		self.moveStage = 0;
-		self.previousMove = null;
+		self.previousMoves = [];
 		self.previousTarget = null;
 		self.battlingForDuration = 0; // How many turns the Pokémon has been in the battle for.
 		self.flinching = false;

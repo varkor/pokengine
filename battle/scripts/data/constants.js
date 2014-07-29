@@ -170,7 +170,7 @@ Events = {
 Genders = {
 	male : q = 0,
 	female : ++ q,
-	neutral : ++ q
+	neuter : ++ q
 };
 
 Time = {

@@ -297,7 +297,7 @@ Moves = {
 			use : [
 				function (self, target) {
 					Battle.damage(target, Move.damage(self, target, Moves.Feint));
-					target.protected = false;
+					target.battler.protected = false;
 				}
 			]
 		}
@@ -394,7 +394,19 @@ Moves = {
 		effect : {
 			use : [
 				function (self) {
-					self.protected = true;
+					var sequence = 1;
+					for (var i = self.battler.previousMoves.length - 1; i >= 0; -- i) {
+						if (!self.battler.previousMoves[i].failed && self.battler.previousMoves[i].move === Moves.Protect)
+							++ sequence;
+						else
+							break;
+					}
+					if (chance(sequence))
+						self.battler.protected = true;
+					else
+						return {
+							failed : true
+						};
 				}
 			]
 		}
@@ -489,13 +501,13 @@ Moves = {
 		effect : {
 			use : [
 				function (self, target) {
-					if (self.battler.transform.transformed || !target.battler.previousMove)
+					if (self.battler.transform.transformed || target.battler.previousMoves.notEmpty() || target.battler.previousMoves.last().failed)
 						return {
 							failed : true
 						};
 					else {
-						self.forget(self.battler.previousMove);
-						if (!self.learn(target.battler.previousMove)) { //? Not the best way to go about it.
+						self.forget(self.battler.previousMoves.last().move);
+						if (!self.learn(target.battler.previousMoves.last().move)) { //? Not the best way to go about it.
 							self.learn(Moves.Sketch);
 							return {
 								failed : true

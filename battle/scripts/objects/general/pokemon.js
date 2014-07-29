@@ -320,7 +320,6 @@ function pokemon (species) {
 
 	self.attemptMove = function (move, target) {
 		if (self.notHinderedByAilments()) {
-			self.battler.previousMove = move.move;
 			self.battler.previousTarget = target;
 			self.use(move.number, target);
 		}
@@ -344,13 +343,26 @@ function pokemon (species) {
 		} else {
 			if (moveNumber !== null)
 				-- self.moves[moveNumber].PP;
+			var used;
 			if (arguments.length >= 2)
-				Move.use(move, self.battler.moveStage, self, target);
+				used = Move.use(move, self.battler.moveStage, self, target);
 			else
-				Move.use(move, self.battler.moveStage, self);
-			++ self.battler.moveStage;
-			if (self.battler.moveStage >= self.battler.previousMove.effect.use.length)
+				used = Move.use(move, self.battler.moveStage, self);
+			if (used)  {
+				self.battler.previousMoves.push({
+					move : move,
+					failed : false
+				});
+				++ self.battler.moveStage;
+				if (self.battler.moveStage >= self.battler.previousMoves.last().move.effect.use.length)
+					self.battler.moveStage = 0;
+			} else {
+				self.battler.previousMoves.push({
+					move : move,
+					failed : true
+				});
 				self.battler.moveStage = 0;
+			}
 		}
 	};
 
