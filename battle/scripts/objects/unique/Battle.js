@@ -533,7 +533,10 @@ Battle = {
 				}
 				break;
 			case "Pokémon":
-				if (arguments.length === 1) {
+				if (currentBattler.battler.trapped && !currentBattler.ofType(Types.Ghost)) {
+					Textbox.state(currentBattler.name() + " is trapped and cannot switch out!");
+					advance = false;
+				} else if (arguments.length === 1) {
 					names = [];
 					positions = [];
 					foreach(Game.player.healthyPokemon(true), function (poke, i) {
@@ -553,6 +556,33 @@ Battle = {
 						Textbox.state("All your Pokémon are already battling!");
 						reprompt = true;
 					}
+				}  else {
+					if (secondary >= Game.player.pokemon()) {
+						Textbox.state("There's no Pokémon in that slot!");
+						advance = false;
+					} else if (Game.player.party.pokemon[secondary].health === 0) {
+						Textbox.state("That Pokémon has fainted — you can't use that one!");
+						advance = false;
+					} else if (currentBattler.trapped && !currentBattler.ofType(Types.ghost)) {
+						Textbox.state(currentBattler.name + " is trapped and can't switch out!");
+						advance = false;
+					} else if (!foreach(Game.player.battlers(), function (battler) {
+						if (battler.pokemon === Game.player.party.pokemon[secondary]) {
+							Textbox.state("That Pokémon is already battling — you can't send it out again!");
+							advance = false;
+						}
+					})) {
+						currentBattler.battler.switching = true;
+						Battle.actions.push({
+							poke : currentBattler,
+							priority : 6,
+							action : function (poke) {
+								Battle.swap(currentBattler, Game.player.party.pokemon[secondary]); 
+							}
+						});
+					}
+					else
+						advance = false;
 				}
 				break;
 			case "Run":
@@ -881,10 +911,6 @@ Battle = {
 					Battle.damage(poke, Move.percentageDamage(target, 1 / 4));
 				} else
 					poke.battler.nightmare = false;
-			}
-			if (poke.battler.cursed) {
-				Textbox.state(poke.name() + " lost a quarter of " + poke.possessivePronoun() + " health to " + poke.possessivePronoun() + " curse!");
-				Battle.damage(poke, Move.percentageDamage(target, 1 / 4));
 			}
 			poke.battler.damaged[Move.category.physical] = 0;
 			poke.battler.damaged[Move.category.special] = 0;
@@ -1309,14 +1335,6 @@ Battle = {
 				Textbox.state(target.name() + " broke out of " + target.possessivePronoun() + " confusion!");
 				target.battler.confused = false;
 			}, srandom.int(1, 4), poke);
-		}
-	},
-	curse : function (poke) {
-		if (poke.cursed) {
-			Textbox.state(poke.name() + " is already cursed!");
-		} else {
-			poke.cursed = true;
-			Textbox.state(poke.name() + " was put under an evil curse!");
 		}
 	},
 	placeHazard : function (hazard, maximum, side) {

@@ -459,7 +459,7 @@ Moves = {
 		effect : {
 			use : [
 				function (self, target) {
-					if (target.substitute > 0) {
+					if (target.battler.substitute > 0 || target.battler.transform.transformed) {
 						return {
 							failed : true
 						};
@@ -467,14 +467,16 @@ Moves = {
 					self.battler.transform = {
 						transformed : true,
 						species : self.species,
-						stats : self.stats,
+						IVs : self.IVs,
 						moves : self.moves,
 						shiny : self.shiny,
 						ability : self.ability,
-						form : self.form
+						form : self.form,
+						gender : self.gender
 					};
 					self.species = target.species;
-					// self.stats = target.stats.clone();
+					self.IVs = target.IVs.clone();
+					self.gender = target.gender;
 					self.battler.statLevel = target.battler.statLevel.clone();
 					self.moves = target.moves.deepCopy();
 					foreach(self.moves, function (move) {
@@ -1075,15 +1077,25 @@ Moves = {
 			use : [
 				function (self, target) {
 					if (self.ofType(Types.ghost)) {
-						Battle.damage(self, Move.exactDamage(self, self, Moves.Curse, Math.floor(self.stats[Stats.health]() / 2)));
-						Battle.curse(target);
+						if (!Battle.moveHasEffect(Moves.Ingrain, self)) {
+							Textbox.state(target.name() + " was put under an evil " + Moves.Curse.name + "!");
+							Battle.damage(self, Move.exactDamage(self, self, Moves.Curse, Math.floor(self.stats[Stats.health]() / 2)));
+							Battle.moveHaveRepeatingEffect(Moves.Curse, Battles.when.endOfThisTurn, target);
+						} else
+							return {
+								failed : true
+							};
 					} else {
 						Battle.stat(self, Stats.speed, -1, self);
 						Battle.stat(self, Stats.attack, 1, self);
 						Battle.stat(self, Stats.defence, 1, self);
 					}
 				}
-			]
+			],
+			effect : function (target) {
+				Textbox.state(target.name() + " lost a quarter of " + target.possessivePronoun() + " health to " + target.possessivePronoun() + " curse!");
+				Battle.damage(target, Move.percentageDamage(target, 1 / 4));
+			}
 		}
 	},
 	Metronome : {

@@ -36,7 +36,6 @@ function battler (pokemon) {
 		self.battlingForDuration = 0; // How many turns the Pokémon has been in the battle for.
 		self.flinching = false;
 		self.confused = false; // Pretty self-explanatory
-		self.cursed = false; // Whether an enemy has used Curse on the Pokémon
 		self.recharging = 0;
 		self.infatuated = false;
 		self.protected = false; // Whether the Pokémon is protecting itself using Protect or Detect
@@ -52,11 +51,12 @@ function battler (pokemon) {
 		battler.resetDisplay(self);
 		if (self.hasOwnProperty("transform") && self.transform.transformed) { // Reverse the Transform
 			self.pokemon.species = self.transform.species;
-			self.pokemon.stats = self.transform.stats;
 			self.pokemon.moves = self.transform.moves;
 			self.pokemon.shiny = self.transform.shiny;
 			self.pokemon.ability = self.transform.ability;
 			self.pokemon.form = self.transform.form;
+			self.pokemon.IVs = self.transform.IVs;
+			self.pokemon.gender = self.transform.gender;
 		}
 		self.transform = {
 			transformed : false
