@@ -329,22 +329,6 @@ Battle = {
 		}
 		Battle.race(Battle.queue);
 		Battle.queue = [];
-		var all = Battle.all(true);
-		foreach(all, function (poke) {
-			foreach(Battle.opponentsTo(poke), function (opponent) {
-				poke.battler.opponents.pushIfNotAlreadyContained(opponent);
-				opponent.battler.opponents.pushIfNotAlreadyContained(poke);
-			});
-			Battle.queue.push({
-				poke : poke,
-				priority : 0,
-				action : function (poke) {
-					Battle.triggerEvent(Events.entrance, {}, poke);
-				}
-			});
-		});
-		Battle.race(Battle.queue);
-		Battle.queue = [];
 		if (Battle.alliedTrainers.indexOf(Game.player) > -1)
 			Battle.startTurn();
 	},
@@ -801,8 +785,29 @@ Battle = {
 		Battle.endTurn();
 	},
 	startTurn : function () {
-		var all = Battle.allies.filter(onlyPokemon);
+		Battle.queue = [];
+		var all = Battle.all();
 		foreach(all, function (poke) {
+			foreach(Battle.opponentsTo(poke), function (opponent) {
+				poke.battler.opponents.pushIfNotAlreadyContained(opponent);
+				opponent.battler.opponents.pushIfNotAlreadyContained(poke);
+			});
+		});
+		foreach(Battle.all().filter(function (poke) {
+			return poke.battler.battlingForDuration === 0;
+		}), function (poke) {
+			Battle.queue.push({
+				poke : poke,
+				priority : 0,
+				action : function (poke) {
+					Battle.triggerEvent(Events.entrance, {}, poke);
+				}
+			});
+		});
+		Battle.race(Battle.queue);
+		Battle.queue = [];
+		var allies = Battle.allies.filter(onlyPokemon);
+		foreach(allies, function (poke) {
 			if (poke.trainer === Game.player) {
 				var disobey = poke.disobey();
 				poke.battler.disobeying = disobey ? true : false;
@@ -948,26 +953,6 @@ Battle = {
 			});
 		}
 		Battle.fillEmptyPlaces();
-		var all = Battle.all();
-		foreach(all, function (poke) {
-			foreach(Battle.opponentsTo(poke), function (opponent) {
-				poke.battler.opponents.pushIfNotAlreadyContained(opponent);
-				opponent.battler.opponents.pushIfNotAlreadyContained(poke);
-			});
-		});
-		/*?foreach(Battle.all().filter(function (poke) {
-			return poke.battler.battlingForDuration === 0;
-		}), function (poke) {
-			Battle.queue.push({
-				poke : poke,
-				priority : 0,
-				action : function (poke) {
-					Battle.triggerEvent(Events.entrance, {}, poke);
-				}
-			});
-		});
-		Battle.race(Battle.queue);
-		Battle.queue = [];*/
 		++ Battle.turns;
 	},
 	fillEmptyPlaces : function () {
