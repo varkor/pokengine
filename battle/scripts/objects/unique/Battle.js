@@ -1090,7 +1090,7 @@ Battle = {
 	attemptCapture : function (poke, ball) {
 		var modifiers = {
 			status : 1,
-			species : poke.species.catchRate,
+			species : !poke.battler.transform.transformed ? poke.species.catchRate : poke.battler.transform.species.catchRate,
 			ball : (typeof ball.catchRate === "number" ? ball.catchRate : ball.catchRate())
 		};
 		switch (poke.status) {
