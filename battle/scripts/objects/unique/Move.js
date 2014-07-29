@@ -68,8 +68,10 @@ Move = {
 				if (Battle.triggerEvent(Events.move, {
 					move : move,
 					affected : true
-				}, mover, targetted).contains(true))
+				}, mover, targetted).contains(true)) {
 					failed = true;
+					statedFailureReason = true;
+				}
 				else {
 					if (!move.classification.contains("_")) {
 						accuracy = (mover.battler.statLevel[Stats.accuracy] === 0 ? 1 : mover.battler.statLevel[Stats.accuracy] > 0 ? 1 + (1 / 3) * mover.battler.statLevel[Stats.accuracy] : 3 / (Math.abs(mover.battler.statLevel[Stats.accuracy]) + 3));

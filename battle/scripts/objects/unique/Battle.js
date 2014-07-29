@@ -798,7 +798,9 @@ Battle = {
 		var display = Display.state.save();
 		Textbox.effect(function () { Display.state.load(display); });
 		foreach(Battle.effects.specific, function (effect, i, deletion) {
-			if (Battle.turns >= effect.due) {
+			if (!effect.target.battler.battling) {
+				deletion.push(i);
+			} else if (Battle.turns >= effect.due) {
 				if (effect.hasOwnProperty("data"))
 					effect.type(effect.target, effect.data);
 				else
@@ -859,7 +861,9 @@ Battle = {
 			}
 		});
 		foreach(Battle.effects.specific, function (effect, i, deletion) {
-			if (Battle.turns >= Math.floor(effect.due)) {
+			if (!effect.target.battler.battling) {
+				deletion.push(i);
+			} else if (Battle.turns >= Math.floor(effect.due)) {
 				if (!effect.expired) {
 					if (effect.hasOwnProperty("data"))
 						effect.type(effect.target, effect.data);
