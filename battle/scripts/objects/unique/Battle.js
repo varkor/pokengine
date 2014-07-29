@@ -284,7 +284,9 @@ Battle = {
 					Battle.opposingTrainers.push(participant);
 					for (var i = 0, newPoke; i < Math.min((Battle.style === Battles.style.normal ? 1 : 2) / opposingTrainers.length, participant.healthyPokemon().length); ++ i) {
 						newPoke = participant.healthyPokemon()[i];
-						Battle.queue.push({
+						if (newPoke.trainer === TheWild)
+							Battle.enter(newPoke, true);
+						else Battle.queue.push({
 							poke : newPoke,
 							doesNotRequirePokemonToBeBattling : true,
 							priority : 0,
@@ -948,8 +950,14 @@ Battle = {
 			foreach(Battle.opposingTrainers, function (trainer) {
 				if (!emptyPlaces.length)
 					return true;
-				while (trainer.battlers().length < Math.min((Battle.style === Battles.style.normal ? 1 : 2) / Battle.opposingTrainers.length) && trainer.hasHealthyPokemon(true) && emptyPlaces.length)
-					Battle.enter(trainer.healthyPokemon(true)[0], true, emptyPlaces.shift());
+				while (trainer.battlers().length < Math.min((Battle.style === Battles.style.normal ? 1 : 2) / Battle.opposingTrainers.length) && trainer.hasHealthyPokemon(true) && emptyPlaces.length) {
+					var poke = trainer.healthyPokemon(true)[0];
+					Battle.enter(poke, true, emptyPlaces.shift());
+					if (trainer === TheWild) {
+						var display = Display.state.save();
+						Textbox.state("A wild " + poke.name() + " was right behind!", function () { Display.state.load(display); });
+					}
+				}
 			});
 		}
 		Battle.fillEmptyPlaces();
@@ -1198,11 +1206,13 @@ Battle = {
 			else
 				Battle.opponents[place] = poke;
 		}
-		poke.battler.display.transition = 0;
-		var displayInitial = Display.state.save();
-		poke.battler.display.transition = 1;
-		var display = Display.state.save(), state = (immediately ? Textbox.stateNow : Textbox.state);
-		state((Game.player === poke.trainer ? "You" : poke.trainer.name) + " sent out " + poke.name() + "!", function () { Display.state.load(displayInitial); return Display.state.transition(display); });
+		if (poke.trainer !== TheWild) {
+			poke.battler.display.transition = 0;
+			var displayInitial = Display.state.save();
+			poke.battler.display.transition = 1;
+			var display = Display.state.save(), state = (immediately ? Textbox.stateNow : Textbox.state);
+			state((Game.player === poke.trainer ? "You" : poke.trainer.name) + " sent out " + poke.name() + "!", function () { Display.state.load(displayInitial); return Display.state.transition(display); });
+		}
 		foreach(Battle.opponentsTo(poke), function (opponent) {
 			poke.battler.opponents.pushIfNotAlreadyContained(opponent);
 			opponent.battler.opponents.pushIfNotAlreadyContained(poke);
