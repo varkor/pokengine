@@ -32,33 +32,6 @@ Battle = {
 	},
 	draw : {
 		bar : function (poke, right, y, detailed) {
-			
-			/*context.beginPath();
-			context.moveTo(Game.canvas.element.width * side + (0 - (1 - transition) * 160) * (right ? -1 : 1), y - 20);
-			context.lineTo(Game.canvas.element.width * side + (Textbox.padding - 12 - (1 - transition) * 160) * (right ? -1 : 1), y - 20);
-			//context.lineTo(Game.canvas.element.width * side + (Textbox.padding - (1 - transition) * 160) * (right ? -1 : 1), y - 20);
-			context.lineTo(Game.canvas.element.width * side + (Textbox.padding + 80 - (1 - transition) * 160) * (right ? -1 : 1), y - 20);
-			context.lineTo(Game.canvas.element.width * side + (Textbox.padding + 80 + 12 - (1 - transition) * 160) * (right ? -1 : 1), y - 10);
-			context.lineTo(Game.canvas.element.width * side + (140 - (1 - transition) * 160) * (right ? -1 : 1), y - 10);
-			context.lineTo(Game.canvas.element.width * side + (160 - (1 - transition) * 160) * (right ? -1 : 1), y);
-			context.lineTo(Game.canvas.element.width * side + (140 - (1 - transition) * 160) * (right ? -1 : 1), y + 10);
-			context.lineTo(Game.canvas.element.width * side + (0 - (1 - transition) * 160) * (right ? -1 : 1), y + 10);
-			context.fill();
-			var percentageHealth = ;
-			context.fillStyle = (percentageHealth > 1 / 2 ? "hsl(110, 100%, 40%)" : percentageHealth > 1 / 4 ? "hsl(40, 100%, 50%)" : "hsl(0, 100%, 50%)");
-			context.fillRect((Game.canvas.element.width - 140 * percentageHealth) * side - (1 - transition) * 160 * (right ? -1 : 1), y - 1, 140 * percentageHealth, 2);
-			if (detailed) {
-				var percentageExperience = poke.experience / poke.experienceFromLevelToNextLevel();
-				context.fillStyle = "hsl(180, 100%, 50%)";
-				context.fillRect((Game.canvas.element.width - 140 * percentageExperience) * side - (1 - transition) * 160 * (right ? -1 : 1), y + 4 - 1, 140 * percentageExperience, 2);
-			}
-			context.fillStyle = Textbox.colour;
-			context.textBaseline = "bottom";
-			context.textAlign = (right ? "right" : "left");
-			context.fillText(poke.name(), Game.canvas.element.width * side + (Textbox.padding + 40 - (1 - transition) * 160) * (right ? -1 : 1), y - 10 + Textbox.padding / 2);
-			context.textAlign = (right ? "left" : "right");
-			context.fillText(poke.level, Game.canvas.element.width * side + (Textbox.padding - (1 - transition) * 20) * (right ? -1 : 1), y - 10 + Textbox.padding / 2);
-			context.textAlign = "left";*/
 			var context = Game.canvas.context, pixelWidth = 14, percentageHealth = poke.health / poke.stats[Stats.health](), percentageExperience = poke.experience / poke.experienceFromLevelToNextLevel();
 			do {
 				context.font = "lighter " + pixelWidth + "px Helvetica Neue";
@@ -127,7 +100,7 @@ Battle = {
 						colour : "hsla(0, 0%, 0%, 0.6)"
 					},
 					{
-						points : [{x : 0, y : 20}, {x : 86 - 148 * (1 - percentageExperience)}, {x : 88 - 148 * (1 - percentageExperience), y : 22}, {x : 0}],
+						points : [{x : 0, y : 20}, {x : 86 - 88 * (1 - percentageExperience)}, {x : 88 - 88 * (1 - percentageExperience), y : 22}, {x : 0}],
 						colour : "hsl(190, 100%, 50%)"
 					}
 				])
@@ -358,6 +331,10 @@ Battle = {
 		Battle.queue = [];
 		var all = Battle.all(true);
 		foreach(all, function (poke) {
+			foreach(Battle.opponentsTo(poke), function (opponent) {
+				poke.battler.opponents.pushIfNotAlreadyContained(opponent);
+				opponent.battler.opponents.pushIfNotAlreadyContained(poke);
+			});
 			Battle.queue.push({
 				poke : poke,
 				priority : 0,
@@ -971,6 +948,13 @@ Battle = {
 			});
 		}
 		Battle.fillEmptyPlaces();
+		var all = Battle.all();
+		foreach(all, function (poke) {
+			foreach(Battle.opponentsTo(poke), function (opponent) {
+				poke.battler.opponents.pushIfNotAlreadyContained(opponent);
+				opponent.battler.opponents.pushIfNotAlreadyContained(poke);
+			});
+		});
 		/*?foreach(Battle.all().filter(function (poke) {
 			return poke.battler.battlingForDuration === 0;
 		}), function (poke) {
@@ -1182,8 +1166,9 @@ Battle = {
 	},
 	removeFromBattle : function (poke) {
 		// Stops a Pokémon battling, either because they've fainted, or because they've been caught in a Poké ball
-		foreach(Battle.opponentsTo(poke).filter(onlyPokemon), function (gainer) { //? This is not how expeience should be gained. What about catching pokemon?
-			gainer.gainExperience(poke);
+		foreach(poke.battler.opponents, function (gainer) { //? This is not how expeience should be gained. What about catching pokemon?
+			if (!gainer.fainted())
+				gainer.gainExperience(poke);
 		});
 		var place;
 		if (poke.battler.side === Battles.side.near) {
@@ -1233,6 +1218,10 @@ Battle = {
 		poke.battler.display.transition = 1;
 		var display = Display.state.save(), state = (immediately ? Textbox.stateNow : Textbox.state);
 		state((Game.player === poke.trainer ? "You" : poke.trainer.name) + " sent out " + poke.name() + "!", function () { Display.state.load(displayInitial); return Display.state.transition(display); });
+		foreach(Battle.opponentsTo(poke), function (opponent) {
+			poke.battler.opponents.pushIfNotAlreadyContained(opponent);
+			opponent.battler.opponents.pushIfNotAlreadyContained(poke);
+		});
 		//? Will this (hazard and ability) work with immediately?
 		foreach((poke.battler.side === Battles.side.near ? Battle.hazards.near : Battle.hazards.far), function (hazard) {
 			hazard.type.effect.hazard(poke, hazard.stack);

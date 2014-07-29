@@ -27,8 +27,8 @@ function battler (pokemon) {
 		self.statLevel[Stats.accuracy] = 0;
 		self.statLevel[Stats.evasion] = 0;
 		self.statLevel[Stats.critical] = 0;
+		self.opponents = []; // Which Pokémon have been battling whilst this Pokémon also has (used to work out which Pokémon gain experience from this one's defeat)
 		self.poison = 1;
-		self.sleep = 0;
 		self.speed = 0; // A small modifer used to determinate randomly which Pokémon goes first if they both have exactly the same speed.
 		self.moveStage = 0;
 		self.previousMoves = [];

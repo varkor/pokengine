@@ -126,6 +126,7 @@ function pokemon (species) {
 	};
 
 	self.gainExperience = function (defeated) {
+		console.log("get exp");
 		if (self.trainer === null || self.trainer.isAnNPC())
 			return;
 		var participated = true, eventModifiers = product(Battle.triggerEvent(Events.experience, {}, defeated, self));

@@ -242,6 +242,13 @@ Array.prototype.deepCopy = function () {
 Array.prototype.contains = function (element) {
 	return this.indexOf(element) > -1;
 };
+Array.prototype.pushIfNotAlreadyContained = function (element) {
+	if (!this.contains(element)) {
+		this.push(element);
+		return true;
+	}
+	return false;
+};
 
 CanvasRenderingContext2D.prototype.fillCircle = function (x, y, radius) {
 	this.beginPath();
