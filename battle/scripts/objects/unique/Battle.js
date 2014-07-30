@@ -1223,6 +1223,7 @@ Battle = {
 		});
 		if (!startOrEndOfTurn)
 			Battle.triggerEvent(Events.entrance, {}, poke);
+		Battle.recoverFromStatus(poke);
 	},
 	withdraw : function (poke, forced) {
 		poke.battler.display.transition = 0;
@@ -1373,15 +1374,18 @@ Battle = {
 	},
 	inflict : function (poke, status) {
 		poke.status = status;
-		if (status === Statuses.asleep) {
+		Battle.recoverFromStatus(poke);
+	},
+	recoverFromStatus : function (poke) {
+		if (poke.status === Statuses.asleep) {
 			Battle.haveEffect(function (target) {
-				Textbox.state(target.name + " woke up!");
+				Textbox.state(target.name() + " woke up!");
 				target.status = Statuses.none;
 			}, srandom.int(1, 5), poke);
 		}
-		if (status === Statuses.frozen) {
+		if (poke.status === Statuses.frozen) {
 			Battle.haveEffect(function (target) {
-				Textbox.state(target.name + " thawed!");
+				Textbox.state(target.name() + " thawed!");
 				target.status = Statuses.none;
 			}, srandom.int(1, 5), poke);
 		}
