@@ -51,14 +51,17 @@ Move = {
 	use : function (move, stage, mover, target) {
 		if (typeof target !== "number")
 			target = Battle.placeOfPokemon(target);
-		var constant = {}, targetPokemon = Battle.pokemonInPlace(target), affected = Battle.affectedByMove(mover, targetPokemon, move).filter(onlyPokemon), completelyFailed = true;
-		if (stage === move.effect.use.length - 1 && move.hasOwnProperty("name"))
+		var constant = {}, targetPokemon = Battle.pokemonInPlace(target), affected = Battle.affectedByMove(mover, targetPokemon, move).filter(onlyPokemon), completelyFailed = true, finalStage = (stage === move.effect.use.length - 1);
+		if (finalStage && move.hasOwnProperty("name"))
 			Textbox.state(mover.name() + " used " + move.name + (move.affects === Move.targets.directTarget && affected.notEmpty() ? " on " + (targetPokemon !== mover ? targetPokemon.name() : mover.selfPronoun()) : "") + "!", function () { return Move.animate(mover, move, stage, targetPokemon, constant); });
 		else
 			Textbox.effect(function () { return Move.animate(mover, move, stage, targetPokemon, constant); });
 		// Make sure any Display states after the move has been used takes into consideration any movements by any of the Pokémon
-			if (targetPokemon !== NoPokemon)
+			if (targetPokemon !== NoPokemon) {
 				Move.renderAnimation(mover, move, stage, targetPokemon, constant);
+				var displayRendered = Display.state.save();
+				Textbox.effect(function () { Display.state.load(displayRendered); });
+			}
 		//
 		if (move.effect.hasOwnProperty("constant"))
 			constant = move.effect.constant();
@@ -79,7 +82,7 @@ Move = {
 						accuracy = 1;
 						evasion = 1;
 					}
-					var hit = (move.hasOwnProperty("accuracy") ? move.accuracy * (accuracy / evasion) >= srandom.point() : true);
+					var hit = (!finalStage || (move.hasOwnProperty("accuracy") ? move.accuracy * (accuracy / evasion) >= srandom.point() : true));
 					if (hit) {
 						if (targetted.battler.protected && !move.piercing) {
 							Textbox.state(targetted.name() + " protected " + targetted.selfPronoun() + ".");
