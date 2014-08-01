@@ -976,7 +976,7 @@ Moves = {
 				function (self, target, constant, repetitions) {
 					if (arguments.length < 4)
 						repetitions = 1;
-					Battle.damage(target, Move.damage(self, target, Moves.PinMissile));
+					Battle.damage(target, Move.damage(self, target, Moves.PinMissile), repetitions === 1);
 					if (target !== NoPokemon && (repetitions < 2 || (repetitions <= 3 && srandom.chance(3)) || (repetitions <= 5 && srandom.chance(6))))
 						Moves.PinMissile.effect.use[0](self, target, constant, ++ repetitions);
 				}
@@ -1111,15 +1111,24 @@ Moves = {
 		affects : Move.targets.self,
 		effect : {
 			use : [
-				function (self, target) {
-					var moves = [], choice;
-					for (var move in Moves) {
-						if (Moves[move].classification.indexOf("special") === -1)
-							moves.push(Moves[move]);
-					}
+				function (self) {
+					var moves = [], choice, targets;
+					forevery(Moves, function (move) {
+						if (!move.classification.contains("special"))
+							moves.push(move);
+					});
 					choice = srandom.chooseFromArray(moves);
 					self.battler.previousMove = choice;
-					Move.use(choice, 0, self, target);
+					targets = Battle.targetsForMove(self, choice, true);
+					targets.sort(function (targetA, targetB) {
+						return Battle.distanceBetween(self, targetA.poke) - Battle.distanceBetween(self, targetB.poke);
+					});
+					if (targets.notEmpty()) {
+						Move.use(choice, 0, self, targets[0].place); // Pick the closest target (this shouldn't be an ally unless it's a friendly move)
+					} else
+						return {
+							failed : true
+						};
 				}
 			]
 		}

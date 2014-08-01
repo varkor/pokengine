@@ -788,14 +788,14 @@ Battle = {
 	},
 	startTurn : function () {
 		Battle.queue = [];
-		var all = Battle.all();
+		var all = Battle.all(true);
 		foreach(all, function (poke) {
-			foreach(Battle.opponentsTo(poke), function (opponent) {
+			foreach(Battle.opponentsTo(poke).filter(onlyPokemon), function (opponent) {
 				poke.battler.opponents.pushIfNotAlreadyContained(opponent);
 				opponent.battler.opponents.pushIfNotAlreadyContained(poke);
 			});
 		});
-		foreach(Battle.all().filter(function (poke) {
+		foreach(all.filter(function (poke) {
 			return poke.battler.battlingForDuration === 0;
 		}), function (poke) {
 			Battle.queue.push({
@@ -994,31 +994,33 @@ Battle = {
 		if (progress)
 			Battle.startTurn();
 	},
-	damage : function (poke, damage) {
+	damage : function (poke, damage, displayMessages) {
 		var amount = damage.damage;
 		if (amount < 0)
 			return;
 		amount = Math.floor(amount);
 		if (damage.critical && damage.effectiveness > 0)
 			Textbox.state("It's a critical hit!");
-		switch (damage.effectiveness) {
-			case 4:
-				Textbox.state("It's super effective!");
-				break;
-			case 2:
-				Textbox.state("It's super effective!");
-				break;
-			case 1:
-				break;
-			case 0.5:
-				Textbox.state("It's not very effective...");
-				break;
-			case 0.25:
-				Textbox.state("It's not very effective...");
-				break;
-			case 0:
-				Textbox.state("It doesn't affect " + poke.name() + "!");
-				return;
+		if (arguments.length < 3 || displayMessages) {
+			switch (damage.effectiveness) {
+				case 4:
+					Textbox.state("It's super effective!");
+					break;
+				case 2:
+					Textbox.state("It's super effective!");
+					break;
+				case 1:
+					break;
+				case 0.5:
+					Textbox.state("It's not very effective...");
+					break;
+				case 0.25:
+					Textbox.state("It's not very effective...");
+					break;
+				case 0:
+					Textbox.state("It doesn't affect " + poke.name() + "!");
+					return;
+			}
 		}
 		if (poke.substitute > 0 && !damage.infiltrates) {
 			Textbox.state(poke.name() + "'s " + Moves.Substitute.name + " took the damage!");
@@ -1159,7 +1161,7 @@ Battle = {
 	},
 	removeFromBattle : function (poke) {
 		// Stops a Pokémon battling, either because they've fainted, or because they've been caught in a Poké ball
-		foreach(poke.battler.opponents, function (gainer) { //? This is not how expeience should be gained. What about catching pokemon?
+		foreach(poke.battler.opponents, function (gainer) {
 			if (!gainer.fainted())
 				gainer.gainExperience(poke);
 		});
