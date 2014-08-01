@@ -14,7 +14,12 @@ Textbox = {
 	lines : 2,
 	spacing : 0.5,
 	colour : "white",
-	say : function (text, progress, trigger, pause, after, now) {
+	messages : 0,
+	currentIndex : function () {
+		var self = Textbox;
+		return self.dialogue.last().id;
+	},
+	say : function (text, progress, trigger, pause, after, now, index) {
 		/*
 			text : The text to display,
 			progress : How long to wait after displaying all the text before continuing ("manual" will require input from the user),
@@ -41,41 +46,93 @@ Textbox = {
 			}
 			text = self.wrap(text);
 		}
-		var message = {text : text, colours : colours, responses : [], progress : (arguments.length > 1 && progress !== null ? progress : "manual") , trigger : trigger, pause : pause, after : after};
+		var message = {
+			id : self.messages ++,
+			text : text,
+			colours : colours,
+			responses : [],
+			progress : (arguments.length > 1 && progress !== null ? progress : "manual"),
+			trigger : trigger,
+			pause : pause,
+			after : after
+		};
 		self.active = true;
 		if (!now) {
 			self.dialogue.push(message);
-			return self.dialogue.length - 1;
 		} else {
 			self.dialogue.insert(1, [message]);
-			return 1;
 		}
-
+		return message.id;
+	},
+	insertAfter : function (id, position) {
+		var self = Textbox, message = self.messageWithId(id), position = self.messageIndexForId(position);
+		if (position !== null) {
+			self.remove(id);
+			self.dialogue.insert(position + 1, message);
+			return true;
+		} else
+			return false;
+	},
+	messageWithId : function (id) {
+		var self = Textbox, found = null;
+		foreach(self.dialogue, function (message) {
+			if (message.id === id) {
+				found = message;
+				return true;
+			}
+		});
+		return found;
+	},
+	messageIndexForId : function (id) {
+		var self = Textbox, found = null;
+		foreach(self.dialogue, function (message, i) {
+			if (message.id === id) {
+				found = i;
+				return true;
+			}
+		});
+		return found;
 	},
 	state : function (text, trigger, pause, after, now) {
 		var self = Textbox;
-		self.say(text, self.standardInterval, trigger, pause, after, now);
+		return self.say(text, self.standardInterval, trigger, pause, after, now);
 	},
 	stateNow : function (text, trigger, pause, after) {
 		var self = Textbox;
-		self.state(text, trigger, pause, after, true);
+		return self.state(text, trigger, pause, after, true);
 	},
 	effect : function (trigger, pause, after) {
 		var self = Textbox;
-		self.say(null, self.standardInterval, trigger, pause, after);
+		return self.say(null, self.standardInterval, trigger, pause, after);
 	},
 	ask : function (query, responses, callback, minors, hover, now) {
 		var self = Textbox, latest;
-		latest = self.say(query, null, null, null, null, now);
-		self.dialogue[latest].responses = responses.concat(minors || []);
-		self.dialogue[latest].callback = callback;
-		self.dialogue[latest].minorResponses = responses.length;
+		latest = self.messageWithId(self.say(query, null, null, null, null, now));
+		latest.responses = responses.concat(minors || []);
+		latest.callback = callback;
+		latest.minorResponses = responses.length;
 		if (arguments.length >= 5 && typeof hover !== "undefined" && hover !== null)
-			self.dialogue[latest].hover = hover;
+			latest.hover = hover;
+		return latest;
 	},
 	askNow : function (query, responses, callback, minors, hover) {
 		var self = Textbox;
-		self.ask(query, responses, callback, minors, hover, true);
+		return self.ask(query, responses, callback, minors, hover, true);
+	},
+	remove : function (id) {
+		var self = Textbox, found = self.messageIndexForId(id);
+		if (found !== null)
+			self.dialogue.remove(found);
+	},
+	removeEffects : function (id) {
+		var self = Textbox, found = self.messageIndexForId(id);
+		if (found !== null) {
+			self.dialogue[found].trigger = null;
+			self.dialogue[found].pause = null;
+			self.dialogue[found].after = null;
+			if (self.dialogue[found].text === null)
+				self.remove(id);
+		}
 	},
 	wrap : function (text) {
 		var self = Textbox;

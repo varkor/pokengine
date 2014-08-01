@@ -51,74 +51,86 @@ Move = {
 	use : function (move, stage, mover, target) {
 		if (typeof target !== "number")
 			target = Battle.placeOfPokemon(target);
-		var constant = {}, targetPokemon = Battle.pokemonInPlace(target), affected = Battle.affectedByMove(mover, targetPokemon, move).filter(onlyPokemon), completelyFailed = true, finalStage = (stage === move.effect.use.length - 1);
+		var constant = {}, targetPokemon = Battle.pokemonInPlace(target), affected = Battle.affectedByMove(mover, targetPokemon, move).filter(onlyPokemon), completelyFailed = true, finalStage = (stage === move.effect.use.length - 1), animationEffect = null, stateEffect = null;
 		if (finalStage && move.hasOwnProperty("name"))
-			Textbox.state(mover.name() + " used " + move.name + (move.affects === Move.targets.directTarget && affected.notEmpty() ? " on " + (targetPokemon !== mover ? targetPokemon.name() : mover.selfPronoun()) : "") + "!", function () { return Move.animate(mover, move, stage, targetPokemon, constant); });
+			animationEffect = Textbox.state(mover.name() + " used " + move.name + (move.affects === Move.targets.directTarget && affected.notEmpty() ? " on " + (targetPokemon !== mover ? targetPokemon.name() : mover.selfPronoun()) : "") + "!", function () { return Move.animate(mover, move, stage, targetPokemon, constant); });
 		else
-			Textbox.effect(function () { return Move.animate(mover, move, stage, targetPokemon, constant); });
-		// Make sure any Display states after the move has been used takes into consideration any movements by any of the Pokémon
+			animationEffect = Textbox.effect(function () { return Move.animate(mover, move, stage, targetPokemon, constant); });
+		// Makes sure any Display states after the move has been used takes into consideration any movements by any of the Pokémon
 			if (targetPokemon !== NoPokemon) {
 				Move.renderAnimation(mover, move, stage, targetPokemon, constant);
 				var displayRendered = Display.state.save();
-				Textbox.effect(function () { Display.state.load(displayRendered); });
+				stateEffect = Textbox.effect(function () { Display.state.load(displayRendered); });
 			}
 		//
 		if (move.effect.hasOwnProperty("constant"))
 			constant = move.effect.constant();
 		if (affected.notEmpty()) {
-			foreach(affected, function (targetted) {
+			foreach(affected, function (targeted) {
 				var failed = false, statedFailureReason = false, accuracy, evasion;
 				if (Battle.triggerEvent(Events.move, {
 					move : move,
 					affected : true
-				}, mover, targetted).contains(true)) {
+				}, mover, targeted).contains(true)) {
 					failed = true;
 					statedFailureReason = true;
 				} else {
 					if (!move.classification.contains("_")) {
 						accuracy = (mover.battler.statLevel[Stats.accuracy] === 0 ? 1 : mover.battler.statLevel[Stats.accuracy] > 0 ? 1 + (1 / 3) * mover.battler.statLevel[Stats.accuracy] : 3 / (Math.abs(mover.battler.statLevel[Stats.accuracy]) + 3));
-						evasion = (targetted.battler.statLevel[Stats.evasion] === 0 ? 1 : targetted.battler.statLevel[Stats.evasion] > 0 ? 1 + (1 / 3) * targetted.battler.statLevel[Stats.evasion] : 3 / (Math.abs(targetted.battler.statLevel[Stats.evasion]) + 3));
+						evasion = (targeted.battler.statLevel[Stats.evasion] === 0 ? 1 : targeted.battler.statLevel[Stats.evasion] > 0 ? 1 + (1 / 3) * targeted.battler.statLevel[Stats.evasion] : 3 / (Math.abs(targeted.battler.statLevel[Stats.evasion]) + 3));
 					} else {
 						accuracy = 1;
 						evasion = 1;
 					}
 					var hit = (!finalStage || (move.hasOwnProperty("accuracy") ? move.accuracy * (accuracy / evasion) >= srandom.point() : true));
 					if (hit) {
-						if (targetted.battler.protected && !move.piercing) {
-							Textbox.state(targetted.name() + " protected " + targetted.selfPronoun() + ".");
+						if (targeted.battler.protected && !move.piercing) {
+							Textbox.state(targeted.name() + " protected " + targeted.selfPronoun() + ".");
 							failed = true;
 							statedFailureReason = true;
-						} else if (targetted.invulnerable && !move.despite.contains(targetted.invulnerable)) { // Dig, Fly, etc.
-							Textbox.state(targetted.name() + " cannot be found!");
+						} else if (targeted.invulnerable && !move.despite.contains(targeted.invulnerable)) { // Dig, Fly, etc.
+							Textbox.state(targeted.name() + " cannot be found!");
 							failed = true;
 							statedFailureReason = true;
 						} else {
-							var response = move.effect.use[stage](mover, targetted, constant);
+							var response = move.effect.use[stage](mover, targeted, constant);
 							if (response && response.hasOwnProperty("failed") && response.failed)
 								failed = true;
 						}
 					} else {
 						if (accuracy <= evasion)
-							Textbox.state(mover.name() + " missed " + targetted.name() + "!");
+							Textbox.state(mover.name() + " missed " + targeted.name() + "!");
 						else
-							Textbox.state(targetted.name() + " evaded the attack!");
+							Textbox.state(targeted.name() + " evaded the attack!");
 						failed = true;
 						statedFailureReason = true;
 						if (move.effect.hasOwnProperty("miss"))
-							move.effect.miss(mover, targetted);
+							move.effect.miss(mover, targeted);
 					}
 				}
 				if (failed) {
 					if (!statedFailureReason)
 						Textbox.state("But it failed!");
 					if (move.effect.hasOwnProperty("fail"))
-						move.effect.fail(mover, targetted);
+						move.effect.fail(mover, targeted);
 					return false;
 				} else
 					completelyFailed = false;
 			});
 		} else {
 			Textbox.state("There was no target for " + mover.name() + " to hit...");
+		}
+		if (completelyFailed) {
+			if (animationEffect !== null)
+				Textbox.removeEffects(animationEffect);
+			if (stateEffect !== null) {
+				battler.resetDisplay(mover);
+				foreach(affected, function (targeted) {
+					battler.resetDisplay(targeted);
+				});
+				displayRendered = Display.state.save();
+				stateEffect.trigger = function () { Display.state.load(displayRendered); };
+			}
 		}
 		return !completelyFailed;
 	},
