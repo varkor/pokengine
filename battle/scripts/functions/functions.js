@@ -1,17 +1,22 @@
 function foreach (array, fn) {
-	var deletion = [], i;
-	for (i = 0; i < array.length; ++ i)
-		if (fn(array[i], i, deletion))
-			return true;
+	var deletion = [], i, broke = false;
+	for (i = 0; i < array.length; ++ i) {
+		if (fn(array[i], i, deletion)) {
+			broke = true;
+			break;
+		}
+	}
 	deletion.sort(function (a, b) { return a - b; });
 	for (i = 0; i < deletion.length; ++ i)
 		array.remove(deletion[i] - i);
+	return broke;
 }
 
 function forevery (dictionary, fn) {
 	for (var key in dictionary)
 		if (fn(dictionary[key], key))
 			return true;
+	return false;
 }
 
 function random (x, y) {

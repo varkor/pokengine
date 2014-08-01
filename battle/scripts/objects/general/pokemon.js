@@ -109,14 +109,15 @@ function pokemon (species) {
 		return true;
 	};
 
-	self.forget = function (move) {
+	self.forget = function (move, initial) {
 		if (foreach(self.moves, function (check, i, deletion) {
 			if (check.move === move) {
 				deletion.push(i);
 				return true;
 			}
 		})) {
-			Textbox.state(self.name() + " forgot " + self.moves[i].move.name + " and learnt " + move.name + "!");
+			if (!initial)
+				Textbox.state(self.name() + " forgot " + move.name + "!");
 			return true;
 		}
 	};

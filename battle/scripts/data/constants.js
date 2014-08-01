@@ -109,6 +109,8 @@ Statuses = {
 };
 
 /*
+	action (data{}, self, other) for Abilities and items
+	action (data{}, target) for Moves
 	All events contain the following:
 		data:
 			oneself : Whether the Pokémon that triggered the event is itself
@@ -116,7 +118,6 @@ Statuses = {
 Events = {
 	/*
 		Triggered when the Pokémon is sent out.
-		action (data{}, self, other)
 	*/
 	entrance : q = 0,
 
@@ -152,7 +153,9 @@ Events = {
 	/*
 		Triggered when the Pokémon's health is changed in some way.
 		data:
-			change : How the health was changed.
+			change : How the health was changed (damage is a negative change, healing is a positive change).
+		returns:
+			Whether the change should be prevented.
 	*/
 	health : ++ q,
 

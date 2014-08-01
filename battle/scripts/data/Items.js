@@ -65,7 +65,7 @@ Items = {
 		Sitrus : {
 			name : "Sitrus",
 			effect : function (self, poke) {
-				Battle.healPercentage(poke, 0.25);
+				Battle.healPercentage(poke, 0.25, Items.Berries.Sitrus);
 			},
 			effects : [
 				{

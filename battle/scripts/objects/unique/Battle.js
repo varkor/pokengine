@@ -1049,14 +1049,18 @@ Battle = {
 			}, damage.cause, poke);
 		}
 	},
-	heal : function (poke, amount) {
+	heal : function (poke, amount, cause) {
 		if (amount < 0)
 			return;
 		amount = Math.ceil(amount);
-		if (Battle.hasEffectOnSide(Moves.HealBlock, (poke.side === Battles.side.near ? Battle.effects.near : Battle.effects.far))) {
+		if (Battle.triggerEvent(Events.health, {
+			change : amount
+		}, cause, poke).contains(true))
+			return;
+		/*if (Battle.hasEffectOnSide(Moves.HealBlock, (poke.side === Battles.side.near ? Battle.effects.near : Battle.effects.far))) {
 			Textbox.state("The " + Moves.HealBlock.name + " prevents healing!");
 			return;
-		}
+		}*/
 		poke.health = Math.min(poke.stats[Stats.health](), poke.health + amount);
 		if (poke.battler.battling) {
 			var display = Display.state.save();
@@ -1064,8 +1068,8 @@ Battle = {
 		} else
 			Textbox.state(amount + " health was restored to " + poke.name() + ", bringing it up to " + poke.health + " HP.");
 	},
-	healPercentage : function (poke, percentage) {
-		Battle.heal(poke, poke.stats[Stats.health]() * percentage);
+	healPercentage : function (poke, percentage, cause) {
+		Battle.heal(poke, poke.stats[Stats.health]() * percentage, cause);
 	},
 	escapeAttempts : 0,
 	escape : function () {
@@ -1276,6 +1280,12 @@ Battle = {
 		var responses = [];
 		foreach(subjects, function (poke) {
 			responses = responses.concat(poke.respondToEvent(event, data, cause));
+			data.oneself = (cause === poke);
+			foreach((poke.battler.side === Battles.side.near ? Battle.effects.near : Battle.effects.far), function (effect) {
+				if (effect.type.effects.event === event)
+					if (!effect.type.effects.hasOwnProperty("oneself") || effect.type.effects.oneself === data.oneself)
+						responses.push(effect.type.effects.action(data, poke));
+			});
 		});
 		return responses;
 	},
@@ -1343,7 +1353,10 @@ Battle = {
 				return true;
 			}
 		}))
-			effectSide.push({type : effect, expiration : Battle.turns + duration});
+			effectSide.push({
+				type : effect,
+				expiration : Battle.turns + duration
+			});
 	},
 	moveHaveEffect : function (move, when, target, data, repeating) {
 		if (!repeating)
@@ -1369,6 +1382,7 @@ Battle = {
 		});
 	},
 	hasEffectOnSide : function (effect, side) {
+		side = (side === Battles.side.near ? Battle.effects.near : Battle.effects.far);
 		return foreach(side, function (which) {
 			if (which.type === effect)
 				return true;

@@ -379,8 +379,7 @@ Moves = {
 		effect : {
 			use : [
 				function (self) {
-					Textbox.state(self.name() + " recovered some of its health due to " + Moves.Synthesis.name + ".");
-					Battle.healPercentage(self, (Battle.weather === Weathers.clear ? 0.5 : Battle.weather === Weathers.intenseSunlight ? 2 / 3 : 0.25));
+					Battle.healPercentage(self, (Battle.weather === Weathers.clear ? 0.5 : Battle.weather === Weathers.intenseSunlight ? 2 / 3 : 0.25), self);
 				}
 			]
 		}
@@ -539,12 +538,31 @@ Moves = {
 		affects : Move.targets.opponents,
 		targets : Move.targets.opponents,
 		effect : {
+			constant : function (self, target) {
+				if (!Battle.hasEffectOnSide(Moves.HealBlock, target.battler.side)) {
+					Textbox.state(self.name() + " put a " + Moves.HealBlock.name + " into effect.");
+					Battle.bringIntoEffect(Moves.HealBlock, Battles.when.afterFiveTurns, target.battler.side);
+					return {};
+				} else {
+					return {
+						failed : true
+					};
+				}
+			},
 			use : [
 				function (self, target) {
-					Textbox.state(self.name() + " put a " + Moves.HealBlock.name + " into effect.");
-					Battle.bringIntoEffect(Moves.HealBlock, Battles.when.afterFiveTurns, self.side);
 				}
 			]
+		},
+		effects : {
+			event : Events.health,
+			oneself : true,
+			action : function (data, target) {
+				if (data.change > 0) {
+					Textbox.state("The " + Moves.HealBlock.name + " prevents healing!");
+					return true;
+				}
+			}
 		}
 	},
 	Absorb : {
@@ -564,7 +582,7 @@ Moves = {
 				function (self, target) {
 					var damage = Move.damage(self, target, Moves.Absorb);
 					Battle.damage(target, damage);
-					Battle.heal(self, damage.damage / 2);
+					Battle.heal(self, damage.damage / 2, self);
 				}
 			]
 		}
@@ -1058,7 +1076,7 @@ Moves = {
 			],
 			effect : function (poke) {
 				Textbox.state(poke.name() + " recovered some of " + poke.possessivePronoun() + " health through " + poke.possessivePronoun() + " ingrained roots!");
-				Battle.healPercentage(poke, 1 / 16);
+				Battle.healPercentage(poke, 1 / 16, poke);
 			}
 		}
 	},
