@@ -224,13 +224,6 @@ Battle = {
 			return Battle.allies;
 		return [];
 	},
-	isBattling : function (poke) {
-		return (foreach(Battle.all(), function (battler) {
-			if (battler === poke) {
-				return true;
-			}
-		}));
-	},
 	update : function () {
 		var self = Battle;
 		if (self.active && self.state < 1)
@@ -474,18 +467,27 @@ Battle = {
 						}
 						names = [];
 						positions = [];
-						var hotkeys = {};
+						var displayAll = [].concat(Display.state.current.allies, Display.state.current.opponents), hotkeys = {};
 						hotkeys[Game.key.secondary] = "Cancel";
 						foreach(targets, function (poke) {
 							names.push(poke.name());
 							positions.push(poke);
 						});
-						Textbox.ask("Which Pokémon do you want to use the " + Game.player.bag.items[secondary].item.fullname + " on?", names, function (response, i) {
+						Textbox.ask("On which Pokémon do you want to use the " + Game.player.bag.items[secondary].item.fullname + "?", names, function (response, i) {
 							if (response !== "Cancel")
 								Battle.input("Bag", secondary, positions[i]);
 							else
 								Battle.prompt();
-						}, ["Cancel"], null, hotkeys);
+						}, ["Cancel"], null, hotkeys, null, function (i, major) {
+							foreach(displayAll.filter(onlyPokemon), function (poke) {
+								poke.battler.display.outlined = false;
+							});
+							if (major) {
+								var poke = positions[i];
+								if (poke.inBattle())
+									Display.pokemonInState(poke).battler.display.outlined = true;
+							}
+						});
 						advance = false;
 						reprompt = false;
 					}
