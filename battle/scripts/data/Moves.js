@@ -167,25 +167,36 @@ Moves = {
 		effect : {
 			use : [
 				function (self, target) {
-					if (!target.trapped || target.ofType(Types.Ghost)) {
-						if (Battle.situation === Battles.situation.wild) {
-							Textbox.state(self.name() + " blew " + target.name() + " away!", function () { Battle.end(); });
-							Battle.finish();
+					if (!target.battler.trapped.contains(Moves.Ingrain)) {
+						if (self.level > target.level) {
+							if (Battle.situation === Battles.situation.wild) {
+								Textbox.state(self.name() + " blew " + target.name() + " away!", function () { Battle.end(); });
+								Battle.finish();
+							} else {
+								var others = target.trainer.healthyPokemon();
+								if (others.length > 1) {
+									foreach(others, function (poke, i, deletion) {
+										if (poke === target)
+											deletion.push(i);
+									});
+									Battle.swap(target, others[srandom.int(0, others.length - 1)], true);
+								} else
+									return {
+										failed : true
+									};
+							}
 						} else {
-							var others = target.trainer.healthyPokemon();
-							if (others.length > 1) {
-								foreach(others, function (poke, i, deletion) {
-									if (poke === target)
-										deletion.push(i);
-								});
-								Battle.swap(target, others[srandom.int(0, others.length - 1)], true);
-							} else
-								return {
-									failed : true
-								};
+							Textbox.state(target.name() + " is standing strong!");
+							return {
+								failed : true
+							};
 						}
-					} else
+					} else {
 						Textbox.state(target.name() + " is trapped in place and can't be blown away!");
+						return {
+							failed : true
+						};
+					}
 				}
 			]
 		}
@@ -207,7 +218,7 @@ Moves = {
 				function (self, target) {
 					Battle.damage(target, Move.damage(self, target, Moves.Wrap));
 					Textbox.state(target.name() + " was wrapped by " + self.name() + "!");
-					target.trapped = true;
+					target.battler.trapped.pushIfNotAlreadyContained(Moves.Wrap);
 					if (!Battle.moveHasEffect(Moves.Wrap, target)) {
 						var turns = srandom.int(2, 5);
 						for (var i = 0; i < turns; ++ i)
@@ -222,7 +233,7 @@ Moves = {
 					Battle.damage(target, Move.percentageDamage(target, 1 / 16));
 				} else {
 					Textbox.state(target.name() + " was freed from " + target.possessivePronoun() + " " + Moves.Wrap.name + ".");
-					target.trapped = false;
+					target.battler.trapped.removeElementsOfValue(Moves.Wrap);
 				}
 			}
 		},
@@ -1065,7 +1076,7 @@ Moves = {
 					if (!Battle.moveHasEffect(Moves.Ingrain, self)) {
 						Textbox.state(self.name() + " rooted " + self.selfPronoun() + " firmly.");
 						self.battler.grounded = true;
-						self.battler.trapped = true;
+						self.battler.trapped.pushIfNotAlreadyContained(Moves.Ingrain);
 						Battle.moveHaveRepeatingEffect(Moves.Ingrain, Battles.when.endOfThisTurn, self);
 					} else
 						return {

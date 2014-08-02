@@ -502,7 +502,7 @@ Battle = {
 				}
 				break;
 			case "Pokémon":
-				if (currentBattler.battler.trapped && !currentBattler.ofType(Types.Ghost)) {
+				if (currentBattler.battler.isTrapped()) {
 					Textbox.state(currentBattler.name() + " is trapped and cannot switch out!");
 					advance = false;
 				} else if (arguments.length === 1) {
@@ -534,7 +534,7 @@ Battle = {
 					} else if (Game.player.party.pokemon[secondary].health === 0) {
 						Textbox.state("That Pokémon has fainted — you can't use that one!");
 						advance = false;
-					} else if (currentBattler.trapped && !currentBattler.ofType(Types.ghost)) {
+					} else if (currentBattler.battler.isTrapped()) {
 						Textbox.state(currentBattler.name + " is trapped and can't switch out!");
 						advance = false;
 					} else if (!foreach(Game.player.battlers(), function (battler) {
@@ -579,9 +579,8 @@ Battle = {
 				if (trainer.isAnNPC())
 					Battle.AI.action(trainer);
 			});
-			Battle.progress();
-		}
-		else
+			Battle.processTurn();
+		} else
 			Battle.prompt();
 	},
 	changeWeather : function (weather) {
@@ -767,7 +766,7 @@ Battle = {
 				Battle.input(response);
 		}, actions, null, hotkeys, "Action: " + currentBattler.unique);
 	},
-	progress : function () {
+	processTurn : function () {
 		Battle.selection = 0;
 		var display = Display.state.save();
 		Textbox.effect(function () { Display.state.load(display); });
@@ -793,6 +792,7 @@ Battle = {
 		Battle.race(Battle.queue);
 		Battle.queue = [];
 		Battle.endTurn();
+		Battle.startTurn();
 	},
 	startTurn : function () {
 		Battle.queue = [];
@@ -1000,8 +1000,6 @@ Battle = {
 			}
 		} else
 			progress = true;
-		if (progress)
-			Battle.startTurn();
 	},
 	damage : function (poke, damage, displayMessages) {
 		var amount = damage.damage;
@@ -1088,7 +1086,7 @@ Battle = {
 			Textbox.state("You can't run from a trainer battle!");
 			return true;
 		}
-		if (currentBattler.battler.trapped && !currentBattler.ofType(Types.Ghost)) {
+		if (currentBattler.battler.isTrapped()) {
 			Battle.queue.push({
 				priority : 6, action : function () {
 					Textbox.state(currentBattler.name() + " is trapped and can't escape!");

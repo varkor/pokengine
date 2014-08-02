@@ -156,6 +156,11 @@ Array.prototype.remove = function (index, number) {
 	this.splice(index, number);
 };
 
+Array.prototype.removeElementsOfValue = function (element) {
+	while (this.contains(element))
+		this.remove(this.indexOf(element));
+};
+
 Array.prototype.choose = function () {
 	return this[randomInt(this.length - 1)];
 };

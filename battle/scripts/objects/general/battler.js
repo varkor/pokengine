@@ -43,7 +43,7 @@ function battler (pokemon) {
 		self.substitute = 0;
 		self.grounded = false; // Whether Flying-type Pokémon have been grounded by a move
 		self.invulnerable = null;
-		self.trapped = false; // Whether the Pokémon is prevented from escaping
+		self.trapped = []; // By what moves or abilities the Pokémon is trapped
 		self.disobeying = false; // Whether the Pokémon is about to disobey their trainer
 		self.damaged = [];
 		self.damaged[Move.category.physical] = 0;
@@ -67,4 +67,8 @@ function battler (pokemon) {
 		});
 	};
 	self.reset();
+
+	self.isTrapped = function () {
+		return self.trapped.notEmpty() && !self.pokemon.ofType(Types.Ghost);
+	};
 }
