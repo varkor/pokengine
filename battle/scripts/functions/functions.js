@@ -101,6 +101,14 @@ function wrapArray (wrap) {
 	return Array.isArray(wrap) ? wrap : [wrap];
 }
 
+function sum (array) {
+	var result = 1;
+	foreach(array, function (number) {
+		result += number;
+	});
+	return result;
+}
+
 function product (array) {
 	var result = 1;
 	foreach(array, function (number) {

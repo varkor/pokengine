@@ -136,6 +136,10 @@ function pokemon (species) {
 		return self.stats[Stats.health]();
 	};
 
+	self.totalEVs = function () {
+		return sum(self.EVs);
+	};
+
 	self.gainExperience = function (defeated, sharedBetween) {
 		if (self.trainer === null || self.trainer.isAnNPC())
 			return;
@@ -144,7 +148,7 @@ function pokemon (species) {
 		var gain = Math.floor((((Battle.situation === Battles.situation.trainer ? 1.5 : 1) * defeated.species.yield.experience * defeated.level) / (5 * (participated ? 1 : 2)) * Math.pow((2 * defeated.level + 10) / (defeated.level + self.level + 10), 2.5) + 1) * (self.trainer === self.originalTrainer ? 1 : self.trainer.nationality === self.nationality ? 1.5 : 1.7) * eventModifiers / sharedBetween);
 		if (Battle.active)
 			Textbox.state(self.name() + " gained " + gain + " experience!");
-		while (self.experience + gain >= self.experienceFromLevelToNextLevel()) {
+		while (self.level < 100 && self.experience + gain >= self.experienceFromLevelToNextLevel()) {
 			gain -= self.experienceFromLevelToNextLevel() - self.experience;
 			self.experience = self.experienceFromLevelToNextLevel();
 			var display = Display.state.save();
@@ -177,7 +181,15 @@ function pokemon (species) {
 				}
 			});*/
 		}
-		self.experience = gain;
+		if (self.level < 100)
+			self.experience = gain;
+		var maximumEVgain = 510 - self.totalEVs(), maximumEVgainForStat;
+		for (var i = Stats.health; i <= Stats.speed; ++ i) {
+			maximumEVgainForStat = Math.min(maximumEVgain, defeated.species.yield.EVs[i]);
+			maximumEVgainForStat = Math.min(maximumEVgainForStat, 252 - maximumEVgainForStat);
+			maximumEVgain -= maximumEVgainForStat;
+			self.EVs[i] += maximumEVgainForStat;
+		}
 		if (Battle.active) {
 			var display = Display.state.save();
 			Textbox.effect(function () { return Display.state.transition(display); });

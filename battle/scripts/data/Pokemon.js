@@ -89,4 +89,9 @@ forevery(Pokemon, function (poke) {
 		poke.stats[Stats.specialDefence] = 100;
 		poke.stats[Stats.speed] = 100;
 	}
+	if (!poke.yield.hasOwnProperty("EVs")) {
+		poke.yield.EVs = [0, 0, 0, 0, 0, 0];
+		poke.yield.EVs[Stats.health] = 1;
+		poke.yield.EVs[Stats.speed] = 2;
+	}
 });
