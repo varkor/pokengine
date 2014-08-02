@@ -222,7 +222,7 @@ Moves = {
 					Battle.damage(target, Move.percentageDamage(target, 1 / 16));
 				} else {
 					Textbox.state(target.name() + " was freed from " + target.possessivePronoun() + " " + Moves.Wrap.name + ".");
-					target.trapped = false; //? What if they use Ingrain with Wrap?
+					target.trapped = false;
 				}
 			}
 		},
@@ -514,7 +514,7 @@ Moves = {
 						};
 					else {
 						self.forget(self.battler.previousMoves.last().move);
-						if (!self.learn(target.battler.previousMoves.last().move)) { //? Not the best way to go about it.
+						if (!self.learn(target.battler.previousMoves.last().move)) {
 							self.learn(Moves.Sketch);
 							return {
 								failed : true
@@ -542,7 +542,6 @@ Moves = {
 				if (!Battle.hasEffectOnSide(Moves.HealBlock, target.battler.side)) {
 					Textbox.state(self.name() + " put a " + Moves.HealBlock.name + " into effect.");
 					Battle.bringIntoEffect(Moves.HealBlock, Battles.when.afterFiveTurns, target.battler.side);
-					return {};
 				} else {
 					return {
 						failed : true
@@ -1080,7 +1079,7 @@ Moves = {
 			}
 		}
 	},
-	Curse : { //? Doesn't work properly for different typings
+	Curse : {
 		name : "Curse",
 		status : Development.incomplete,
 		description : "",

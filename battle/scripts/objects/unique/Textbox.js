@@ -3,7 +3,9 @@ Textbox = {
 	slide : 0,
 	displayed : "",
 	dialogue : [],
-	response : null,
+	response : null, // The selected option when a question is asked
+	hoverResponse : null, // Which response the cursor is hovering over
+	responsePosition : { x : 0, y : 0 }, // Used to allow for much more natural keyboard input
 	finished : null,
 	standardInterval : "manual" || 0 * 0.8 * Time.seconds,
 	pausing : false,
@@ -13,13 +15,14 @@ Textbox = {
 	height : 80,
 	lines : 2,
 	spacing : 0.5,
-	colour : "white",
+	colour : "white", // The default text colour
 	messages : 0,
+	namedDialogue : {}, // Allows the textbox to remember the user's last response to dialogue like "Fight, Run, Bag, etc."
 	currentIndex : function () {
 		var self = Textbox;
 		return self.dialogue.last().id;
 	},
-	say : function (text, progress, trigger, pause, after, now, index) {
+	say : function (text, progress, trigger, pause, after, index) {
 		/*
 			text : The text to display,
 			progress : How long to wait after displaying all the text before continuing ("manual" will require input from the user),
@@ -57,11 +60,7 @@ Textbox = {
 			after : after
 		};
 		self.active = true;
-		if (!now) {
-			self.dialogue.push(message);
-		} else {
-			self.dialogue.insert(1, [message]);
-		}
+		self.dialogue.push(message);
 		return message.id;
 	},
 	insertAfter : function (id, position) {
@@ -69,9 +68,9 @@ Textbox = {
 		if (position !== null) {
 			self.remove(id);
 			self.dialogue.insert(position + 1, message);
-			return true;
+			return id;
 		} else
-			return false;
+			return null;
 	},
 	messageWithId : function (id) {
 		var self = Textbox, found = null;
@@ -93,31 +92,65 @@ Textbox = {
 		});
 		return found;
 	},
-	state : function (text, trigger, pause, after, now) {
+	state : function (text, trigger, pause, after) {
 		var self = Textbox;
-		return self.say(text, self.standardInterval, trigger, pause, after, now);
-	},
-	stateNow : function (text, trigger, pause, after) {
-		var self = Textbox;
-		return self.state(text, trigger, pause, after, true);
+		return self.say(text, self.standardInterval, trigger, pause, after);
 	},
 	effect : function (trigger, pause, after) {
 		var self = Textbox;
 		return self.say(null, self.standardInterval, trigger, pause, after);
 	},
-	ask : function (query, responses, callback, minors, hover, now) {
+	ask : function (query, responses, callback, minors, defaultResponse, hotkeys, name, hover) {
 		var self = Textbox, latest;
-		latest = self.messageWithId(self.say(query, null, null, null, null, now));
+		latest = self.messageWithId(self.say(query));
 		latest.responses = responses.concat(minors || []);
 		latest.callback = callback;
 		latest.minorResponses = responses.length;
-		if (arguments.length >= 5 && typeof hover !== "undefined" && hover !== null)
+		if (arguments.length >= 5 && defaultResponse !== null && typeof defaultResponse !== "undefined") {
+			if (typeof defaultResponse === "number")
+				latest.defaultResponse = Math.clamp(0, defaultResponse, latest.responses.length - 1);
+			else if (latest.responses.contains(defaultResponse))
+				latest.defaultResponse = latest.responses.indexOf(defaultResponse);
+			else
+				latest.defaultResponse = null;
+		} else
+			latest.defaultResponse = null;
+		if (arguments.length >= 6 && hotkeys !== null && typeof hotkeys !== "undefined") {
+			forevery(hotkeys, function (response, key, deletion) {
+				if (typeof response === "number") {
+					if (response < 0 || response >= latest.responses.length)
+						deletion.push(key);
+				} else {
+					if (latest.responses.contains(response))
+						hotkeys[key] = latest.responses.indexOf(response);
+					else
+						deletion.push(key);
+				}
+			});
+			latest.hotkeys = hotkeys;
+		} else
+			latest.hotkeys = {};
+		if (arguments.length >= 7 && name !== null && typeof name !== "undefined") {
+			if (self.namedDialogue.hasOwnProperty(name)) {
+				if (latest.defaultResponse === null) {
+					latest.defaultResponse = self.namedDialogue[name];
+					latest.defaultResponse = Math.clamp(0, latest.defaultResponse, latest.responses.length - 1);
+				}
+			} else {
+				self.namedDialogue[name] = null;
+			}
+			latest.name = name;
+		}
+		if (arguments.length >= 8 && hover !== null && typeof hover !== "undefined")
 			latest.hover = hover;
-		return latest;
+		if (self.dialogue.length === 1)
+			self.selectDefaultResponse();
+		return latest.id;
 	},
-	askNow : function (query, responses, callback, minors, hover) {
-		var self = Textbox;
-		return self.ask(query, responses, callback, minors, hover, true);
+	confirm : function (query, callback, minors, defaultResponse, name, hover) {
+		var hotkeys = {};
+		hotkeys[Game.key.secondary] = "No";
+		return Textbox.ask(query, ["No", "Yes"], callback, minors, defaultResponse, hotkeys, name, hover);
 	},
 	remove : function (id) {
 		var self = Textbox, found = self.messageIndexForId(id);
@@ -164,9 +197,13 @@ Textbox = {
 			return;
 		if (self.dialogue[0].text === null || self.displayed.length === self.dialogue[0].text.length) {
 			if (self.dialogue[0].responses.length && !automatic) {
-				if (self.response !== null) {
-					Game.canvas.element.className = "centre";
-					self.dialogue[0].callback(self.dialogue[0].responses[self.response], self.response, self.response < self.dialogue[0].minorResponses);
+				var response;
+				if (self.hoverResponse !== null || (Game.control.current === Game.control.schemes.keyboard && self.response !== null)) {
+					response = (self.hoverResponse !== null ? self.hoverResponse : self.response);
+					Game.canvas.element.className = "centre"; // Remove the mouse hover CSS class
+					if (self.dialogue[0].hasOwnProperty("name"))
+						self.namedDialogue[self.dialogue[0].name] = response;
+					self.dialogue[0].callback(self.dialogue[0].responses[response], response, response < self.dialogue[0].minorResponses);
 				} else
 					return;
 			}
@@ -183,8 +220,55 @@ Textbox = {
 			}
 			self.dialogue.shift();
 			self.displayed = "";
+			self.selectDefaultResponse();
 		} else
 			self.displayed = self.dialogue[0].text;
+	},
+	selectDefaultResponse : function () {
+		var self = Textbox;
+		if (self.dialogue.notEmpty() && self.dialogue[0].responses.length)
+			self.selectResponse(self.dialogue[0].defaultResponse !== null ? self.dialogue[0].defaultResponse : 0);
+	},
+	selectResponse : function (response) {
+		var self = Textbox;
+		self.response = response;
+		var selectedMajor = (self.response < self.dialogue[0].minorResponses), majorResponses = self.dialogue[0].minorResponses, minorResponses = self.dialogue[0].responses.length - self.dialogue[0].minorResponses;
+		self.responsePosition = (self.response === null ? { x : null, y : null} : { x : (selectedMajor ? (self.response + 0.5) / majorResponses : (self.response - majorResponses + 0.5) / minorResponses), y : (selectedMajor ? 0 : 1) });
+	},
+	selectAdjacent : function (direction) {
+		var self = Textbox;
+		if (self.dialogue.length && self.dialogue[0].responses.length) {
+			if (self.response === null)
+				self.response = 0;
+			else {
+				var selectedMajor = (self.response < self.dialogue[0].minorResponses), majorResponses = self.dialogue[0].minorResponses, minorResponses = self.dialogue[0].responses.length - self.dialogue[0].minorResponses;
+				switch (direction) {
+					case Directions.up:
+						self.responsePosition.y = 0;
+						break;
+					case Directions.down:
+						if (minorResponses > 0)
+							self.responsePosition.y = 1;
+						break;
+					case Directions.right:
+						self.responsePosition.x += 1 / (selectedMajor ? majorResponses : minorResponses);
+						self.responsePosition.x = Math.mod(self.responsePosition.x, 1);
+						break;
+					case Directions.left:
+						self.responsePosition.x -= 1 / (selectedMajor ? majorResponses : minorResponses);
+						self.responsePosition.x = Math.mod(self.responsePosition.x, 1);
+					break;
+				}
+				self.response = (self.responsePosition.y === 0 ? roundTo(self.responsePosition.x - 0.5 / majorResponses, 1 / majorResponses) * majorResponses : majorResponses + roundTo(self.responsePosition.x - 0.5 / minorResponses, 1 / minorResponses) * minorResponses);
+			}
+		}
+	},
+	key : function (keys) {
+		var self = Textbox;
+		if (self.dialogue.length && self.dialogue[0].responses.length) {
+			if (self.dialogue[0].hotkeys.hasOwnProperty(keys))
+				self.selectResponse(self.dialogue[0].hotkeys[keys]);
+		}
 	},
 	update : function () {
 		var self = Textbox;
@@ -216,7 +300,7 @@ Textbox = {
 		}
 	},
 	clear : function () {
-		return (Textbox.dialogue.length  === 0);
+		return (Textbox.dialogue.length === 0);
 	},
 	lineHeight : function () {
 		var self = Textbox;
@@ -249,29 +333,28 @@ Textbox = {
 			letters += lines[line].length;
 		}
 		if (!self.pausing && self.dialogue.length /*&& self.displayed === self.dialogue[0].text*/ && self.dialogue[0].responses.length) {
-			var widthMajor = Game.canvas.element.width / self.dialogue[0].minorResponses, minors = self.dialogue[0].responses.length - self.dialogue[0].minorResponses > 0, widthMinor;
+			var widthMajor = Game.canvas.element.width / self.dialogue[0].minorResponses, minors = (self.dialogue[0].responses.length - self.dialogue[0].minorResponses) > 0, widthMinor;
 			if (minors)
 				widthMinor = Game.canvas.element.width / (self.dialogue[0].responses.length - self.dialogue[0].minorResponses);
 			context.textAlign = "center";
 			context.textBaseline = "middle";
-			self.response = null;
+			self.hoverResponse = null;
 			Game.canvas.element.className = "centre";
-			var hovered = false;
+			var hovered = Game.cursor.inArea(0, Game.canvas.element.height - fullHeight - Math.round(self.lineHeight() + self.padding * 2), Game.canvas.element.width, Math.round(self.lineHeight() + self.padding * 2));
 			for (var response = 0, major, hover, width, height, x, fontSize; response < self.dialogue[0].responses.length; ++ response) {
 				major = (response < self.dialogue[0].minorResponses);
 				width = Math.ceil(major ? widthMajor : widthMinor);
-				height = Math.ceil(major ? (self.lineHeight() + self.padding * 2) * (minors ? 2 / 3 : 1) : (self.lineHeight() + self.padding * 2) / 3);
+				height = Math.round(major ? (self.lineHeight() + self.padding * 2) * (minors ? 2 / 3 : 1) : (self.lineHeight() + self.padding * 2) / 3);
 				x = Math.ceil(major ? response * width : (response - self.dialogue[0].minorResponses) * width);
-				y = Math.floor(Game.canvas.element.height - fullHeight - height - (major && minors ? (self.lineHeight() + self.padding * 2) / 3 : 0));
+				y = Math.round(Game.canvas.element.height - fullHeight - height - (major && minors ? (self.lineHeight() + self.padding * 2) / 3 : 0));
 				fontSize = Math.ceil(self.lineHeight() / (major ? 1 : 1.5));
 				do {
 					context.font = "lighter " + fontSize + "px Helvetica Neue";
 					fontSize -= 4;
 				} while (context.measureText(self.dialogue[0].responses[response]).width > width);
-				hover = Game.cursor.inArea(x, y, width, height);
+				hover = Game.cursor.inArea(x, y, width, height) || self.hoverResponse === response || (Game.control.current === Game.control.schemes.keyboard && !hovered && self.response === response);
 				if (hover) {
-					hovered = true;
-					self.response = response;
+					self.hoverResponse = response;
 					if (self.dialogue[0].hasOwnProperty("hover"))
 						self.dialogue[0].hover(response, response < self.dialogue[0].minorResponses);
 					Game.canvas.element.className = "centre hover";
@@ -284,6 +367,10 @@ Textbox = {
 			if (!hovered) {
 				if (self.dialogue[0].hasOwnProperty("hover"))
 					self.dialogue[0].hover(null, null);
+			}
+			if (Game.debug) {
+				context.fillStyle = "red";
+				context.fillCircle(self.responsePosition.x * Game.canvas.element.width, Math.floor(Game.canvas.element.height - fullHeight - height - ((self.responsePosition.y === 0) && minors ? (self.lineHeight() + self.padding * 2) / 3 : 0)), 4);
 			}
 		}
 	}

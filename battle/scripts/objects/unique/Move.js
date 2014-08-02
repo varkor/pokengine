@@ -72,7 +72,7 @@ Move = {
 		//
 		if (move.effect.hasOwnProperty("constant"))
 			constant = move.effect.constant(mover, targetPokemon);
-		if (!constant.hasOwnProperty("failed") || !constant.failed) {
+		if (typeof constant === "undefined" || !constant.hasOwnProperty("failed") || !constant.failed) {
 			if (affected.notEmpty()) {
 				foreach(affected, function (targeted) {
 					var failed = false, accuracy, evasion;

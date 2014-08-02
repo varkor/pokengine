@@ -3,6 +3,7 @@ function pokemon (species) {
 
 	self.species = species;
 	self.nickname = null;
+	self.unique = Game.unique();
 	self.name = function () {
 		return (self.egg === 0 ? (self.nickname || (self.battler.transform.transformed ? self.battler.transform.species.name : self.species.name)) : "Egg");
 	};
@@ -77,36 +78,45 @@ function pokemon (species) {
 				PP : move.PP,
 				maximumPP : move.PP
 			});
-		}
-		else {
+		} else {
 			if (initial) {
 				self.moves[0] = {move : move, PP : move.PP, maximumPP : move.PP};
 			} else {
+				var resumeNormalProceedings;
+				if (Battle.active) {
+					resumeNormalProceedings = function () {
+						Battle.delayForInput = false;
+						Battle.prompt();
+					};
+					Battle.delayForInput = true;
+				} else {
+					resumeNormalProceedings = function () {};
+				}
 				Textbox.state(self.name() + " wants to learn " + move.name + ". But " + self.name() + " already knows 4 moves!");
-				Textbox.ask("Do you want " + self.name() + " to forget a move to make room for " + move.name + "?", ["No", "Yes"], function (response) {
-					var learntNew = false;
+				var immediatelyProceeding = Textbox.confirm("Do you want " + self.name() + " to forget a move to make room for " + move.name + "?", function (response) {
 					if (response === "Yes") {
-						learntNew = true;
-						var moves = [];
+						var moves = [], hotkeys = {};
+						hotkeys[Game.key.secondary] = "Never mind";
 						foreach(self.moves, function (move) {
 							moves.push(move.move.name);
 						});
-						Textbox.askNow("Which move do you want " + self.name() + " to forget?", moves, function (response, i, major) {
+						immediatelyProceeding = Textbox.insertAfter(Textbox.ask("Which move do you want " + self.name() + " to forget?", moves, function (response, i, major) {
 							if (major) {
-							Textbox.stateNow(self.name() + " forgot " + self.moves[i].move.name + " and learnt " + move.name + "!");
-							self.moves[i] = {move : move, PP : move.PP, maximumPP : move.PP};
+								Textbox.insertAfter(Textbox.state(self.name() + " forgot " + self.moves[i].move.name + " and learnt " + move.name + "!", resumeNormalProceedings), immediatelyProceeding);
+								self.moves[i] = {
+									move : move,
+									number : i,
+									PP : move.PP,
+									maximumPP : move.PP
+								};
 							} else
-								learntNew = false;
-						}, ["Actually, never mind."]);
-					}
-					if (!learntNew) {
-						Textbox.stateNow(self.name() + " didn't learn " + move.name + ".");
-						return false;
-					}
+								Textbox.insertAfter(Textbox.state(self.name() + " didn't learn " + move.name + ".", resumeNormalProceedings), immediatelyProceeding);
+						}, ["Never mind"], null, hotkeys), immediatelyProceeding);
+					} else
+						Textbox.insertAfter(Textbox.state(self.name() + " didn't learn " + move.name + ".", resumeNormalProceedings), immediatelyProceeding);
 				});
 			}
 		}
-		return true;
 	};
 
 	self.forget = function (move, initial) {
@@ -126,11 +136,12 @@ function pokemon (species) {
 		return self.stats[Stats.health]();
 	};
 
-	self.gainExperience = function (defeated) {
+	self.gainExperience = function (defeated, sharedBetween) {
 		if (self.trainer === null || self.trainer.isAnNPC())
 			return;
+		sharedBetween = sharedBetween || 1;
 		var participated = true, eventModifiers = product(Battle.triggerEvent(Events.experience, {}, defeated, self));
-		var gain = Math.floor((((Battle.situation === Battles.situation.trainer ? 1.5 : 1) * defeated.species.yield.experience * defeated.level) / (5 * (participated ? 1 : 2)) * Math.pow((2 * defeated.level + 10) / (defeated.level + self.level + 10), 2.5) + 1) * (self.trainer === self.originalTrainer ? 1 : self.trainer.nationality === self.nationality ? 1.5 : 1.7) * eventModifiers);
+		var gain = Math.floor((((Battle.situation === Battles.situation.trainer ? 1.5 : 1) * defeated.species.yield.experience * defeated.level) / (5 * (participated ? 1 : 2)) * Math.pow((2 * defeated.level + 10) / (defeated.level + self.level + 10), 2.5) + 1) * (self.trainer === self.originalTrainer ? 1 : self.trainer.nationality === self.nationality ? 1.5 : 1.7) * eventModifiers / sharedBetween);
 		if (Battle.active)
 			Textbox.state(self.name() + " gained " + gain + " experience!");
 		while (self.experience + gain >= self.experienceFromLevelToNextLevel()) {
@@ -149,8 +160,7 @@ function pokemon (species) {
 					self.learn(move);
 				});
 			}
-			//? What about EVs?
-			//? Cycle through all the available evolutions
+			// Cycle through all the available evolutions
 			/*
 			foreach(self.species.evolution, function (evo) {
 				// Cycle through all the conditions for evolutions, e.g. levelling up and/while having a high friendship
@@ -178,7 +188,7 @@ function pokemon (species) {
 		var previousMaximumHealth = self.stats[Stats.health]();
 		++ self.level;
 		self.health = Math.min(self.stats[Stats.health](), self.health + self.stats[Stats.health]() - previousMaximumHealth);
-		//? Add 1 additional friendship if friendship is increased in the location of its capture
+		// Add 1 additional friendship if friendship is increased in the location of its capture
 		self.friendship += (self.friendship < 100 ? 5 : self.friendship < 200 ? 3 : self.friendship < 256 ? 2 : 0) + (self.pokeball === Pokeballs.Luxury ? 1 : 0);
 		self.friendship = Math.min(self.friendship, 255);
 	};

@@ -254,6 +254,13 @@ Battles = {
 	}
 };
 
+Directions = {
+	up : q = 0,
+	right : ++ q,
+	down : ++ q,
+	left : ++ q
+};
+
 NoPokemon = {};
 
 onlyPokemon = function (poke) {

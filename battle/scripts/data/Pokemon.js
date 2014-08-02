@@ -35,6 +35,7 @@ Pokemon = {
 			experience : 50
 		},
 		moveset : {
+			2 : [Moves.HyperBeam, Moves.SolarBeam],
 			3 : [Moves.Metronome]
 		},
 		friendship : 70,
@@ -78,13 +79,11 @@ forevery(Pokemon, function (poke) {
 	if (!poke.hasOwnProperty("stats")) {
 		poke.stats = [];
 		poke.stats[Stats.health] = 100;
-		if (false && poke.name === "Bulbasaur") {
+		poke.stats[Stats.attack] = 100;
+		poke.stats[Stats.specialAttack] = 100;
+		if (poke.name === "Ivysaur") {
 			poke.stats[Stats.attack] = 10000;
 			poke.stats[Stats.specialAttack] = 10000;
-		}
-		else {
-			poke.stats[Stats.attack] = 100;
-			poke.stats[Stats.specialAttack] = 100;
 		}
 		poke.stats[Stats.defence] = 100;
 		poke.stats[Stats.specialDefence] = 100;

@@ -15,6 +15,7 @@ Battle = {
 	weather : null,
 	turns : 0,
 	selection : 0,
+	delayForInput : false, // Delay asking the player what they'd like to do until a potentially breaking change has been made (such as learning a new move, which needs to wait, so that the new move will show up in the Pokémon's move list)
 	queue : [],
 	actions : [],
 	scene : "clearing",
@@ -167,9 +168,9 @@ Battle = {
 		context.strokeWidth = 2;
 		context.strokeStyle = "white";
 		var shadowOpacity = Lighting.shadows.opacity(), shadowMatrix = new Matrix ([1, 0.1, -0.6, 0.4, 0, 0]), matrix = new Matrix(), position, transition, side;
-		var sortDisplay = Display.states[Display.state.save(Display.state.current)];
+		var sortDisplay = Display.states[Display.state.save(Display.state.current)], poke;
 		var all = [].concat(sortDisplay.allies, sortDisplay.opponents.reverse()).filter(onlyPokemon).sort(function (a, b) {
-			return (b.battler.display.position.z - a.battler.display.position.z);
+			return Battle.draw.position(Display.pokemonInState(b)).z - Battle.draw.position(Display.pokemonInState(a)).z;
 		});
 		foreach(all, function (poke) {
 			poke = Display.pokemonInState(poke);
@@ -268,7 +269,7 @@ Battle = {
 				Battle.queue.push({
 					poke : newPoke,
 					doesNotRequirePokemonToBeBattling : true,
-					priority : 1 - (1 / (alliedTrainers.length + 1)) * (i + 1),
+					priority : 1 - (1 / (alliedTrainers.length + 3)) * (i + 1),
 					action : function (which) {return function () {
 						Battle.enter(which, true);
 					}; }(newPoke)});
@@ -407,13 +408,14 @@ Battle = {
 					if (Battle.style !== Battles.style.normal || targets.length > 1) {
 						targets.reverse();
 						targetNames.reverse();
-						var displayAll = [].concat(Display.state.current.allies, Display.state.current.opponents);
+						var displayAll = [].concat(Display.state.current.allies, Display.state.current.opponents), hotkeys = {};
+						hotkeys[Game.key.secondary] = "Cancel";
 						Textbox.ask("Whom do you want " + currentBattler.name() + " to attack?", targetNames, function (response, i, major) {
 							if (response !== "Cancel")
 								Battle.input("Fight", secondary, targets[i].target);
 							else
 								Battle.prompt();
-						}, ["Cancel"], function (i, major) {
+						}, ["Cancel"], null, hotkeys, "Target: " + currentBattler.unique, function (i, major) {
 							foreach(displayAll.filter(onlyPokemon), function (poke) {
 								poke.battler.display.outlined = false;
 							});
@@ -449,7 +451,8 @@ Battle = {
 						Textbox.state("You don't have any items.");
 						reprompt = true;
 					} else {
-						var items = [];
+						var items = [], hotkeys = {};
+						hotkeys[Game.key.secondary] = "Cancel";
 						foreach(Game.player.bag.items, function (item) {
 							if (item.item.direct) // If the item can be used directly, instead of when being held
 								items.push(item.item.fullname + " ×" + item.quantity);
@@ -459,7 +462,7 @@ Battle = {
 								Battle.input("Bag", i);
 							else
 								Battle.prompt();
-						}, ["Cancel"]);
+						}, ["Cancel"], null, hotkeys, "Item");
 					}
 				} else {
 					if (arguments.length === 2) {
@@ -471,6 +474,8 @@ Battle = {
 						}
 						names = [];
 						positions = [];
+						var hotkeys = {};
+						hotkeys[Game.key.secondary] = "Cancel";
 						foreach(targets, function (poke) {
 							names.push(poke.name());
 							positions.push(poke);
@@ -480,13 +485,14 @@ Battle = {
 								Battle.input("Bag", secondary, positions[i]);
 							else
 								Battle.prompt();
-						}, ["Cancel"]);
+						}, ["Cancel"], null, hotkeys);
 						advance = false;
 						reprompt = false;
 					}
 					if (typeof tertiary !== "undefined" && tertiary !== null) {
 						Battle.actions.push({
 							poke : tertiary,
+							doesNotRequirePokemonToBeBattling : true,
 							priority : 6,
 							action : function (poke) {
 								Game.player.bag.use(secondary, poke);
@@ -507,13 +513,15 @@ Battle = {
 						positions.push(Game.player.party.pokemon.indexOf(poke));
 					});
 					advance = false;
+					var hotkeys = {};
+					hotkeys[Game.key.secondary] = "Cancel";
 					if (names.length) {
 						Textbox.ask("Which Pokémon do you want to send out?", names, function (response, i) {
 							if (response !== "Cancel")
 								Battle.input("Pokémon", positions[i]);
 							else
 								Battle.prompt();
-						}, ["Cancel"]);
+						}, ["Cancel"], null, hotkeys);
 						reprompt = false;
 					} else {
 						Textbox.state("All your Pokémon are already battling!");
@@ -673,7 +681,6 @@ Battle = {
 	AI : {
 		action : function (trainer) {
 			// Decide whether to use a move, item, switch out, etc.
-			//? Does not handle using items, switching out, etc. yet
 			var group = (arguments.length < 1 ? Battle.opponents : trainer.battlers());
 			foreach(group, function (poke) {
 				var disobey = poke.disobey();
@@ -749,7 +756,8 @@ Battle = {
 			Textbox.effect(function () { Display.state.load(display); });
 			currentBattler.battler.display.outlined = false;
 		}
-		var actions = ["Pokémon", "Run", "Bag"];
+		var actions = ["Pokémon", "Run", "Bag"], hotkeys = {};
+		hotkeys[Game.key.secondary] = "Run";
 		if (Battle.style === Battles.style.double && Battle.selection > 0)
 			actions.insert(0, "Back");
 		Textbox.ask("What do you want " + currentBattler.name() + " to do?", moves, function (response, i, major) {
@@ -757,7 +765,7 @@ Battle = {
 				Battle.input("Fight", i);
 			} else
 				Battle.input(response);
-		}, actions);
+		}, actions, null, hotkeys, "Action: " + currentBattler.unique);
 	},
 	progress : function () {
 		Battle.selection = 0;
@@ -825,7 +833,8 @@ Battle = {
 				}
 			}
 		});
-		Battle.prompt();
+		if (!Battle.delayForInput)
+			Battle.prompt();
 	},
 	endTurn : function () {
 		if (!Battle.active || Battle.finished)
@@ -1089,7 +1098,7 @@ Battle = {
 				if (poke.stats[Stats.speed](true) > maxSpeed)
 					maxSpeed = poke.stats[Stats.speed](true);
 			});
-			var escapeChance = (currentBattler.stats[Stats.speed](true) * 32) / ((maxSpeed / 4) % 256) + 30 * (Battle.escapeAttempts ++); //? What is formula for opponents when there are more than one?
+			var escapeChance = (currentBattler.stats[Stats.speed](true) * 32) / ((maxSpeed / 4) % 256) + 30 * (Battle.escapeAttempts ++);
 			if (escapeChance > 255 || randomInt(255) < escapeChance) {
 				Battle.queue.push({priority : 6, action : function () { Textbox.state("You escaped successfully!", function () { Battle.end(); }); Battle.finish(); } });
 			} else
@@ -1167,7 +1176,7 @@ Battle = {
 		// Stops a Pokémon battling, either because they've fainted, or because they've been caught in a Poké ball
 		foreach(poke.battler.opponents, function (gainer) {
 			if (!gainer.fainted())
-				gainer.gainExperience(poke);
+				gainer.gainExperience(poke, poke.battler.opponents.length);
 		});
 		var place;
 		if (poke.battler.side === Battles.side.near) {
@@ -1196,7 +1205,7 @@ Battle = {
 	swap : function (out, replacement, forced) {
 		Battle.enter(replacement, false, Battle.withdraw(out, forced));
 	},
-	enter : function (poke, startOrEndOfTurn, place, immediately) {
+	enter : function (poke, startOrEndOfTurn, place) {
 		poke.battler.reset();
 		poke.battler.battling = true;
 		var ally = Battle.alliedTrainers.contains(poke.trainer);
@@ -1216,14 +1225,13 @@ Battle = {
 			poke.battler.display.transition = 0;
 			var displayInitial = Display.state.save();
 			poke.battler.display.transition = 1;
-			var display = Display.state.save(), state = (immediately ? Textbox.stateNow : Textbox.state);
-			state((Game.player === poke.trainer ? "You" : poke.trainer.name) + " sent out " + poke.name() + "!", function () { Display.state.load(displayInitial); return Display.state.transition(display); });
+			var display = Display.state.save();
+			Textbox.state((Game.player === poke.trainer ? "You" : poke.trainer.name) + " sent out " + poke.name() + "!", function () { Display.state.load(displayInitial); return Display.state.transition(display); });
 		}
 		foreach(Battle.opponentsTo(poke), function (opponent) {
 			poke.battler.opponents.pushIfNotAlreadyContained(opponent);
 			opponent.battler.opponents.pushIfNotAlreadyContained(poke);
 		});
-		//? Will this (hazard and ability) work with immediately?
 		foreach((poke.battler.side === Battles.side.near ? Battle.hazards.near : Battle.hazards.far), function (hazard) {
 			hazard.type.effect.hazard(poke, hazard.stack);
 		});

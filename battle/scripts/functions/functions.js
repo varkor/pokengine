@@ -13,10 +13,16 @@ function foreach (array, fn) {
 }
 
 function forevery (dictionary, fn) {
-	for (var key in dictionary)
-		if (fn(dictionary[key], key))
-			return true;
-	return false;
+	var deletion = [], broke = false;
+	for (var key in dictionary) {
+		if (fn(dictionary[key], key)) {
+			broke = true;
+			break;
+		}
+	}
+	for (var i = 0; i < deletion.length; ++ i)
+		delete dictionary[deletion[i]];
+	return broke;
 }
 
 function random (x, y) {
@@ -28,11 +34,15 @@ function random (x, y) {
 		return Math.min(x, y) + Math.random() * Math.abs(x - y);
 }
 
-function randomInt(x, y) {
+function randomInt (x, y) {
 	if (arguments.length === 1)
 		return Math.round(random(x));
 	else if (arguments.length === 2)
 		return Math.round(random(x, y));
+}
+
+function roundTo (x, y) {
+	return Math.round(x / y) * y;
 }
 
 function chance (x) {
@@ -76,7 +86,7 @@ Math.clamp = function (lowest, value, highest) {
 };
 
 Math.mod = function (x, y) {
-	return y !== 0 ? (x >= 0 ? x % y : y + (x % y)) : x;
+	return x >= 0 ? x % y : y + (x % y);
 };
 
 function commaSeparatedList (list, ampersand) {
@@ -257,16 +267,36 @@ function keyname (key) {
 			return "tab";
 		case 13:
 			return "return";
+		case 16:
+			return "shift";
+		case 17:
+			return "control";
+		case 18:
+			return "option";
+		case 20:
+			return "caps lock";
 		case 27:
 			return "escape";
 		case 32:
 			return "space";
+		case 37:
+			return "left";
+		case 38:
+			return "up";
+		case 39:
+			return "right";
+		case 40:
+			return "down";
 		case 67:
 			return "c";
 		case 83:
 			return "s";
 		case 86:
 			return "v";
+		case 88:
+			return "x";
+		case 90:
+			return "z";
 		default:
 			return "unknown";
 	}

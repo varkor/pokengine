@@ -1,4 +1,85 @@
 Game = {
+	debug : false,
+	control : {
+		schemes : {
+			mouse : q = 0,
+			keyboard : ++ q
+		},
+		current : null
+	},
+	key : {
+		primary : "space",
+		secondary : "z",
+		up : "up",
+		right : "right",
+		down : "down",
+		left : "left"
+	},
+	keys : {
+		held : {},
+		heldKeys : function () {
+			var held = [];
+			forevery(Game.keys.held, function (duration, key) {
+				held.push(key);
+			});
+			return held;
+		},
+		pressedKeys : function () {
+			var pressed = [];
+			forevery(Game.keys.held, function (duration, key) {
+				if (duration === 1)
+					pressed.push(key);
+			});
+			return pressed;
+		},
+		press : function (key) {
+			if (!Game.keys.held.hasOwnProperty(key))
+				Game.keys.held[key] = 1;
+			if (key !== "unknown") {
+				if (Game.control.current === Game.control.schemes.keyboard) {
+					if (Textbox.active) {
+						switch (key) {
+							case Game.key.primary:
+								Textbox.progress();
+								break;
+							case Game.key.up:
+								Textbox.selectAdjacent(Directions.up);
+								break;
+							case Game.key.right:
+								Textbox.selectAdjacent(Directions.right);
+								break;
+							case Game.key.down:
+								Textbox.selectAdjacent(Directions.down);
+								break;
+							case Game.key.left:
+								Textbox.selectAdjacent(Directions.left);
+								break;
+							default:
+								if (key !== "unknown") {
+									Game.control.current = Game.control.schemes.keyboard;
+									Textbox.key(Game.keys.combination(Game.keys.heldKeys()));
+								}
+								break;
+						}
+					}
+				}
+				Game.control.current = Game.control.schemes.keyboard;
+			}
+		},
+		release : function (key) {
+			delete Game.keys.held[key];
+		},
+		combination : function (keys) {
+			var combo = [];
+			if (arguments.length > 0 && Array.isArray(keys))
+				combo = keys;
+			else {
+				for (var i = 0; i < arguments.length; ++ i)
+					combo.push(arguments[i]);
+			}
+			return combo.sort().join(", ");
+		}
+	},
 	cursor : {
 		x : null,
 		y : null,
@@ -6,16 +87,39 @@ Game = {
 			return (Game.cursor.x >= x && Game.cursor.x < x + width && Game.cursor.y >= y && Game.cursor.y < y + height);
 		}
 	},
+	click : function () {
+		if (Textbox.active) {
+			Game.control.current = Game.control.schemes.mouse;
+			Textbox.progress();
+		}
+	},
+	initialise : function () {
+		Game.control.current = Game.control.schemes.keyboard;
+		window.addEventListener("keydown", function (event) {
+			Game.keys.press(keyname(event.keyCode));
+		});
+		window.addEventListener("keyup", function (event) {
+			Game.keys.release(keyname(event.keyCode));
+		});
+		window.addEventListener("mousedown", function (event) {
+			Game.click();
+		});
+		window.addEventListener("mousemove", function (event) {
+			Game.cursor.x = event.clientX - Game.canvas.element.offsetLeft + Game.canvas.element.width / 2;
+			Game.cursor.y = event.clientY - Game.canvas.element.offsetTop + Game.canvas.element.height / 2;
+		});
+	},
+	increment : 0,
+	unique : function () {
+		// Returns a unique id that can be used to identify different objects
+		return Game.increment ++;
+	},
 	canvas : {
 		element : null,
 		context : null,
 		temporary : [],
 		initialise : function () {
 			var self = Game.canvas.element = document.getElementById("battle");
-			window.addEventListener("mousemove", function (event) {
-				Game.cursor.x = event.clientX - Game.canvas.element.offsetLeft + Game.canvas.element.width / 2;
-				Game.cursor.y = event.clientY - Game.canvas.element.offsetTop + Game.canvas.element.height / 2;
-			});
 			Game.canvas.context = self.getContext("2d");
 			self.width = 356;
 			self.height = 292;
@@ -161,14 +265,6 @@ Game = {
 			}
 		}
 	},
-	keys : {
-		primary : "space"
-	},
-	key : function (key) {
-		if (Textbox.active)
-			if (key === Game.keys.primary)
-				Textbox.progress();
-	},
 	previousFrame : Time.now(),
 	fps : {
 		framerate : function () {
@@ -183,6 +279,9 @@ Game = {
 		context : null
 	},
 	update : function () {
+		forevery(Game.keys.held, function (duration, key) {
+			Game.keys.held[key] = duration + 1;
+		});
 		if (Battle.active)
 			Battle.update();
 		if (Textbox.active)
@@ -210,9 +309,4 @@ Game = {
 	player : null
 };
 
-window.addEventListener("keydown", function (event) {
-	Game.key(keyname(event.keyCode));
-});
-window.addEventListener("mousedown", function (event) {
-	Game.key("space");
-});
+Game.initialise();
