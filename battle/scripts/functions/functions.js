@@ -165,6 +165,10 @@ Array.prototype.choose = function () {
 	return this[randomInt(this.length - 1)];
 };
 
+Array.prototype.empty = function () {
+	return this.length === 0;
+};
+
 Array.prototype.notEmpty = function () {
 	return this.length > 0;
 };

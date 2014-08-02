@@ -35,7 +35,6 @@ Pokemon = {
 			experience : 50
 		},
 		moveset : {
-			2 : [Moves.HyperBeam, Moves.SolarBeam],
 			3 : [Moves.Metronome]
 		},
 		friendship : 70,

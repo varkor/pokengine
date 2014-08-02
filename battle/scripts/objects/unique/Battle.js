@@ -83,7 +83,7 @@ Battle = {
 						font : "lighter 12px Helvetica Neue"
 					}
 				]);
-			if (right)
+			if (right) {
 				shapes = shapes.concat([
 					{
 						points : [{x : 146, y : 16}, {x : 138, y : 24}, {x : 90}, {x : 82, y : 16}],
@@ -97,14 +97,17 @@ Battle = {
 						font : "lighter 10px Helvetica Neue"
 					},
 					{
-						points : [{x : 0, y : 18}, {x : 84}, {x : 90, y : 24}, {x : 0}],
+						points : [{x : 0, y : 18}, {x : 80}, {x : 86, y : 24}, {x : 0}],
 						colour : "hsla(0, 0%, 0%, 0.6)"
-					},
-					{
-						points : [{x : 0, y : 20}, {x : 86 - 88 * (1 - percentageExperience)}, {x : 88 - 88 * (1 - percentageExperience), y : 22}, {x : 0}],
-						colour : "hsl(190, 100%, 50%)"
 					}
-				])
+				]);
+				if (percentageExperience > 0) {
+					shapes = shapes.concat([{
+						points : [{x : 0, y : 20}, {x : 78 - 80 * (1 - percentageExperience)}, {x : 80 - 80 * (1 - percentageExperience), y : 22}, {x : 0}],
+						colour : "hsl(190, 100%, 50%)"
+					}]);
+				}
+			}
 			foreach(shapes, function (shape) {
 				if (shape.hasOwnProperty("points")) {
 					foreach(shape.points, function (point) {
@@ -122,7 +125,7 @@ Battle = {
 							current.x = point.x;
 						if (point.hasOwnProperty("y"))
 							current.y = point.y;
-						context.lineTo(Game.canvas.element.width * (right ? 1 : 0) + (current.x - width * (1 - poke.battler.display.transition)) * (right ? -1 : 1), y + current.y);
+						context.lineTo(Game.canvas.element.width * (right ? 1 : 0) + (current.x - (width * (1 - poke.battler.display.transition)) + (poke.battler.display.outlined ? 0 : 0)) * (right ? -1 : 1), y + current.y);
 					});
 					context.fill();
 				}
@@ -130,7 +133,7 @@ Battle = {
 					context.font = shape.font;
 					context.textAlign = shape.align.x;
 					context.textBaseline = shape.align.y;
-					context.fillText(shape.text, Game.canvas.element.width * (right ? 1 : 0) + (shape.position.x - width * (1 - poke.battler.display.transition)) * (right ? -1 : 1), y + shape.position.y);
+					context.fillText(shape.text, Game.canvas.element.width * (right ? 1 : 0) + (shape.position.x - (width * (1 - poke.battler.display.transition)) + (poke.battler.display.outlined ? 0 : 0)) * (right ? -1 : 1), y + shape.position.y);
 				}
 			});
 		},
@@ -192,11 +195,11 @@ Battle = {
 			Weather.draw(Game.canvas.context);
 		foreach(display.opponents, function (poke, place) {
 			if (poke !== NoPokemon)
-				self.draw.bar(poke, false, 30 + 40 * place);
+				self.draw.bar(poke, false, 30 + 34 * place);
 		});
 		foreach(display.allies, function (poke, place) {
 			if (poke !== NoPokemon)
-				self.draw.bar(poke, true, 130 + 40 * place, true);
+				self.draw.bar(poke, true, 120 + 42 * place, true);
 		});
 		context.fillStyle = "hsla(0, 0%, 0%, " + (1 - Math.clamp(0, Battle.state, 1)).toFixed(3) + ")";
 		context.fillRect(0, 0, Game.canvas.element.width, Game.canvas.element.height);
@@ -283,7 +286,7 @@ Battle = {
 						else Battle.queue.push({
 							poke : newPoke,
 							doesNotRequirePokemonToBeBattling : true,
-							priority : 0,
+							priority : (1 - (1 / (opposingTrainers.length + 3)) * (i + 1)) / 10,
 							action : function (which) {return function () {
 								Battle.enter(which, true);
 							}; }(newPoke)});

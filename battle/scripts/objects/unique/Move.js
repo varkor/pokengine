@@ -59,6 +59,15 @@ Move = {
 			finalStage = (stage === move.effect.use.length - 1),
 			animationEffect = null,
 			stateEffect = null;
+		// If the move won't hit anything, try aiming for a different target
+		if (stage === 0 && affected.empty()) {
+			var newTarget = Battle.targetsForMove(mover, move, true);
+			if (newTarget.notEmpty()) {
+				target = newTarget[0].place;
+				targetPokemon = newTarget[0].poke;
+				affected = Battle.affectedByMove(mover, targetPokemon, move).filter(onlyPokemon);
+			}
+		}
 		if (finalStage && move.hasOwnProperty("name"))
 			animationEffect = Textbox.state(mover.name() + " used " + move.name + (move.affects === Move.targets.directTarget && affected.notEmpty() ? " on " + (targetPokemon !== mover ? targetPokemon.name() : mover.selfPronoun()) : "") + "!", function () { return Move.animate(mover, move, stage, targetPokemon, constant); });
 		else
