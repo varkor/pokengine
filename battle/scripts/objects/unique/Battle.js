@@ -1051,6 +1051,8 @@ Battle = {
 			poke.battler.display.height = 0;
 			var displayFaint = Display.state.save();
 			Textbox.state(poke.name() + " fainted!", function () { return Display.state.transition(displayFaint); });
+			if (poke.friendship > 0)
+				-- poke.friendship;
 			Battle.removeFromBattle(poke);
 		} else {
 			Battle.triggerEvent(Events.health, {
@@ -1168,6 +1170,7 @@ Battle = {
 			var display = Display.state.save();
 			Textbox.state("Gotcha! " + poke.name() + " was caught!", function () { return Display.state.transition(display); });
 			Battle.removeFromBattle(poke);
+			poke.pokeball = ball;
 			Game.player.give(poke);
 		}
 		return caught;

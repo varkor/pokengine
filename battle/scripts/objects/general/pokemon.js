@@ -9,7 +9,6 @@ function pokemon (species) {
 	};
 	self.battler = new battler(self);
 	self.trainer = null;
-	self.originalTrainer = null;
 	self.level = 1;
 	self.nature = Natures.Lonely;
 	self.stats = [];
@@ -50,9 +49,14 @@ function pokemon (species) {
 	self.item = null;
 	self.form = 0;
 	self.friendship = self.species.friendship;
-	self.pokeball = Pokeballs.Poke;
+	self.pokeball = null;
 	self.shiny = chance(8192);
 	self.egg = 0; // The number of steps required to hatch the Pokémon
+	self.caught = {
+		location : Map.locations.nowhere,
+		level : 1,
+		trainer : null
+	};
 	self.sprite = {
 		path : function (which) {
 			return "pokemon/" + self.species.region + "/" + self.species.name + (which ? "~" + which : "");
@@ -145,7 +149,7 @@ function pokemon (species) {
 			return;
 		sharedBetween = sharedBetween || 1;
 		var participated = true, eventModifiers = product(Battle.triggerEvent(Events.experience, {}, defeated, self));
-		var gain = Math.floor((((Battle.situation === Battles.situation.trainer ? 1.5 : 1) * defeated.species.yield.experience * defeated.level) / (5 * (participated ? 1 : 2)) * Math.pow((2 * defeated.level + 10) / (defeated.level + self.level + 10), 2.5) + 1) * (self.trainer === self.originalTrainer ? 1 : self.trainer.nationality === self.nationality ? 1.5 : 1.7) * eventModifiers / sharedBetween);
+		var gain = Math.floor((((Battle.situation === Battles.situation.trainer ? 1.5 : 1) * defeated.species.yield.experience * defeated.level) / (5 * (participated ? 1 : 2)) * Math.pow((2 * defeated.level + 10) / (defeated.level + self.level + 10), 2.5) + 1) * (self.trainer === self.caught.trainer ? 1 : self.trainer.nationality === self.nationality ? 1.5 : 1.7) * eventModifiers / sharedBetween);
 		if (Battle.active)
 			Textbox.state(self.name() + " gained " + gain + " experience!");
 		while (self.level < 100 && self.experience + gain >= self.experienceFromLevelToNextLevel()) {
@@ -200,8 +204,7 @@ function pokemon (species) {
 		var previousMaximumHealth = self.stats[Stats.health]();
 		++ self.level;
 		self.health = Math.min(self.stats[Stats.health](), self.health + self.stats[Stats.health]() - previousMaximumHealth);
-		// Add 1 additional friendship if friendship is increased in the location of its capture
-		self.friendship += (self.friendship < 100 ? 5 : self.friendship < 200 ? 3 : self.friendship < 256 ? 2 : 0) + (self.pokeball === Pokeballs.Luxury ? 1 : 0);
+		self.friendship += (self.friendship < 100 ? 5 : self.friendship < 200 ? 3 : self.friendship < 256 ? 2 : 0) + (self.pokeball === Items.Balls.Luxury ? 1 : 0) + (self.trainer !== null && self.trainer.location === self.caught.location ? 1 : 0);
 		self.friendship = Math.min(self.friendship, 255);
 	};
 
@@ -305,7 +308,7 @@ function pokemon (species) {
 		if (self.trainer)
 			self.trainer.release(self);
 		else
-			self.originalTrainer = who;
+			self.caught.trainer = who;
 		self.trainer = who;
 		
 	};
@@ -391,7 +394,7 @@ function pokemon (species) {
 	};
 
 	self.disobey = function () {
-		if (self.trainer !== null && (self.trainer !== self.originalTrainer && self.trainer.holdsControlOverPokemonUpToLevel() < self.level && srandom.chance(2))) {
+		if (self.trainer !== null && (self.trainer !== self.caught.trainer && self.trainer.holdsControlOverPokemonUpToLevel() < self.level && srandom.chance(2))) {
 			return srandom.choose(
 				function (poke) {
 					Textbox.state(poke.name() + srandom.choose(" is loafing around!", " turned away!", " won't obey!"));

@@ -208,15 +208,6 @@ Item = {
 	}
 };
 
-Pokeballs = {
-	Poke : {
-		name : "Poké Ball"
-	},
-	Luxury : {
-		name : "Luxury Ball"
-	}
-};
-
 Teams = {
 	allies : q = 0,
 	opponents : ++ q

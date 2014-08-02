@@ -13,6 +13,7 @@ function character (name, team) {
 	self.nationality = Nationalities.British;
 	self.bag = new bag();
 	self.badges = [];
+	self.location = Map.locations.nowhere;
 	
 	self.give = function (poke) {
 		poke.belong(self);

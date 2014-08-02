@@ -39,6 +39,10 @@ Items = {
 			name : "Poké",
 			catchRate : 1
 		},
+		Luxury : {
+			name : "Luxury",
+			catchRate : 1
+		},
 		Master : {
 			name : "Master",
 			catchRate : 255
