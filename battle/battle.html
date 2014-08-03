@@ -1,0 +1,64 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>Battle Engine</title>
+		<script src="scripts/functions/functions.js"></script>
+		<script src="scripts/functions/random.js"></script>
+		<script src="scripts/functions/Sprite.js"></script>
+		<script src="scripts/data/constants.js"></script>
+		<script src="scripts/objects/unique/Type.js"></script>
+		<script src="scripts/objects/unique/Move.js"></script>
+		<script src="scripts/objects/unique/Map.js"></script>
+		<script src="scripts/data/Moves.js"></script>
+		<script src="scripts/data/Pokemon.js"></script>
+		<script src="scripts/data/Abilities.js"></script>
+		<script src="scripts/data/Items.js"></script>
+		<script src="scripts/data/machines.js"></script>
+		<script src="scripts/data/Badges.js"></script>
+		<script src="scripts/objects/unique/Settings.js"></script>
+		<script src="scripts/objects/unique/Textbox.js"></script>
+		<script src="scripts/objects/unique/Display.js"></script>
+		<script src="scripts/objects/unique/View.js"></script>
+		<script src="scripts/objects/unique/Game.js"></script>
+		<script src="scripts/objects/unique/Pokedex.js"></script>
+		<script src="scripts/objects/unique/visuals.js"></script>
+		<script src="scripts/objects/general/bag.js"></script>
+		<script src="scripts/objects/general/party.js"></script>
+		<script src="scripts/objects/general/character.js"></script>
+		<script src="scripts/objects/general/battler.js"></script>
+		<script src="scripts/objects/general/pokemon.js"></script>
+		<script src="scripts/objects/unique/Client.js"></script>
+		<script src="scripts/objects/unique/Battle.js"></script>
+		<style>
+		*, *::before, *::after {
+			box-sizing: border-box;
+		}
+		body {
+			background: hsl(0, 0%, 12%);
+			color: white;
+		}
+		.centre {
+			position: absolute;
+			left: 50%; top: 50%;
+			-webkit-transform: translate(-50%, -50%);
+			transform: translate(-50%, -50%);
+		}
+		canvas {
+			box-shadow: hsla(0, 0%, 0%, 0.4) 0 4px 16px;
+		}
+		.hover {
+			cursor: pointer;
+		}
+		</style>
+	</head>
+	<body>
+		<canvas id="battle" class="centre"></canvas>
+		<canvas id="fps" class="corner"></canvas>
+		<script>
+		window.addEventListener("load", function () {
+			Game.canvas.initialise();
+		});
+		</script>
+	</body>
+</html>
