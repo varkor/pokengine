@@ -306,7 +306,11 @@ Game = {
 		context.fillText("fps: " + Game.fps.framerate().toFixed(1), 16, Game.fps.element.height / 2);
 		window.requestAnimationFrame(Game.redraw);
 	},
-	player : null
+	player : null,
+	takePossessionOf : function (entity) {
+		Game.player = entity;
+		entity.type = Characters.type.local;
+	}
 };
 
 Game.initialise();

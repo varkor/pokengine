@@ -7,7 +7,7 @@ Textbox = {
 	hoverResponse : null, // Which response the cursor is hovering over
 	responsePosition : { x : 0, y : 0 }, // Used to allow for much more natural keyboard input
 	finished : null,
-	standardInterval : "manual" || 0 * 0.8 * Time.seconds,
+	standardInterval : "manual"/* 0.8 * Time.seconds*/,
 	pausing : false,
 	after : null,
 	speed : 100,
@@ -95,6 +95,10 @@ Textbox = {
 	state : function (text, trigger, pause, after) {
 		var self = Textbox;
 		return self.say(text, self.standardInterval, trigger, pause, after);
+	},
+	stateUntil : function (text, until) {
+		var self = Textbox;
+		self.say(text, until);
 	},
 	effect : function (trigger, pause, after) {
 		var self = Textbox;
@@ -193,7 +197,7 @@ Textbox = {
 	},
 	progress : function (automatic) {
 		var self = Textbox;
-		if (self.pausing || (!automatic && (self.dialogue[0].progress !== "manual" || self.dialogue[0].text === null)))
+		if (self.dialogue.length === 0 || self.pausing || (!automatic && (self.dialogue[0].progress !== "manual" || self.dialogue[0].text === null)))
 			return;
 		if (self.dialogue[0].text === null || self.displayed.length === self.dialogue[0].text.length) {
 			if (self.dialogue[0].responses.length && !automatic) {
@@ -278,16 +282,20 @@ Textbox = {
 			self.pausing = false;
 			self.after = null;
 		}
-		if (self.dialogue.length) {
+		if (self.dialogue.notEmpty()) {
 			if (self.slide === 1 && !self.pausing && self.dialogue[0].text !== null) {
 				if (self.displayed.length < self.dialogue[0].text.length)
 					self.displayed = self.dialogue[0].text.substr(0, self.displayed.length + self.speed);
 			}
-			if ((self.dialogue[0].text === null || (self.displayed.length === self.dialogue[0].text.length && self.dialogue[0].progress !== "manual")) && self.finished === null)
+			// Null text means no text is going to be displayed, and the Textbox is just being used to initiate an event
+			if ((self.dialogue[0].text === null || self.displayed.length === self.dialogue[0].text.length) && self.finished === null)
 				self.finished = Time.now();
-			if (((self.dialogue[0].text === null && Time.now() >= self.finished) || (self.dialogue[0].progress !== "manual" && Time.now() >= self.finished + self.dialogue[0].progress)) && self.finished !== null) {
+			if (((self.dialogue[0].text === null && Time.now() >= self.finished) || (self.dialogue[0].progress !== "manual" && typeof self.dialogue[0].progress === "number" && Time.now() >= self.finished + self.dialogue[0].progress)) && self.finished !== null) {
 				self.progress(true);
 				self.finished = null;
+			}
+			if (self.dialogue[0].progress !== "manual" && typeof self.dialogue[0].progress === "function" && self.dialogue[0].progress() && self.finished !== null) {
+				self.progress(true);
 			}
 			if (/*!self.pausing && */self.slide < 1)
 				self.slide += (1 / Time.framerate) * 6;

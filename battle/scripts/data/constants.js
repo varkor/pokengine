@@ -227,6 +227,11 @@ Battles = {
 		inverse : ++ q,
 		horde : ++ q
 	},
+	kind : {
+		local : q = 0,
+		online : ++ q,
+		recording : ++ q
+	},
 	side : {
 		near : q = 0,
 		far : ++ q
@@ -242,6 +247,14 @@ Battles = {
 		endOfTurnAfterNext : 2.5, // Not the next turn, but the turn after (2 turns, excluding current)
 		inThreeTurns : 3.5, // After three turns have passed, excluding the current turn (3 turns, excluding current)
 		afterFiveTurns : 4.5 // In five turns' time, including the current turn (4 turns, excluding current)
+	}
+};
+
+Characters = {
+	type : {
+		NPC : q = 0,
+		local : ++ q,
+		online : ++ q
 	}
 };
 

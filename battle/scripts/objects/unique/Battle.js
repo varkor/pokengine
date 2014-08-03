@@ -5,6 +5,7 @@ TheWild = new character("The Wild");
 Battle = {
 	active : false,
 	finished : true,
+	kind : null,
 	state : 0,
 	situation : null,
 	style : null,
@@ -18,6 +19,8 @@ Battle = {
 	delayForInput : false, // Delay asking the player what they'd like to do until a potentially breaking change has been made (such as learning a new move, which needs to wait, so that the new move will show up in the Pokémon's move list)
 	queue : [],
 	actions : [],
+	recording : [],
+	communication : [],
 	scene : "clearing",
 	hazards : {
 		near : [],
@@ -233,6 +236,16 @@ Battle = {
 			self.state += (1 / Time.framerate) * 4;
 		self.state = Math.clamp(0, self.state, 1);
 	},
+	playRecording : function (recording, alliedTrainers, opposingTrainers) {
+		recording.teamA = alliedTrainers;
+		recording.teamB = opposingTrainers;
+		Battle.recording = recording;
+		srandom.seed = Battle.recording.seed;
+		Battle.begin(Battle.recording.teamA, Battle.recording.teamB, Battle.recording.style, Battle.recording.weather, Battles.kind.recording);
+	},
+	beginOnline : function (alliedTrainers, opposingTrainers, style, weather) {
+		Battle.begin(alliedTrainers, opposingTrainers, style, weather, Battles.kind.online);
+	},
 	beginWildBattle : function (pokes) {
 		pokes = wrapArray(pokes);
 		TheWild.party.empty();
@@ -241,15 +254,19 @@ Battle = {
 		});
 		Battle.begin(Game.player, TheWild, Battles.style.normal, Weathers.hail);
 	},
-	begin : function (alliedTrainers, opposingTrainers, style, weather) {
+	begin : function (alliedTrainers, opposingTrainers, style, weather, kind) {
 		Battle.active = true;
 		Battle.finished = false;
+		if (arguments.length >= 5)
+			Battle.kind = kind;
+		else
+			Battle.kind = Battles.kind.local;
 		Battle.situation = Battles.situation.wild;
-		if (arguments.length >= 3)
+		if (arguments.length >= 3 && typeof style !== "undefined" && style !== null)
 			Battle.style = style;
 		else
 			Battle.style = Battles.style.normal;
-		if (arguments.length >= 4)
+		if (arguments.length >= 4 && typeof weather !== "undefined" && weather !== null)
 			Battle.weather = weather;
 		else
 			Battle.weather = Weathers.clear;
@@ -321,18 +338,36 @@ Battle = {
 					++ number;
 				});
 				if (names.length === 1)
-					Textbox.state(names[0] + " is challenging you to a battle. " + (Battle.opposingTrainers[0].gender === Genders.male ? "He" : "She") + " has " + numberword(Battle.opposingTrainers[0].pokemon()) + " Pokémon.");
+					Textbox.state(names[0] + " is challenging " + Battle.secondPerson() + " to a battle. " + (Battle.opposingTrainers[0].gender === Genders.male ? "He" : "She") + " has " + numberword(Battle.opposingTrainers[0].pokemon()) + " Pokémon.");
 				if (names.length > 1)
-					Textbox.state(commaSeparatedList(names) + " are challenging you to a battle. They have " + number + " Pokémon between them.");
+					Textbox.state(commaSeparatedList(names) + " are challenging " + Battle.secondPerson() + " to a battle. They have " + number + " Pokémon between them.");
 				break;
+		}
+		if (Battle.kind !== Battles.kind.recording) {
+			Battle.recording = {
+				seed : srandom.seed,
+				style : Battle.style,
+				weather : Battle.weather,
+				teamA : Battle.alliedTrainers,
+				teamB : Battle.opposingTrainers,
+				actions : []
+			};
 		}
 		Battle.race(Battle.queue);
 		Battle.queue = [];
-		if (Battle.alliedTrainers.indexOf(Game.player) > -1)
-			Battle.startTurn();
+		Battle.startTurn();
 	},
 	finish : function () {
 		Battle.finished = true;
+	},
+	secondPerson : function (capitalise) {
+		return (Battle.kind !== Battles.kind.recording ? (capitalise ? "You" : "you") : Battle.alliedTrainers[0].name);
+	},
+	possessiveSecondPerson : function (capitalise) {
+		return (Battle.kind !== Battles.kind.recording ? (capitalise ? "Your" : "your") : Battle.alliedTrainers[0].name + "'s");
+	},
+	secondPersonHave : function () {
+		return (Battle.kind !== Battles.kind.recording ? "have" : "has");
 	},
 	end : function () {
 		Battle.active = false;
@@ -354,14 +389,18 @@ Battle = {
 		Battle.escapeAttempts = 0;
 		Battle.turns = 0;
 	},
-	input : function (primary, secondary, tertiary) {
+	input : function (primary, secondary, tertiary, character, selection) {
 		var advance = true, reprompt = true;
-		var inBattle = [];
-		foreach(Battle.allies, function (poke) {
-			if (poke.trainer === Game.player)
+		var inBattle = [], all = Battle.all(true);
+		if (arguments.length < 4) {
+			character = Game.player;
+			selection = Battle.selection;
+		}
+		foreach(all, function (poke) {
+			if (poke.trainer === character)
 				inBattle.push(poke);
 		});
-		var names, positions, currentBattler = inBattle[Battle.selection];
+		var names, positions, currentBattler = inBattle[selection];
 		switch (primary) {
 			case "Fight":
 				var chosenMove = currentBattler.usableMoves()[secondary];
@@ -369,9 +408,9 @@ Battle = {
 				if (typeof tertiary !== "undefined" && tertiary !== null)
 					who = tertiary;
 				else {
-					var targets = [], targetNames = [], affected, partOfTarget, names, all = Battle.all();
+					var targets = [], targetNames = [], affected, partOfTarget, names, all = Battle.all(true);
 					foreach(all, function (poke, i) {
-						if (poke !== NoPokemon && Battle.pokemonInRangeOfMove(currentBattler, poke, chosenMove.move)) {
+						if (Battle.pokemonInRangeOfMove(currentBattler, poke, chosenMove.move)) {
 							affected = chosenMove.move.affects;
 							partOfTarget = [];
 							if (affected.contains(Move.target.directTarget)) {
@@ -443,13 +482,13 @@ Battle = {
 				if (arguments.length === 1) {
 					advance = false;
 					reprompt = false;
-					if (Game.player.bag.empty()) {
+					if (character.bag.empty()) {
 						Textbox.state("You don't have any items.");
 						reprompt = true;
 					} else {
 						var items = [], hotkeys = {};
 						hotkeys[Game.key.secondary] = "Cancel";
-						foreach(Game.player.bag.items, function (item) {
+						foreach(character.bag.items, function (item) {
 							if (item.item.direct) // If the item can be used directly, instead of when being held
 								items.push(item.item.fullname + " ×" + item.quantity);
 						});
@@ -462,9 +501,9 @@ Battle = {
 					}
 				} else {
 					if (arguments.length === 2) {
-						var targets = Game.player.bag.items[secondary].item.targets;
+						var targets = character.bag.items[secondary].item.targets;
 						if (targets === Move.targets.party) {
-							targets = Game.player.party.pokemon;
+							targets = character.party.pokemon;
 						} else if (targets === Move.targets.opponents) {
 							targets = Battle.opponents;
 						}
@@ -476,7 +515,7 @@ Battle = {
 							names.push(poke.name());
 							positions.push(poke);
 						});
-						Textbox.ask("On which Pokémon do you want to use the " + Game.player.bag.items[secondary].item.fullname + "?", names, function (response, i) {
+						Textbox.ask("On which Pokémon do you want to use the " + character.bag.items[secondary].item.fullname + "?", names, function (response, i) {
 							if (response !== "Cancel")
 								Battle.input("Bag", secondary, positions[i]);
 							else
@@ -500,7 +539,7 @@ Battle = {
 							doesNotRequirePokemonToBeBattling : true,
 							priority : 6,
 							action : function (poke) {
-								Game.player.bag.use(secondary, poke);
+								character.bag.use(secondary, poke);
 							}
 						});
 					}
@@ -513,9 +552,9 @@ Battle = {
 				} else if (arguments.length === 1) {
 					names = [];
 					positions = [];
-					foreach(Game.player.healthyPokemon(true), function (poke, i) {
+					foreach(character.healthyPokemon(true), function (poke, i) {
 						names.push(poke.name());
-						positions.push(Game.player.party.pokemon.indexOf(poke));
+						positions.push(character.party.pokemon.indexOf(poke));
 					});
 					advance = false;
 					var hotkeys = {};
@@ -533,17 +572,17 @@ Battle = {
 						reprompt = true;
 					}
 				}  else {
-					if (secondary >= Game.player.pokemon()) {
+					if (secondary >= character.pokemon()) {
 						Textbox.state("There's no Pokémon in that slot!");
 						advance = false;
-					} else if (Game.player.party.pokemon[secondary].health === 0) {
+					} else if (character.party.pokemon[secondary].health === 0) {
 						Textbox.state("That Pokémon has fainted — you can't use that one!");
 						advance = false;
 					} else if (currentBattler.battler.isTrapped()) {
 						Textbox.state(currentBattler.name + " is trapped and can't switch out!");
 						advance = false;
-					} else if (!foreach(Game.player.battlers(), function (battler) {
-						if (battler.pokemon === Game.player.party.pokemon[secondary]) {
+					} else if (!foreach(character.battlers(), function (battler) {
+						if (battler.pokemon === character.party.pokemon[secondary]) {
 							Textbox.state("That Pokémon is already battling — you can't send it out again!");
 							advance = false;
 						}
@@ -553,7 +592,7 @@ Battle = {
 							poke : currentBattler,
 							priority : 6,
 							action : function (poke) {
-								Battle.swap(currentBattler, Game.player.party.pokemon[secondary]); 
+								Battle.swap(currentBattler, character.party.pokemon[secondary]); 
 							}
 						});
 					}
@@ -567,26 +606,59 @@ Battle = {
 				break;
 			case "Back":
 				Battle.actions.pop();
+				Battle.recording.actions[Battle.turns].pop();
 				-- Battle.selection;
 				advance = false;
 				break;
 		}
-		if (advance)
-			Battle.advance();
-		else if (reprompt)
-			Battle.prompt();
+		if (Battle.kind !== Battles.kind.online || character === Game.player) {
+			if (advance) {
+				if (Battle.kind !== Battles.kind.recording) {
+					Battle.recording.actions[Battle.turns].push({
+						primary : primary,
+						secondary : secondary,
+						tertiary : tertiary
+					});
+				}
+				Battle.advance();
+			} else if (reprompt)
+				Battle.prompt();
+		}
 	},
 	advance : function () {
 		if (++ Battle.selection === Game.player.battlers().length) {
 			Battle.queue = Battle.queue.concat(Battle.actions);
 			Battle.actions = [];
-			foreach(Battle.allTrainers(), function (trainer) {
-				if (trainer.isAnNPC())
-					Battle.AI.action(trainer);
-			});
-			Battle.processTurn();
+			if (Battle.kind !== Battles.kind.online || Battle.communication.notEmpty())
+				Battle.giveTrainersActions();
+			else {
+				Battle.stage = 2;
+				Textbox.stateUntil("Waiting for the other player to make a decision...", function () { return Battle.stage !== 2; });
+			}
 		} else
 			Battle.prompt();
+	},
+	giveTrainersActions : function () {
+		foreach(Battle.allTrainers(), function (trainer) {
+			if (trainer.isAnNPC())
+				Battle.AI.action(trainer);
+			else if (trainer.type === Characters.type.online) {
+				for (var i = 0, action; i < trainer.battlers().length; ++ i) {
+					action = Battle.communication.shift();
+					Battle.input(action.primary, action.secondary, action.tertiary, trainer, i);
+				}
+			}
+		});
+		Battle.queue = Battle.queue.concat(Battle.actions);
+		Battle.actions = [];
+		Battle.stage = 1;
+		Battle.processTurn();
+	},
+	receiveActions : function (actions) {
+		// Receive the opponent's actions, in an online battle
+		Battle.communication = actions;
+		if (Battle.stage === 2)
+			Battle.giveTrainersActions();
 	},
 	changeWeather : function (weather) {
 		Battle.weather = weather;
@@ -760,16 +832,21 @@ Battle = {
 			Textbox.effect(function () { Display.state.load(display); });
 			currentBattler.battler.display.outlined = false;
 		}
-		var actions = ["Pokémon", "Run", "Bag"], hotkeys = {};
-		hotkeys[Game.key.secondary] = "Run";
-		if (Battle.style === Battles.style.double && Battle.selection > 0)
-			actions.insert(0, "Back");
-		Textbox.ask("What do you want " + currentBattler.name() + " to do?", moves, function (response, i, major) {
-			if (major) {
-				Battle.input("Fight", i);
-			} else
-				Battle.input(response);
-		}, actions, null, hotkeys, "Action: " + currentBattler.unique);
+		if (Battle.kind !== Battles.kind.recording) {
+			var actions = ["Pokémon", "Run", "Bag"], hotkeys = {};
+			hotkeys[Game.key.secondary] = "Run";
+			if (Battle.style === Battles.style.double && Battle.selection > 0)
+				actions.insert(0, "Back");
+			Textbox.ask("What do you want " + currentBattler.name() + " to do?", moves, function (response, i, major) {
+				if (major) {
+					Battle.input("Fight", i);
+				} else
+					Battle.input(response);
+			}, actions, null, hotkeys, "Action: " + currentBattler.unique);
+		} else {
+			var action = Battle.recording.actions[Battle.turns][Battle.selection];
+			Battle.input(action.primary, action.secondary, action.tertiary);
+		}
 	},
 	processTurn : function () {
 		Battle.selection = 0;
@@ -800,6 +877,9 @@ Battle = {
 		Battle.startTurn();
 	},
 	startTurn : function () {
+		if (Battle.kind !== Battles.kind.recording) {
+			Battle.recording.actions.push([]);
+		}
 		Battle.queue = [];
 		var all = Battle.all(true);
 		foreach(all, function (poke) {
@@ -847,7 +927,7 @@ Battle = {
 		foreach([].concat(Battle.effects.near, Battle.effects.far), function (effect, i, deletion) {
 			if (Battle.turns >= Math.floor(effect.expiration)) {
 				if (i < Battle.effects.near.length) {
-					Textbox.state("Your " + effect.type.name + " ran out.");
+					Textbox.state(Battle.possessiveSecondPerson() + effect.type.name + " ran out.");
 					deletion.push(i);
 				}
 				else {
@@ -1105,9 +1185,9 @@ Battle = {
 			});
 			var escapeChance = (currentBattler.stats[Stats.speed](true) * 32) / ((maxSpeed / 4) % 256) + 30 * (Battle.escapeAttempts ++);
 			if (escapeChance > 255 || randomInt(255) < escapeChance) {
-				Battle.queue.push({priority : 6, action : function () { Textbox.state("You escaped successfully!", function () { Battle.end(); }); Battle.finish(); } });
+				Battle.queue.push({priority : 6, action : function () { Textbox.state(Battle.secondPerson(true) + " escaped successfully!", function () { Battle.end(); }); Battle.finish(); } });
 			} else
-				Battle.queue.push({priority : 6, action : function () { Textbox.state("You couldn't get away!"); }});
+				Battle.queue.push({priority : 6, action : function () { Textbox.state(Battle.secondPerson(true) + "couldn't get away!"); }});
 		}
 	},
 	attemptCapture : function (poke, ball) {
@@ -1180,10 +1260,12 @@ Battle = {
 	},
 	removeFromBattle : function (poke) {
 		// Stops a Pokémon battling, either because they've fainted, or because they've been caught in a Poké ball
-		foreach(poke.battler.opponents, function (gainer) {
-			if (!gainer.fainted())
-				gainer.gainExperience(poke, poke.battler.opponents.length);
-		});
+		if (Battle.kind !== Battles.kind.online) {
+			foreach(poke.battler.opponents, function (gainer) {
+				if (!gainer.fainted())
+					gainer.gainExperience(poke, poke.battler.opponents.length);
+			});
+		}
 		var place;
 		if (poke.battler.side === Battles.side.near) {
 			place = Battle.allies.indexOf(poke);
@@ -1196,11 +1278,11 @@ Battle = {
 		if (!poke.trainer.hasHealthyPokemon(true, poke) && !poke.trainer.hasHealthyPokemon(false, poke)) {
 			var defeatedMessage;
 			if (poke.trainer === Game.player)
-				defeatedMessage = "You have been defeated!";
+				defeatedMessage = Battle.secondPerson(true) + " " + Battle.secondPersonHave() + " been defeated!";
 			else if (Battle.situation === Battles.situation.trainer)
-				defeatedMessage = "You have defeated " + poke.trainer.name + "!";
+				defeatedMessage = Battle.secondPerson(true) + " " + Battle.secondPersonHave() + " defeated " + poke.trainer.name + "!";
 			else
-				defeatedMessage = "You have defeated the wild Pokémon!";
+				defeatedMessage = Battle.secondPerson(true) + " " + Battle.secondPersonHave() + " defeated the wild Pokémon!";
 			Textbox.state(defeatedMessage, function () {
 				Battle.end();
 			});
@@ -1232,7 +1314,7 @@ Battle = {
 			var displayInitial = Display.state.save();
 			poke.battler.display.transition = 1;
 			var display = Display.state.save();
-			Textbox.state((Game.player === poke.trainer ? "You" : poke.trainer.name) + " sent out " + poke.name() + "!", function () { Display.state.load(displayInitial); return Display.state.transition(display); });
+			Textbox.state((Game.player === poke.trainer ? Battle.secondPerson(true) : poke.trainer.name) + " sent out " + poke.name() + "!", function () { Display.state.load(displayInitial); return Display.state.transition(display); });
 		}
 		foreach(Battle.opponentsTo(poke), function (opponent) {
 			poke.battler.opponents.pushIfNotAlreadyContained(opponent);

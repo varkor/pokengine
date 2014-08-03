@@ -14,6 +14,7 @@ function character (name, team) {
 	self.bag = new bag();
 	self.badges = [];
 	self.location = Map.locations.nowhere;
+	self.type = Characters.type.NPC;
 	
 	self.give = function (poke) {
 		poke.belong(self);
@@ -48,7 +49,7 @@ function character (name, team) {
 	};
 
 	self.isAnNPC = function () {
-		return Game.player !== self;
+		return self.type === Characters.type.NPC;
 	};
 
 	self.battlers = function () {

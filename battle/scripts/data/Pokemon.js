@@ -80,7 +80,7 @@ forevery(Pokemon, function (poke) {
 		poke.stats[Stats.health] = 100;
 		poke.stats[Stats.attack] = 100;
 		poke.stats[Stats.specialAttack] = 100;
-		if (poke.name === "Ivysaur") {
+		if (0 && poke.name === "Ivysaur") {
 			poke.stats[Stats.attack] = 10000;
 			poke.stats[Stats.specialAttack] = 10000;
 		}
