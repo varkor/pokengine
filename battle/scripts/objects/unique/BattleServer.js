@@ -6,6 +6,11 @@ exports.BattleServer = {
 			case "connect":
 				exports.BattleServer.clients.push(from);
 				break;
+			case "disconnect":
+				var index = exports.BattleServer.clients.indexOf(from);
+				if (index >= 0)
+					exports.BattleServer.clients.splice(index, 1);
+				break;
 			case "invite":
 				if (message.hasOwnProperty("who")) {
 					var clientA, clientB = null;
@@ -36,7 +41,7 @@ exports.BattleServer = {
 						if (client !== from)
 							exports.BattleServer.send({
 								action : "invitation",
-								from : from
+								from : from.ip
 							}, client);
 					});
 				}
@@ -64,6 +69,6 @@ exports.BattleServer = {
 		}
 	},
 	send : function (message, to) {
-		to.socket.send(JSON.stringify([56, message]).slice(1, -1));
+		to.send(JSON.stringify([56, message]).slice(1, -1));
 	}
 };
