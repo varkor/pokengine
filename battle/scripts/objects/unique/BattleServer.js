@@ -13,7 +13,7 @@ exports.BattleServer = {
 					exports.BattleServer.clients.forEach(function (client) {
 						if (client !== from && client.ip === message.who) {
 							clientB = client;
-							break;
+							return;
 						}
 					});
 					if (clientB !== null) {
@@ -48,13 +48,13 @@ exports.BattleServer = {
 							action : "actions",
 							actions : message.actions
 						}, clientB);
-						break;
+						return;
 					} else if (battle.clientB === from) {
 						exports.BattleServer.send({
 							action : "actions",
 							actions : message.actions
 						}, clientA);
-						break;
+						return;
 					}
 				});
 				break;
