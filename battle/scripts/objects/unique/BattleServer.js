@@ -1,6 +1,6 @@
 exports.BattleServer = {
 	clients : [],
-	battles = [],
+	battles : [],
 	receive : function (message, from) {
 		switch (message.action) {
 			case "connect":
