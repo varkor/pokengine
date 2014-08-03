@@ -31,15 +31,15 @@ exports.BattleServer = {
 				break;
 			case "invite":
 				if (message.hasOwnProperty("who")) {
-					var clientA, clientB = null;
-					clientA = from;
+					var clientB, clientA = null;
+					clientB = from;
 					exports.BattleServer.clients.forEach(function (client) {
 						if (client !== from && client.ip === message.who) {
-							clientB = client;
+							clientA = client;
 							return;
 						}
 					});
-					if (clientB !== null) {
+					if (clientA !== null) {
 						exports.BattleServer.battles.push({
 							clientA : clientA,
 							clientB : clientB,
@@ -70,13 +70,13 @@ exports.BattleServer = {
 						exports.BattleServer.send({
 							action : "actions",
 							actions : message.actions
-						}, clientB);
+						}, battle.clientB);
 						return;
 					} else if (battle.clientB === from) {
 						exports.BattleServer.send({
 							action : "actions",
 							actions : message.actions
-						}, clientA);
+						}, battle.clientA);
 						return;
 					}
 				});
