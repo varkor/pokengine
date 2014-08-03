@@ -10,6 +10,24 @@ exports.BattleServer = {
 				var index = exports.BattleServer.clients.indexOf(from);
 				if (index >= 0)
 					exports.BattleServer.clients.splice(index, 1);
+				index = -1;
+				exports.BattleServer.battles.forEach(function (battle, i) {
+					if (battle.clientA === from) {
+						exports.BattleServer.send({
+							action : "disconnect"
+						}, battle.clientB);
+						index = i;
+						return;
+					} else if (battle.clientB === from) {
+						exports.BattleServer.send({
+							action : "disconnect"
+						}, battle.clientA);
+						index = i;
+						return;
+					}
+				});
+				if (index >= 0)
+					exports.BattleServer.battles.splice(index, 1);
 				break;
 			case "invite":
 				if (message.hasOwnProperty("who")) {

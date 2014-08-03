@@ -640,7 +640,7 @@ Battle = {
 				Battle.giveTrainersActions();
 			else {
 				Battle.stage = 2;
-				Textbox.stateUntil("Waiting for the other player to make a decision...", function () { return Battle.stage !== 2; });
+				Textbox.stateUntil("Waiting for the other player to make a decision...", function () { return Battle.stage !== 2 || !Battle.active; });
 			}
 		} else
 			Battle.prompt();

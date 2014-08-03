@@ -24,6 +24,10 @@ Client = {
 				(message.team === 0 ? them : you).give(blastoise);
 				Battle.beginOnline(message.seed, you, them);
 				break;
+			case "disconnect":
+				console.log("%cThe other player disconnected from the server!", "color : hsl(0, 100%, 40%)");
+				if (Battle.active)
+					Battle.end();
 			case "actions":
 				Battle.communication = message.actions;
 				if (Battle.stage === 2)
