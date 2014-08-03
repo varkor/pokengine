@@ -43,7 +43,7 @@ exports.BattleServer = {
 						var battle = {
 							clientA : clientA,
 							clientB : clientB,
-							seed : parseInt(String(Math.random()).replace(".", ""))
+							seed : Math.random() * Math.pow(2, 32)
 						};
 						exports.BattleServer.battles.push(battle);
 						exports.BattleServer.send({

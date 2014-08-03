@@ -370,26 +370,29 @@ Battle = {
 	secondPersonHave : function () {
 		return (Battle.kind !== Battles.kind.recording ? "have" : "has");
 	},
-	end : function () {
-		Battle.active = false;
-		Textbox.clear();
-		Battle.redraw();
-		Battle.situation = null;
-		foreach(Battle.all(true), function (poke) {
-			if (poke.status === Statuses.badlyPoisoned)
-				poke.status = Statuses.poisoned;
-			poke.battler.reset();
-		});
-		Battle.allies = [];
-		Battle.opponents = [];
-		foreach(Battle.allTrainers(), function (participant) {
-			participant.battlers = [];
-		});
-		Battle.alliedTrainers = [];
-		Battle.opposingTrainers = [];
-		Battle.queue = [];
-		Battle.escapeAttempts = 0;
-		Battle.turns = 0;
+	end : function (forcefully) {
+		if (Battle.active) {
+			Battle.active = false;
+			if (forcefully)
+				Textbox.clear();
+			Battle.redraw();
+			Battle.situation = null;
+			foreach(Battle.all(true), function (poke) {
+				if (poke.status === Statuses.badlyPoisoned)
+					poke.status = Statuses.poisoned;
+				poke.battler.reset();
+			});
+			Battle.allies = [];
+			Battle.opponents = [];
+			foreach(Battle.allTrainers(), function (participant) {
+				participant.battlers = [];
+			});
+			Battle.alliedTrainers = [];
+			Battle.opposingTrainers = [];
+			Battle.queue = [];
+			Battle.escapeAttempts = 0;
+			Battle.turns = 0;
+		}
 	},
 	input : function (primary, secondary, tertiary, character, selection) {
 		var advance = true, reprompt = true;
@@ -629,8 +632,7 @@ Battle = {
 	},
 	advance : function () {
 		if (++ Battle.selection === Game.player.battlers().length) {
-			Battle.playerActions = Battle.actions;
-			Battle.queue = Battle.queue.concat(playerActions);
+			Battle.queue = Battle.queue.concat(Battle.actions);
 			Battle.actions = [];
 			if (Battle.kind === Battles.kind.online) {
 				Client.send({
@@ -648,7 +650,6 @@ Battle = {
 			Battle.prompt();
 	},
 	giveTrainersActions : function () {
-		Battle.actions = [];
 		foreach(Battle.allTrainers(), function (trainer) {
 			if (trainer.isAnNPC())
 				Battle.AI.action(trainer);

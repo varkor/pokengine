@@ -22,16 +22,13 @@ function pokemon (species) {
 			};
 		})(i);
 	}
-	self.compare = function (object) {
-		return self === object;
-	};
 	self.gender = Genders.male;
 	self.moves = [];
 	self.ability = Abilities.HyperCutter;
 	self.status = Statuses.none;
 	self.IVs = [];
-	self.IVs[Stats.health] = srandom.int(0, 31);
-	self.IVs[Stats.attack] = srandom.int(0, 31);
+	self.IVs[Stats.health] = 1//1srandom.int(0, 31);
+	self.IVs[Stats.attack] = 2//srandom.int(0, 31);
 	self.IVs[Stats.defence] = srandom.int(0, 31);
 	self.IVs[Stats.specialAttack] = srandom.int(0, 31);
 	self.IVs[Stats.specialDefence] = srandom.int(0, 31);
@@ -57,15 +54,40 @@ function pokemon (species) {
 		level : 1,
 		trainer : null
 	};
+
 	self.sprite = {
 		path : function (which) {
 			return "pokemon/" + self.species.region + "/" + self.species.name + (which ? "~" + which : "");
 		}
 	};
 
-	/*self.snapshot = function () {
-		return self.clone();
-	};*/
+	self.store = function () {
+		// Returns an object that contains all the data for the Pokémon, without any methods
+		var store = {};
+		// , moves, , , , 
+		foreach(["nickname", "unique", "level", "nature", "gender", "status", "IVs", "EVs", "experience", "nationality", "form", "friendship", "shiny", "egg"], function (property) {
+			store[property] = self[property];
+		});
+		foreach(["species", "item", "ability", "pokeball"], function (property) {
+			store[property] = (self[property] !== null ? self[property].name : null);
+		});
+		store.moves = [];
+		foreach(self.moves, function (move) {
+			store.moves.push({
+				move : move.name,
+				PP : move.PP,
+				maximumPP : move.maximumPP,
+				number : move.number
+			});
+		});
+		store.trainer = self.trainer.unique;
+		store.caught = {
+			location : self.caught.location.name,
+			level : self.caught.level,
+			trainer : self.caught.trainer.unique
+		};
+		return deepCopy(store);
+	};
 
 	self.learn = function (move, initial, learnRegardless) {
 		if (foreach(self.moves, function (check) {

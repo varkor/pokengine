@@ -1,0 +1,38 @@
+*, *::before, *::after {
+	box-sizing: border-box;
+}
+body {
+	background: hsl(0, 0%, 12%);
+	color: white;
+	font: lighter 10pt "Helvetica Neue";
+}
+.centre {
+	position: absolute;
+	left: 50%; top: 50%;
+	-webkit-transform: translate(-50%, -50%);
+	transform: translate(-50%, -50%);
+}
+canvas {
+	display: block;
+	box-shadow: hsla(0, 0%, 0%, 0.4) 0 4px 16px;
+}
+.hover {
+	cursor: pointer;
+}
+button {
+	width: 80pt; height: 24pt;
+	background: hsl(0, 0%, 70%) -webkit-linear-gradient(top, hsl(0, 0%, 80%), transparent);
+	border: none;
+	outline: none;
+	border-radius: 4pt;
+	margin: 20pt 0;
+	cursor: pointer;
+	font: normal 12pt "Helvetica Neue";
+}
+button:hover {
+	background: hsl(0, 0%, 80%) -webkit-linear-gradient(top, hsl(0, 0%, 90%), transparent);
+}
+button:active {
+	background: hsl(0, 0%, 40%);
+	box-shadow: inset hsla(0, 0%, 0%, 0.4) 0 4px 16px;
+}

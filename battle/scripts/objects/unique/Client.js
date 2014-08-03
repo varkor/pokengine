@@ -29,8 +29,7 @@ Client = {
 				break;
 			case "disconnect":
 				console.log("%cThe other player disconnected from the server!", "color : hsl(0, 100%, 40%)");
-				if (Battle.active)
-					Battle.end();
+				Battle.end(true);
 			case "actions":
 				Battle.receiveActions(message.actions);
 				break;
@@ -57,8 +56,7 @@ Client = {
 			Client.socket.addEventListener("close", function () {
 				console.log("%cDisconnected from the server.", "color : hsl(0, 100%, 40%)");
 				Client.connected = false;
-				if (Battle.active)
-					Battle.end();
+				Battle.end(true);
 			});
 			Client.socket.addEventListener("message", function (event) {
 				var data = event.data;

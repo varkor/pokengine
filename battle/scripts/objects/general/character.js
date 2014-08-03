@@ -2,6 +2,7 @@ function character (name, team) {
 	var self = this;
 
 	self.name = name;
+	self.unique = Game.unique();
 	self.gender = Genders.male;
 	self.party = (arguments.length >= 2 ? team : new party());
 	self.party.trainer = self;
@@ -21,6 +22,7 @@ function character (name, team) {
 		poke.belong(self);
 		self.party.add(poke);
 	};
+
 	self.release = function (poke) {
 		self.party.release(poke);
 	};

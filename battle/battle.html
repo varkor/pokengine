@@ -30,27 +30,7 @@
 		<script src="scripts/objects/general/pokemon.js"></script>
 		<script src="scripts/objects/unique/Client.js"></script>
 		<script src="scripts/objects/unique/Battle.js"></script>
-		<style>
-		*, *::before, *::after {
-			box-sizing: border-box;
-		}
-		body {
-			background: hsl(0, 0%, 12%);
-			color: white;
-		}
-		.centre {
-			position: absolute;
-			left: 50%; top: 50%;
-			-webkit-transform: translate(-50%, -50%);
-			transform: translate(-50%, -50%);
-		}
-		canvas {
-			box-shadow: hsla(0, 0%, 0%, 0.4) 0 4px 16px;
-		}
-		.hover {
-			cursor: pointer;
-		}
-		</style>
+		<link rel="stylesheet" href="battle.css">
 	</head>
 	<body>
 		<canvas id="battle" class="centre"></canvas>
@@ -58,6 +38,61 @@
 		<script>
 		window.addEventListener("load", function () {
 			Game.canvas.initialise();
+
+			var player = new character("Red"/*, new party(new pokemon(Pokemon.Bulbasaur), new pokemon(Pokemon.Ivysaur))*/), myBulbasaur = new pokemon(Pokemon.Bulbasaur), opponent = new character("Blue");
+			Game.takePossessionOf(player);
+			player.bag.add(Items.Berries.Sitrus);
+			player.bag.add(Items.Balls.Poke, 100);
+			player.bag.add(Items.Balls.Clone, 10);
+			myBulbasaur.nickname = "Leafy";
+			//myBulbasaur.ability = Abilities.Intimidate;
+			myBulbasaur.learn(Moves.Magnitude, true);
+			myBulbasaur.learn(Moves.Transform, true);
+			myBulbasaur.item = Items.Berries.Sitrus;
+			//myBulbasaur.health = Math.ceil(myBulbasaur.stats[Stats.health]() / 4);
+			var ivy = new pokemon(Pokemon.Ivysaur);
+			ivy.nickname = "Ivy";
+			ivy.item = Items.Berries.Sitrus;
+			ivy.ability = Abilities.Soundproof;
+
+			ivy.learn(Moves.Fly, true);
+			ivy.learn(Moves.Ingrain, true);
+
+			//ivy.raiseToLevel(10);
+			player.give(ivy);
+			player.give(myBulbasaur);
+			player.give(new pokemon(Pokemon.Blastoise));
+			player.give(new pokemon(Pokemon.Charizard));
+			var theirCharizard = new pokemon(Pokemon.Charizard), wildMon = new pokemon(Pokemon.Blastoise);
+			wildMon.raiseToLevel(3);
+			theirCharizard.nickname = "Char-Dawg";
+			//wildMon.learn(Moves.Ingrain, true);
+			theirCharizard.ability = Abilities.HyperCutter;
+			wildMon.ability = Abilities.Levitate;
+			//wildMon.learn(Moves.Wrap, true);
+			theirCharizard.level = 1;
+			//theirCharizard.health = theirCharizard.stats[Stats.health]();
+			//theirCharizard.forget(Moves.Tackle, true);
+			theirCharizard.learn(Moves.Wrap, true);
+			//opponent.give(wildMon);
+			opponent.give(theirCharizard);
+			var otherIvy = new pokemon(Pokemon.Blastoise);
+			otherIvy.nickname = "'Toise";
+			opponent.give(otherIvy);
+			//opponent.party.pokemon[0].status = Statuses.poisoned;
+			//player.party.pokemon[0].status = Statuses.asleep;
+			//player.party.pokemon[0].caught.trainer = opponent;
+			/*Textbox.ask("hello", ["Yes", "No"], function (response) { console.log(response); });
+			Textbox.state("test1");
+			Textbox.state("test2");
+			Textbox.state("test3");
+			Textbox.ask("hello", ["Yes", "No"], function (response) { console.log(response); }, ["Maybe", "I'm not sure"]);
+			Textbox.state("test4");*/
+			Battle.begin(player, /*[wildMon, theirCharizard]*/opponent, Battles.style.normal, Weathers.rain);
+			//opponent.type = Characters.type.online;
+			//Battle.beginOnline(player, opponent);
+			//Battle.playRecording(JSON.parse('{"seed":1,"style":0,"weather":2,"actions":[[{"primary":"Fight","secondary":0}],[{"primary":"Fight","secondary":1}],[],[]]}'), player, opponent);
+			//Battle.beginWildBattle([theirCharizard, wildMon]);
 		});
 		</script>
 	</body>

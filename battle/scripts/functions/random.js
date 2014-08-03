@@ -1,8 +1,18 @@
 srandom = {
 	seed : 1,
 	point : function () {
-		var x = Math.sin(srandom.seed ++) * 1000000;
+		var x = Math.sin(srandom.seed = srandom.increase(srandom.seed)) * 1000000;
 		return x - Math.floor(x);
+	},
+	increase : function (value) {
+		var jump = 1;
+		while (value === (value += jump) && jump < Math.pow(10, 10)) {
+			if (jump >= Math.pow(10, 2))
+				jump *= 10;
+			else
+				++ jump;
+		}
+		return value;
 	},
 	number : function (x, y) {
 		var point = srandom.point();
