@@ -40,14 +40,16 @@ exports.BattleServer = {
 						}
 					});
 					if (clientA !== null) {
-						exports.BattleServer.battles.push({
+						var battle = {
 							clientA : clientA,
 							clientB : clientB,
 							seed : Math.random() * 10000000000000000
-						});
+						};
+						exports.BattleServer.battles.push(battle);
 						exports.BattleServer.send({
 							action : "begin",
-							team : 0
+							team : 0,
+							seed : battle.seed
 						}, clientA);
 						exports.BattleServer.send({
 							action : "begin",
