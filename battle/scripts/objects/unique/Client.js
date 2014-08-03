@@ -14,9 +14,12 @@ Client = {
 				break;
 			case "begin":
 				console.log("%cAn online battle has been initialised.", "color : hsl(170, 100%, 30%)");
+				srandom.seed = message.seed;
 				var bulbasaur = new pokemon(Pokemon.Bulbasaur), charizard = new pokemon(Pokemon.Charizard), ivysaur = new pokemon(Pokemon.Ivysaur), blastoise = new pokemon(Pokemon.Blastoise);
 				var you = new character((message.team === 0 ? "DM" : "Jext")), them = new character((message.team === 0 ? "Jext" : "DM"));
 				Game.takePossessionOf(you);
+				you.team = message.team;
+				them.team = 1 - message.team;
 				them.type = Characters.type.online;
 				(message.team === 0 ? you : them).give(bulbasaur);
 				(message.team === 0 ? you : them).give(charizard);
@@ -29,9 +32,7 @@ Client = {
 				if (Battle.active)
 					Battle.end();
 			case "actions":
-				Battle.communication = message.actions;
-				if (Battle.stage === 2)
-					Battle.giveTrainersActions();
+				Battle.receiveActions(message.actions, Game.player.team);
 				break;
 		}
 	},

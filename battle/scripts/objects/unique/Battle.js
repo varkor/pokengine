@@ -646,6 +646,8 @@ Battle = {
 			Battle.prompt();
 	},
 	giveTrainersActions : function () {
+		if (Game.player.team === 0)
+			Battle.queue = Battle.queue.concat(Battle.actions);
 		foreach(Battle.allTrainers(), function (trainer) {
 			if (trainer.isAnNPC())
 				Battle.AI.action(trainer);
@@ -656,7 +658,8 @@ Battle = {
 				}
 			}
 		});
-		Battle.queue = Battle.queue.concat(Battle.actions);
+		if (Game.player.team === 1)
+			Battle.queue = Battle.queue.concat(Battle.actions);
 		Battle.actions = [];
 		Battle.stage = 1;
 		Battle.processTurn();

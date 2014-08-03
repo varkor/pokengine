@@ -15,6 +15,7 @@ function character (name, team) {
 	self.badges = [];
 	self.location = Map.locations.nowhere;
 	self.type = Characters.type.NPC;
+	self.team = null;
 	
 	self.give = function (poke) {
 		poke.belong(self);
