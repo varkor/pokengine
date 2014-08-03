@@ -36,8 +36,8 @@ exports.BattleServer = {
 						if (client !== from)
 							exports.BattleServer.send({
 								action : "invitation",
-								from : client
-							});
+								from : from
+							}, client);
 					});
 				}
 				break;

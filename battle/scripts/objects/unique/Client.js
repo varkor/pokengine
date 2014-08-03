@@ -15,7 +15,7 @@ Client = {
 			case "begin":
 				console.log("%cAn online battle has been initialised.", "color : hsl(170, 100%, 40%)");
 				var bulbasaur = new pokemon(Pokemon.Bulbasaur), charizard = new pokemon(Pokemon.Charizard), ivysaur = new pokemon(Pokemon.Ivysaur), blastoise = new pokemon(Pokemon.Blastoise);
-				var you = new Character("Jext"), them = new Character("DM");
+				var you = new Character("DM"), them = new Character("Jext");
 				Game.takePossessionOf(you);
 				them.type = Characters.type.online;
 				(message.team === 0 ? you : them).give(bulbasaur);
