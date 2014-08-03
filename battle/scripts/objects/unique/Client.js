@@ -2,20 +2,20 @@ Client = {
 	connected : false,
 	socket : null,
 	receive : function (message) {
-		console.log("%cReceived the following message from the server:", "color : hsl(170, 100%, 40%)", message);
+		console.log("%cReceived the following message from the server:", "color : hsl(170, 100%, 30%)", message);
 		switch (message.action) {
 			case "invitation":
-				console.log("%cYou have received an invitation to battle from another player (" + message.from + "):", "color : hsl(170, 100%, 40%)");
-				console.log("%cAccepting the invitation to battle...", "color : hsl(170, 100%, 40%)");
+				console.log("%cYou have received an invitation to battle from another player (" + message.from + "):", "color : hsl(170, 100%, 30%)");
+				console.log("%cAccepting the invitation to battle...", "color : hsl(170, 100%, 30%)");
 				Client.send({
 					action : "invite",
 					who : message.from
 				});
 				break;
 			case "begin":
-				console.log("%cAn online battle has been initialised.", "color : hsl(170, 100%, 40%)");
+				console.log("%cAn online battle has been initialised.", "color : hsl(170, 100%, 30%)");
 				var bulbasaur = new pokemon(Pokemon.Bulbasaur), charizard = new pokemon(Pokemon.Charizard), ivysaur = new pokemon(Pokemon.Ivysaur), blastoise = new pokemon(Pokemon.Blastoise);
-				var you = new Character("DM"), them = new Character("Jext");
+				var you = new character("DM"), them = new character("Jext");
 				Game.takePossessionOf(you);
 				them.type = Characters.type.online;
 				(message.team === 0 ? you : them).give(bulbasaur);
@@ -56,11 +56,12 @@ Client = {
 			var data = event.data;
 			try {
 				data = JSON.parse("[" + event.data + "]");
-				if (data[0] === 56) // pokéngine.org's battle "port"
-					Client.receive(data[1]);
 			} catch (error) {
-				console.log("%cReceived a message of an incorrect form from the server:", "color : hsl(0, 100%, 40%)", data);
+				console.log("%cReceived a message of an incorrect form from the server:", "color : hsl(0, 100%, 40%)", data, error);
+				return;
 			};
+			if (data[0] === 56) // pokéngine.org's battle "port"
+				Client.receive(data[1]);
 		});
 	}
 };
