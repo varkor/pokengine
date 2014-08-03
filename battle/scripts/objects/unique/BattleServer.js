@@ -43,7 +43,7 @@ exports.BattleServer = {
 						var battle = {
 							clientA : clientA,
 							clientB : clientB,
-							seed : Math.random() * 10000000000000000
+							seed : parseInt(String(Math.random()).replace(".", ""))
 						};
 						exports.BattleServer.battles.push(battle);
 						exports.BattleServer.send({
@@ -53,7 +53,8 @@ exports.BattleServer = {
 						}, clientA);
 						exports.BattleServer.send({
 							action : "begin",
-							team : 1
+							team : 1,
+							seed : battle.seed
 						}, clientB);
 					}
 				} else {
