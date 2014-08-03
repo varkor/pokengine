@@ -372,6 +372,7 @@ Battle = {
 	},
 	end : function () {
 		Battle.active = false;
+		Textbox.clear();
 		Battle.redraw();
 		Battle.situation = null;
 		foreach(Battle.all(true), function (poke) {
@@ -628,7 +629,8 @@ Battle = {
 	},
 	advance : function () {
 		if (++ Battle.selection === Game.player.battlers().length) {
-			Battle.queue = Battle.queue.concat(Battle.actions);
+			Battle.playerActions = Battle.actions;
+			Battle.queue = Battle.queue.concat(playerActions);
 			Battle.actions = [];
 			if (Battle.kind === Battles.kind.online) {
 				Client.send({
@@ -640,14 +642,13 @@ Battle = {
 				Battle.giveTrainersActions();
 			else {
 				Battle.stage = 2;
-				Textbox.stateUntil("Waiting for the other player to make a decision...", function () { return Battle.stage !== 2 || !Battle.active; });
+				Textbox.stateUntil("Waiting for the other player to make a decision...", function () { return Battle.stage !== 2; });
 			}
 		} else
 			Battle.prompt();
 	},
 	giveTrainersActions : function () {
-		if (Game.player.team === 0)
-			Battle.queue = Battle.queue.concat(Battle.actions);
+		Battle.actions = [];
 		foreach(Battle.allTrainers(), function (trainer) {
 			if (trainer.isAnNPC())
 				Battle.AI.action(trainer);
@@ -658,8 +659,7 @@ Battle = {
 				}
 			}
 		});
-		if (Game.player.team === 1)
-			Battle.queue = Battle.queue.concat(Battle.actions);
+		Battle.queue = Battle.queue.concat(Battle.actions);
 		Battle.actions = [];
 		Battle.stage = 1;
 		Battle.processTurn();
@@ -1355,6 +1355,11 @@ Battle = {
 		return place;
 	},
 	race : function (entrants, action) {
+		entrants.sort(function (a, b) {
+			if (a.hasOwnProperty("poke") && b.hasOwnProperty("poke")) {
+				return a.poke.trainer.team - b.poke.trainer.team;
+			}
+		});
 		foreach(entrants, function (entrant) { // If Pokémon have exactly the same speed, they should go randomly
 			entrant.poke.battler.speed = srandom.number(0.5);
 		});

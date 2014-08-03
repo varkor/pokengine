@@ -308,7 +308,9 @@ Textbox = {
 		}
 	},
 	clear : function () {
-		return (Textbox.dialogue.length === 0);
+		var self = Textbox;
+		self.dialogue = [];
+		self.displayed = "";
 	},
 	lineHeight : function () {
 		var self = Textbox;

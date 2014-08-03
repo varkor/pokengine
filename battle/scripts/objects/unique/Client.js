@@ -32,7 +32,7 @@ Client = {
 				if (Battle.active)
 					Battle.end();
 			case "actions":
-				Battle.receiveActions(message.actions, Game.player.team);
+				Battle.receiveActions(message.actions);
 				break;
 		}
 	},
@@ -44,31 +44,34 @@ Client = {
 		}
 	},
 	connect : function () {
-		Client.socket = new WebSocket("ws://pokengine.org:9008/");
-		console.log("%cConnecting to the server...", "color : hsl(50, 100%, 40%)");
-		Client.socket.addEventListener("open", function () {
-			console.log("%cConnected with the server.", "color : hsl(110, 100%, 40%)");
-			Client.connected = true;
-			Client.send({
-				action : "connect"
+		if (!Client.connected) {
+			Client.socket = new WebSocket("ws://pokengine.org:9008/");
+			console.log("%cConnecting to the server...", "color : hsl(50, 100%, 40%)");
+			Client.socket.addEventListener("open", function () {
+				console.log("%cConnected with the server.", "color : hsl(110, 100%, 40%)");
+				Client.connected = true;
+				Client.send({
+					action : "connect"
+				});
 			});
-		});
-		Client.socket.addEventListener("close", function () {
-			console.log("%cDisconnected from the server.", "color : hsl(0, 100%, 40%)");
-			Client.connected = false;
-			if (Battle.active)
-				Battle.end();
-		});
-		Client.socket.addEventListener("message", function (event) {
-			var data = event.data;
-			try {
-				data = JSON.parse("[" + event.data + "]");
-			} catch (error) {
-				console.log("%cReceived a message of an incorrect form from the server:", "color : hsl(0, 100%, 40%)", data, error);
-				return;
-			};
-			if (data[0] === 56) // pokéngine.org's battle "port"
-				Client.receive(data[1]);
-		});
+			Client.socket.addEventListener("close", function () {
+				console.log("%cDisconnected from the server.", "color : hsl(0, 100%, 40%)");
+				Client.connected = false;
+				if (Battle.active)
+					Battle.end();
+			});
+			Client.socket.addEventListener("message", function (event) {
+				var data = event.data;
+				try {
+					data = JSON.parse("[" + event.data + "]");
+				} catch (error) {
+					console.log("%cReceived a message of an incorrect form from the server:", "color : hsl(0, 100%, 40%)", data, error);
+					return;
+				};
+				if (data[0] === 56) // pokéngine.org's battle "port"
+					Client.receive(data[1]);
+			});
+		} else
+			console.log("%cThe client is already connected to the server.", "color : hsl(0, 100%, 40%)");
 	}
 };
