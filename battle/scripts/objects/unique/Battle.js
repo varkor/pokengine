@@ -243,7 +243,8 @@ Battle = {
 		srandom.seed = Battle.recording.seed;
 		Battle.begin(Battle.recording.teamA, Battle.recording.teamB, Battle.recording.style, Battle.recording.weather, Battles.kind.recording);
 	},
-	beginOnline : function (alliedTrainers, opposingTrainers, style, weather) {
+	beginOnline : function (seed, alliedTrainers, opposingTrainers, style, weather) {
+		srandom.seed = seed;
 		Battle.begin(alliedTrainers, opposingTrainers, style, weather, Battles.kind.online);
 	},
 	beginWildBattle : function (pokes) {
@@ -629,6 +630,12 @@ Battle = {
 		if (++ Battle.selection === Game.player.battlers().length) {
 			Battle.queue = Battle.queue.concat(Battle.actions);
 			Battle.actions = [];
+			if (Battle.kind === Battles.kind.online) {
+				Client.send({
+					action : "actions",
+					actions : Battle.recording.actions[Battle.turns]
+				});
+			}
 			if (Battle.kind !== Battles.kind.online || Battle.communication.notEmpty())
 				Battle.giveTrainersActions();
 			else {
