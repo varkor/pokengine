@@ -770,7 +770,7 @@ Battle = {
 			// Decide whether to use a move, item, switch out, etc.
 			var group = (arguments.length < 1 ? Battle.opponents : trainer.battlers());
 			foreach(group, function (poke) {
-				var disobey = poke.disobey();
+				var disobey = poke.battler.disobeying;
 				if (!disobey) {
 					var usableMoves = poke.usableMoves(), use = srandom.chooseFromArray(usableMoves), againstWhom;
 					againstWhom = srandom.chooseFromArray(Battle.targetsForMove(poke, use.move, true));
@@ -912,21 +912,23 @@ Battle = {
 		});
 		Battle.race(Battle.queue);
 		Battle.queue = [];
-		var allies = Battle.allies.filter(onlyPokemon);
-		foreach(allies, function (poke) {
-			if (poke.trainer === Game.player) {
-				var disobey = poke.disobey();
-				poke.battler.disobeying = disobey ? true : false;
-				if (disobey) {
-					Battle.actions.push({
-						poke : poke,
-						priority : 0,
-						action : function (poke) {
-							if (poke.notHinderedByAilments(poke))
-								disobey(poke);
-						}
-					});
-				}
+		var all = Battle.all(true);
+		all.sort(function (a, b) {
+			return a.trainer.team - b.trainer.team;
+		});
+		foreach(all, function (poke) {
+			console.log("disobeychance", poke.name(), srandom.seed);
+			var disobey = poke.disobey();
+			poke.battler.disobeying = disobey ? disobey : false;
+			if (disobey) {
+				Battle.actions.push({
+					poke : poke,
+					priority : 0,
+					action : function (poke) {
+						if (poke.notHinderedByAilments(poke))
+							disobey(poke);
+					}
+				});
 			}
 		});
 		if (!Battle.delayForInput)
