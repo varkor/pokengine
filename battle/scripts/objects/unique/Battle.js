@@ -1362,7 +1362,11 @@ Battle = {
 			}
 		});
 		foreach(entrants, function (entrant) { // If Pokémon have exactly the same speed, they should go randomly
-			entrant.poke.battler.speed = srandom.number(0.5);
+			if (entrant.hasOwnProperty("poke")) {
+				var speed = srandom.number(0.5)
+				console.log(entrant.poke.name(), speed);
+				entrant.poke.battler.speed = speed;
+			}
 		});
 		entrants.sort(function (a, b) {
 			if (a.priority !== b.priority)

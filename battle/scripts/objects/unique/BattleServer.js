@@ -30,41 +30,42 @@ exports.BattleServer = {
 					exports.BattleServer.battles.splice(index, 1);
 				break;
 			case "invite":
-				if (message.hasOwnProperty("who")) {
-					var clientB, clientA = null;
-					clientB = from;
-					exports.BattleServer.clients.forEach(function (client) {
-						if (client !== from && client.ip === message.who) {
-							clientA = client;
-							return;
-						}
-					});
-					if (clientA !== null) {
-						var battle = {
-							clientA : clientA,
-							clientB : clientB,
-							seed : Math.random() * Math.pow(2, 32)
-						};
-						exports.BattleServer.battles.push(battle);
-						exports.BattleServer.send({
-							action : "begin",
-							team : 0,
-							seed : battle.seed
-						}, clientA);
-						exports.BattleServer.send({
-							action : "begin",
-							team : 1,
-							seed : battle.seed
-						}, clientB);
-					}
-				} else {
-					exports.BattleServer.clients.forEach(function (client) {
-						if (client !== from)
+				if (BattleServer.battleForClient(from) === null) {
+					if (message.hasOwnProperty("who")) {
+						var clientB = from, clientA = null;
+						exports.BattleServer.clients.forEach(function (client) {
+							if (client !== from && client.ip === message.who) {
+								clientA = client;
+								return;
+							}
+						});
+						if (clientA !== null && BattleServer.battleForClient(clientA) === null) {
+							var battle = {
+								clientA : clientA,
+								clientB : clientB,
+								seed : Math.random() * Math.pow(2, 32)
+							};
+							exports.BattleServer.battles.push(battle);
 							exports.BattleServer.send({
-								action : "invitation",
-								from : from.ip
-							}, client);
-					});
+								action : "begin",
+								team : 0,
+								seed : battle.seed
+							}, clientA);
+							exports.BattleServer.send({
+								action : "begin",
+								team : 1,
+								seed : battle.seed
+							}, clientB);
+						}
+					} else {
+						exports.BattleServer.clients.forEach(function (client) {
+							if (client !== from)
+								exports.BattleServer.send({
+									action : "invitation",
+									from : from.ip
+								}, client);
+						});
+					}
 				}
 				break;
 			case "actions":
@@ -91,5 +92,15 @@ exports.BattleServer = {
 	},
 	send : function (message, to) {
 		to.send(JSON.stringify([56, message]).slice(1, -1));
+	},
+	battleForClient : function (client) {
+		var which = null;
+		exports.BattleServer.battles.forEach(function (battle) {
+			if (battle.clientA === client || battle.clientB === client) {
+				which = battle;
+				return;
+			}
+		});
+		return which;
 	}
 };

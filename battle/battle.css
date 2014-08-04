@@ -21,18 +21,27 @@ canvas {
 }
 button {
 	width: 80pt; height: 24pt;
-	background: hsl(0, 0%, 70%) -webkit-linear-gradient(top, hsl(0, 0%, 80%), transparent);
+	color: black;
+	background: hsl(0, 0%, 70%);
 	border: none;
 	outline: none;
-	border-radius: 4pt;
 	margin: 20pt 0;
 	cursor: pointer;
 	font: normal 12pt "Helvetica Neue";
 }
 button:hover {
-	background: hsl(0, 0%, 80%) -webkit-linear-gradient(top, hsl(0, 0%, 90%), transparent);
+	background: hsl(0, 0%, 80%);
 }
 button:active {
 	background: hsl(0, 0%, 40%);
-	box-shadow: inset hsla(0, 0%, 0%, 0.4) 0 4px 16px;
 }
+button:disabled {
+	cursor: default;
+	background: hsl(0, 0%, 30%);
+}
+button.active {
+	background: hsl(150, 100%, 40%);
+}
+/*button.active:hover {
+	background: hsl(0, 100%, 40%);
+}*/

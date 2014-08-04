@@ -1,5 +1,6 @@
 Client = {
 	connected : false,
+	connecting : false,
 	socket : null,
 	receive : function (message) {
 		console.log("%cReceived the following message from the server:", "color : hsl(170, 100%, 30%)", message);
@@ -43,7 +44,8 @@ Client = {
 		}
 	},
 	connect : function () {
-		if (!Client.connected) {
+		if (!Client.connected && !Client.connecting) {
+			Client.connecting = true;
 			Client.socket = new WebSocket("ws://pokengine.org:9008/");
 			console.log("%cConnecting to the server...", "color : hsl(50, 100%, 40%)");
 			Client.socket.addEventListener("open", function () {
@@ -70,6 +72,6 @@ Client = {
 					Client.receive(data[1]);
 			});
 		} else
-			console.log("%cThe client is already connected to the server.", "color : hsl(0, 100%, 40%)");
+			console.log("%cThe client is already " + (Client.connected ? "connected" : "connecting") + " to the server.", "color : hsl(0, 100%, 40%)");
 	}
 };
