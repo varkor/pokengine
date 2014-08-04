@@ -917,7 +917,6 @@ Battle = {
 			return a.trainer.team - b.trainer.team;
 		});
 		foreach(all, function (poke) {
-			console.log("disobeychance", poke.name(), srandom.seed);
 			var disobey = poke.disobey();
 			poke.battler.disobeying = disobey ? disobey : false;
 			if (disobey) {

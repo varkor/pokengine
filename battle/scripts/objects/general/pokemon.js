@@ -1,4 +1,4 @@
-function pokemon (species) {
+function pokemon (species, display) {
 	var self = this;
 
 	self.species = species;
@@ -27,12 +27,9 @@ function pokemon (species) {
 	self.ability = Abilities.HyperCutter;
 	self.status = Statuses.none;
 	self.IVs = [];
-	self.IVs[Stats.health] = 1//1srandom.int(0, 31);
-	self.IVs[Stats.attack] = 2//srandom.int(0, 31);
-	self.IVs[Stats.defence] = srandom.int(0, 31);
-	self.IVs[Stats.specialAttack] = srandom.int(0, 31);
-	self.IVs[Stats.specialDefence] = srandom.int(0, 31);
-	self.IVs[Stats.speed] = srandom.int(0, 31);
+	for (var i = Stats.attack; i <= Stats.speed; ++ i) {
+		self.IVs[i] = (display ? 0 : srandom.int(0, 31));
+	}
 	self.EVs = [];
 	self.EVs[Stats.health] = 0;
 	self.EVs[Stats.attack] = 0;

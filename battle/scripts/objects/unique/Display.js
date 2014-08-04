@@ -2,7 +2,7 @@ Display = {
 	store : function (poke) {
 		if (poke === NoPokemon)
 			return NoPokemon;
-		var newPoke = new pokemon(poke.species);
+		var newPoke = new pokemon(poke.species, true);
 		foreach(["name", "gender", "species", "level", "health", "experience", "experienceFromLevelToNextLevel"], function (property) {
 			newPoke[property] = (typeof poke[property] === "function" ? function (value) { return function () { return value; }; }(poke[property]()) : poke[property]);
 		});
