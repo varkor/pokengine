@@ -64,6 +64,10 @@
 							document.getElementById("connect").innerHTML = "Connected";
 							document.getElementById("connect").className = "active";
 							document.getElementById("invite").disabled = false;
+						} else {
+							document.getElementById("connect").innerHTML = "Connect";
+							document.getElementById("connect").className = "";
+							document.getElementById("invite").disabled = true;
 						}
 					}
 				});

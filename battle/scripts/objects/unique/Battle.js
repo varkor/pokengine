@@ -1364,7 +1364,7 @@ Battle = {
 		foreach(entrants, function (entrant) { // If Pokémon have exactly the same speed, they should go randomly
 			if (entrant.hasOwnProperty("poke")) {
 				var speed = srandom.number(0.5)
-				console.log(entrant.poke.name(), speed);
+				console.log(entrant.poke.name(), srandom.seed, speed, (entrant.poke.stats[Stats.speed](true) * (entrant.poke.status === Statuses.paralysed ? 0.25 : 1) + entrant.poke.battler.speed));
 				entrant.poke.battler.speed = speed;
 			}
 		});

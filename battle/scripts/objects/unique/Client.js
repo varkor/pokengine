@@ -7,11 +7,15 @@ Client = {
 		switch (message.action) {
 			case "invitation":
 				console.log("%cYou have received an invitation to battle from another player (" + message.from + "):", "color : hsl(170, 100%, 30%)");
+				if (!Battle.active) {
 				console.log("%cAccepting the invitation to battle...", "color : hsl(170, 100%, 30%)");
-				Client.send({
-					action : "invite",
-					who : message.from
-				});
+					Client.send({
+						action : "invite",
+						who : message.from
+					});
+				} else {
+					console.log("%cRefusing the invitation: you're already battling!", "color : hsl(0, 100%, 40%)");
+				}
 				break;
 			case "begin":
 				console.log("%cAn online battle has been initialised.", "color : hsl(170, 100%, 30%)");
