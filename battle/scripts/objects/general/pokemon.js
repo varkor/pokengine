@@ -27,7 +27,7 @@ function pokemon (species, display) {
 	self.ability = Abilities.HyperCutter;
 	self.status = Statuses.none;
 	self.IVs = [];
-	for (var i = Stats.attack; i <= Stats.speed; ++ i) {
+	for (var i = Stats.health; i <= Stats.speed; ++ i) {
 		self.IVs[i] = (display ? 0 : srandom.int(0, 31));
 	}
 	self.EVs = [];

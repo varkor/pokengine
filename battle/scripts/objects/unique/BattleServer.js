@@ -30,7 +30,6 @@ exports.BattleServer = {
 					exports.BattleServer.battles.splice(index, 1);
 				break;
 			case "invite":
-				console.log("clientB", exports.BattleServer.battleForClient(from));
 				if (exports.BattleServer.battleForClient(from) === null) {
 					if (message.hasOwnProperty("who")) {
 						var clientB = from, clientA = null;
@@ -40,8 +39,6 @@ exports.BattleServer = {
 								return;
 							}
 						});
-						if (clientA !== null)
-							console.log("clientA", exports.BattleServer.battleForClient(clientA));
 						if (clientA !== null && exports.BattleServer.battleForClient(clientA) === null) {
 							var battle = {
 								clientA : clientA,
