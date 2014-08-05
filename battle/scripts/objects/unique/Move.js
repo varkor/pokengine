@@ -49,7 +49,7 @@ Move = {
 		maximumPP : Infinity
 	},
 	use : function (move, stage, mover, target) {
-		if (typeof target !== "number")
+		if (target instanceof pokemon)
 			target = Battle.placeOfPokemon(target);
 		var constant = {},
 			targetPokemon = Battle.pokemonInPlace(target),

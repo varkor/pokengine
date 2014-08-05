@@ -22,6 +22,7 @@ Client = {
 				srandom.seed = message.seed;
 				var bulbasaur = new pokemon(Pokemon.Bulbasaur), charizard = new pokemon(Pokemon.Charizard), ivysaur = new pokemon(Pokemon.Ivysaur), blastoise = new pokemon(Pokemon.Blastoise);
 				var you = new character((message.team === 0 ? "DM" : "Jext")), them = new character((message.team === 0 ? "Jext" : "DM"));
+				ivysaur.item = Items.Berries.Sitrus;
 				Game.takePossessionOf(you);
 				you.team = message.team;
 				them.team = 1 - message.team;
@@ -30,7 +31,10 @@ Client = {
 				(message.team === 0 ? you : them).give(charizard);
 				(message.team === 0 ? them : you).give(ivysaur);
 				(message.team === 0 ? them : you).give(blastoise);
-				Battle.beginOnline(message.seed, you, them);
+				(message.team === 0 ? you : them).bag.add(Items.Balls.Poke, 2);
+				(message.team === 0 ? you : them).bag.add(Items.Balls.Clone, 1);
+				(message.team === 0 ? you : them).bag.add(Items.Berries.Sitrus, 3);
+				Battle.beginOnline(message.seed, you, them, Battles.style.double);
 				break;
 			case "disconnect":
 				console.log("%cThe other player disconnected from the server!", "color : hsl(0, 100%, 40%)");
@@ -55,6 +59,7 @@ Client = {
 			Client.socket.addEventListener("open", function () {
 				console.log("%cConnected with the server.", "color : hsl(110, 100%, 40%)");
 				Client.connected = true;
+				Client.connecting = false;
 				Client.send({
 					action : "connect"
 				});

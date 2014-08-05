@@ -97,6 +97,10 @@ function commaSeparatedList (list, ampersand) {
 	return list.slice(0, -1).join(", ") + " " + (ampersand ? "&" : "and") + " " + list[list.length - 1];
 }
 
+function capitalise (word) {
+	return word.substr(0, 1).toUpperCase() + word.substr(1);
+}
+
 function wrapArray (wrap) {
 	return Array.isArray(wrap) ? wrap : [wrap];
 }

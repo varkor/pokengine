@@ -3,6 +3,12 @@ function bag () {
 
 	self.items = [];
 
+	self.usableItems = function () {
+		return self.items.filter(function (item) {
+			return item.quantity - item.intentToUse > 0;
+		});
+	};
+
 	self.add = function (item, quantity) {
 		if (arguments.length < 2)
 			quantity = 1;
@@ -12,7 +18,11 @@ function bag () {
 				return true;
 			}
 		}))
-			self.items.push({item : item, quantity : quantity});
+			self.items.push({
+				item : item,
+				quantity : quantity,
+				intentToUse : 0 // When the player selects "Use item" in their bag, it should count an item as having being used even before it has been
+			});
 	};
 
 	self.remove = function (item, quantity) {
@@ -54,7 +64,7 @@ function bag () {
 		});
 	};
 
-	self.use = function (item, on) {
+	self.indexOfItem = function (item) {
 		var index;
 		if (typeof item !== "number") {
 			foreach(self.items, function (which, i) {
@@ -65,11 +75,25 @@ function bag () {
 			});
 		} else
 			index = item;
-		self.items[index].item.effect(self.items[index].item, on);
+		return index;
+	};
+
+	self.intendToUse = function (item, quantity) {
+		if (arguments.length < 2)
+			quantity = 1;
+		self.items[self.indexOfItem(item)].intentToUse += quantity;
+	};
+
+	self.use = function (item, on, who) {
+		var index = self.indexOfItem(item), item = self.items[index].item;
+		-- self.items[index].intentToUse;
+		if (item.useMessage)
+			Textbox.state(capitalise(who.pronoun()) + " used the " + item.fullname + " on " + on.name() + "!");
+		item.effect(item, on, who);
 		self.remove(index);
 	};
 
 	self.empty = function () {
-		return self.items.length === 0;
+		return self.usableItems().length === 0;
 	};
 }

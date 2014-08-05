@@ -28,6 +28,7 @@ button {
 	margin: 20pt 0;
 	cursor: pointer;
 	font: normal 12pt "Helvetica Neue";
+	-webkit-user-select: none;
 }
 button:hover {
 	background: hsl(0, 0%, 80%);

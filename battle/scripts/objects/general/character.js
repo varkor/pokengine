@@ -16,7 +16,17 @@ function character (name, team) {
 	self.badges = [];
 	self.location = Map.locations.nowhere;
 	self.type = Characters.type.NPC;
-	self.team = null;
+	self.team = Game.unique();
+
+	self.pronoun = function () {
+		return (self === Game.player ? "you" : self.name);
+	};
+	self.genderPronoun = function () {
+		return (self === Game.player ? "you" : (self.gender === Genders.male ? "he" : self.gender === Genders.female ? "her" : "it"));
+	};
+	self.possessivePronoun = function () {
+		return (self === Game.player ? "your" : self.name + "'s");
+	};
 	
 	self.give = function (poke) {
 		poke.belong(self);

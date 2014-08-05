@@ -6,6 +6,7 @@ Items = {
 			targets : Move.targets.self,
 			onetime : false,
 			direct : false,
+			useMessage : false,
 			effect : function (self) {
 				return 1.5;
 			},
@@ -26,12 +27,13 @@ Items = {
 			targets : Move.targets.opponents,
 			onetime : true,
 			direct : true,
-			effect : function (self, poke) {
+			useMessage : false,
+			effect : function (self, poke, trainer) {
 				if (Battle.situation === Battles.situation.wild) {
-					Textbox.state("You threw a " + self.fullname + " at " + poke.name() + "!");
-					Battle.attemptCapture(poke, self);
+					Textbox.state(capitalise(trainer.pronoun()) + " threw a " + self.fullname + " at " + poke.name() + "!");
+					Battle.attemptCapture(poke, self, trainer);
 				} else {
-					Textbox.state("The other trainer blocked your " + self.fullname + "! You can't catch other people's Pokémon!");
+					Textbox.state(capitalise(poke.trainer.pronoun()) + " blocked " + trainer.possessivePronoun() + " " + self.fullname + "! " + (trainer === Game.player ? "You can't catch other people's Pokémon!" : capitalise(trainer.pronoun()) + " tried to capture your Pokémon!"));
 				}
 			}
 		},
@@ -50,11 +52,12 @@ Items = {
 		Clone : {
 			name : "Clone",
 			catchRate : 255,
-			effect : function (self, poke) {
-				Textbox.state("You threw a " + self.fullname + " at " + poke.name() + "!");
+			effect : function (self, poke, trainer) {
+				var thrownByPlayer = (poke.trainer !== Battle.alliedTrainers[0]);
+				Textbox.state(capitalise((thrownByPlayer ? Battle.alliedTrainers[0] : Battle.opposingTrainers[0]).pronoun()) + " threw a " + self.fullname + " at " + poke.name() + "!");
 				if (Battle.situation !== Battles.situation.wild)
-					Textbox.state("The other trainer looks on helplessly as your " + self.fullname + " closes in!");
-				Battle.attemptCapture(poke, self);
+					Textbox.state(capitalise((thrownByPlayer ? Battle.opposingTrainers[0] : Battle.alliedTrainers[0]).pronoun()) + " look" + (thrownByPlayer ? "s" : "") + " on helplessly as " + (thrownByPlayer ? Battle.alliedTrainers[0] : Battle.opposingTrainers[0]).possessivePronoun() + " " + self.fullname + " closes in!");
+				Battle.attemptCapture(poke, self, trainer);
 			}
 		}
 	},
@@ -63,8 +66,9 @@ Items = {
 			category : "Berry",
 			use : Item.use.healing,
 			targets : Move.targets.party,
-			onetime : true,
-			direct : true // Whether you can use it as a trainer, directly (rather than just being a held item)
+			onetime : true, // Whether the item is used up after its effect has occurred
+			direct : true, // Whether you can use it as a trainer, directly (rather than just being a held item)
+			useMessage : true
 		},
 		Sitrus : {
 			name : "Sitrus",

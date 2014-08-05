@@ -98,17 +98,19 @@ Battle = {
 						align : {x : "center" , y : "bottom"},
 						colour : "white",
 						font : "lighter 10px Helvetica Neue"
-					},
-					{
-						points : [{x : 0, y : 18}, {x : 80}, {x : 86, y : 24}, {x : 0}],
-						colour : "hsla(0, 0%, 0%, 0.6)"
 					}
 				]);
-				if (percentageExperience > 0) {
+				if (Battle.kind !== Battles.kind.online) {
 					shapes = shapes.concat([{
-						points : [{x : 0, y : 20}, {x : 78 - 80 * (1 - percentageExperience)}, {x : 80 - 80 * (1 - percentageExperience), y : 22}, {x : 0}],
-						colour : "hsl(190, 100%, 50%)"
+						points : [{x : 0, y : 18}, {x : 80}, {x : 86, y : 24}, {x : 0}],
+						colour : "hsla(0, 0%, 0%, 0.6)"
 					}]);
+					if (percentageExperience > 0) {
+						shapes = shapes.concat([{
+							points : [{x : 0, y : 20}, {x : 78 - 80 * (1 - percentageExperience)}, {x : 80 - 80 * (1 - percentageExperience), y : 22}, {x : 0}],
+							colour : "hsl(190, 100%, 50%)"
+						}]);
+					}
 				}
 			}
 			foreach(shapes, function (shape) {
@@ -339,9 +341,9 @@ Battle = {
 					++ number;
 				});
 				if (names.length === 1)
-					Textbox.state(names[0] + " is challenging " + Battle.secondPerson() + " to a battle. " + (Battle.opposingTrainers[0].gender === Genders.male ? "He" : "She") + " has " + numberword(Battle.opposingTrainers[0].pokemon()) + " Pokémon.");
+					Textbox.state(names[0] + " is challenging " + Battle.alliedTrainers[0].pronoun() + " to a battle. " + (Battle.opposingTrainers[0].gender === Genders.male ? "He" : "She") + " has " + numberword(Battle.opposingTrainers[0].pokemon()) + " Pokémon.");
 				if (names.length > 1)
-					Textbox.state(commaSeparatedList(names) + " are challenging " + Battle.secondPerson() + " to a battle. They have " + number + " Pokémon between them.");
+					Textbox.state(commaSeparatedList(names) + " are challenging " + Battle.alliedTrainers[0].pronoun() + " to a battle. They have " + number + " Pokémon between them.");
 				break;
 		}
 		if (Battle.kind !== Battles.kind.recording) {
@@ -360,15 +362,6 @@ Battle = {
 	},
 	finish : function () {
 		Battle.finished = true;
-	},
-	secondPerson : function (capitalise) {
-		return (Battle.kind !== Battles.kind.recording ? (capitalise ? "You" : "you") : Battle.alliedTrainers[0].name);
-	},
-	possessiveSecondPerson : function (capitalise) {
-		return (Battle.kind !== Battles.kind.recording ? (capitalise ? "Your" : "your") : Battle.alliedTrainers[0].name + "'s");
-	},
-	secondPersonHave : function () {
-		return (Battle.kind !== Battles.kind.recording ? "have" : "has");
 	},
 	end : function (forcefully) {
 		if (Battle.active) {
@@ -413,13 +406,14 @@ Battle = {
 				if (typeof tertiary !== "undefined" && tertiary !== null)
 					who = tertiary;
 				else {
-					var targets = [], targetNames = [], affected, partOfTarget, names, all = Battle.all(true);
-					foreach(all, function (poke, i) {
+					var targets = [], targetNames = [], place, affected, partOfTarget, names, all = Battle.all(true);
+					foreach(all, function (poke) {
+						place = Battle.placeOfPokemon(poke);
 						if (Battle.pokemonInRangeOfMove(currentBattler, poke, chosenMove.move)) {
 							affected = chosenMove.move.affects;
 							partOfTarget = [];
 							if (affected.contains(Move.target.directTarget)) {
-								partOfTarget.push(i);
+								partOfTarget.push(place);
 							}
 							foreach(Battle.alliesTo(currentBattler).filter(onlyPokemon), function (adjacent) {
 								var index = all.indexOf(adjacent), distance = Math.floor(Battle.distanceBetween(currentBattler, adjacent));
@@ -433,7 +427,7 @@ Battle = {
 							});
 							names = [];
 							foreach(partOfTarget, function (part) {
-								names.push(all[part].name());
+								names.push(Battle.pokemonInPlace(part).name());
 							});
 							partOfTarget = partOfTarget.removeDuplicates();
 							if (!foreach(targets, function (who) {
@@ -441,7 +435,10 @@ Battle = {
 									return true;
 							})) {
 								targetNames.push(commaSeparatedList(names, true));
-								targets.push({target : i, affects : partOfTarget});
+								targets.push({
+									target : place,
+									affects : partOfTarget
+								});
 							}
 						}
 					});
@@ -461,7 +458,7 @@ Battle = {
 							});
 							if (major) {
 								foreach(targets[i].affects, function (affected) {
-									displayAll[affected].battler.display.outlined = true;
+									Display.pokemonInState(Battle.pokemonInPlace(affected)).battler.display.outlined = true;
 								});
 							}
 						});
@@ -491,15 +488,17 @@ Battle = {
 						Textbox.state("You don't have any items.");
 						reprompt = true;
 					} else {
-						var items = [], hotkeys = {};
+						var usableItems = character.bag.usableItems(), items = [], indices = [], hotkeys = {};
 						hotkeys[Game.key.secondary] = "Cancel";
-						foreach(character.bag.items, function (item) {
-							if (item.item.direct) // If the item can be used directly, instead of when being held
-								items.push(item.item.fullname + " ×" + item.quantity);
+						foreach(usableItems, function (item) {
+							if (item.item.direct) { // If the item can be used directly, instead of when being held
+								items.push(item.item.fullname + " ×" + (item.quantity - item.intentToUse));
+								indices.push(character.bag.indexOfItem(item.item));
+							}
 						});
 						Textbox.ask("Which item do you want to use?", items, function (response, i, major) {
 							if (response !== "Cancel")
-								Battle.input("Bag", i);
+								Battle.input("Bag", indices[i]);
 							else
 								Battle.prompt();
 						}, ["Cancel"], null, hotkeys, "Item");
@@ -510,7 +509,11 @@ Battle = {
 						if (targets === Move.targets.party) {
 							targets = character.party.pokemon;
 						} else if (targets === Move.targets.opponents) {
-							targets = Battle.opponents;
+							targets = [];
+							foreach(Battle.opponents, function (opponent) {
+								targets.push(opponent);
+							});
+							targets.reverse();
 						}
 						names = [];
 						positions = [];
@@ -518,7 +521,7 @@ Battle = {
 						hotkeys[Game.key.secondary] = "Cancel";
 						foreach(targets, function (poke) {
 							names.push(poke.name());
-							positions.push(poke);
+							positions.push(Battle.placeOfPokemon(poke));
 						});
 						Textbox.ask("On which Pokémon do you want to use the " + character.bag.items[secondary].item.fullname + "?", names, function (response, i) {
 							if (response !== "Cancel")
@@ -530,7 +533,7 @@ Battle = {
 								poke.battler.display.outlined = false;
 							});
 							if (major) {
-								var poke = positions[i];
+								var poke = Battle.pokemonInPlace(positions[i]);
 								if (poke.inBattle())
 									Display.pokemonInState(poke).battler.display.outlined = true;
 							}
@@ -542,11 +545,15 @@ Battle = {
 						Battle.actions.push({
 							poke : tertiary,
 							doesNotRequirePokemonToBeBattling : true,
-							priority : 6,
+							priority : 6.1, // Using items should be slightly higher priority than switching Pokémon in
 							action : function (poke) {
-								character.bag.use(secondary, poke);
+								character.bag.use(secondary, poke, character);
+							},
+							undo : function () {
+								character.bag.intendToUse(secondary, -1);
 							}
 						});
+						character.bag.intendToUse(secondary);
 					}
 				}
 				break;
@@ -610,7 +617,9 @@ Battle = {
 					advance = false;
 				break;
 			case "Back":
-				Battle.actions.pop();
+				var previous = Battle.actions.pop();
+				if (previous.hasOwnProperty("undo"))
+					previous.undo();
 				Battle.recording.actions[Battle.turns].pop();
 				-- Battle.selection;
 				advance = false;
@@ -634,9 +643,12 @@ Battle = {
 		if (++ Battle.selection === Game.player.battlers().length) {
 			Battle.queue = Battle.queue.concat(Battle.actions);
 			Battle.actions = [];
+			var display = Display.state.save();
+			Textbox.effect(function () { Display.state.load(display); });
 			if (Battle.kind === Battles.kind.online) {
 				Client.send({
 					action : "actions",
+					seed : srandom.seed,
 					actions : Battle.recording.actions[Battle.turns]
 				});
 			}
@@ -760,10 +772,30 @@ Battle = {
 		}
 	},
 	placeOfPokemon : function (poke) {
-		return Battle.all().indexOf(poke);
+		if (poke.inBattle())
+			return {
+				side : poke.battler.side,
+				team : poke.trainer.team,
+				position : (poke.battler.side === Battles.side.near ? Battle.allies : Battle.opponents).indexOf(poke)
+			};
+		else
+			return {
+				team : poke.trainer.team,
+				position : poke.trainer.party.pokemon.indexOf(poke)
+			};
 	},
 	pokemonInPlace : function (place) {
-		return Battle.all()[place];
+		return (place.hasOwnProperty("side") ? (place.team === Game.player.team ? Battle.allies : Battle.opponents)[place.position] : Battle.trainerOfTeam(place.team).party.pokemon[place.position]);
+	},
+	trainerOfTeam : function (team) {
+		var trainerOfTeam = null, all = Battle.allTrainers();
+		foreach(all, function (trainer) {
+			if (trainer.team === team) {
+				trainerOfTeam = trainer;
+				return true;
+			}
+		});
+		return trainerOfTeam;
 	},
 	AI : {
 		action : function (trainer) {
@@ -823,8 +855,8 @@ Battle = {
 		// Get the player to submit an action, such as Fight, or Run, etc.
 		if (Battle.finished)
 			return;
-		var inBattle = [], currentBattler;
-		foreach(Battle.allies, function (poke) {
+		var inBattle = [], currentBattler, allies = Battle.allies.filter(onlyPokemon);
+		foreach(allies, function (poke) {
 			if (!poke.trainer.isAnNPC())
 				inBattle.push(poke);
 		});
@@ -861,8 +893,6 @@ Battle = {
 	},
 	processTurn : function () {
 		Battle.selection = 0;
-		var display = Display.state.save();
-		Textbox.effect(function () { Display.state.load(display); });
 		foreach(Battle.effects.specific, function (effect, i, deletion) {
 			if (!effect.target.battler.battling) {
 				deletion.push(i);
@@ -936,16 +966,16 @@ Battle = {
 	endTurn : function () {
 		if (!Battle.active || Battle.finished)
 			return;
-		foreach([].concat(Battle.effects.near, Battle.effects.far), function (effect, i, deletion) {
+		foreach(Battle.effects.near, function (effect, i, deletion) {
 			if (Battle.turns >= Math.floor(effect.expiration)) {
-				if (i < Battle.effects.near.length) {
-					Textbox.state(Battle.possessiveSecondPerson() + effect.type.name + " ran out.");
-					deletion.push(i);
-				}
-				else {
-					Textbox.state("The opponent's " + effect.type.name + " ran out.");
-					deletion.push(i - Battle.effects.near.length);
-				}
+				Textbox.state(capitalise(Battle.alliedTrainers[0].possessivePronoun()) + effect.type.name + " ran out.");
+				deletion.push(i);
+			}
+		});
+		foreach(Battle.effects.far, function (effect, i, deletion) {
+			if (Battle.turns >= Math.floor(effect.expiration)) {
+				Textbox.state(capitalise(Battle.opposingTrainers[0].possessivePronoun()) + effect.type.name + " ran out.");
+				deletion.push(i);
 			}
 		});
 		foreach(Battle.effects.specific, function (effect, i, deletion) {
@@ -1140,7 +1170,7 @@ Battle = {
 		if (typeof damage.category !== "undefined" && damage.category !== null)
 			poke.battler.damaged[damage.category] += amount;
 		var display = Display.state.save();
-		Textbox.state(amount + " damage was done to " + poke.name() + ", bringing " + poke.personalPronoun() + " down to " + poke.health + " HP.", function () { return Display.state.transition(display); });
+		Textbox.effect(function () { return Display.state.transition(display); });
 		if (poke.health === 0) {
 			poke.battler.display.transition = 0;
 			poke.battler.display.height = 0;
@@ -1163,16 +1193,13 @@ Battle = {
 			change : amount
 		}, cause, poke).contains(true))
 			return;
-		/*if (Battle.hasEffectOnSide(Moves.HealBlock, (poke.side === Battles.side.near ? Battle.effects.near : Battle.effects.far))) {
-			Textbox.state("The " + Moves.HealBlock.name + " prevents healing!");
-			return;
-		}*/
 		poke.health = Math.min(poke.stats[Stats.health](), poke.health + amount);
+		var message = "Some of " + poke.name() + "'s health was restored.";
 		if (poke.battler.battling) {
 			var display = Display.state.save();
-			Textbox.state(amount + " health was restored to " + poke.name() + ", bringing it up to " + poke.health + " HP.", function () { return Display.state.transition(display); });
+			Textbox.state(message, function () { return Display.state.transition(display); });
 		} else
-			Textbox.state(amount + " health was restored to " + poke.name() + ", bringing it up to " + poke.health + " HP.");
+			Textbox.state(message);
 	},
 	healPercentage : function (poke, percentage, cause) {
 		Battle.heal(poke, poke.stats[Stats.health]() * percentage, cause);
@@ -1197,12 +1224,18 @@ Battle = {
 			});
 			var escapeChance = (currentBattler.stats[Stats.speed](true) * 32) / ((maxSpeed / 4) % 256) + 30 * (Battle.escapeAttempts ++);
 			if (escapeChance > 255 || randomInt(255) < escapeChance) {
-				Battle.queue.push({priority : 6, action : function () { Textbox.state(Battle.secondPerson(true) + " escaped successfully!", function () { Battle.end(); }); Battle.finish(); } });
+				Battle.queue.push({priority : 6, action : function () {
+					Textbox.state(capitalise(Battle.alliedTrainers[0].pronoun()) + " escaped successfully!", function () { Battle.end(); }); Battle.finish(); }
+				});
 			} else
-				Battle.queue.push({priority : 6, action : function () { Textbox.state(Battle.secondPerson(true) + "couldn't get away!"); }});
+				Battle.queue.push({priority : 6, action : function () {
+					Textbox.state(capitalise(Battle.alliedTrainers[0].pronoun()) + "couldn't get away!");
+				}});
 		}
 	},
-	attemptCapture : function (poke, ball) {
+	attemptCapture : function (poke, ball, trainer) {
+		if (arguments.length < 3)
+			trainer = Game.player;
 		var modifiers = {
 			status : 1,
 			species : !poke.battler.transform.transformed ? poke.species.catchRate : poke.battler.transform.species.catchRate,
@@ -1248,25 +1281,25 @@ Battle = {
 		if (!caught) {
 			switch (shakes) {
 				case 0:
-					Textbox.state("Oh no! The Pokémon broke free!");
+					Textbox.state((trainer === Game.player ? "Oh no! " : "") + "The Pokémon broke free!");
 					break;
 				case 1:
-					Textbox.state("Aww! It appeared to be caught!");
+					Textbox.state((trainer === Game.player ? "Aww! " : "") + "It appeared to be caught!");
 					break;
 				case 2:
-					Textbox.state("Aargh! Almost had it!");
+					Textbox.state((trainer === Game.player ? "Aargh! " : "") + "Almost had it!");
 					break;
 				case 3:
-					Textbox.state("Gah! It was so close, too!");
+					Textbox.state((trainer === Game.player ? "Gah! " : "") + " It was so close, too!");
 					break;
 			}
 		} else {
 			poke.battler.display.transition = 0;
 			var display = Display.state.save();
-			Textbox.state("Gotcha! " + poke.name() + " was caught!", function () { return Display.state.transition(display); });
+			Textbox.state((trainer === Game.player ? "Gotcha! " : "") + poke.name() + " was caught!", function () { return Display.state.transition(display); });
 			Battle.removeFromBattle(poke);
 			poke.pokeball = ball;
-			Game.player.give(poke);
+			trainer.give(poke);
 		}
 		return caught;
 	},
@@ -1288,13 +1321,13 @@ Battle = {
 		}
 		poke.battler.reset();
 		if (!poke.trainer.hasHealthyPokemon(true, poke) && !poke.trainer.hasHealthyPokemon(false, poke)) {
-			var defeatedMessage;
+			var defeatedMessage = capitalise(Battle.alliedTrainers[0].pronoun()) + " " + (poke.trainer === Game.player ? "have" : "has") + " ";
 			if (poke.trainer === Game.player)
-				defeatedMessage = Battle.secondPerson(true) + " " + Battle.secondPersonHave() + " been defeated!";
+				defeatedMessage += "been defeated!";
 			else if (Battle.situation === Battles.situation.trainer)
-				defeatedMessage = Battle.secondPerson(true) + " " + Battle.secondPersonHave() + " defeated " + poke.trainer.name + "!";
+				defeatedMessage += "defeated " + poke.trainer.name + "!";
 			else
-				defeatedMessage = Battle.secondPerson(true) + " " + Battle.secondPersonHave() + " defeated the wild Pokémon!";
+				defeatedMessage += "defeated the wild Pokémon!";
 			Textbox.state(defeatedMessage, function () {
 				Battle.end();
 			});
@@ -1326,7 +1359,7 @@ Battle = {
 			var displayInitial = Display.state.save();
 			poke.battler.display.transition = 1;
 			var display = Display.state.save();
-			Textbox.state((Game.player === poke.trainer ? Battle.secondPerson(true) : poke.trainer.name) + " sent out " + poke.name() + "!", function () { Display.state.load(displayInitial); return Display.state.transition(display); });
+			Textbox.state(capitalise(poke.trainer.pronoun()) + " sent out " + poke.name() + "!", function () { Display.state.load(displayInitial); return Display.state.transition(display); });
 		}
 		foreach(Battle.opponentsTo(poke), function (opponent) {
 			poke.battler.opponents.pushIfNotAlreadyContained(opponent);
@@ -1357,6 +1390,10 @@ Battle = {
 		return place;
 	},
 	race : function (entrants, action) {
+		foreach(entrants, function (entrant) {
+			if (entrant.hasOwnProperty("poke") && !(entrant.poke instanceof pokemon))
+				entrant.poke = Battle.pokemonInPlace(entrant.poke);
+		});
 		entrants.sort(function (a, b) {
 			if (a.hasOwnProperty("poke") && b.hasOwnProperty("poke")) {
 				return a.poke.trainer.team - b.poke.trainer.team;
@@ -1364,9 +1401,7 @@ Battle = {
 		});
 		foreach(entrants, function (entrant) { // If Pokémon have exactly the same speed, they should go randomly
 			if (entrant.hasOwnProperty("poke")) {
-				var speed = srandom.number(0.5)
-				console.log(entrant.poke.name(), srandom.seed, speed, (entrant.poke.stats[Stats.speed](true) * (entrant.poke.status === Statuses.paralysed ? 0.25 : 1) + entrant.poke.battler.speed));
-				entrant.poke.battler.speed = speed;
+				entrant.poke.battler.speed = srandom.number(0.5);
 			}
 		});
 		entrants.sort(function (a, b) {
@@ -1374,7 +1409,7 @@ Battle = {
 				return b.priority - a.priority;
 			else {
 				if (a.hasOwnProperty("poke") && b.hasOwnProperty("poke"))
-					return (b.poke.stats[Stats.speed](true) * (b.poke.status === Statuses.paralysed ? 0.25 : 1) + b.poke.battler.speed) - (a.poke.stats[Stats.speed](true) * (a.poke.status === Statuses.paralysed ? 0.25 : 1) + a.poke.battler.speed);
+					return (Math.floor(b.poke.stats[Stats.speed](true) * (b.poke.status === Statuses.paralysed ? 0.25 : 1)) + b.poke.battler.speed) - (Math.floor(a.poke.stats[Stats.speed](true) * (a.poke.status === Statuses.paralysed ? 0.25 : 1)) + a.poke.battler.speed);
 				else
 					return 0;
 			}

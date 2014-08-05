@@ -22,10 +22,4 @@ function party () {
 	self.empty = function () {
 		self.pokemon = [];
 	};
-
-	self.list = function () {
-		foreach(self.pokemon, function (poke, i) {
-			Textbox.state((i + 1) + ". " + poke.name() + (poke.nickname ? " (" + poke.species.name + ")" : "") + ": Level " + poke.level + ", " + poke.health + "/" + poke.stats[Stats.health]() + " HP");
-		});
-	};
 }

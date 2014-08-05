@@ -59,13 +59,13 @@ Weather = {
 					} else
 						particle.velocity.speed -= 0.4;
 				} else {
-					var all = Battle.all().filter(onlyPokemon), position, sprite, ally, overPokemon = (Settings.particleCollisionTesting ? foreach(all, function (poke) {
+					var all = Battle.all(true), position, sprite, ally, overPokemon = (Settings.particleCollisionTesting ? foreach(all, function (poke) {
 						ally = (poke.battler.side === Battles.side.near);
 						if (!(poke = Display.pokemonInState(poke)))
 							return;
 						position = Battle.draw.position(poke);
 						sprite = Sprite.load(poke.sprite.path(ally ? "back" : "front"));
-						if (sprite && (inRange(particle.position.x, position.x - (sprite.width / 2) * (ally ? 2 : 1), position.x + (sprite.width / 2) * (ally ? 2 : 1)) && inRange(particle.position.y, position.y - (sprite.height) * (ally ? 2 : 1), position.y))) {
+						if (sprite && (inRange(particle.position.x, position.x - (sprite.width / 2) * position.scale, position.x + (sprite.width / 2) * position.scale) && inRange(particle.position.y, position.y - sprite.height * position.scale + position.z * (ally ? 1 : -1), position.y + position.z * (ally ? 1 : -1)))) {
 							return true;
 						}
 					}) : false);
