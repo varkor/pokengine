@@ -389,6 +389,7 @@ Battle = {
 			Battle.queue = [];
 			Battle.escapeAttempts = 0;
 			Battle.turns = 0;
+			communication : [];
 		}
 	},
 	input : function (primary, secondary, tertiary, character, selection) {

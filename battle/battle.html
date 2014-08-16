@@ -38,6 +38,7 @@
 		<button id="connect">Connect</button>
 		<span>with the name</span>
 		<input id="name" type="text" value="Dark Matter">
+		<button id="randomise" class="small">⚄</button>
 		<br>
 		<div id="invitations" class="hidden">
 			<span>Invite someone to a</span>
@@ -65,7 +66,20 @@
 				event.stopPropagation();
 				document.getElementById("connect").innerHTML = "Connecting...";
 				document.getElementById("connect").disabled = true;
+				document.getElementById("name").disabled = true;
+				document.getElementById("randomise").disabled = true;
 				Client.connect(document.getElementById("name").value || "anonymous");
+			});
+
+			document.getElementById("randomise").addEventListener("mousedown", function (event) {
+				event.stopPropagation();
+				if (!document.getElementById("name").disabled) {
+					var name = "";
+					for (var i = 0; i < 10; ++ i)
+						name += "abcdefghijklmnopqrstuvwxyz".split("").choose();
+					document.getElementById("name").value = name;
+					document.getElementById("randomise").innerHTML = "⚀⚁⚂⚃⚄⚅".replace(document.getElementById("randomise").innerHTML, "").split("").choose();
+				}
 			});
 
 			Object.observe(Client, function (changes) {

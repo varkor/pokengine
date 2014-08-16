@@ -48,6 +48,10 @@ button {
 	font: normal 12pt "Helvetica Neue";
 	-webkit-user-select: none;
 }
+button.small {
+	width: 40pt;
+	font-size: 16pt;
+}
 button:hover {
 	background: hsl(0, 0%, 80%);
 }

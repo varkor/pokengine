@@ -121,13 +121,13 @@ exports.BattleServer = {
 							self : {
 								user : clientB.user,
 								ip : clientB.ip,
-								party : battle.clientBParty
+								party : battle.clientBParty,
 								bag : battle.clientBBag
 							},
 							other : {
 								user : clientA.user,
 								ip : clientA.ip,
-								party : battle.clientAParty
+								party : battle.clientAParty,
 								bag : battle.clientABag
 							},
 							seed : battle.seed,

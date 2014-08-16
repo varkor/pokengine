@@ -63,6 +63,7 @@ Client = {
 				button.addEventListener("mousedown", function (event) {
 					event.stopPropagation();
 					button.innerHTML = "Accepted";
+					button.disabled = true;
 					console.log("%cAccepting the invitation to battle...", "color : hsl(170, 100%, 30%)");
 					var pokes = new party();
 					pokes.add(new pokemon({species : "Blastoise"}));
@@ -105,9 +106,9 @@ Client = {
 			case "disconnect":
 				var list = document.getElementById("users").childNodes;
 				foreach(list, function (user) {
+					user.childNodes[1].disabled = false;
 					if (user.getAttribute("data-ip") === message.who.ip && user.getAttribute("data-user") === message.who.user) {
 						user.parentElement.removeChild(user);
-						return true;
 					}
 				});
 				if (Client.battle !== null && Client.battle.other.ip === message.who.ip && Client.battle.other.user === message.who.user) {
