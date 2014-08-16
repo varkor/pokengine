@@ -4,7 +4,8 @@
 body {
 	background: hsl(0, 0%, 12%);
 	color: white;
-	font: lighter 10pt "Helvetica Neue";
+	font: 200 12pt "Helvetica Neue";
+	-webkit-user-select: none;
 }
 .centre {
 	position: absolute;
@@ -18,6 +19,23 @@ canvas {
 }
 .hover {
 	cursor: pointer;
+}
+.hidden {
+	display: none;
+}
+select {
+	border: none;
+	outline: none;
+	border-radius: 0px;
+	-webkit-appearance: none;
+	background: transparent;
+	font: inherit;
+	color: inherit;
+	border-bottom: 1px dashed currentcolor;
+	cursor: pointer;
+}
+span {
+	-webkit-user-select: auto;
 }
 button {
 	width: 80pt; height: 24pt;
@@ -46,3 +64,63 @@ button.active {
 /*button.active:hover {
 	background: hsl(0, 100%, 40%);
 }*/
+.select {
+	position: relative;
+	font: normal 12pt "Helvetica Neue";
+	-webkit-user-select: none;
+	display: inline-block;
+	color: white;
+	font-weight: 200;
+}
+/*.select::after {
+	content: "▼";
+	font-size: 10pt;
+	position: absolute;
+	right: 4pt;
+	top: 6pt;
+	pointer-events: none;
+}*/
+input[type="text"] {
+	border: 1px dashed currentcolor;
+	outline: none;
+	width: 80pt;
+	height: 24pt;
+	color: inherit;
+	background: transparent;
+	font: normal 12pt "Helvetica Neue";
+	padding: 6pt;
+}
+ul {
+	list-style-type: none;
+	padding: 0;
+	width: 200pt;
+}
+li {
+	position: relative;
+	padding: 4pt 8pt;
+	background: hsl(150, 100%, 40%);
+	color: black;
+	height: 24pt;
+}
+li button {
+	position: absolute;
+	margin: 0;
+	right: 8pt;
+	height: 16pt;
+	background: hsl(150, 100%, 30%);
+}
+li.active {
+	background: hsl(0, 0%, 90%);
+}
+li.active button {
+	background: hsl(0, 0%, 80%);
+}
+li button:hover {
+	background: hsl(150, 100%, 50%);
+}
+li.active button:hover {
+	background: hsl(0, 0%, 100%);
+}
+li button:disabled {
+	background: hsl(150, 100%, 40%);
+}

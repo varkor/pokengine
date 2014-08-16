@@ -36,7 +36,27 @@
 		<canvas id="battle" class="centre"></canvas>
 		<canvas id="fps" class="corner"></canvas>
 		<button id="connect">Connect</button>
-		<button id="invite" disabled>Invite</button>
+		<span>with the name</span>
+		<input id="name" type="text" value="Dark Matter">
+		<br>
+		<div id="invitations" class="hidden">
+			<span>Invite someone to a</span>
+			<div class="select"><select id="style">
+				<option value="normal">normal</option>
+				<option value="double">double</option>
+			</select></div><span>battle,<br>with</span>
+			<div class="select"><select id="weather">
+				<option value="clear">clear skies</option>
+				<option value="intenseSunlight">sun</option>
+				<option value="rain">rain</option>
+				<option value="hail">hail</option>
+			</select></div><span>, in a</span>
+			<div class="select"><select id="scene">
+				<option value="clearing">clearing</option>
+			</select></div><span>.</span>
+			<br>
+		</div>
+		<ul id="users"></ul>
 		<script>
 		window.addEventListener("load", function () {
 			Game.canvas.initialise();
@@ -45,16 +65,7 @@
 				event.stopPropagation();
 				document.getElementById("connect").innerHTML = "Connecting...";
 				document.getElementById("connect").disabled = true;
-				Client.connect();
-			});
-
-			document.getElementById("invite").addEventListener("mousedown", function (event) {
-				event.stopPropagation();
-				document.getElementById("invite").innerHTML = "Invited";
-				document.getElementById("invite").disabled = true;
-				Client.send({
-					action : "invite"
-				});
+				Client.connect(document.getElementById("name").value || "anonymous");
 			});
 
 			Object.observe(Client, function (changes) {
@@ -63,16 +74,80 @@
 						if (Client.connected) {
 							document.getElementById("connect").innerHTML = "Connected";
 							document.getElementById("connect").className = "active";
-							document.getElementById("invite").disabled = false;
 						} else {
 							document.getElementById("connect").innerHTML = "Connect";
 							document.getElementById("connect").className = "";
 							document.getElementById("connect").disabled = false;
-							document.getElementById("invite").disabled = true;
 						}
 					}
 				});
 			});
+
+			document.getElementById("name").addEventListener("mousedown", function (event) {
+				event.stopPropagation();
+			});
+
+			if (localStorage["name"])
+				document.getElementById("name").value = localStorage["name"];
+
+			document.getElementById("name").addEventListener("input", function (event) {
+				localStorage["name"] = document.getElementById("name").value;
+			});
+
+			var player = new character("Red"/*, new party(new pokemon(Pokemon.Bulbasaur), new pokemon(Pokemon.Ivysaur))*/), myBulbasaur = new pokemon({species : "Bulbasaur"}), opponent = new character("Blue");
+			Game.takePossessionOf(player);
+			player.bag.add("Berries -> Sitrus");
+			player.bag.add("Balls -> Poké", 100);
+			player.bag.add("Balls -> Clone", 10);
+			myBulbasaur.nickname = "Leafy";
+			//myBulbasaur.ability = Abilities.Intimidate;
+			myBulbasaur.learn("Magnitude", true);
+			myBulbasaur.learn("Transform", true);
+			myBulbasaur.item = "Berries -> Sitrus";
+			//myBulbasaur.health = Math.ceil(myBulbasaur.stats[Stats.health]() / 4);
+			var ivy = new pokemon({species : "Ivysaur"});
+			ivy.nickname = "Ivy";
+			ivy.item = "Berries -> Sitrus";
+			ivy.ability = "Soundproof";
+
+			ivy.learn("Fly", true);
+			ivy.learn("Ingrain", true);
+
+			//ivy.raiseToLevel(10);
+			player.give(ivy);
+			player.give(myBulbasaur);
+			player.give(new pokemon({species : "Blastoise"}));
+			player.give(new pokemon({species : "Charizard"}));
+			var theirCharizard = new pokemon({species : "Charizard"}), wildMon = new pokemon({species : "Blastoise"});
+			wildMon.raiseToLevel(3);
+			theirCharizard.nickname = "Char-Dawg";
+			//wildMon.learn(Moves.Ingrain, true);
+			theirCharizard.ability = "Hyper Cutter";
+			wildMon.ability = "Levitate";
+			//wildMon.learn(Moves.Wrap, true);
+			theirCharizard.level = 1;
+			//theirCharizard.health = theirCharizard.stats[Stats.health]();
+			//theirCharizard.forget(Moves.Tackle, true);
+			theirCharizard.learn("Wrap", true);
+			//opponent.give(wildMon);
+			opponent.give(theirCharizard);
+			var otherIvy = new pokemon({species : "Blastoise"});
+			otherIvy.nickname = "'Toise";
+			opponent.give(otherIvy);
+			//opponent.party.pokemon[0].status = Statuses.poisoned;
+			//player.party.pokemon[0].status = Statuses.asleep;
+			//player.party.pokemon[0].caught.trainer = opponent;
+			/*Textbox.ask("hello", ["Yes", "No"], function (response) { console.log(response); });
+			Textbox.state("test1");
+			Textbox.state("test2");
+			Textbox.state("test3");
+			Textbox.ask("hello", ["Yes", "No"], function (response) { console.log(response); }, ["Maybe", "I'm not sure"]);
+			Textbox.state("test4");*/
+			Battle.begin(player, /*[wildMon, theirCharizard]*/opponent, Battles.style.double, Weathers.rain);
+			//opponent.type = Characters.type.online;
+			//Battle.beginOnline(player, opponent);
+			//Battle.playRecording(JSON.parse('{"seed":1,"style":0,"weather":2,"actions":[[{"primary":"Fight","secondary":0}],[{"primary":"Fight","secondary":1}],[],[]]}'), player, opponent);
+			//Battle.beginWildBattle([theirCharizard, wildMon]);
 		});
 		</script>
 	</body>

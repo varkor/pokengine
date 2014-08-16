@@ -1,11 +1,12 @@
-function party () {
+function party (initial) {
 	var self = this;
 
 	self.space = 6;
 	self.pokemon = [];
-	foreach(arguments, function (poke) {
-		self.pokemon.push(poke);
-	});
+	if (arguments.length > 0)
+		foreach(initial, function (poke) {
+			self.add(new pokemon(poke));
+		});
 
 	self.add = function (poke) {
 		if (self.pokemon.length < self.space) {
@@ -21,5 +22,13 @@ function party () {
 
 	self.empty = function () {
 		self.pokemon = [];
+	};
+
+	self.store = function () {
+		var store = [];
+		foreach(self.pokemon, function (poke) {
+			store.push(poke.store());
+		});
+		return store;
 	};
 }

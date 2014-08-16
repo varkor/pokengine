@@ -1,11 +1,9 @@
 Badges = {
-	Boulder : {
-		name : "Boulder",
+	"Boulder" : {
 		enabled : [HMs.indexOf(Moves.Flash)],
 		obediance : null
 	},
-	Cascade : {
-		name : "Cascade",
+	"Cascade" : {
 		enabled : [HMs.indexOf(Moves.Cut)],
 		obediance : 30
 	}

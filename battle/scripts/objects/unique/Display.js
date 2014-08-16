@@ -2,7 +2,7 @@ Display = {
 	store : function (poke) {
 		if (poke === NoPokemon)
 			return NoPokemon;
-		var newPoke = new pokemon(poke.species, true);
+		var newPoke = new pokemon(poke.store());
 		foreach(["name", "gender", "species", "level", "health", "experience", "experienceFromLevelToNextLevel"], function (property) {
 			newPoke[property] = (typeof poke[property] === "function" ? function (value) { return function () { return value; }; }(poke[property]()) : poke[property]);
 		});
@@ -56,6 +56,7 @@ Display = {
 			if (self.states[state] === null)
 				throw "You've tried to load an older state than the current one!";
 			self.state.current = self.states[state];
+			Battle.cache = null;
 		},
 		transition : function (state, track, original) {
 			var self = Display, from = self.state.current, to = self.states[state], fromAll, toAll, originalAll, completed = true;
@@ -98,6 +99,7 @@ Display = {
 				track.completed = true;
 			} else
 				setTimeout(function () { self.state.transition(state, track, original); }, Time.refresh);
+			Battle.cache = null;
 			return track;
 		},
 		current : {}

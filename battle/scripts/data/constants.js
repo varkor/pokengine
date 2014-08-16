@@ -20,7 +20,8 @@ Types = {
 	ice : ++ q,
 	dragon : ++ q,
 	dark : ++ q,
-	fairy : ++ q
+	fairy : ++ q,
+	bird : ++ q
 };
 
 Stats = {
@@ -264,6 +265,8 @@ Directions = {
 	down : ++ q,
 	left : ++ q
 };
+
+Scenes = ["Clearing"];
 
 NoPokemon = {};
 

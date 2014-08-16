@@ -4,7 +4,27 @@ exports.BattleServer = {
 	receive : function (message, from) {
 		switch (message.action) {
 			case "connect":
-				exports.BattleServer.clients.push(from);
+				var newcomer = from, others = [];
+				newcomer.user = message.user;
+				newcomer.invitations = {};
+				exports.BattleServer.clients.forEach(function (client) {
+					others.push({
+						user : client.user,
+						ip : client.ip
+					});
+					exports.BattleServer.send({
+						action : "users",
+						user : {
+							user : newcomer.user,
+							ip : newcomer.ip
+						}
+					}, client);
+				});
+				exports.BattleServer.clients.push(newcomer);
+				exports.BattleServer.send({
+					action : "users",
+					users : others
+				}, newcomer);
 				break;
 			case "disconnect":
 				var index = exports.BattleServer.clients.indexOf(from);
@@ -31,40 +51,77 @@ exports.BattleServer = {
 				break;
 			case "invite":
 				if (exports.BattleServer.battleForClient(from) === null) {
-					if (message.hasOwnProperty("who")) {
-						var clientB = from, clientA = null;
-						exports.BattleServer.clients.forEach(function (client) {
-							if (client !== from && client.ip === message.who) {
-								clientA = client;
-								return;
-							}
-						});
-						if (clientA !== null && exports.BattleServer.battleForClient(clientA) === null) {
-							var battle = {
-								clientA : clientA,
-								clientB : clientB,
-								seed : Math.random() * Math.pow(2, 32)
+					exports.BattleServer.clients.forEach(function (client) {
+						if (client !== from && (!message.hasOwnProperty("who") || client.ip === message.who) && !from.invitations.hasOwnProperty(client.ip))
+							exports.BattleServer.send({
+								action : "invitation",
+								from : from.ip
+							}, client);
+							from.invitations[client.ip] = {
+								party : message.party,
+								bag : message.bag,
+								settings : message.settings;
 							};
-							exports.BattleServer.battles.push(battle);
-							exports.BattleServer.send({
-								action : "begin",
-								team : 0,
-								seed : battle.seed
-							}, clientA);
-							exports.BattleServer.send({
-								action : "begin",
-								team : 1,
-								seed : battle.seed
-							}, clientB);
+					});
+				}
+				break;
+			case "accept":
+				if (exports.BattleServer.battleForClient(from) === null) {
+					var clientB = from, clientA = null;
+					exports.BattleServer.clients.forEach(function (client) {
+						if (client !== from && client.ip === message.who) {
+							clientA = client;
+							return;
 						}
-					} else {
-						exports.BattleServer.clients.forEach(function (client) {
-							if (client !== from)
-								exports.BattleServer.send({
-									action : "invitation",
-									from : from.ip
-								}, client);
-						});
+					});
+					if (clientA !== null && exports.BattleServer.battleForClient(clientA) === null && clientA.invitations.hasOwnProperty(clientB.ip)) {
+						var storage = clientA.invitations[clientB.ip], settings = storage.settings, battle = {
+							clientA : clientA,
+							clientAParty : storage.party,
+							clientABag : storage.bag,
+							clientB : clientB,
+							clientBParty : message.party,
+							clientBBag : message.bag,
+							seed : Math.random() * Math.pow(2, 32),
+							style : settings.style,
+							weather : settings.weather,
+							scene : settings.scene
+						};
+						exports.BattleServer.battles.push(battle);
+						exports.BattleServer.send({
+							action : "begin",
+							team : 0,
+							self : {
+								user : clientA.user,
+								party : battle.clientAParty,
+								bag : battle.clientABag
+							},
+							other : {
+								user : clientB.user,
+								party : battle.clientBParty,
+								bag : battle.clientBBag
+							},
+							seed : battle.seed,
+							style : battle.style,
+							weather : battle.weather,
+							scene : settings.scene
+						}, clientA);
+						exports.BattleServer.send({
+							action : "begin",
+							team : 1,
+							self : {
+								user : clientB.user,
+								party : battle.clientBParty
+							},
+							other : {
+								user : clientA.user,
+								party : battle.clientAParty
+							},
+							seed : battle.seed,
+							style : battle.style,
+							weather : battle.weather,
+							scene : settings.scene
+						}, clientB);
 					}
 				}
 				break;

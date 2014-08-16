@@ -1,89 +1,87 @@
-function pokemon (species, display) {
+function pokemon (data) {
 	var self = this;
 
-	self.species = species;
-	self.nickname = null;
-	self.unique = Game.unique();
-	self.name = function () {
-		return (self.egg === 0 ? (self.nickname || (self.battler.transform.transformed ? self.battler.transform.species.name : self.species.name)) : "Egg");
+	if (arguments.length < 1)
+		data = {};
+	var setProperty = function (property, value) {
+		if (data.hasOwnProperty(property))
+			self[property] = data[property];
+		else
+			self[property] = (typeof value === "function" ? value() : value);
 	};
-	self.battler = new battler(self);
-	self.trainer = null;
-	self.level = 1;
-	self.nature = Natures.Lonely;
+
+	setProperty("species", "Missingno.");
+	setProperty("nickname", null);
+	setProperty("unique", Game.unique());
+	setProperty("trainer", null);
+	setProperty("level", 1);
+	setProperty("nature", Natures.Lonely);
+	setProperty("gender", Genders.male);
+	setProperty("moves", []);
+	setProperty("ability", null);
+	setProperty("status", Statuses.none);
+	setProperty("IVs", function () {
+		var IVs = [];
+		for (var i = Stats.health; i <= Stats.speed; ++ i) {
+			IVs[i] = srandom.int(0, 31);
+		}
+		return IVs;
+	});
+	setProperty("EVs", [0, 0, 0, 0, 0, 0]);
+	setProperty("experience", 0);
+	setProperty("nationality", Nationalities.British);
+	setProperty("item", null);
+	setProperty("form", null); //? Forms don't work yet — should be object instead of array {name: "attack forme", attack : 5}, etc.
+	//? Perhaps there can be a way to combine forms and transform, like:
+	// if transformed, get the property from this object, else if a form, get it from this object, else get it from the default object
+	setProperty("friendship", _(Pokemon, self.species).friendship);
+	setProperty("pokeball", null);
+	setProperty("shiny", function () {
+		return srandom.chance(8192);
+	});
+	setProperty("egg", null);
+	setProperty("caught", null);
+
 	self.stats = [];
 	self.stats[Stats.health] = function () {
-		return Math.floor(((self.IVs[Stats.health] + 2 * self.species.stats[Stats.health] + self.EVs[Stats.health] / 4 + 100) * self.level) / 100 + 10);
+		return Math.floor(((self.IVs[Stats.health] + 2 * _(Pokemon, self.species).stats[Stats.health] + self.EVs[Stats.health] / 4 + 100) * self.level) / 100 + 10);
 	};
 	for (var i = Stats.attack; i <= Stats.speed; ++ i) {
 		(function (stat) {
 			self.stats[stat] = function (stageModifier) {
-				return Math.floor(((((self.IVs[stat] + 2 * self.species.stats[stat] + self.EVs[stat] / 4) * self.level) / 100 + 5) * (self.nature.increased === stat ? 1.1 : self.nature.decreased === stat ? 0.9 : 1)) * (stageModifier ? (self.battler.statLevel[stat] >= 0 ? 1 + 0.5 * self.battler.statLevel[stat] : 2 / (2 - self.battler.statLevel[stat])) : 1));
+				return Math.floor(((((self.IVs[stat] + 2 * _(Pokemon, self.species).stats[stat] + self.EVs[stat] / 4) * self.level) / 100 + 5) * (self.nature.increased === stat ? 1.1 : self.nature.decreased === stat ? 0.9 : 1)) * (stageModifier ? (self.battler.statLevel[stat] >= 0 ? 1 + 0.5 * self.battler.statLevel[stat] : 2 / (2 - self.battler.statLevel[stat])) : 1));
 			};
 		})(i);
 	}
-	self.gender = Genders.male;
-	self.moves = [];
-	self.ability = Abilities.HyperCutter;
-	self.status = Statuses.none;
-	self.IVs = [];
-	for (var i = Stats.health; i <= Stats.speed; ++ i) {
-		self.IVs[i] = (display ? 0 : srandom.int(0, 31));
-	}
-	self.EVs = [];
-	self.EVs[Stats.health] = 0;
-	self.EVs[Stats.attack] = 0;
-	self.EVs[Stats.defence] = 0;
-	self.EVs[Stats.specialAttack] = 0;
-	self.EVs[Stats.specialDefence] = 0;
-	self.EVs[Stats.speed] = 0;
-	self.health = self.stats[Stats.health]();
-	self.experience = 0;
-	self.nationality = Nationalities.British;
-	self.item = null;
-	self.form = 0;
-	self.friendship = self.species.friendship;
-	self.pokeball = null;
-	self.shiny = chance(8192);
-	self.egg = 0; // The number of steps required to hatch the Pokémon
-	self.caught = {
-		location : Map.locations.nowhere,
-		level : 1,
-		trainer : null
-	};
+
+	setProperty("health", self.stats[Stats.health]());
+
+	self.battler = new battler(self);
 
 	self.sprite = {
 		path : function (which) {
-			return "pokemon/" + self.species.region + "/" + self.species.name + (which ? "~" + which : "");
+			return "pokemon/" + _(Pokemon, self.species).region + "/" + self.species + (which ? "~" + which : "");
 		}
+	};
+
+	self.name = function () {
+		return (self.egg === null ? (self.nickname || (self.battler.transform.transformed ? self.battler.transform.species : self.species)) : "Egg");
 	};
 
 	self.store = function () {
 		// Returns an object that contains all the data for the Pokémon, without any methods
 		var store = {};
-		// , moves, , , , 
-		foreach(["nickname", "unique", "level", "nature", "gender", "status", "IVs", "EVs", "experience", "nationality", "form", "friendship", "shiny", "egg"], function (property) {
-			store[property] = self[property];
+		foreach(["species", "item", "moves", "ability", "pokeball", "nickname", "unique", "level", "nature", "gender", "status", "IVs", "EVs", "experience", "nationality", "form", "friendship", "shiny", "egg"], function (property) {
+			store[property] = JSONcopy(_(self, property));
 		});
-		foreach(["species", "item", "ability", "pokeball"], function (property) {
-			store[property] = (self[property] !== null ? self[property].name : null);
-		});
-		store.moves = [];
-		foreach(self.moves, function (move) {
-			store.moves.push({
-				move : move.name,
-				PP : move.PP,
-				maximumPP : move.maximumPP,
-				number : move.number
-			});
-		});
-		store.trainer = self.trainer.unique;
-		store.caught = {
-			location : self.caught.location.name,
-			level : self.caught.level,
+		store.trainer = (self.trainer ? self.trainer.unique : null);
+		if (store.caught = (self.caught ? {
+			location : self.caught.location,
+			level : self.caught.location,
 			trainer : self.caught.trainer.unique
-		};
-		return deepCopy(store);
+		} : null))
+			store.caught.trainer = (self.caught ? self.caught.trainer.unique : null);
+		return JSONcopy(store);
 	};
 
 	self.learn = function (move, initial, learnRegardless) {
@@ -94,51 +92,47 @@ function pokemon (species, display) {
 			return false;
 		if (self.moves.length < 4) {
 			if (!initial)
-				Textbox.state(self.name() + " learnt " + move.name + "!");
+				Textbox.state(self.name() + " learnt " + move + "!");
 			self.moves.push({
 				move : move,
 				number : self.moves.length,
-				PP : move.PP,
-				maximumPP : move.PP
+				PP : _(Moves, move).PP,
+				maximumPP : 0
 			});
 		} else {
-			if (initial) {
-				self.moves[0] = {move : move, PP : move.PP, maximumPP : move.PP};
+			var resumeNormalProceedings;
+			if (Battle.active) {
+				resumeNormalProceedings = function () {
+					Battle.delayForInput = false;
+					Battle.prompt();
+				};
+				Battle.delayForInput = true;
 			} else {
-				var resumeNormalProceedings;
-				if (Battle.active) {
-					resumeNormalProceedings = function () {
-						Battle.delayForInput = false;
-						Battle.prompt();
-					};
-					Battle.delayForInput = true;
-				} else {
-					resumeNormalProceedings = function () {};
-				}
-				Textbox.state(self.name() + " wants to learn " + move.name + ". But " + self.name() + " already knows 4 moves!");
-				var immediatelyProceeding = Textbox.confirm("Do you want " + self.name() + " to forget a move to make room for " + move.name + "?", function (response) {
-					if (response === "Yes") {
-						var moves = [], hotkeys = {};
-						hotkeys[Game.key.secondary] = "Never mind";
-						foreach(self.moves, function (move) {
-							moves.push(move.move.name);
-						});
-						immediatelyProceeding = Textbox.insertAfter(Textbox.ask("Which move do you want " + self.name() + " to forget?", moves, function (response, i, major) {
-							if (major) {
-								Textbox.insertAfter(Textbox.state(self.name() + " forgot " + self.moves[i].move.name + " and learnt " + move.name + "!", resumeNormalProceedings), immediatelyProceeding);
-								self.moves[i] = {
-									move : move,
-									number : i,
-									PP : move.PP,
-									maximumPP : move.PP
-								};
-							} else
-								Textbox.insertAfter(Textbox.state(self.name() + " didn't learn " + move.name + ".", resumeNormalProceedings), immediatelyProceeding);
-						}, ["Never mind"], null, hotkeys), immediatelyProceeding);
-					} else
-						Textbox.insertAfter(Textbox.state(self.name() + " didn't learn " + move.name + ".", resumeNormalProceedings), immediatelyProceeding);
-				});
+				resumeNormalProceedings = function () {};
 			}
+			Textbox.state(self.name() + " wants to learn " + move + ". But " + self.name() + " already knows 4 moves!");
+			var immediatelyProceeding = Textbox.confirm("Do you want " + self.name() + " to forget a move to make room for " + move + "?", function (response) {
+				if (response === "Yes") {
+					var moves = [], hotkeys = {};
+					hotkeys[Game.key.secondary] = "Never mind";
+					foreach(self.moves, function (move) {
+						moves.push(move.move);
+					});
+					immediatelyProceeding = Textbox.insertAfter(Textbox.ask("Which move do you want " + self.name() + " to forget?", moves, function (response, i, major) {
+						if (major) {
+							Textbox.insertAfter(Textbox.state(self.name() + " forgot " + self.moves[i].move + " and learnt " + move + "!", resumeNormalProceedings), immediatelyProceeding);
+							self.moves[i] = {
+								move : move,
+								number : i,
+								PP : move.PP,
+								maximumPP : 0
+							};
+						} else
+							Textbox.insertAfter(Textbox.state(self.name() + " didn't learn " + move + ".", resumeNormalProceedings), immediatelyProceeding);
+					}, ["Never mind"], null, hotkeys), immediatelyProceeding);
+				} else
+					Textbox.insertAfter(Textbox.state(self.name() + " didn't learn " + move + ".", resumeNormalProceedings), immediatelyProceeding);
+			});
 		}
 	};
 
@@ -150,7 +144,7 @@ function pokemon (species, display) {
 			}
 		})) {
 			if (!initial)
-				Textbox.state(self.name() + " forgot " + move.name + "!");
+				Textbox.state(self.name() + " forgot " + move + "!");
 			return true;
 		}
 	};
@@ -168,7 +162,7 @@ function pokemon (species, display) {
 			return;
 		sharedBetween = sharedBetween || 1;
 		var participated = true, eventModifiers = product(Battle.triggerEvent(Events.experience, {}, defeated, self));
-		var gain = Math.floor((((Battle.situation === Battles.situation.trainer ? 1.5 : 1) * defeated.species.yield.experience * defeated.level) / (5 * (participated ? 1 : 2)) * Math.pow((2 * defeated.level + 10) / (defeated.level + self.level + 10), 2.5) + 1) * (self.trainer === self.caught.trainer ? 1 : self.trainer.nationality === self.nationality ? 1.5 : 1.7) * eventModifiers / sharedBetween);
+		var gain = Math.floor((((Battle.situation === Battles.situation.trainer ? 1.5 : 1) * _(Pokemon, defeated.species).yield.experience * defeated.level) / (5 * (participated ? 1 : 2)) * Math.pow((2 * defeated.level + 10) / (defeated.level + self.level + 10), 2.5) + 1) * (self.caught && self.trainer === self.caught.trainer ? 1 : self.trainer.nationality === self.nationality ? 1.5 : 1.7) * eventModifiers / sharedBetween);
 		if (Battle.active)
 			Textbox.state(self.name() + " gained " + gain + " experience!");
 		while (self.level < 100 && self.experience + gain >= self.experienceFromLevelToNextLevel()) {
@@ -182,14 +176,14 @@ function pokemon (species, display) {
 			var display = Display.state.save();
 				Textbox.state(self.name() + " has grown to level " + self.level + "!", function (display) { return function () { Display.state.load(display); }; }(display));
 			}
-			if (self.species.moveset.hasOwnProperty(self.level)) {
-				foreach(self.species.moveset[self.level], function (move) {
+			if (_(Pokemon, self.species).moveset.hasOwnProperty(self.level)) {
+				foreach(_(Pokemon, self.species).moveset[self.level], function (move) {
 					self.learn(move);
 				});
 			}
 			// Cycle through all the available evolutions
 			/*
-			foreach(self.species.evolution, function (evo) {
+			foreach(_(Pokemon, self.species).evolution, function (evo) {
 				// Cycle through all the conditions for evolutions, e.g. levelling up and/while having a high friendship
 				if (!foreach(evo.method, function (method) {
 					switch (method) {
@@ -208,7 +202,7 @@ function pokemon (species, display) {
 			self.experience = gain;
 		var maximumEVgain = 510 - self.totalEVs(), maximumEVgainForStat;
 		for (var i = Stats.health; i <= Stats.speed; ++ i) {
-			maximumEVgainForStat = Math.min(maximumEVgain, defeated.species.yield.EVs[i]);
+			maximumEVgainForStat = Math.min(maximumEVgain, _(Pokemon, defeated.species).yield.EVs[i]);
 			maximumEVgainForStat = Math.min(maximumEVgainForStat, 252 - maximumEVgainForStat);
 			maximumEVgain -= maximumEVgainForStat;
 			self.EVs[i] += maximumEVgainForStat;
@@ -223,15 +217,15 @@ function pokemon (species, display) {
 		var previousMaximumHealth = self.stats[Stats.health]();
 		++ self.level;
 		self.health = Math.min(self.stats[Stats.health](), self.health + self.stats[Stats.health]() - previousMaximumHealth);
-		self.friendship += (self.friendship < 100 ? 5 : self.friendship < 200 ? 3 : self.friendship < 256 ? 2 : 0) + (self.pokeball === Items.Balls.Luxury ? 1 : 0) + (self.trainer !== null && self.trainer.location === self.caught.location ? 1 : 0);
+		self.friendship += (self.friendship < 100 ? 5 : self.friendship < 200 ? 3 : self.friendship < 256 ? 2 : 0) + (self.pokeball === Items.Balls.Luxury ? 1 : 0) + (self.caught && self.trainer && self.trainer.location === self.caught.location ? 1 : 0);
 		self.friendship = Math.min(self.friendship, 255);
 	};
 
 	self.evolve = function (evolution) {
-		Textbox.state(self.name() + " evolved from " + article(self.species.name) + " " + self.species.name + " into " + article(evolution.species.name) + " " + evolution.species.name + "!");
+		Textbox.state(self.name() + " evolved from " + article(self.species) + " " + self.species + " into " + article(evolution.species) + " " + evolution.species + "!");
 		self.species = evolution.species;
-		if (self.species.moveset.hasOwnProperty(self.level)) {
-			foreach(self.species.moveset[self.level], function (move) {
+		if (_(Pokemon, self.species).moveset.hasOwnProperty(self.level)) {
+			foreach(_(Pokemon, self.species).moveset[self.level], function (move) {
 				self.learn(move);
 			});
 		}
@@ -253,7 +247,7 @@ function pokemon (species, display) {
 
 	self.experienceAtLevel = function (level) {
 		var n = level;
-		switch (self.species.experience) {
+		switch (_(Pokemon, self.species).experience) {
 			case Experiences.erratic:
 				if (n <= 50)
 					return Math.ceil(Math.pow(n, 3) * (100 - n) / 50);
@@ -285,7 +279,7 @@ function pokemon (species, display) {
 
 	self.ofType = function () {
 		for (var i = 0; i < arguments.length; ++ i)
-			if (self.species.types.indexOf(arguments[i]) > -1)
+			if (_(Pokemon, self.species).types.indexOf(arguments[i]) > -1)
 				return true;
 		return false;
 	};
@@ -305,7 +299,7 @@ function pokemon (species, display) {
 
 	self.effectiveness = function (attackType, byWhom) {
 		var multiplier = 1, current;
-		foreach(self.species.types, function (type) {
+		foreach(_(Pokemon, self.species).types, function (type) {
 			if (attackType === Types.ground && type === Types.flying && self.battler.grounded)
 				return;
 			multiplier *= Move.effectiveness(attackType, type);
@@ -320,14 +314,19 @@ function pokemon (species, display) {
 	};
 
 	self.conscious = function () {
-		return self.health > 0 && self.egg === 0;
+		return self.health > 0 && self.egg === null;
 	};
 
 	self.belong = function (who) {
 		if (self.trainer)
 			self.trainer.release(self);
-		else
-			self.caught.trainer = who;
+		else {
+			self.caught = {
+				location : who.location,
+				level : self.level,
+				trainer : who
+			};
+		}
 		self.trainer = who;
 		
 	};
@@ -400,7 +399,7 @@ function pokemon (species, display) {
 					failed : false
 				});
 				++ self.battler.moveStage;
-				if (self.battler.moveStage >= self.battler.previousMoves.last().move.effect.use.length)
+				if (self.battler.moveStage >= _(Moves, self.battler.previousMoves.last().move).effect.use.length)
 					self.battler.moveStage = 0;
 			} else {
 				self.battler.previousMoves.push({
@@ -458,17 +457,19 @@ function pokemon (species, display) {
 	};
 
 	self.useHeldItem = function () {
-		Textbox.state(self.name() + " used the " + self.item.fullname + " " + self.pronoun() + " was holding on " + self.selfPronoun() + "!");
-		var response = self.item.effect(self.item, self);
-		if (self.item.onetime)
+		var item = _(Items, self.item);
+		Textbox.state(self.name() + " used the " + item.fullname + " " + self.pronoun() + " was holding on " + self.selfPronoun() + "!");
+		var response = item.effect(self.item, self);
+		if (item.onetime)
 			self.item = null;
 		return response;
 	};
 
 	self.respondToEvent = function (event, data, other) {
 		var responses = [];
-		responses = responses.concat(self.respondToEventWith(event, data, other, self.ability));
-		if (self.item !== null && self.respondToEventWith(event, data, other, self.item).contains(true))
+		if (self.ability)
+			responses = responses.concat(self.respondToEventWith(event, data, other, _(Abilities, self.ability)));
+		if (self.item && self.respondToEventWith(event, data, other, _(Items, self.item)).contains(true))
 			responses.push(self.useHeldItem());
 		return responses;
 	};
@@ -500,6 +501,6 @@ function pokemon (species, display) {
 		return self.health === 0;
 	};
 
-	// Initialise
-	self.learn(Moves.Tackle, true);
+	//? Initialise
+	self.learn("Tackle", true);
 }

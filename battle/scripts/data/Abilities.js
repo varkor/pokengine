@@ -1,12 +1,11 @@
 Abilities = {
-	Intimidate : {
-		name : "Intimidate",
+	"Intimidate" : {
 		effects : [
 			{
 				event : Events.entrance,
 				oneself : true,
 				action : function (data, self, other) {
-					Textbox.state(self.name() + "'s " + Abilities.Intimidate.name + " is lowering the Attack of the opposing Pokémon!");
+					Textbox.state(self.name() + "'s Intimidate is lowering the Attack of the opposing Pokémon!");
 					foreach(Battle.opponentsTo(self), function (poke) {
 						Battle.stat(poke, Stats.attack, -1, self);
 					});
@@ -14,8 +13,7 @@ Abilities = {
 			}
 		]
 	},
-	HyperCutter : {
-		name : "Hyper Cutter",
+	"Hyper Cutter" : {
 		effects : [
 			{
 				event : Events.stat,
@@ -23,30 +21,28 @@ Abilities = {
 				stat : Stats.attack,
 				action : function (data, self, other) {
 					if (data.change < 0 || (data.change === 0 && self.battler.statLevel[Stats.attack] > 0)) {
-						Textbox.state(self.name() + "'s " + Abilities.HyperCutter.name + " prevents " + self.possessivePronoun() + " Attack from being lowered!");
+						Textbox.state(self.name() + "'s Hyper Cutter prevents " + self.possessivePronoun() + " Attack from being lowered!");
 						return true;
 					}
 				}
 			}
 		]
 	},
-	Soundproof : {
-		name : "Soundproof",
+	"Soundproof" : {
 		effects : [
 			{
 				event : Events.move,
 				affected : true,
 				action : function (data, self, other) {
 					if (data.move.classification.contains("Sound")) {
-						Textbox.state(self.name() + "'s " + Abilities.Soundproof.name + " protects " + self.personalPronoun() + " from " + other.name() + "'s sound-based attack!");
+						Textbox.state(self.name() + "'s Soundproof protects " + self.personalPronoun() + " from " + other.name() + "'s sound-based attack!");
 						return true;
 					}
 				}
 			}
 		]
 	},
-	Levitate : {
-		name : "Levitate",
+	"Levitate" : {
 		effects : [
 			{
 				event : Events.effectiveness,
@@ -54,7 +50,7 @@ Abilities = {
 				action : function (data, self, other) {
 					if (!Battle.active || !self.battler.grounded) {
 						if (other)
-							Textbox.state(self.name() + "'s " + Abilities.Levitate.name + " protects " + self.personalPronoun() + " from " + other.name() + "'s Ground-type attack!");
+							Textbox.state(self.name() + "'s Levitate protects " + self.personalPronoun() + " from " + other.name() + "'s Ground-type attack!");
 						return 0;
 					}
 				}

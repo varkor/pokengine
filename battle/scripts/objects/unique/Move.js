@@ -46,9 +46,11 @@ Move = {
 	Struggle : {
 		number : -1,
 		PP : Infinity,
-		maximumPP : Infinity
+		maximumPP : 0
 	},
 	use : function (move, stage, mover, target) {
+		moveName = move;
+		move = _(Moves, move);
 		if (target instanceof pokemon)
 			target = Battle.placeOfPokemon(target);
 		var constant = {},
@@ -68,8 +70,8 @@ Move = {
 				affected = Battle.affectedByMove(mover, targetPokemon, move).filter(onlyPokemon);
 			}
 		}
-		if (finalStage && move.hasOwnProperty("name"))
-			animationEffect = Textbox.state(mover.name() + " used " + move.name + (move.affects === Move.targets.directTarget && affected.notEmpty() ? " on " + (targetPokemon !== mover ? targetPokemon.name() : mover.selfPronoun()) : "") + "!", function () { return Move.animate(mover, move, stage, targetPokemon, constant); });
+		if (finalStage && moveName[0] !== "_")
+			animationEffect = Textbox.state(mover.name() + " used " + moveName + (move.affects === Move.targets.directTarget && affected.notEmpty() ? " on " + (targetPokemon !== mover ? targetPokemon.name() : mover.selfPronoun()) : "") + "!", function () { return Move.animate(mover, move, stage, targetPokemon, constant); });
 		else
 			animationEffect = Textbox.effect(function () { return Move.animate(mover, move, stage, targetPokemon, constant); });
 		// Makes sure any Display states after the move has been used takes into consideration any movements by any of the Pokémon

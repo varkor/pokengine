@@ -1,6 +1,18 @@
 Pokemon = {
-	Bulbasaur : {
-		name : "Bulbasaur",
+	"Missingno." : {
+		region : "Nintendo",
+		types : [Types.bird, Types.normal],
+		experience : Experiences.fast,
+		yield : {
+			experience : 50
+		},
+		moveset : {
+		},
+		evolution : [],
+		friendship : 70,
+		catchRate : 29
+	},
+	"Bulbasaur" : {
 		region : "Nintendo",
 		types : [Types.grass, Types.poison],
 		experience : Experiences.fast,
@@ -8,7 +20,7 @@ Pokemon = {
 			experience : 50
 		},
 		moveset : {
-			2 : [Moves.HyperBeam]
+			2 : ["Hyper Beam"]
 		},
 		evolution : [
 			{
@@ -26,22 +38,28 @@ Pokemon = {
 		friendship : 70,
 		catchRate : 45
 	},
-	Ivysaur : {
-		name : "Ivysaur",
+	"Ivysaur" : {
 		region : "Nintendo",
 		types : [Types.grass, Types.poison],
 		experience : Experiences.fast,
+		forms : { //? Does not work in this form yet (affect all properties + sprite path, etc.)
+			Normal : {
+			},
+			Metallic : {
+				types : [Types.grass, Types.steel],
+				attack : 200
+			}
+		},
 		yield : {
 			experience : 50
 		},
 		moveset : {
-			3 : [Moves.Metronome]
+			3 : ["Metronome"]
 		},
 		friendship : 70,
 		catchRate : 45
 	},
-	Charizard : {
-		name : "Charizard",
+	"Charizard" : {
 		region : "Nintendo",
 		types : [Types.fire, Types.flying],
 		experience : Experiences.fast,
@@ -52,8 +70,7 @@ Pokemon = {
 		friendship : 70,
 		catchRate : 45
 	},
-	Blastoise : {
-		name : "Blastoise",
+	"Blastoise" : {
 		region : "Nintendo",
 		types : [Types.water],
 		experience : Experiences.fast,
@@ -65,22 +82,19 @@ Pokemon = {
 		catchRate : 45
 	}
 };
-forevery(Pokemon, function (poke) {
+forevery(Pokemon, function (poke, name) {
 	if (!poke.hasOwnProperty("evolution"))
 		poke.evolution = [];
-	if (poke.hasOwnProperty("evolution") && !(poke.evolution instanceof Array))
-		poke.evolution = [poke.evolution];
+	poke.evolution = wrapArray(poke.evolution);
 	foreach(poke.evolution, function (evo) {
-		evo.species = Pokemon[evo.species];
-		if (!(evo.method instanceof Array))
-			evo.method = [evo.method];
+			evo.method = wrapArray(evo.method);
 	});
 	if (!poke.hasOwnProperty("stats")) {
 		poke.stats = [];
 		poke.stats[Stats.health] = 100;
 		poke.stats[Stats.attack] = 100;
 		poke.stats[Stats.specialAttack] = 100;
-		if (0 && poke.name === "Ivysaur") {
+		if (0 && name === "Ivysaur") {
 			poke.stats[Stats.attack] = 10000;
 			poke.stats[Stats.specialAttack] = 10000;
 		}

@@ -5,36 +5,79 @@ Client = {
 	receive : function (message) {
 		console.log("%cReceived the following message from the server:", "color : hsl(170, 100%, 30%)", message);
 		switch (message.action) {
+			case "users":
+				var users = [];
+				if (message.hasOwnProperty("users"))
+					users = message.users;
+				if (message.hasOwnProperty("user"))
+					users.push(message.user);
+				foreach(users, function (user) {
+					var li, button;
+					li = document.createElement("li");
+					li.innerHTML = user.user;
+					button = document.createElement("button");
+					button.innerHTML = "Invite";
+					button.addEventListener("mousedown", function (event) {
+						event.stopPropagation();
+						button.innerHTML = "Invited";
+						button.disabled = true;
+						var pokes = new party();
+						pokes.add(new pokemon({species : "Charizard"}));
+						pokes.add(new pokemon({species : "Bulbasaur"}));
+						Client.send({
+							action : "invite",
+							who : user.ip,
+							party : pokes.store(),
+							bag : [], //? Will also need to send trainer badges, etc.
+							settings : {
+								style : (document.getElementById("style").value === "double" ? Battles.style.double : Battles.style.normal),
+								weather : (Weathers.hasOwnProperty(document.getElementById("weather").value) ? Weathers[document.getElementById("weather").value] : Weathers.clear),
+								scene : (Scenes.contains(document.getElementById("scene").value) ? document.getElementById("scene").value : "Clearing")
+							}
+						});
+					});
+					li.appendChild(button);
+					document.getElementById("users").appendChild(li);
+				});
+				break;
 			case "invitation":
 				console.log("%cYou have received an invitation to battle from another player (" + message.from + "):", "color : hsl(170, 100%, 30%)");
-				if (!Battle.active) {
-				console.log("%cAccepting the invitation to battle...", "color : hsl(170, 100%, 30%)");
+				var li, button = li.childNodes[1];
+				li.className = "active";
+				button.parentElement.removeChild(button);
+				button = document.createElement("button");
+				button.innerHTML = "Accept";
+				button.addEventListener("mousedown", function (event) {
+					event.stopPropagation();
+					console.log("%cAccepting the invitation to battle...", "color : hsl(170, 100%, 30%)");
+					var pokes = new party();
+					pokes.add(new pokemon({species : "Blastoise"}));
+					pokes.add(new pokemon({species : "Ivysaur"}));
 					Client.send({
-						action : "invite",
-						who : message.from
+						action : "accept",
+						who : message.from,
+						party : pokes.store(),
+						bag : []
 					});
-				} else {
-					console.log("%cRefusing the invitation: you're already battling!", "color : hsl(0, 100%, 40%)");
-				}
+				})
+				li.appendChild(button);
 				break;
 			case "begin":
 				console.log("%cAn online battle has been initialised.", "color : hsl(170, 100%, 30%)");
 				srandom.seed = message.seed;
-				var bulbasaur = new pokemon(Pokemon.Bulbasaur), charizard = new pokemon(Pokemon.Charizard), ivysaur = new pokemon(Pokemon.Ivysaur), blastoise = new pokemon(Pokemon.Blastoise);
-				var you = new character((message.team === 0 ? "DM" : "Jext")), them = new character((message.team === 0 ? "Jext" : "DM"));
-				ivysaur.item = Items.Berries.Sitrus;
+				var you = new character(message.self.user, new party(message.self.party)), them = new character(message.other.user, new party(message.other.party));
+				you.bag.items = message.self.bag;
+				them.bag.items = message.other.bag;
 				Game.takePossessionOf(you);
 				you.team = message.team;
 				them.team = 1 - message.team;
 				them.type = Characters.type.online;
-				(message.team === 0 ? you : them).give(bulbasaur);
-				(message.team === 0 ? you : them).give(charizard);
-				(message.team === 0 ? them : you).give(ivysaur);
-				(message.team === 0 ? them : you).give(blastoise);
-				(message.team === 0 ? you : them).bag.add(Items.Balls.Poke, 2);
-				(message.team === 0 ? you : them).bag.add(Items.Balls.Clone, 1);
-				(message.team === 0 ? you : them).bag.add(Items.Berries.Sitrus, 3);
-				Battle.beginOnline(message.seed, you, them, Battles.style.double);
+				foreach(document.getElementById("users").childNodes, function (li) {
+					li.childNodes[1].disabled = true;
+				});
+				Battle.beginOnline(message.seed, you, them, message.style, message.weather, message.scene);
+				//? All pokemon and battle data that is sent should use no magic numbers, only strings or logical values
+				//? Replace team with using trainer.unique
 				break;
 			case "disconnect":
 				console.log("%cThe other player disconnected from the server!", "color : hsl(0, 100%, 40%)");
@@ -51,7 +94,7 @@ Client = {
 			console.log("%cMessages can't be sent without being connected to the server!", "color : hsl(0, 100%, 40%)");
 		}
 	},
-	connect : function () {
+	connect : function (as) {
 		if (!Client.connected && !Client.connecting) {
 			Client.connecting = true;
 			Client.socket = new WebSocket("ws://pokengine.org:9008/");
@@ -60,9 +103,16 @@ Client = {
 				console.log("%cConnected with the server.", "color : hsl(110, 100%, 40%)");
 				Client.connected = true;
 				Client.connecting = false;
+				var user;
+				if (arguments.length > 0)
+					user = as;
+				else
+					user = "anonymous";
 				Client.send({
-					action : "connect"
+					action : "connect",
+					user : as
 				});
+				document.getElementById("invitations").className = "";
 			});
 			Client.socket.addEventListener("close", function () {
 				console.log("%cDisconnected from the server.", "color : hsl(0, 100%, 40%)");

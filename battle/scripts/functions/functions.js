@@ -25,6 +25,13 @@ function forevery (dictionary, fn) {
 	return broke;
 }
 
+function  _ (object, path) {
+	var keys = path.split(/ ?-> ?/g), value = object;
+	while (keys.length)
+		value = value[keys.shift()];
+	return value;
+}
+
 function random (x, y) {
 	if (arguments.length === 0)
 		return Math.random();
@@ -138,7 +145,7 @@ Array.prototype.isSimilarTo = function (other) {
 	other.sort(numerically);
 	var length = self.length
 	for (var i = 0; i < length; ++ i)
-		if (self.shift() !== other.shift())
+		if (JSON.stringify(self.shift()) !== JSON.stringify(other.shift()))
 			return false;
 	return true;
 };
@@ -146,7 +153,7 @@ Array.prototype.isSimilarTo = function (other) {
 Array.prototype.removeDuplicates = function () {
 	var unique = {}, filtered = [];
 	foreach(this, function (element) {
-		unique[element] = element;
+		unique[JSON.stringify(element)] = element;
 	});
 	forevery(unique, function (element) {
 		filtered.push(element);
@@ -180,6 +187,10 @@ Array.prototype.notEmpty = function () {
 Array.prototype.last = function () {
 	return this[this.length - 1];
 };
+
+function JSONcopy (object) {
+	return JSON.parse(JSON.stringify(object));
+}
 
 deepCopy = function (source, list, initial) { // If an object contains a variable referencing itself (like self), that variable references the old object, not the new one. Needs to be fixed
 	var destination = initial;

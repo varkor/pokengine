@@ -1,7 +1,6 @@
 Items = {
 	Other : {
-		LuckyEgg : {
-			name : "Lucky Egg",
+		"Lucky Egg" : {
 			use : Item.use.experience,
 			targets : Move.targets.self,
 			onetime : false,
@@ -37,20 +36,16 @@ Items = {
 				}
 			}
 		},
-		Poke : {
-			name : "Poké",
+		"Poké" : {
 			catchRate : 1
 		},
-		Luxury : {
-			name : "Luxury",
+		"Luxury" : {
 			catchRate : 1
 		},
-		Master : {
-			name : "Master",
+		"Master" : {
 			catchRate : 255
 		},
-		Clone : {
-			name : "Clone",
+		"Clone" : {
 			catchRate : 255,
 			effect : function (self, poke, trainer) {
 				var thrownByPlayer = (poke.trainer !== Battle.alliedTrainers[0]);
@@ -70,8 +65,7 @@ Items = {
 			direct : true, // Whether you can use it as a trainer, directly (rather than just being a held item)
 			useMessage : true
 		},
-		Sitrus : {
-			name : "Sitrus",
+		"Sitrus" : {
 			effect : function (self, poke) {
 				Battle.healPercentage(poke, 0.25, Items.Berries.Sitrus);
 			},
@@ -90,13 +84,13 @@ Items = {
 
 forevery(Items, function (category) {
 	var standard = (category.hasOwnProperty("standard") ? category.standard : {});
-	forevery(category, function (item) {
+	forevery(category, function (item, name) {
 		if (item === standard)
 			return;
 		forevery(standard, function (value, key) {
 			if (!item.hasOwnProperty(key))
 				item[key] = value;
 		});
-		item.fullname = item.name + (["Berry", "Ball"].contains(item.category) ? " " + item.category : "");
+		item.fullname = name + (["Berry", "Ball"].contains(item.category) ? " " + item.category : "");
 	});
 });

@@ -122,7 +122,7 @@ Game = {
 			var self = Game.canvas.element = document.getElementById("battle");
 			Game.canvas.context = self.getContext("2d");
 			self.width = 356;
-			self.height = 292;
+			self.height = 288;
 			Game.canvas.context.imageSmoothingEnabled = false;
 			for (var i = 0; i < 3; ++ i) {
 				Game.canvas.temporary[i] = document.createElement("canvas");
@@ -268,7 +268,7 @@ Game = {
 	previousFrame : Time.now(),
 	fps : {
 		framerate : function () {
-			var past = Time.framerate, average = 0; // Analyse the past 10 frames
+			var past = Time.framerate, average = 0; // Analyse the past so many frames
 			for (var i = Game.fps.timeline.length - 1; i >= 0 && i >= Game.fps.timeline.length - past; -- i)
 				average += Game.fps.timeline[i];
 			average /= past;
@@ -301,9 +301,28 @@ Game = {
 		context.textBaseline = "middle";
 		context.fillStyle = "hsla(0, 0%, 0%, 1)";
 		context.fillRect(0, 0, Game.fps.element.width, Game.fps.element.height);
+		var fps = Game.fps.framerate();
+		context.beginPath();
+		context.moveTo(0, (fps / Time.framerate) * Game.fps.element.height);
+		context.lineTo(Game.fps.element.width, (fps / Time.framerate) * Game.fps.element.height);
+		context.strokeStyle = "hsla(0, 0%, 100%, 0)";
+		context.stroke();
+		var gradient = context.createLinearGradient(0, 0, Game.fps.element.width, 0);
+		context.beginPath();
+		var past = Time.framerate;
+		for (var i = Game.fps.timeline.length - 1, j = Time.framerate - 1, x; i >= 0 && i >= Game.fps.timeline.length - past; -- i, -- j) {
+			x = ((j - Math.max(0, Time.framerate - Game.fps.timeline.length)) / (Time.framerate - 1)) * Game.fps.element.width;
+			context.lineTo(x, (1 - ((Time.framerate - Game.fps.timeline[i]) / Time.framerate)) * Game.fps.element.height);
+			gradient.addColorStop(x / Game.fps.element.width, "hsla(" + (Game.fps.timeline[i] / Time.framerate) * 60 + ", 100%, 50%, " + 1/*Math.pow(Math.max(0, 1 - Game.fps.timeline[i] / Time.framerate), 0.5)*/ + ")");
+		}
+		context.lineTo(0, Game.fps.element.height);
+		context.lineTo((Math.min(Time.framerate, Game.fps.timeline.length) / Time.framerate) * Game.fps.element.width, Game.fps.element.height);
+		context.fillStyle = gradient;
+		context.fill();
 		context.fillStyle = "white";
+		
 		context.font = "lighter 16px Helvetica Neue";
-		context.fillText("fps: " + Game.fps.framerate().toFixed(1), 16, Game.fps.element.height / 2);
+		context.fillText("fps: " + fps.toFixed(1), 16, Game.fps.element.height / 2);
 		window.requestAnimationFrame(Game.redraw);
 	},
 	player : null,

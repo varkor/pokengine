@@ -15,8 +15,7 @@ Moves = {
 			]
 		}
 	},
-	Struggle : {
-		name : "Struggle",
+	"Struggle" : {
 		status : Development.incomplete,
 		description : "",
 		type : Types.normal,
@@ -36,8 +35,7 @@ Moves = {
 			]
 		}
 	},
-	Tackle : {
-		name : "Tackle",
+	"Tackle" : {
 		status : Development.incomplete,
 		description : "A physical attack in which the user charges and slams into the target with its whole body.",
 		type : Types.normal,
@@ -150,8 +148,7 @@ Moves = {
 			}
 		]]
 	},
-	Roar : {
-		name : "Roar",
+	"Roar" : {
 		status : Development.incomplete,
 		description : "",
 		type : Types.normal,
@@ -201,8 +198,7 @@ Moves = {
 			]
 		}
 	},
-	Wrap : {
-		name : "Wrap",
+	"Wrap" : {
 		status : Development.incomplete,
 		description : "",
 		type : Types.normal,
@@ -229,17 +225,16 @@ Moves = {
 			],
 			effect : function (target, data) {
 				if (!data.freed) {
-					Textbox.state(target.name() + " is hurt by " + target.possessivePronoun() + " " + Moves.Wrap.name + ".");
+					Textbox.state(target.name() + " is hurt by " + target.possessivePronoun() + " Wrap.");
 					Battle.damage(target, Move.percentageDamage(target, 1 / 16));
 				} else {
-					Textbox.state(target.name() + " was freed from " + target.possessivePronoun() + " " + Moves.Wrap.name + ".");
+					Textbox.state(target.name() + " was freed from " + target.possessivePronoun() + " Wrap.");
 					target.battler.trapped.removeElementsOfValue(Moves.Wrap);
 				}
 			}
 		},
 	},
-	Disable : {
-		name : "Disable",
+	"Disable" : {
 		status : Development.incomplete,
 		description : "",
 		type : Types.normal,
@@ -264,15 +259,14 @@ Moves = {
 						};
 					} else {
 						var which = possibilities[srandom.int(0, possibilities.length - 1)];
-						Textbox.state(self.name() + " disabled " + target.name() + "'s " + target.moves[which].move.name + ".");
+						Textbox.state(self.name() + " disabled " + target.name() + "'s " + target.moves[which].move + ".");
 						target.moves[which].disabled = 4;
 					}
 				}
 			]
 		}
 	},
-	Counter : {
-		name : "Counter",
+	"Counter" : {
 		status : Development.incomplete,
 		description : "",
 		type : Types.fighting,
@@ -296,8 +290,7 @@ Moves = {
 			]
 		}
 	},
-	Feint : {
-		name : "Feint",
+	"Feint" : {
 		status : Development.incomplete,
 		description : "",
 		type : Types.normal,
@@ -319,8 +312,7 @@ Moves = {
 			]
 		}
 	},
-	Pursuit : {
-		name : "Pursuit",
+	"Pursuit" : {
 		status : Development.incomplete,
 		description : "",
 		type : Types.dark,
@@ -341,8 +333,7 @@ Moves = {
 			]
 		}
 	},
-	Magnitude : {
-		name : "Magnitude",
+	"Magnitude" : {
 		status : Development.incomplete,
 		description : "",
 		type : Types.ground,
@@ -377,8 +368,7 @@ Moves = {
 			}
 		]]
 	},
-	Synthesis : {
-		name : "Synthesis",
+	"Synthesis" : {
 		status : Development.incomplete,
 		description : "",
 		type : Types.grass,
@@ -395,8 +385,7 @@ Moves = {
 			]
 		}
 	},
-	Protect : {
-		name : "Protect",
+	"Protect" : {
 		status : Development.incomplete,
 		description : "",
 		type : Types.normal,
@@ -427,8 +416,7 @@ Moves = {
 			]
 		}
 	},
-	Substitute : {
-		name : "Substitute",
+	"Substitute" : {
 		status : Development.incomplete,
 		description : "",
 		type : Types.normal,
@@ -447,15 +435,14 @@ Moves = {
 							failed : true
 						};
 					}
-					Textbox.state(self.name() + " created a " + Moves.Substitute.name + ".");
+					Textbox.state(self.name() + " created a Substitute.");
 					Battle.damage(self, Move.exactDamage(self, self, Moves.Substitute, sacrificed));
 					self.substitute = sacrificed;
 				}
 			]
 		}
 	},
-	Transform : {
-		name : "Transform",
+	"Transform" : {
 		status : Development.incomplete,
 		description : "",
 		type : Types.normal,
@@ -491,19 +478,18 @@ Moves = {
 					self.moves = target.moves.deepCopy();
 					foreach(self.moves, function (move) {
 						move.PP = 5;
-						move.maximumPP = 5;
+						move.maximumPP = 0;
 					});
 					self.shiny = target.shiny;
 					self.ability = target.ability;
 					self.form = target.form;
 					var display = Display.state.save();
-					Textbox.state(self.name() + " transformed itself into " + target.species.name + ".", /*transform animation, has finishing transforming, */function () { Display.state.load(display); });
+					Textbox.state(self.name() + " transformed itself into " + target.species + ".", /*transform animation, has finishing transforming, */function () { Display.state.load(display); });
 				}
 			]
 		}
 	},
-	Sketch : {
-		name : "Sketch",
+	"Sketch" : {
 		status : Development.incomplete,
 		description : "",
 		type : Types.normal,
@@ -536,8 +522,7 @@ Moves = {
 			]
 		}
 	},
-	HealBlock : {
-		name : "Heal Block",
+	"Heal Block" : {
 		status : Development.incomplete,
 		description : "",
 		type : Types.grass,
@@ -550,9 +535,9 @@ Moves = {
 		targets : Move.targets.opponents,
 		effect : {
 			constant : function (self, target) {
-				if (!Battle.hasEffectOnSide(Moves.HealBlock, target.battler.side)) {
-					Textbox.state(self.name() + " put a " + Moves.HealBlock.name + " into effect.");
-					Battle.bringIntoEffect(Moves.HealBlock, Battles.when.afterFiveTurns, target.battler.side);
+				if (!Battle.hasEffectOnSide("Heal Block", target.battler.side)) {
+					Textbox.state(self.name() + " put a Heal Block into effect.");
+					Battle.bringIntoEffect("Heal Block", Battles.when.afterFiveTurns, target.battler.side);
 				} else {
 					return {
 						failed : true
@@ -569,14 +554,13 @@ Moves = {
 			oneself : true,
 			action : function (data, target) {
 				if (data.change > 0) {
-					Textbox.state("The " + Moves.HealBlock.name + " prevents healing!");
+					Textbox.state("The Heal Block prevents healing!");
 					return true;
 				}
 			}
 		}
 	},
-	Absorb : {
-		name : "Absorb",
+	"Absorb" : {
 		status : Development.incomplete,
 		description : "",
 		type : Types.grass,
@@ -597,8 +581,7 @@ Moves = {
 			]
 		}
 	},
-	Guillotine : {
-		name : "Guillotine",
+	"Guillotine" : {
 		status : Development.incomplete,
 		description : "",
 		type : Types.normal,
@@ -621,8 +604,7 @@ Moves = {
 			]
 		}
 	},
-	DragonRage : {
-		name : "Dragon Rage",
+	"Dragon Rage" : {
 		status : Development.incomplete,
 		description : "",
 		type : Types.dragon,
@@ -640,8 +622,7 @@ Moves = {
 			]
 		}
 	},
-	PerishSong : {
-		name : "Perish Song",
+	"Perish Song" : {
 		status : Development.incomplete,
 		description : "",
 		type : Types.normal,
@@ -676,8 +657,7 @@ Moves = {
 			}
 		}
 	},
-	TakeDown : {
-		name : "Take Down",
+	"Take Down" : {
 		status : Development.incomplete,
 		description : "",
 		type : Types.normal,
@@ -698,8 +678,7 @@ Moves = {
 			]
 		}
 	},
-	Yawn : {
-		name : "Yawn",
+	"Yawn" : {
 		status : Development.incomplete,
 		description : "",
 		type : Types.normal,
@@ -723,8 +702,7 @@ Moves = {
 			}
 		}
 	},
-	FutureSight : {
-		name : "Future Sight",
+	"Future Sight" : {
 		status : Development.incomplete,
 		description : "",
 		type : Types.psychic,
@@ -749,13 +727,12 @@ Moves = {
 				}
 			],
 			effect : function (target, data) {
-				Textbox.state(target.name() + " took the " + Moves.FutureSight.name + " attack!");
+				Textbox.state(target.name() + " took the Future Sight attack!");
 				Battle.damage(target, Move.damage(data.self, target, Moves.FutureSight, null, Moves.FutureSight.type, true));
 			}
 		}
 	},
-	JumpKick : {
-		name : "Jump Kick",
+	"Jump Kick" : {
 		status : Development.incomplete,
 		description : "",
 		type : Types.fighting,
@@ -777,8 +754,7 @@ Moves = {
 			}
 		}
 	},
-	HyperVoice : {
-		name : "Hyper Voice",
+	"Hyper Voice" : {
 		status : Development.incomplete,
 		description : "",
 		type : Types.normal,
@@ -798,8 +774,7 @@ Moves = {
 			]
 		}
 	},
-	HyperBeam : {
-		name : "Hyper Beam",
+	"Hyper Beam" : {
 		status : Development.incomplete,
 		description : "",
 		type : Types.normal,
@@ -819,8 +794,7 @@ Moves = {
 			]
 		}
 	},
-	SolarBeam : {
-		name : "Solar Beam",
+	"Solar Beam" : {
 		status : Development.incomplete,
 		description : "",
 		type : Types.grass,
@@ -846,8 +820,7 @@ Moves = {
 			]
 		}
 	},
-	Fly : {
-		name : "Fly",
+	"Fly" : {
 		status : Development.incomplete,
 		description : "",
 		type : Types.flying,
@@ -931,8 +904,7 @@ Moves = {
 			]
 		]
 	},
-	Dive : {
-		name : "Dive",
+	"Dive" : {
 		status : Development.incomplete,
 		description : "",
 		type : Types.water,
@@ -959,8 +931,7 @@ Moves = {
 			}
 		}
 	},
-	Dig : {
-		name : "Dig",
+	"Dig" : {
 		status : Development.incomplete,
 		description : "",
 		type : Types.ground,
@@ -987,8 +958,7 @@ Moves = {
 			}
 		}
 	},
-	PinMissile : {
-		name : "Pin Missile",
+	"Pin Missile" : {
 		status : Development.incomplete,
 		description : "",
 		type : Types.bug,
@@ -1011,8 +981,7 @@ Moves = {
 			]
 		}
 	},
-	Supersonic : {
-		name : "Supersonic",
+	"Supersonic" : {
 		status : Development.incomplete,
 		description : "",
 		type : Types.normal,
@@ -1032,8 +1001,7 @@ Moves = {
 			]
 		}
 	},
-	Spikes : {
-		name : "Spikes",
+	"Spikes" : {
 		status : Development.incomplete,
 		description : "",
 		type : Types.ground,
@@ -1059,8 +1027,7 @@ Moves = {
 			}
 		}
 	},
-	Ingrain : {
-		name : "Ingrain",
+	"Ingrain" : {
 		status : Development.incomplete,
 		description : "",
 		type : Types.grass,
@@ -1090,8 +1057,7 @@ Moves = {
 			}
 		}
 	},
-	Curse : {
-		name : "Curse",
+	"Curse" : {
 		status : Development.incomplete,
 		description : "",
 		type : Types.ghost,
@@ -1106,7 +1072,7 @@ Moves = {
 				function (self, target) {
 					if (self.ofType(Types.ghost)) {
 						if (!Battle.moveHasEffect(Moves.Ingrain, self)) {
-							Textbox.state(target.name() + " was put under an evil " + Moves.Curse.name + "!");
+							Textbox.state(target.name() + " was put under an evil Curse!");
 							Battle.damage(self, Move.exactDamage(self, self, Moves.Curse, Math.floor(self.stats[Stats.health]() / 2)));
 							Battle.moveHaveRepeatingEffect(Moves.Curse, Battles.when.endOfThisTurn, target);
 						} else
@@ -1126,8 +1092,7 @@ Moves = {
 			}
 		}
 	},
-	Metronome : {
-		name : "Metronome",
+	"Metronome" : {
 		status : Development.incomplete,
 		description : "",
 		type : Types.normal,
