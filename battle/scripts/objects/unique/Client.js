@@ -2,6 +2,7 @@ Client = {
 	connected : false,
 	connecting : false,
 	socket : null,
+	battle : null,
 	receive : function (message) {
 		console.log("%cReceived the following message from the server:", "color : hsl(170, 100%, 30%)", message);
 		switch (message.action) {
@@ -14,6 +15,8 @@ Client = {
 				foreach(users, function (user) {
 					var li, button;
 					li = document.createElement("li");
+					li.setAttribute("data-user", user.user);
+					li.setAttribute("data-ip", user.ip);
 					li.innerHTML = user.user;
 					button = document.createElement("button");
 					button.innerHTML = "Invite";
@@ -26,7 +29,10 @@ Client = {
 						pokes.add(new pokemon({species : "Bulbasaur"}));
 						Client.send({
 							action : "invite",
-							who : user.ip,
+							who : {
+								user : user.user,
+								ip : user.ip
+							},
 							party : pokes.store(),
 							bag : [], //? Will also need to send trainer badges, etc.
 							settings : {
@@ -41,21 +47,32 @@ Client = {
 				});
 				break;
 			case "invitation":
-				console.log("%cYou have received an invitation to battle from another player (" + message.from + "):", "color : hsl(170, 100%, 30%)");
-				var li, button = li.childNodes[1];
+				console.log("%cYou have received an invitation to battle from another player (" + message.from.user + "):", "color : hsl(170, 100%, 30%)");
+				var list = document.getElementById("users").childNodes, li, button;
+				foreach(list, function (user) {
+					if (user.getAttribute("data-ip") === message.from.ip && user.getAttribute("data-user") === message.from.user) {
+						li = user;
+						return true;
+					}
+				});
+				button = li.childNodes[1];
 				li.className = "active";
 				button.parentElement.removeChild(button);
 				button = document.createElement("button");
 				button.innerHTML = "Accept";
 				button.addEventListener("mousedown", function (event) {
 					event.stopPropagation();
+					button.innerHTML = "Accepted";
 					console.log("%cAccepting the invitation to battle...", "color : hsl(170, 100%, 30%)");
 					var pokes = new party();
 					pokes.add(new pokemon({species : "Blastoise"}));
 					pokes.add(new pokemon({species : "Ivysaur"}));
 					Client.send({
 						action : "accept",
-						who : message.from,
+						who : {
+							user : message.from.user,
+							ip : message.from.ip
+						},
 						party : pokes.store(),
 						bag : []
 					});
@@ -75,13 +92,28 @@ Client = {
 				foreach(document.getElementById("users").childNodes, function (li) {
 					li.childNodes[1].disabled = true;
 				});
+				Client.battle = {
+					other : {
+						user : message.other.user,
+						ip : message.other.ip
+					}
+				};
 				Battle.beginOnline(message.seed, you, them, message.style, message.weather, message.scene);
 				//? All pokemon and battle data that is sent should use no magic numbers, only strings or logical values
 				//? Replace team with using trainer.unique
 				break;
 			case "disconnect":
-				console.log("%cThe other player disconnected from the server!", "color : hsl(0, 100%, 40%)");
-				Battle.end(true);
+				var list = document.getElementById("users").childNodes;
+				foreach(list, function (user) {
+					if (user.getAttribute("data-ip") === message.who.ip && user.getAttribute("data-user") === message.who.user) {
+						user.parentElement.removeChild(user);
+						return true;
+					}
+				});
+				if (Client.battle !== null && Client.battle.other.ip === message.who.ip && Client.battle.other.user === message.who.user) {
+					console.log("%cThe other player disconnected from the server!", "color : hsl(0, 100%, 40%)");
+					Battle.end(true);
+				}
 			case "actions":
 				Battle.receiveActions(message.actions);
 				break;

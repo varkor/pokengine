@@ -83,7 +83,7 @@ button.active {
 input[type="text"] {
 	border: 1px dashed currentcolor;
 	outline: none;
-	width: 80pt;
+	width: 100pt;
 	height: 24pt;
 	color: inherit;
 	background: transparent;
@@ -123,4 +123,7 @@ li.active button:hover {
 }
 li button:disabled {
 	background: hsl(150, 100%, 40%);
+}
+li.active button:disabled {
+	background: hsl(0, 0%, 90%);
 }

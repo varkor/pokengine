@@ -3,10 +3,6 @@ function party (initial) {
 
 	self.space = 6;
 	self.pokemon = [];
-	if (arguments.length > 0)
-		foreach(initial, function (poke) {
-			self.add(new pokemon(poke));
-		});
 
 	self.add = function (poke) {
 		if (self.pokemon.length < self.space) {
@@ -15,6 +11,11 @@ function party (initial) {
 		}
 		return false;
 	};
+
+	if (arguments.length > 0)
+		foreach(initial, function (poke) {
+			self.add(new pokemon(poke));
+		});
 
 	self.release = function (poke) {
 		self.pokemon.remove(self.pokemon.indexOf(poke));

@@ -33,35 +33,42 @@ exports.BattleServer = {
 				index = -1;
 				exports.BattleServer.battles.forEach(function (battle, i) {
 					if (battle.clientA === from) {
-						exports.BattleServer.send({
-							action : "disconnect"
-						}, battle.clientB);
 						index = i;
 						return;
 					} else if (battle.clientB === from) {
-						exports.BattleServer.send({
-							action : "disconnect"
-						}, battle.clientA);
 						index = i;
 						return;
 					}
 				});
 				if (index >= 0)
 					exports.BattleServer.battles.splice(index, 1);
+				exports.BattleServer.clients.forEach(function (client) {
+					exports.BattleServer.send({
+						action : "disconnect",
+						who : {
+							user : from.user,
+							ip : from.ip
+						},
+					}, client);
+				});
 				break;
 			case "invite":
 				if (exports.BattleServer.battleForClient(from) === null) {
 					exports.BattleServer.clients.forEach(function (client) {
-						if (client !== from && (!message.hasOwnProperty("who") || client.ip === message.who) && !from.invitations.hasOwnProperty(client.ip))
+						if (client !== from && (!message.hasOwnProperty("who") || (client.ip === message.who.ip && client.user === message.who.user)) && !from.invitations.hasOwnProperty(client.user + ":" + client.ip)) {
 							exports.BattleServer.send({
 								action : "invitation",
-								from : from.ip
+								from : {
+									user : from.user,
+									ip : from.ip
+								}
 							}, client);
-							from.invitations[client.ip] = {
+							from.invitations[client.user + ":" + client.ip] = {
 								party : message.party,
 								bag : message.bag,
-								settings : message.settings;
+								settings : message.settings
 							};
+						}
 					});
 				}
 				break;
@@ -69,13 +76,13 @@ exports.BattleServer = {
 				if (exports.BattleServer.battleForClient(from) === null) {
 					var clientB = from, clientA = null;
 					exports.BattleServer.clients.forEach(function (client) {
-						if (client !== from && client.ip === message.who) {
+						if (client !== from && client.ip === message.who.ip && client.user === message.who.user) {
 							clientA = client;
 							return;
 						}
 					});
-					if (clientA !== null && exports.BattleServer.battleForClient(clientA) === null && clientA.invitations.hasOwnProperty(clientB.ip)) {
-						var storage = clientA.invitations[clientB.ip], settings = storage.settings, battle = {
+					if (clientA !== null && exports.BattleServer.battleForClient(clientA) === null && clientA.invitations.hasOwnProperty(clientB.user + ":" + clientB.ip)) {
+						var storage = clientA.invitations[clientB.user + ":" + clientB.ip], settings = storage.settings, battle = {
 							clientA : clientA,
 							clientAParty : storage.party,
 							clientABag : storage.bag,
@@ -93,11 +100,13 @@ exports.BattleServer = {
 							team : 0,
 							self : {
 								user : clientA.user,
+								ip : clientA.ip,
 								party : battle.clientAParty,
 								bag : battle.clientABag
 							},
 							other : {
 								user : clientB.user,
+								ip : clientB.ip,
 								party : battle.clientBParty,
 								bag : battle.clientBBag
 							},
@@ -111,11 +120,15 @@ exports.BattleServer = {
 							team : 1,
 							self : {
 								user : clientB.user,
+								ip : clientB.ip,
 								party : battle.clientBParty
+								bag : battle.clientBBag
 							},
 							other : {
 								user : clientA.user,
+								ip : clientA.ip,
 								party : battle.clientAParty
+								bag : battle.clientABag
 							},
 							seed : battle.seed,
 							style : battle.style,
