@@ -169,7 +169,8 @@ exports.BattleServer = {
 			}, client);
 			return;
 		}
-		forevery(rules, function (setting, rule) {
+		for (var rule in rules) {
+			var setting = rules[rule];
 			switch (rule) {
 				case "levels":
 					switch (setting) {
@@ -229,7 +230,7 @@ exports.BattleServer = {
 					// This rule is handled by the battle system
 					break;
 			}
-		});
+		}
 		return valid;
 	},
 	battleForClient : function (client) {

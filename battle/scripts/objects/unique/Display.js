@@ -78,7 +78,7 @@ Display = {
 				if (fromAll[i] === NoPokemon || toAll[i] === NoPokemon || originalAll[i] === NoPokemon)
 					continue;
 				foreach(["health", "experience"], function (property) {
-					var difference = (toAll[i][property] - originalAll[i][property]) * ((1 / _(Settings.client, "stat transition duration")) / Time.framerate);
+					var difference = (toAll[i][property] - originalAll[i][property]) * ((1 / _(Settings, "stat transition duration")) / Time.framerate);
 					fromAll[i][property] += difference;
 					if (Math.abs(fromAll[i][property] - toAll[i][property]) > Math.abs(difference))
 						completed = false;
@@ -86,7 +86,7 @@ Display = {
 						fromAll[i][property] = toAll[i][property];
 				});
 				foreach(["transition", "height"], function (property) {
-					var difference = (toAll[i].battler.display[property] - originalAll[i].battler.display[property]) * ((1 / _(Settings.client, "switch transition duration")) / Time.framerate);
+					var difference = (toAll[i].battler.display[property] - originalAll[i].battler.display[property]) * ((1 / _(Settings, "switch transition duration")) / Time.framerate);
 					fromAll[i].battler.display[property] += difference;
 					if (Math.abs(fromAll[i].battler.display[property] - toAll[i].battler.display[property]) > Math.abs(difference))
 						completed = false;
