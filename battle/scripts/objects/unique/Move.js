@@ -195,7 +195,7 @@ Move = {
 				completed : false,
 				progress : 0
 			};
-			if (!_(Settings.client, "animated moves") || move.animation.length - 1 < stage || move.animation[stage].length === 0) {
+			if (!_(Settings, "animated moves") || move.animation.length - 1 < stage || move.animation[stage].length === 0) {
 				track.completed = true;
 				return track;
 			}

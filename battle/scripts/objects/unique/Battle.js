@@ -200,7 +200,7 @@ Battle = {
 			if (transition > 0 && transition < 1)
 				Game.canvas.draw.sprite(poke.sprite.path(side), position.x, position.y - position.z, true, [{type : "fill", colour : "white"}, {type : "opacity", value : Math.pow(1 - transition, 0.4)}, {type : "crop", heightRatio : poke.battler.display.height}], matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix);
 		});
-		if (_(Settings.client, "visual weather effects") || display.flags.weather)
+		if (_(Settings, "visual weather effects") || display.flags.weather)
 			Weather.draw(Game.canvas.context);
 		foreach(display.opponents, function (poke, place) {
 			if (poke !== NoPokemon)
@@ -1061,15 +1061,15 @@ Battle = {
 		var all = Battle.all(true);
 		switch (Battle.weather) {
 			case Weathers.intenseSunlight:
-				if (!_(Settings.client, "visual weather effects"))
+				if (!_(Settings, "visual weather effects"))
 					Textbox.state("The sun is blazing fiercely in the sky!");
 				break;
 			case Weathers.rain:
-				if (!_(Settings.client, "visual weather effects"))
+				if (!_(Settings, "visual weather effects"))
 					Textbox.state("The rain is pouring down in torrents!");
 				break;
 			case Weathers.sandstorm:
-				if (!_(Settings.client, "visual weather effects"))
+				if (!_(Settings, "visual weather effects"))
 					Textbox.state("The sandstorm is raging all around!");
 				
 				foreach(all, function (poke) {
@@ -1082,7 +1082,7 @@ Battle = {
 				});
 				break;
 			case Weathers.hail:
-				if (!_(Settings.client, "visual weather effects"))
+				if (!_(Settings, "visual weather effects"))
 					Textbox.state("The hail is falling heavily!");
 				foreach(all, function (poke) {
 					if (!Battle.active || Battle.finished)

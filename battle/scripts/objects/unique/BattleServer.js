@@ -1,4 +1,7 @@
 exports.BattleServer = {
+	Settings : {
+		"silently resolve rule exceptions" : true // Whether, if a client sends a party, etc. which breaks some of the set rules, BattleServer should just attempt to align the data with the rules, or whether it should send a warning message back to the client
+	},
 	clients : [],
 	battles : [],
 	receive : function (message, from) {
@@ -194,7 +197,7 @@ exports.BattleServer = {
 							break;
 						case "up to: 3":
 							if (trainer.party.length > 3) {
-								if (_(Settings.server, "silently resolve rule exceptions")) {
+								if (exports.BattleServer.Settings["silently resolve rule exceptions"]) {
 									// Use the first 3 Pokémon in the party
 									trainer.party = trainer.party.slice(0, 3);
 								} else {
@@ -208,7 +211,7 @@ exports.BattleServer = {
 							break;
 						case "solo":
 							if (trainer.party.length > 1) {
-								if (_(Settings.server, "silently resolve rule exceptions")) {
+								if (exports.BattleServer.Settings["silently resolve rule exceptions"]) {
 									// Use the first 3 Pokémon in the party
 									trainer.party = trainer.party.slice(0, 1);
 								} else {
