@@ -54,22 +54,23 @@ exports.BattleServer = {
 				break;
 			case "invite":
 				if (exports.BattleServer.battleForClient(from) === null) {
-					exports.BattleServer.clients.forEach(function (client) {
-						if (client !== from && (!message.hasOwnProperty("who") || (client.ip === message.who.ip && client.user === message.who.user)) && !from.invitations.hasOwnProperty(client.user + ":" + client.ip)) {
-							exports.BattleServer.send({
-								action : "invitation",
-								from : {
-									user : from.user,
-									ip : from.ip
-								}
-							}, client);
-							from.invitations[client.user + ":" + client.ip] = {
-								party : message.party,
-								bag : message.bag,
-								settings : message.settings
-							};
-						}
-					});
+					if (exports.BattleServer.validateForRules(from, message.trainer, message.settings.rules, message.reference)) {
+						exports.BattleServer.clients.forEach(function (client) {
+							if (client !== from && (!message.hasOwnProperty("who") || (client.ip === message.who.ip && client.user === message.who.user)) && !from.invitations.hasOwnProperty(client.user + ":" + client.ip)) {
+								exports.BattleServer.send({
+									action : "invitation",
+									from : {
+										user : from.user,
+										ip : from.ip
+									}
+								}, client);
+								from.invitations[client.user + ":" + client.ip] = {
+									trainer : message.trainer,
+									settings : message.settings
+								};
+							}
+						});
+					}
 				}
 				break;
 			case "accept":
@@ -82,59 +83,47 @@ exports.BattleServer = {
 						}
 					});
 					if (clientA !== null && exports.BattleServer.battleForClient(clientA) === null && clientA.invitations.hasOwnProperty(clientB.user + ":" + clientB.ip)) {
-						var storage = clientA.invitations[clientB.user + ":" + clientB.ip], settings = storage.settings, battle = {
-							clientA : clientA,
-							clientAParty : storage.party,
-							clientABag : storage.bag,
-							clientB : clientB,
-							clientBParty : message.party,
-							clientBBag : message.bag,
-							seed : Math.random() * Math.pow(2, 32),
-							style : settings.style,
-							weather : settings.weather,
-							scene : settings.scene
-						};
-						exports.BattleServer.battles.push(battle);
-						exports.BattleServer.send({
-							action : "begin",
-							team : 0,
-							self : {
-								user : clientA.user,
-								ip : clientA.ip,
-								party : battle.clientAParty,
-								bag : battle.clientABag
-							},
-							other : {
-								user : clientB.user,
-								ip : clientB.ip,
-								party : battle.clientBParty,
-								bag : battle.clientBBag
-							},
-							seed : battle.seed,
-							style : battle.style,
-							weather : battle.weather,
-							scene : settings.scene
-						}, clientA);
-						exports.BattleServer.send({
-							action : "begin",
-							team : 1,
-							self : {
-								user : clientB.user,
-								ip : clientB.ip,
-								party : battle.clientBParty,
-								bag : battle.clientBBag
-							},
-							other : {
-								user : clientA.user,
-								ip : clientA.ip,
-								party : battle.clientAParty,
-								bag : battle.clientABag
-							},
-							seed : battle.seed,
-							style : battle.style,
-							weather : battle.weather,
-							scene : settings.scene
-						}, clientB);
+						var storage = clientA.invitations[clientB.user + ":" + clientB.ip];
+						if (exports.BattleServer.validateForRules(from, message.trainer, storage.settings.rules, message.reference)) {
+							var battle = {
+								clientA : {
+									client : clientA,
+									trainer : storage.trainer
+								},
+								clientB : {
+									client : clientB,
+									trainer : message.trainer
+								},
+								seed : Math.random() * Math.pow(2, 32),
+								settings : storage.settings
+							};
+							exports.BattleServer.battles.push(battle);
+							var clientAInfo = {
+								user : battle.clientA.client.user,
+								ip : battle.clientA.client.ip,
+								trainer : battle.clientA.trainer
+							}, clientBInfo = {
+								user : battle.clientB.client.user,
+								ip : battle.clientB.client.ip,
+								trainer : battle.clientB.trainer
+							};
+							exports.BattleServer.send({
+								action : "begin",
+								team : 0,
+								self : clientAInfo,
+								other : clientBInfo,
+								seed : battle.seed,
+								settings : battle.settings
+							}, clientA);
+							exports.BattleServer.send({
+								action : "begin",
+								team : 1,
+								self : clientBInfo,
+								other : clientAInfo,
+								seed : battle.seed,
+								settings : battle.settings
+							}, clientB);
+						}
 					}
 				}
 				break;
@@ -161,7 +150,84 @@ exports.BattleServer = {
 		}
 	},
 	send : function (message, to) {
+		if (!message.hasOwnProperty("reference"))
+			message.reference = (new Date());
 		to.send(JSON.stringify([56, message]).slice(1, -1));
+		return message.reference;
+	},
+	validateForRules : function (client, trainer, rules, reference) {
+		var valid = true;
+		if (trainer.party.length === 0) {
+			valid = false;
+			exports.BattleServer.send({
+				action : "issue",
+				message : "You haven't got any Pokémon!",
+				reference : reference
+			}, client);
+			return;
+		}
+		forevery(rules, function (setting, rule) {
+			switch (rule) {
+				case "levels":
+					switch (setting) {
+						case "any":
+							// No validation or changes are needed with this setting
+							break;
+						case "flatten: 50":
+							foreach(trainer.party, function (poke) {
+								poke.level = 50;
+								poke.experience = 0;
+							});
+							break;
+						case "flatten: 100":
+							foreach(trainer.party, function (poke) {
+								poke.level = 100;
+								poke.experience = 0;
+							});
+							break;
+					}
+					break;
+				case "party":
+					switch (setting) {
+						case "up to: 6":
+							// No validation or changes are needed with this setting
+							break;
+						case "up to: 3":
+							if (trainer.party.length > 3) {
+								if (_(Settings.server, "silently resolve rule exceptions")) {
+									// Use the first 3 Pokémon in the party
+									trainer.party = trainer.party.slice(0, 3);
+								} else {
+									valid = false;
+									exports.BattleServer.send({
+										action : "issue",
+										message : "Only 3 Pokémon are allowed, but you have " + trainer.party.length + "!"
+									}, client);
+								}
+							}
+							break;
+						case "solo":
+							if (trainer.party.length > 1) {
+								if (_(Settings.server, "silently resolve rule exceptions")) {
+									// Use the first 3 Pokémon in the party
+									trainer.party = trainer.party.slice(0, 1);
+								} else {
+									valid = false;
+									exports.BattleServer.send({
+										action : "issue",
+										message : "Only one Pokémon is allowed, but you have " + trainer.party.length + "!"
+									}, client);
+								}
+							}
+							break;
+					}
+					break;
+				case "items":
+					// This rule is handled by the battle system
+					break;
+			}
+		});
+		return valid;
 	},
 	battleForClient : function (client) {
 		var which = null;

@@ -8,3 +8,6 @@ Badges = {
 		obediance : 30
 	}
 };
+
+Ribbons = {
+};

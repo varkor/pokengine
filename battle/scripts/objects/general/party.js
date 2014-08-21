@@ -18,6 +18,7 @@ function party (initial) {
 		});
 
 	self.release = function (poke) {
+		poke.release();
 		self.pokemon.remove(self.pokemon.indexOf(poke));
 	};
 

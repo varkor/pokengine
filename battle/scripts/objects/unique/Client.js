@@ -6,6 +6,25 @@ Client = {
 	receive : function (message) {
 		console.log("%cReceived the following message from the server:", "color : hsl(170, 100%, 30%)", message);
 		switch (message.action) {
+			case "issue":
+				console.log("%c" + message.message, "color : hsl(0, 100%, 40%)");
+				var li = null;
+				foreach(document.querySelectorAll("#users li"), function (user) {
+					if (user.getAttribute("data-ip") === message.reference.ip && user.getAttribute("data-user") === message.reference.user) {
+						li = user;
+						return true;
+					}
+				});
+				if (li) {
+					Interface.issue(li, message.message);
+					var button = li.querySelector("button");
+					if (button.classList.contains("active"))
+						button.innerHTML = "Accept";
+					else
+						button.innerHTML = "Invite";
+					button.disabled = true;
+				}
+				break;
 			case "users":
 				var users = [];
 				if (message.hasOwnProperty("users"))
@@ -22,33 +41,34 @@ Client = {
 					button.innerHTML = "Invite";
 					button.addEventListener("mousedown", function (event) {
 						event.stopPropagation();
-						button.innerHTML = "Invited";
-						button.disabled = true;
-						var pokes = new party();
-						pokes.add(new pokemon({species : "Charizard"}));
-						pokes.add(new pokemon({species : "Bulbasaur"}));
-						Client.send({
-							action : "invite",
-							who : {
-								user : user.user,
-								ip : user.ip
-							},
-							party : pokes.store(),
-							bag : [], //? Will also need to send trainer badges, etc.
-							settings : {
-								style : (document.getElementById("style").value === "double" ? Battles.style.double : Battles.style.normal),
-								weather : (Weathers.hasOwnProperty(document.getElementById("weather").value) ? Weathers[document.getElementById("weather").value] : Weathers.clear),
-								scene : (Scenes.contains(document.getElementById("scene").value) ? document.getElementById("scene").value : "Clearing")
-							}
-						});
+						Interface.popup(button, function (event) {
+							button.innerHTML = "Invited";
+							button.disabled = true;
+							Client.send({
+								action : "invite",
+								who : {
+									user : user.user,
+									ip : user.ip
+								},
+								trainer : new trainer({
+									name : user.user,
+									party : Interface.buildParty()
+								}).store(),
+								settings : Interface.buildSettings(),
+								reference : {
+									user : user.user,
+									ip : user.ip
+								}
+							});
+						}, false);
 					});
 					li.appendChild(button);
-					document.getElementById("users").appendChild(li);
+					document.querySelector("#users").appendChild(li);
 				});
 				break;
 			case "invitation":
 				console.log("%cYou have received an invitation to battle from another player (" + message.from.user + "):", "color : hsl(170, 100%, 30%)");
-				var list = document.getElementById("users").childNodes, li, button;
+				var list = document.querySelector("#users").childNodes, li, button;
 				foreach(list, function (user) {
 					if (user.getAttribute("data-ip") === message.from.ip && user.getAttribute("data-user") === message.from.user) {
 						li = user;
@@ -65,17 +85,16 @@ Client = {
 					button.innerHTML = "Accepted";
 					button.disabled = true;
 					console.log("%cAccepting the invitation to battle...", "color : hsl(170, 100%, 30%)");
-					var pokes = new party();
-					pokes.add(new pokemon({species : "Blastoise"}));
-					pokes.add(new pokemon({species : "Ivysaur"}));
 					Client.send({
 						action : "accept",
 						who : {
 							user : message.from.user,
 							ip : message.from.ip
 						},
-						party : pokes.store(),
-						bag : []
+						trainer : new trainer({
+							name : message.from.user,
+							party : Interface.buildParty()
+						}).store()
 					});
 				})
 				li.appendChild(button);
@@ -83,14 +102,12 @@ Client = {
 			case "begin":
 				console.log("%cAn online battle has been initialised.", "color : hsl(170, 100%, 30%)");
 				srandom.seed = message.seed;
-				var you = new character(message.self.user, new party(message.self.party)), them = new character(message.other.user, new party(message.other.party));
-				you.bag.items = message.self.bag;
-				them.bag.items = message.other.bag;
+				var you = new trainer(message.self.trainer), them = new trainer(message.other.trainer);
 				Game.takePossessionOf(you);
 				you.team = message.team;
 				them.team = 1 - message.team;
-				them.type = Characters.type.online;
-				foreach(document.getElementById("users").childNodes, function (li) {
+				them.type = Trainers.type.online;
+				foreach(document.querySelector("#users").childNodes, function (li) {
 					li.childNodes[1].disabled = true;
 				});
 				Client.battle = {
@@ -99,12 +116,10 @@ Client = {
 						ip : message.other.ip
 					}
 				};
-				Battle.beginOnline(message.seed, you, them, message.style, message.weather, message.scene);
-				//? All pokemon and battle data that is sent should use no magic numbers, only strings or logical values
-				//? Replace team with using trainer.unique
+				Battle.beginOnline(message.seed, you, them, message.settings);
 				break;
 			case "disconnect":
-				var list = document.getElementById("users").childNodes;
+				var list = document.querySelector("#users").childNodes;
 				foreach(list, function (user) {
 					user.childNodes[1].disabled = false;
 					if (user.getAttribute("data-ip") === message.who.ip && user.getAttribute("data-user") === message.who.user) {
@@ -122,7 +137,10 @@ Client = {
 	},
 	send : function (message) {
 		if (Client.connected) {
+			if (!message.hasOwnProperty("reference"))
+				message.reference = Time.now();
 			Client.socket.send(JSON.stringify([56, message]).slice(1, -1));
+			return message.reference;
 		} else {
 			console.log("%cMessages can't be sent without being connected to the server!", "color : hsl(0, 100%, 40%)");
 		}
@@ -145,7 +163,6 @@ Client = {
 					action : "connect",
 					user : as
 				});
-				document.getElementById("invitations").className = "";
 			});
 			Client.socket.addEventListener("close", function () {
 				console.log("%cDisconnected from the server.", "color : hsl(0, 100%, 40%)");

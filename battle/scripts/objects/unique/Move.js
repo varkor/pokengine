@@ -46,7 +46,7 @@ Move = {
 	Struggle : {
 		number : -1,
 		PP : Infinity,
-		maximumPP : 0
+		PPups : 0
 	},
 	use : function (move, stage, mover, target) {
 		moveName = move;
@@ -54,8 +54,8 @@ Move = {
 		if (target instanceof pokemon)
 			target = Battle.placeOfPokemon(target);
 		var constant = {},
-			targetPokemon = Battle.pokemonInPlace(target),
-			affected = Battle.affectedByMove(mover, targetPokemon, move).filter(onlyPokemon),
+			targetPokemon = (target !== NoPokemon ? Battle.pokemonInPlace(target) : NoPokemon),
+			affected = (targetPokemon !== NoPokemon ? Battle.affectedByMove(mover, targetPokemon, move).filter(onlyPokemon) : []),
 			completelyFailed = true,
 			statedFailureReason = false,
 			finalStage = (stage === move.effect.use.length - 1),
@@ -70,18 +70,20 @@ Move = {
 				affected = Battle.affectedByMove(mover, targetPokemon, move).filter(onlyPokemon);
 			}
 		}
-		if (finalStage && moveName[0] !== "_")
-			animationEffect = Textbox.state(mover.name() + " used " + moveName + (move.affects === Move.targets.directTarget && affected.notEmpty() ? " on " + (targetPokemon !== mover ? targetPokemon.name() : mover.selfPronoun()) : "") + "!", function () { return Move.animate(mover, move, stage, targetPokemon, constant); });
-		else
+		if (finalStage && moveName[0] !== "_") {
+			if (affected.notEmpty())
+				animationEffect = Textbox.state(mover.name() + " used " + moveName + (move.affects === Move.targets.directTarget && affected.notEmpty() ? " on " + (targetPokemon !== mover ? targetPokemon.name() : mover.selfPronoun()) : "") + "!", function () { return Move.animate(mover, move, stage, targetPokemon, constant); });
+			else
+				Textbox.state(mover.name() + " tried to use " + moveName + "...");
+		} else
 			animationEffect = Textbox.effect(function () { return Move.animate(mover, move, stage, targetPokemon, constant); });
 		// Makes sure any Display states after the move has been used takes into consideration any movements by any of the Pokémon
-			if (targetPokemon !== NoPokemon) {
-				Move.renderAnimation(mover, move, stage, targetPokemon, constant);
-				var displayRendered = Display.state.save();
-				stateEffect = Textbox.effect(function () { Display.state.load(displayRendered); });
-			}
-		//
-		if (move.effect.hasOwnProperty("constant"))
+		if (targetPokemon !== NoPokemon) {
+			Move.renderAnimation(mover, move, stage, targetPokemon, constant);
+			var displayRendered = Display.state.save();
+			stateEffect = Textbox.effect(function () { Display.state.load(displayRendered); });
+		}
+		if (move.effect.hasOwnProperty("constant") && targetPokemon !== NoPokemon)
 			constant = move.effect.constant(mover, targetPokemon);
 		if (typeof constant === "undefined" || !constant.hasOwnProperty("failed") || !constant.failed) {
 			if (affected.notEmpty()) {
@@ -193,7 +195,7 @@ Move = {
 				completed : false,
 				progress : 0
 			};
-			if (!Settings.movesAnimate || move.animation.length - 1 < stage || move.animation[stage].length === 0) {
+			if (!_(Settings.client, "animated moves") || move.animation.length - 1 < stage || move.animation[stage].length === 0) {
 				track.completed = true;
 				return track;
 			}
@@ -242,6 +244,7 @@ Move = {
 		}
 	},
 	damage : function (attacker, target, move, power, type, noCritical) {
+		move = _(Moves, move);
 		var weather = Battle.weather, multiTarget = (Battle.style === Battles.style.double);
 		power = power || move.power;
 		if (arguments.length < 5)
@@ -269,10 +272,27 @@ Move = {
 	},
 	exactDamage : function (attacker, target, move, damage, type) {
 		if (arguments.length === 1)
-			return {damage : arguments[0], effectiveness : 1, critical : false, category : Move.category.none, infiltrates : true, cause : NoPokemon, targets : Move.target.none};
+			return {
+				damage : arguments[0],
+				effectiveness : 1,
+				critical : false,
+				category : Move.category.none,
+				infiltrates : true,
+				cause : NoPokemon,
+				targets : Move.target.none
+			};
+		move = _(Moves, move);
 		if (arguments.length < 5)
 			type = move.type;
-		return {damage : damage, effectiveness : (target.effectiveness(type) !== 0 ? 1 : 0), critical : false, category : move.category, infiltrates : move.infiltrates || move.classification.contains("Sound"), cause : attacker, targets : move.targets};
+		return {
+			damage : damage,
+			effectiveness : (target.effectiveness(type) !== 0 ? 1 : 0),
+			critical : false,
+			category : move.category,
+			infiltrates : move.infiltrates || move.classification.contains("Sound"),
+			cause : attacker,
+			targets : move.targets
+		};
 	},
 	percentageDamage : function (poke, fraction) {
 		return Move.exactDamage(Math.max(1, poke.stats[Stats.health]() * fraction));
@@ -291,6 +311,7 @@ Move.targets = {
 	// A preset list of all the common combinations of targets moves may use
 	everyone : [Move.target.self, Move.target.directOpponent, Move.target.adjacentAlly, Move.target.adjacentOpponent, Move.target.farAlly, Move.target.farOpponent],
 	allButUser : [Move.target.directOpponent, Move.target.adjacentAlly, Move.target.adjacentOpponent, Move.target.farAlly, Move.target.farOpponent],
+	directOpponent : [Move.target.directOpponent],
 	adjacentToUser : [Move.target.directOpponent, Move.target.adjacentAlly, Move.target.adjacentOpponent],
 	opponents : [Move.target.directOpponent, Move.target.adjacentOpponent, Move.target.farOpponent],
 	allies : [Move.target.self, Move.target.adjacentAlly, Move.target.farAlly],
@@ -302,5 +323,8 @@ Move.targets = {
 	noone : [],
 	closeBy : [Move.target.self, Move.target.directOpponent, Move.target.adjacentAlly, Move.target.adjacentOpponent],
 
-	party : [] // Special constant
+	 // Special constants
+	party : [],
+	opposingSide : [],
+	alliedSide : []
 };

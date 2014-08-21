@@ -251,7 +251,7 @@ Battles = {
 	}
 };
 
-Characters = {
+Trainers = {
 	type : {
 		NPC : q = 0,
 		local : ++ q,

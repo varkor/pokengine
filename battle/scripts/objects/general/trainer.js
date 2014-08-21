@@ -1,22 +1,44 @@
-function character (name, team) {
+function trainer (data) {
 	var self = this;
 
-	self.name = name;
-	self.unique = Game.unique();
-	self.gender = Genders.male;
-	self.party = (arguments.length >= 2 ? team : new party());
-	self.party.trainer = self;
+	if (arguments.length < 1)
+		data = {};
+	var setProperty = function (property, value) {
+		if (data.hasOwnProperty(property))
+			self[property] = data[property];
+		else
+			self[property] = (typeof value === "function" ? value() : value);
+	};
+
+	setProperty("name", "Someone");
+	setProperty("unique", Game.unique());
+	setProperty("gender", Genders.male);
+	setProperty("party", []);
+	setProperty("money", 0);
+	setProperty("nationality", Nationalities.British);
+	setProperty("bag", []);
+	setProperty("badges", []);
+	setProperty("location", "nowhere");
+
+	self.party = new party(self.party);
 	foreach(self.party.pokemon, function (poke) {
 		poke.belong(self);
 	});
+	self.bag = new bag(self.bag);
 	self.battlers = [];
-	self.money = 0;
-	self.nationality = Nationalities.British;
-	self.bag = new bag();
-	self.badges = [];
-	self.location = "nowhere";
-	self.type = Characters.type.NPC;
+	self.type = Trainers.type.NPC;
 	self.team = Game.unique();
+
+	self.store = function () {
+		// Returns an object that contains all the data for the trainer, without any methods
+		var store = {};
+		foreach(["name", "unique", "gender", "money", "nationality", "badges", "location"], function (property) {
+			store[property] = JSONcopy(_(self, property));
+		});
+		store.party = self.party.store();
+		store.bag = self.bag.items;
+		return JSONcopy(store);
+	};
 
 	self.pronoun = function () {
 		return (self === Game.player ? "you" : self.name);
@@ -29,8 +51,22 @@ function character (name, team) {
 	};
 	
 	self.give = function (poke) {
+		/*
+			Gives the player a Pokémon, ensuring it now has the correct trainer details.
+		*/
 		poke.belong(self);
+		self.rent(poke);
+	};
+
+	self.rent = function (poke) {
+		/*
+			Gives the trainer a Pokémon, but only temporarily, so it is not added to the Pokédex.
+			This is used for some tournament battles, such as in the Battle Factory
+		*/
 		self.party.add(poke);
+		if (self === Game.player) {
+			Pokedex.capture(poke.species);
+		}
 	};
 
 	self.release = function (poke) {
@@ -62,7 +98,7 @@ function character (name, team) {
 	};
 
 	self.isAnNPC = function () {
-		return self.type === Characters.type.NPC;
+		return self.type === Trainers.type.NPC;
 	};
 
 	self.battlers = function () {

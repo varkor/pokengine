@@ -1,6 +1,8 @@
 /* jshint loopfunc: true */
 
-TheWild = new character("The Wild");
+TheWild = new trainer({
+	name : "The Wild"
+});
 
 Battle = {
 	active : false,
@@ -20,8 +22,9 @@ Battle = {
 	queue : [],
 	actions : [],
 	recording : [],
-	communication : [],
+	communication : null,
 	scene : null,
+	rules : [],
 	hazards : {
 		near : [],
 		far : []
@@ -197,7 +200,7 @@ Battle = {
 			if (transition > 0 && transition < 1)
 				Game.canvas.draw.sprite(poke.sprite.path(side), position.x, position.y - position.z, true, [{type : "fill", colour : "white"}, {type : "opacity", value : Math.pow(1 - transition, 0.4)}, {type : "crop", heightRatio : poke.battler.display.height}], matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix);
 		});
-		if (Settings.visualWeather || display.flags.weather)
+		if (_(Settings.client, "visual weather effects") || display.flags.weather)
 			Weather.draw(Game.canvas.context);
 		foreach(display.opponents, function (poke, place) {
 			if (poke !== NoPokemon)
@@ -246,122 +249,128 @@ Battle = {
 		srandom.seed = Battle.recording.seed;
 		Battle.begin(Battle.recording.teamA, Battle.recording.teamB, Battle.recording.style, Battle.recording.weather, Battle.recording.scene, Battles.kind.recording);
 	},
-	beginOnline : function (seed, alliedTrainers, opposingTrainers, style, weather, scene) {
+	beginOnline : function (seed, alliedTrainers, opposingTrainers, settings) {
 		srandom.seed = seed;
-		Battle.begin(alliedTrainers, opposingTrainers, style, weather, scene, Battles.kind.online);
+		Battle.begin(alliedTrainers, opposingTrainers, settings, Battles.kind.online);
 	},
-	beginWildBattle : function (pokes) {
+	beginWildBattle : function (pokes, settings) {
 		pokes = wrapArray(pokes);
 		TheWild.party.empty();
 		foreach(pokes, function (poke) {
 			TheWild.give(poke);
 		});
-		Battle.begin(Game.player, TheWild, Battles.style.normal, Weathers.hail);
+		Battle.begin(Game.player, TheWild, settings);
 	},
-	begin : function (alliedTrainers, opposingTrainers, style, weather, scene, kind) {
-		Battle.active = true;
-		Battle.finished = false;
-		if (arguments.length >= 6)
-			Battle.kind = kind;
-		else
-			Battle.kind = Battles.kind.local;
-		Battle.scene = scene || "Clearing";
-		Battle.situation = Battles.situation.wild;
-		if (arguments.length >= 3 && typeof style !== "undefined" && style !== null)
-			Battle.style = style;
-		else
-			Battle.style = Battles.style.normal;
-		if (arguments.length >= 4 && typeof weather !== "undefined" && weather !== null)
-			Battle.weather = weather;
-		else
-			Battle.weather = Weathers.clear;
-		Weather.weather = Battle.weather;
-		if (!(alliedTrainers instanceof Array))
-			alliedTrainers = [alliedTrainers];
-		if (!(opposingTrainers instanceof Array))
-			opposingTrainers = [opposingTrainers];
-		foreach(alliedTrainers, function (participant) {
-			Battle.alliedTrainers.push(participant);
-			for (var i = 0, newPoke; i < Math.min((Battle.style === Battles.style.normal ? 1 : 2) / alliedTrainers.length, participant.healthyPokemon().length); ++ i) {
-				newPoke = participant.healthyPokemon()[i];
-				Battle.queue.push({
-					poke : newPoke,
-					doesNotRequirePokemonToBeBattling : true,
-					priority : 1 - (1 / (alliedTrainers.length + 3)) * (i + 1),
-					action : function (which) {return function () {
-						Battle.enter(which, true);
-					}; }(newPoke)});
-			}
-		});
-		foreach(opposingTrainers, function (participant) {
-			if (participant instanceof character) {
-				if (!participant.hasHealthyPokemon()) {
-					Textbox.state(participant.name + " doesn't have any Pokémon! The battle must be stopped!", function () { Battle.end(); });
-					Battle.finish();
-					return;
-				} else {
-					Battle.opposingTrainers.push(participant);
-					for (var i = 0, newPoke; i < Math.min((Battle.style === Battles.style.normal ? 1 : 2) / opposingTrainers.length, participant.healthyPokemon().length); ++ i) {
-						newPoke = participant.healthyPokemon()[i];
-						if (newPoke.trainer === TheWild)
-							Battle.enter(newPoke, true);
-						else Battle.queue.push({
-							poke : newPoke,
-							doesNotRequirePokemonToBeBattling : true,
-							priority : (1 - (1 / (opposingTrainers.length + 3)) * (i + 1)) / 10,
-							action : function (which) {return function () {
-								Battle.enter(which, true);
-							}; }(newPoke)});
-					}
+	begin : function (alliedTrainers, opposingTrainers, settings, kind) {
+		if (!Battle.active) {
+			if (arguments.length < 3 || typeof settings === "undefined" || settings === null)
+				settings = {};
+			if (!settings.hasOwnProperty("scene"))
+				settings.scene = "Clearing";
+			if (!settings.hasOwnProperty("style"))
+				settings.style = Battles.style.normal;
+			if (!settings.hasOwnProperty("weather"))
+				settings.weather = Weathers.clear;
+			Battle.active = true;
+			Battle.finished = false;
+			if (arguments.length >= 4)
+				Battle.kind = kind;
+			else
+				Battle.kind = Battles.kind.local;
+			Battle.rules = settings.rules;
+			Battle.scene = settings.scene;
+			Battle.situation = Battles.situation.wild;
+			Battle.style = settings.style;
+			Battle.changeWeather(settings.weather);
+			if (!(alliedTrainers instanceof Array))
+				alliedTrainers = [alliedTrainers];
+			if (!(opposingTrainers instanceof Array))
+				opposingTrainers = [opposingTrainers];
+			foreach(alliedTrainers, function (participant) {
+				Battle.alliedTrainers.push(participant);
+				for (var i = 0, newPoke; i < Math.min((Battle.style === Battles.style.normal ? 1 : 2) / alliedTrainers.length, participant.healthyPokemon().length); ++ i) {
+					newPoke = participant.healthyPokemon()[i];
+					Battle.queue.push({
+						poke : newPoke,
+						doesNotRequirePokemonToBeBattling : true,
+						priority : 1 - (1 / (alliedTrainers.length + 3)) * (i + 1),
+						action : function (which) {return function () {
+							Battle.enter(which, true, null, true);
+						}; }(newPoke)});
 				}
-			} else {
-				participant.battler.reset();
-				participant.battler.side = Battles.side.far;
-				Battle.opponents.push(participant);
-			}
-		});
-		if (!Battle.opposingTrainers.contains(TheWild))
-			Battle.situation = Battles.situation.trainer;
-		Display.state.load(Display.state.save());
-		var names = [], number = 0;
-		switch (Battle.situation) {
-			case Battles.situation.wild:
-				var wildPokemon = TheWild.healthyPokemon();
-				if (wildPokemon.length === 1)
-					Textbox.state("A wild " + wildPokemon[0].name() + " appeared!");
-				else {
-					foreach(wildPokemon, function (poke) {
-						names.push(poke.name());
+			});
+			foreach(opposingTrainers, function (participant) {
+				if (participant instanceof trainer) {
+					if (!participant.hasHealthyPokemon()) {
+						Textbox.state(participant.name + " doesn't have any Pokémon! The battle must be stopped!", function () { Battle.end(); });
+						Battle.finish();
+						return;
+					} else {
+						Battle.opposingTrainers.push(participant);
+						for (var i = 0, newPoke; i < Math.min((Battle.style === Battles.style.normal ? 1 : 2) / opposingTrainers.length, participant.healthyPokemon().length); ++ i) {
+							newPoke = participant.healthyPokemon()[i];
+							if (newPoke.trainer === TheWild)
+								Battle.enter(newPoke, true, null, true);
+							else Battle.queue.push({
+								poke : newPoke,
+								doesNotRequirePokemonToBeBattling : true,
+								priority : (1 - (1 / (opposingTrainers.length + 3)) * (i + 1)) / 10,
+								action : function (which) {return function () {
+									Battle.enter(which, true, null, true);
+								}; }(newPoke)});
+						}
+					}
+				} else {
+					participant.battler.reset();
+					participant.battler.side = Battles.side.far;
+					Battle.opponents.push(participant);
+				}
+			});
+			if (!Battle.opposingTrainers.contains(TheWild))
+				Battle.situation = Battles.situation.trainer;
+			Display.state.load(Display.state.save());
+			var names = [], number = 0;
+			switch (Battle.situation) {
+				case Battles.situation.wild:
+					var wildPokemon = TheWild.healthyPokemon();
+					if (wildPokemon.length === 1)
+						Textbox.state("A wild " + wildPokemon[0].name() + " appeared!");
+					else {
+						foreach(wildPokemon, function (poke) {
+							names.push(poke.name());
+							++ number;
+						});
+						Textbox.state("A " + (wildPokemon.length === 2 ? "pair of" : "group of " + number) + " wild Pokémon appeared: " + commaSeparatedList(names) + "!");
+					}
+					break;
+				case Battles.situation.trainer:
+					foreach(Battle.opposingTrainers, function (trainer) {
+						names.push(trainer.name);
 						++ number;
 					});
-					Textbox.state("A " + (wildPokemon.length === 2 ? "pair of" : "group of " + number) + " wild Pokémon appeared: " + commaSeparatedList(names) + "!");
-				}
-				break;
-			case Battles.situation.trainer:
-				foreach(Battle.opposingTrainers, function (trainer) {
-					names.push(trainer.name);
-					++ number;
-				});
-				if (names.length === 1)
-					Textbox.state(names[0] + " is challenging " + Battle.alliedTrainers[0].pronoun() + " to a battle. " + (Battle.opposingTrainers[0].gender === Genders.male ? "He" : "She") + " has " + numberword(Battle.opposingTrainers[0].pokemon()) + " Pokémon.");
-				if (names.length > 1)
-					Textbox.state(commaSeparatedList(names) + " are challenging " + Battle.alliedTrainers[0].pronoun() + " to a battle. They have " + number + " Pokémon between them.");
-				break;
+					if (names.length === 1)
+						Textbox.state(names[0] + " is challenging " + Battle.alliedTrainers[0].pronoun() + " to a battle. " + (Battle.opposingTrainers[0].gender === Genders.male ? "He" : "She") + " has " + numberword(Battle.opposingTrainers[0].pokemon()) + " Pokémon.");
+					if (names.length > 1)
+						Textbox.state(commaSeparatedList(names) + " are challenging " + Battle.alliedTrainers[0].pronoun() + " to a battle. They have " + number + " Pokémon between them.");
+					break;
+			}
+			if (Battle.kind !== Battles.kind.recording) {
+				Battle.recording = {
+					seed : srandom.seed,
+					style : Battle.style,
+					weather : Battle.weather,
+					scene : Battle.scene,
+					teamA : Battle.alliedTrainers,
+					teamB : Battle.opposingTrainers,
+					actions : []
+				};
+			}
+			Battle.race(Battle.queue);
+			Battle.queue = [];
+			Battle.startTurn();
+		} else {
+			throw "You've tried to start a battle when one is already in progress!";
 		}
-		if (Battle.kind !== Battles.kind.recording) {
-			Battle.recording = {
-				seed : srandom.seed,
-				style : Battle.style,
-				weather : Battle.weather,
-				scene : Battle.scene,
-				teamA : Battle.alliedTrainers,
-				teamB : Battle.opposingTrainers,
-				actions : []
-			};
-		}
-		Battle.race(Battle.queue);
-		Battle.queue = [];
-		Battle.startTurn();
 	},
 	finish : function () {
 		Battle.finished = true;
@@ -382,14 +391,17 @@ Battle = {
 			Battle.opponents = [];
 			foreach(Battle.allTrainers(), function (participant) {
 				participant.battlers = [];
+				foreach(participant.bag, function (item) {
+					item.intentToUse = 0;
+				});
 			});
-			//? Make sure all bag items are made usable again
 			Battle.alliedTrainers = [];
 			Battle.opposingTrainers = [];
 			Battle.queue = [];
+			Battle.rules = [];
 			Battle.escapeAttempts = 0;
 			Battle.turns = 0;
-			communication : [];
+			communication = null;
 		}
 	},
 	input : function (primary, secondary, tertiary, character, selection) {
@@ -467,8 +479,12 @@ Battle = {
 								});
 							}
 						});
-					} else
-						who = targets[0].target;
+					} else {
+						if (targets.notEmpty())
+							who = targets[0].target;
+						else
+							who = NoPokemon;
+					}
 				}
 				if (who !== null) {
 					if (!currentBattler.battler.disobeying) {
@@ -619,7 +635,7 @@ Battle = {
 				}
 				break;
 			case "Run":
-				if (Battle.escape())
+				if (Battle.escape(currentBattler))
 					advance = false;
 				break;
 			case "Back":
@@ -658,7 +674,7 @@ Battle = {
 					actions : Battle.recording.actions[Battle.turns]
 				});
 			}
-			if (Battle.kind !== Battles.kind.online || Battle.communication.notEmpty())
+			if (Battle.kind !== Battles.kind.online || Battle.communication !== null)
 				Battle.giveTrainersActions();
 			else {
 				Battle.stage = 2;
@@ -671,16 +687,20 @@ Battle = {
 		foreach(Battle.allTrainers(), function (trainer) {
 			if (trainer.isAnNPC())
 				Battle.AI.action(trainer);
-			else if (trainer.type === Characters.type.online) {
-				for (var i = 0, action; i < trainer.battlers().length; ++ i) {
+			else if (trainer.type === Trainers.type.online) {
+				for (var i = 0, action; i < trainer.battlers().length && Battle.communication.notEmpty(); ++ i) {
 					action = Battle.communication.shift();
 					Battle.input(action.primary, action.secondary, action.tertiary, trainer, i);
 				}
 			}
 		});
+		Battle.communication = null;
 		Battle.queue = Battle.queue.concat(Battle.actions);
 		Battle.actions = [];
-		Battle.stage = 1;
+		if (Battle.stage === 2) {
+			Battle.stage = 1;
+			Textbox.update();
+		}
 		Battle.processTurn();
 	},
 	receiveActions : function (actions) {
@@ -878,7 +898,9 @@ Battle = {
 			currentBattler.battler.display.outlined = false;
 		}
 		if (Battle.kind !== Battles.kind.recording) {
-			var actions = ["Pokémon", "Run", "Bag"], hotkeys = {};
+			var actions = ["Pokémon", "Run"], hotkeys = {};
+			if (Battle.rules.items === "allowed")
+				actions.push("Bag");
 			hotkeys[Game.key.secondary] = "Run";
 			var moves = [];
 			foreach(currentBattler.usableMoves(), function (move) {
@@ -921,7 +943,6 @@ Battle = {
 		Battle.race(Battle.queue);
 		Battle.queue = [];
 		Battle.endTurn();
-		Battle.startTurn();
 	},
 	startTurn : function () {
 		if (Battle.kind !== Battles.kind.recording) {
@@ -1040,15 +1061,15 @@ Battle = {
 		var all = Battle.all(true);
 		switch (Battle.weather) {
 			case Weathers.intenseSunlight:
-				if (!Settings.visualWeather)
+				if (!_(Settings.client, "visual weather effects"))
 					Textbox.state("The sun is blazing fiercely in the sky!");
 				break;
 			case Weathers.rain:
-				if (!Settings.visualWeather)
+				if (!_(Settings.client, "visual weather effects"))
 					Textbox.state("The rain is pouring down in torrents!");
 				break;
 			case Weathers.sandstorm:
-				if (!Settings.visualWeather)
+				if (!_(Settings.client, "visual weather effects"))
 					Textbox.state("The sandstorm is raging all around!");
 				
 				foreach(all, function (poke) {
@@ -1061,7 +1082,7 @@ Battle = {
 				});
 				break;
 			case Weathers.hail:
-				if (!Settings.visualWeather)
+				if (!_(Settings.client, "visual weather effects"))
 					Textbox.state("The hail is falling heavily!");
 				foreach(all, function (poke) {
 					if (!Battle.active || Battle.finished)
@@ -1086,19 +1107,15 @@ Battle = {
 				if (!emptyPlaces.length)
 					return true;
 				while (trainer.battlers().length < Math.min((Battle.style === Battles.style.normal ? 1 : 2) / Battle.opposingTrainers.length) && trainer.hasHealthyPokemon(true) && emptyPlaces.length) {
-					var poke = trainer.healthyPokemon(true)[0];
+					var poke = trainer.healthyPokemon(true).first();
 					Battle.enter(poke, true, emptyPlaces.shift());
-					if (trainer === TheWild) {
-						var display = Display.state.save();
-						Textbox.state("A wild " + poke.name() + " was right behind!", function () { Display.state.load(display); });
-					}
 				}
 			});
 		}
-		Battle.fillEmptyPlaces();
 		++ Battle.turns;
+		Battle.fillEmptyPlaces();
 	},
-	fillEmptyPlaces : function () {
+	fillEmptyPlaces : function (initial) {
 		// Fills the player's empty places with Pokémon of their choosing
 		var trainer = Game.player, empty = null, progress = false;
 		foreach(Battle.allies, function (poke, i) {
@@ -1126,6 +1143,8 @@ Battle = {
 			}
 		} else
 			progress = true;
+		if (progress)
+			Battle.startTurn();
 	},
 	damage : function (poke, damage, displayMessages) {
 		var amount = damage.damage;
@@ -1155,12 +1174,12 @@ Battle = {
 					return;
 			}
 		}
-		if (poke.substitute > 0 && !damage.infiltrates) {
+		if (poke.battler.substitute > 0 && !damage.infiltrates) {
 			Textbox.state(poke.name() + "'s Substitute took the damage!");
-			poke.substitute -= amount;
-			if (poke.substitute <= 0) {
+			poke.battler.substitute -= amount;
+			if (poke.battler.substitute <= 0) {
 				Textbox.state(poke.name() + "'s Substitute broke!");
-				poke.substitute = 0;
+				poke.battler.substitute = 0;
 			}
 			return;
 		}
@@ -1204,7 +1223,7 @@ Battle = {
 		Battle.heal(poke, poke.stats[Stats.health]() * percentage, cause);
 	},
 	escapeAttempts : 0,
-	escape : function () {
+	escape : function (currentBattler) {
 		if (Battle.situation === Battles.situation.trainer) {
 			Textbox.state("You can't run from a trainer battle!");
 			return true;
@@ -1228,7 +1247,7 @@ Battle = {
 				});
 			} else
 				Battle.queue.push({priority : 6, action : function () {
-					Textbox.state(capitalise(Battle.alliedTrainers[0].pronoun()) + "couldn't get away!");
+					Textbox.state(capitalise(Battle.alliedTrainers[0].pronoun()) + " couldn't get away!");
 				}});
 		}
 	},
@@ -1337,12 +1356,12 @@ Battle = {
 	swap : function (out, replacement, forced) {
 		Battle.enter(replacement, false, Battle.withdraw(out, forced));
 	},
-	enter : function (poke, startOrEndOfTurn, place) {
+	enter : function (poke, startOrEndOfTurn, place, initial) {
 		poke.battler.reset();
 		poke.battler.battling = true;
 		var ally = Battle.alliedTrainers.contains(poke.trainer);
 		poke.battler.side = (ally ? Battles.side.near : Battles.side.far);
-		if (arguments.length < 3) {
+		if (arguments.length < 3 || place === null) {
 			if (ally)
 				Battle.allies.push(poke);
 			else
@@ -1359,6 +1378,9 @@ Battle = {
 			poke.battler.display.transition = 1;
 			var display = Display.state.save();
 			Textbox.state(capitalise(poke.trainer.pronoun()) + " sent out " + poke.name() + "!", function () { Display.state.load(displayInitial); return Display.state.transition(display); });
+		} else if (!initial) {
+			var displayInitial = Display.state.save();
+			Textbox.state("A wild " + poke.name() + " was right behind!", function () { Display.state.load(displayInitial); });
 		}
 		foreach(Battle.opponentsTo(poke), function (opponent) {
 			poke.battler.opponents.pushIfNotAlreadyContained(opponent);
@@ -1442,7 +1464,7 @@ Battle = {
 	},
 	stat : function (poke, stat, change, cause) {
 		// A change of zero will reset the stat
-		if (poke.substitute > 0 && cause !== poke) {
+		if (poke.battler.substitute > 0 && cause !== poke) {
 			Textbox.state(poke.name() + "'s Substitute isn't affected by the stat change.");
 			return;
 		}
@@ -1468,8 +1490,8 @@ Battle = {
 		return Battle.alliesTo(pokeA) === Battle.alliesTo(pokeB);
 	},
 	flinch : function (poke) {
-		if (!poke.flinching && poke.substitute === 0) {
-			poke.flinching = true;
+		if (!poke.battler.flinching && poke.battler.substitute === 0) {
+			poke.battler.flinching = true;
 			Textbox.state(poke.name() + " flinched!");
 		}
 	},
@@ -1494,7 +1516,10 @@ Battle = {
 				return true;
 			}
 		}))
-			hazardSide.push({type : hazard, stack : 1});
+			hazardSide.push({
+				type : _(Moves, hazard),
+				stack : 1
+			});
 	},
 	bringIntoEffect : function (effect, duration, side) {
 		var effectSide = (side === Battles.side.near ? Battle.effects.near : Battle.effects.far);
@@ -1513,15 +1538,28 @@ Battle = {
 		if (!repeating)
 			repeating = false;
 		if (data)
-			Battle.effects.specific.push({type : move.effect.effect, due : Battle.turns + when, target : target, data : data, expired : false, repeating : repeating});
+			Battle.effects.specific.push({
+				type : _(Moves, move).effect.effect,
+				due : Battle.turns + when,
+				target : target,
+				data : data,
+				expired : false,
+				repeating : repeating
+			});
 		else
-			Battle.effects.specific.push({type : move.effect.effect, due : Battle.turns + when, target : target, expired : false, repeating : repeating});
+			Battle.effects.specific.push({
+				type : _(Moves, move).effect.effect,
+				due : Battle.turns + when,
+				target : target,
+				expired : false,
+				repeating : repeating
+			});
 	},
 	moveHaveRepeatingEffect : function (move, when, target, data) {
 		Battle.moveHaveEffect(move, when, target, data, true);
 	},
 	moveHasEffect : function (move, target) {
-		return Battle.hasEffect(move.effect.effect, target);
+		return Battle.hasEffect(_(Moves, move).effect.effect, target);
 	},
 	haveEffect : function (effect, when, target) {
 		Battle.effects.specific.push({type : effect, due : Battle.turns + when, target : target, expired : false});

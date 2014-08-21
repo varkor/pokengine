@@ -17,7 +17,14 @@ function pokemon (data) {
 	setProperty("level", 1);
 	setProperty("nature", Natures.Lonely);
 	setProperty("gender", Genders.male);
-	setProperty("moves", []);
+	setProperty("moves", function () {
+		return [{
+			move : "Tackle",
+			PP : Moves["Tackle"].PP,
+			PPups : 0,
+			number : 0
+		}];
+	});
 	setProperty("ability", null);
 	setProperty("status", Statuses.none);
 	setProperty("IVs", function () {
@@ -31,9 +38,7 @@ function pokemon (data) {
 	setProperty("experience", 0);
 	setProperty("nationality", Nationalities.British);
 	setProperty("item", null);
-	setProperty("form", null); //? Forms don't work yet — should be object instead of array {name: "attack forme", attack : 5}, etc.
-	//? Perhaps there can be a way to combine forms and transform, like:
-	// if transformed, get the property from this object, else if a form, get it from this object, else get it from the default object
+	setProperty("form", null);
 	setProperty("friendship", _(Pokemon, self.species).friendship);
 	setProperty("pokeball", null);
 	setProperty("shiny", function () {
@@ -41,6 +46,7 @@ function pokemon (data) {
 	});
 	setProperty("egg", null);
 	setProperty("caught", null);
+	setProperty("ribbons", []);
 
 	self.stats = [];
 	self.stats[Stats.health] = function () {
@@ -71,7 +77,7 @@ function pokemon (data) {
 	self.store = function () {
 		// Returns an object that contains all the data for the Pokémon, without any methods
 		var store = {};
-		foreach(["species", "item", "moves", "ability", "pokeball", "nickname", "unique", "level", "nature", "gender", "status", "IVs", "EVs", "experience", "nationality", "form", "friendship", "shiny", "egg"], function (property) {
+		foreach(["species", "item", "moves", "ability", "pokeball", "nickname", "unique", "level", "nature", "gender", "status", "IVs", "EVs", "experience", "nationality", "form", "friendship", "shiny", "egg", "ribbons"], function (property) {
 			store[property] = JSONcopy(_(self, property));
 		});
 		store.trainer = (self.trainer ? self.trainer.unique : null);
@@ -97,7 +103,7 @@ function pokemon (data) {
 				move : move,
 				number : self.moves.length,
 				PP : _(Moves, move).PP,
-				maximumPP : 0
+				PPups : 0
 			});
 		} else {
 			var resumeNormalProceedings;
@@ -125,7 +131,7 @@ function pokemon (data) {
 								move : move,
 								number : i,
 								PP : move.PP,
-								maximumPP : 0
+								PPups : 0
 							};
 						} else
 							Textbox.insertAfter(Textbox.state(self.name() + " didn't learn " + move + ".", resumeNormalProceedings), immediatelyProceeding);
@@ -162,7 +168,7 @@ function pokemon (data) {
 			return;
 		sharedBetween = sharedBetween || 1;
 		var participated = true, eventModifiers = product(Battle.triggerEvent(Events.experience, {}, defeated, self));
-		var gain = Math.floor((((Battle.situation === Battles.situation.trainer ? 1.5 : 1) * _(Pokemon, defeated.species).yield.experience * defeated.level) / (5 * (participated ? 1 : 2)) * Math.pow((2 * defeated.level + 10) / (defeated.level + self.level + 10), 2.5) + 1) * (self.caught && self.trainer === self.caught.trainer ? 1 : self.trainer.nationality === self.nationality ? 1.5 : 1.7) * eventModifiers / sharedBetween);
+		var gain = Math.ceil((((Battle.situation === Battles.situation.trainer ? 1.5 : 1) * _(Pokemon, defeated.species).yield.experience * defeated.level) / (5 * (participated ? 1 : 2)) * Math.pow((2 * defeated.level + 10) / (defeated.level + self.level + 10), 2.5) + 1) * (self.caught && self.trainer === self.caught.trainer ? 1 : self.trainer.nationality === self.nationality ? 1.5 : 1.7) * eventModifiers / sharedBetween);
 		if (Battle.active)
 			Textbox.state(self.name() + " gained " + gain + " experience!");
 		while (self.level < 100 && self.experience + gain >= self.experienceFromLevelToNextLevel()) {
@@ -320,7 +326,7 @@ function pokemon (data) {
 	self.belong = function (who) {
 		if (self.trainer)
 			self.trainer.release(self);
-		else {
+		if (!self.caught) {
 			self.caught = {
 				location : who.location,
 				level : self.level,
@@ -328,7 +334,10 @@ function pokemon (data) {
 			};
 		}
 		self.trainer = who;
-		
+	};
+
+	self.release = function () {
+		self.trainer = null;
 	};
 
 	self.notHinderedByAilments = function () {
@@ -377,7 +386,7 @@ function pokemon (data) {
 				moveNumber = move;
 				move = self.moves[move].move;
 			} else {
-				move = Moves.Struggle;
+				move = "Struggle";
 				Textbox.state(self.name() + " has no PP left...");
 			}
 		}
@@ -432,7 +441,7 @@ function pokemon (data) {
 
 	self.hurtInConfusion = function () {
 		Textbox.state(self.name() + " hurt " + self.selfPronoun() + " in the confusion!");
-		Move.use(Moves._Confused, 0, self, self);
+		Move.use("_Confused", 0, self, self);
 	};
 
 	self.recoil = function (move, damage) {
@@ -501,6 +510,12 @@ function pokemon (data) {
 		return self.health === 0;
 	};
 
-	//? Initialise
-	self.learn("Tackle", true);
+	self.heal = function () {
+		self.health = self.stats[Stats.health](); // Restore the Pokémon's health
+		self.status = Statuses.none; // Heal any status conditions
+		// Restore the PP of all the Pokémon's moves
+		foreach(self.moves, function (move) {
+			move.PP = Moves[move.move].PP * (1 + 0.2 * move.PPups);
+		})
+	};
 }

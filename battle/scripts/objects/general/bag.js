@@ -1,7 +1,10 @@
-function bag () {
+function bag (items) {
 	var self = this;
 
-	self.items = [];
+	if (arguments.length >= 1)
+		self.items = items;
+	else
+		self.items = [];
 
 	self.usableItems = function () {
 		return self.items.filter(function (item) {

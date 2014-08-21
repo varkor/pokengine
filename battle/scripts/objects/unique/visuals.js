@@ -59,7 +59,7 @@ Weather = {
 					} else
 						particle.velocity.speed -= 0.4;
 				} else {
-					var all = Battle.all(true), position, sprite, ally, overPokemon = (Settings.particleCollisionTesting ? foreach(all, function (poke) {
+					var all = Battle.all(true), position, sprite, ally, overPokemon = (_(Settings.client, "particle collision-testing") ? foreach(all, function (poke) {
 						ally = (poke.battler.side === Battles.side.near);
 						if (!(poke = Display.pokemonInState(poke)))
 							return;

@@ -73,7 +73,7 @@ button.active {
 	font: normal 12pt "Helvetica Neue";
 	-webkit-user-select: none;
 	display: inline-block;
-	color: white;
+	color: inherit;
 	font-weight: 200;
 }
 /*.select::after {
@@ -104,7 +104,10 @@ li {
 	padding: 4pt 8pt;
 	background: hsl(150, 100%, 40%);
 	color: black;
-	height: 24pt;
+	min-height: 24pt;
+}
+.zebra li:nth-child(even) {
+	background: hsl(150, 100%, 35%);
 }
 li button {
 	position: absolute;
@@ -129,5 +132,89 @@ li button:disabled {
 	background: hsl(150, 100%, 40%);
 }
 li.active button:disabled {
+	background: hsl(0, 0%, 90%);
+}
+li input[type="text"] {
+	width: 40pt;
+	font-weight: 200;
+	color: inherit;
+	text-align: right;
+}
+
+.issue {
+	position: absolute;
+	z-index: 1;
+	background: hsl(0, 60%, 50%);
+	padding: 4pt 8pt;
+	box-shadow: hsla(0, 0%, 0%, 0.4) 0 4px 16px;
+}
+.issue::before {
+	content: "";
+	position: absolute;
+	border-right: hsl(0, 60%, 50%) 4pt solid;
+	border-top: transparent 4pt solid;
+	border-bottom: transparent 4pt solid;
+	border-left: none;
+	right: 100%; top: 50%; margin-top: -4pt;
+}
+
+.popup {
+	position: absolute;
+	width: 240pt;
+	padding: 4pt 8pt;
+	color: black;
+	text-align: center;
+	z-index: 2;
+	background: hsl(0, 0%, 90%);
+	box-shadow: hsla(0, 0%, 0%, 0.4) 0 4px 16px;
+}
+.popup::after {
+	position: absolute;
+	content: "";
+	top: 100%;
+	left: 50%; margin-left: -20pt;
+	border: transparent 20pt solid;
+	border-top: hsl(0, 0%, 90%) 20pt solid;
+	border-bottom: none;
+}
+.popup.below::after {
+	top: 0%;
+	margin-top: calc(-20pt + 1px);
+	border-bottom: hsl(0, 0%, 90%) 20pt solid;
+	border-top: none;
+}
+.popup button {
+	margin-top: 10pt;
+	margin-bottom: 4pt;
+}
+table {
+	width: 100%;
+	table-layout: fixed;
+	border-spacing: 0;
+	text-align: center;
+}
+tr {
+	text-align: left;
+}
+td:first-of-type {
+	width: 80pt;
+}
+td:last-of-type::before {
+	content: ":";
+	margin-right: 20pt;
+}
+tr:not(:last-of-type) td:last-of-type::after {
+	content: ",";
+}
+table:not(:last-of-type) tr:last-of-type td {
+	padding-bottom: 16pt;
+	border-bottom: hsl(0, 0%, 20%) solid 1px;
+}
+caption {
+	position: relative;
+	top: -8pt;
+}
+caption span {
+	padding: 0 4pt;
 	background: hsl(0, 0%, 90%);
 }

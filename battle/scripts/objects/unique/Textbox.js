@@ -293,8 +293,7 @@ Textbox = {
 			if (((self.dialogue[0].text === null && Time.now() >= self.finished) || (self.dialogue[0].progress !== "manual" && typeof self.dialogue[0].progress === "number" && Time.now() >= self.finished + self.dialogue[0].progress)) && self.finished !== null) {
 				self.progress(true);
 				self.finished = null;
-			}
-			if (self.dialogue[0].progress !== "manual" && typeof self.dialogue[0].progress === "function" && self.dialogue[0].progress() && self.finished !== null) {
+			} else if (self.dialogue[0].progress !== "manual" && typeof self.dialogue[0].progress === "function" && self.dialogue[0].progress() && self.finished !== null) {
 				self.progress(true);
 			}
 			if (/*!self.pausing && */self.slide < 1)

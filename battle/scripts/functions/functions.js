@@ -181,7 +181,11 @@ Array.prototype.empty = function () {
 };
 
 Array.prototype.notEmpty = function () {
-	return this.length > 0;
+	return this.length !== 0;
+};
+
+Array.prototype.first = function () {
+	return this[0];
 };
 
 Array.prototype.last = function () {

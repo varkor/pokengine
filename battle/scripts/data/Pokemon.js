@@ -42,7 +42,7 @@ Pokemon = {
 		region : "Nintendo",
 		types : [Types.grass, Types.poison],
 		experience : Experiences.fast,
-		forms : { //? Does not work in this form yet (affect all properties + sprite path, etc.)
+		forms : {
 			Normal : {
 			},
 			Metallic : {

@@ -101,9 +101,11 @@ Game = {
 		window.addEventListener("keyup", function (event) {
 			Game.keys.release(keyname(event.keyCode));
 		});
-		window.addEventListener("mousedown", function (event) {
+		/*window.addEventListener("mousedown", function (event) {
+			if (event.button !== 0)
+				return;
 			Game.click();
-		});
+		});*/
 		window.addEventListener("mousemove", function (event) {
 			Game.cursor.x = event.clientX - Game.canvas.element.offsetLeft + Game.canvas.element.width / 2;
 			Game.cursor.y = event.clientY - Game.canvas.element.offsetTop + Game.canvas.element.height / 2;
@@ -119,7 +121,7 @@ Game = {
 		context : null,
 		temporary : [],
 		initialise : function () {
-			var self = Game.canvas.element = document.getElementById("battle");
+			var self = Game.canvas.element = document.querySelector("#battle");
 			Game.canvas.context = self.getContext("2d");
 			self.width = 356;
 			self.height = 288;
@@ -129,7 +131,7 @@ Game = {
 				Game.canvas.temporary[i].context = Game.canvas.temporary[i].getContext("2d");
 				Game.canvas.temporary[i].context.imageSmoothingEnabled = false;
 			}
-			Game.fps.element = document.getElementById("fps");
+			Game.fps.element = document.querySelector("#fps");
 			Game.fps.context = Game.fps.element.getContext("2d");
 			Game.fps.element.width = 96;
 			Game.fps.element.height = 32;
@@ -313,7 +315,7 @@ Game = {
 		for (var i = Game.fps.timeline.length - 1, j = Time.framerate - 1, x; i >= 0 && i >= Game.fps.timeline.length - past; -- i, -- j) {
 			x = ((j - Math.max(0, Time.framerate - Game.fps.timeline.length)) / (Time.framerate - 1)) * Game.fps.element.width;
 			context.lineTo(x, (1 - ((Time.framerate - Game.fps.timeline[i]) / Time.framerate)) * Game.fps.element.height);
-			gradient.addColorStop(x / Game.fps.element.width, "hsla(" + (Game.fps.timeline[i] / Time.framerate) * 60 + ", 100%, 50%, " + 1/*Math.pow(Math.max(0, 1 - Game.fps.timeline[i] / Time.framerate), 0.5)*/ + ")");
+			gradient.addColorStop(Math.clamp(0, x / Game.fps.element.width, 1), "hsla(" + (Game.fps.timeline[i] / Time.framerate) * 60 + ", 100%, 50%, " + 1/*Math.pow(Math.max(0, 1 - Game.fps.timeline[i] / Time.framerate), 0.5)*/ + ")");
 		}
 		context.lineTo(0, Game.fps.element.height);
 		context.lineTo((Math.min(Time.framerate, Game.fps.timeline.length) / Time.framerate) * Game.fps.element.width, Game.fps.element.height);
@@ -328,7 +330,7 @@ Game = {
 	player : null,
 	takePossessionOf : function (entity) {
 		Game.player = entity;
-		entity.type = Characters.type.local;
+		entity.type = Trainers.type.local;
 	}
 };
 

@@ -15,7 +15,7 @@
 		<script src="scripts/data/Abilities.js"></script>
 		<script src="scripts/data/Items.js"></script>
 		<script src="scripts/data/machines.js"></script>
-		<script src="scripts/data/Badges.js"></script>
+		<script src="scripts/data/accessories.js"></script>
 		<script src="scripts/objects/unique/Settings.js"></script>
 		<script src="scripts/objects/unique/Textbox.js"></script>
 		<script src="scripts/objects/unique/Display.js"></script>
@@ -25,7 +25,7 @@
 		<script src="scripts/objects/unique/visuals.js"></script>
 		<script src="scripts/objects/general/bag.js"></script>
 		<script src="scripts/objects/general/party.js"></script>
-		<script src="scripts/objects/general/character.js"></script>
+		<script src="scripts/objects/general/trainer.js"></script>
 		<script src="scripts/objects/general/battler.js"></script>
 		<script src="scripts/objects/general/pokemon.js"></script>
 		<script src="scripts/objects/unique/Client.js"></script>
@@ -39,75 +39,334 @@
 		<span>with the name</span>
 		<input id="name" type="text" value="Dark Matter">
 		<button id="randomise" class="small">⚄</button>
+		<span>or initiate an</span>
+		<button id="local">offline battle</button>
 		<br>
-		<div id="invitations" class="hidden">
-			<span>Invite someone to a</span>
-			<div class="select"><select id="style">
-				<option value="normal">normal</option>
-				<option value="double">double</option>
-			</select></div><span>battle,<br>with</span>
-			<div class="select"><select id="weather">
-				<option value="clear">clear skies</option>
-				<option value="intenseSunlight">sun</option>
-				<option value="rain">rain</option>
-				<option value="hail">hail</option>
-			</select></div><span>, in a</span>
-			<div class="select"><select id="scene">
-				<option value="clearing">clearing</option>
-			</select></div><span>.</span>
-			<br>
+		<div id="settings" class="popup hidden">
+			<table>
+				<tr>
+					<td>type</td>
+					<td><div class="select"><select id="style">
+						<option value="normal">normal</option>
+						<option value="double">double</option>
+					</select></div></td>
+				</tr>
+				<tr class="hidden-">
+					<td>weather</td>
+					<td><div class="select"><select id="weather">
+						<option value="clear">clear skies</option>
+						<option value="intenseSunlight">sun</option>
+						<option value="rain">rain</option>
+						<option value="hail">hail</option>
+					</select></div></td>
+				</tr>
+				<tr class="hidden-">
+					<td>scene</td>
+					<td><div class="select"><select id="scene">
+						<option value="clearing">clearing</option>
+					</select></div></td>
+				</tr>
+			</table>
+			<table>
+				<caption><span>Rules</span></caption>
+				<tr>
+					<td>levels</td>
+					<td><div class="select"><select id="rule-levels">
+						<option value="any">any</option>
+						<option value="flatten: 50" selected>flatten to level 50</option>
+						<option value="flatten: 100">flatten to level 100</option>
+					</select></div></td>
+				</tr>
+				<tr>
+					<td>party</td>
+					<td><div class="select"><select id="rule-party">
+							<option value="up to: 6">up to 6</option>
+							<option value="up to: 3" selected>up to 3</option>
+							<option value="solo">only one</option>
+						</select></div>
+						<span>Pokémon</span>
+					</td>
+				</tr>
+				<tr>
+					<td>items</td>
+					<td><div class="select"><select id="rule-items">
+						<option value="allowed" selected>allowed</option>
+						<option value="disallowed">disallowed</option>
+					</select></div></td>
+				</tr>
+			</table>
+			<button>Confirm</button>
 		</div>
+		<span>Battle with the following Pokémon:</span>
+		<ul id="team" class="zebra"></ul>
 		<ul id="users"></ul>
 		<script>
 		window.addEventListener("load", function () {
+			Interface = {};
+
 			Game.canvas.initialise();
 
-			document.getElementById("connect").addEventListener("mousedown", function (event) {
+			document.querySelector("#connect").addEventListener("mousedown", function (event) {
+				if (event.button !== 0)
+					return;
 				event.stopPropagation();
-				document.getElementById("connect").innerHTML = "Connecting...";
-				document.getElementById("connect").disabled = true;
-				document.getElementById("name").disabled = true;
-				document.getElementById("randomise").disabled = true;
-				Client.connect(document.getElementById("name").value || "anonymous");
+				document.querySelector("#connect").innerHTML = "Connecting...";
+				document.querySelector("#connect").disabled = true;
+				document.querySelector("#name").disabled = true;
+				document.querySelector("#randomise").disabled = true;
+				Client.connect(document.querySelector("#name").value || "anonymous");
 			});
 
-			document.getElementById("randomise").addEventListener("mousedown", function (event) {
+			document.querySelector("#randomise").addEventListener("mousedown", function (event) {
+				if (event.button !== 0)
+					return;
 				event.stopPropagation();
-				if (!document.getElementById("name").disabled) {
+				if (!document.querySelector("#name").disabled) {
 					var name = "";
 					for (var i = 0; i < 10; ++ i)
 						name += "abcdefghijklmnopqrstuvwxyz".split("").choose();
-					document.getElementById("name").value = name;
-					document.getElementById("randomise").innerHTML = "⚀⚁⚂⚃⚄⚅".replace(document.getElementById("randomise").innerHTML, "").split("").choose();
+					document.querySelector("#name").value = name;
+					document.querySelector("#randomise").innerHTML = "⚀⚁⚂⚃⚄⚅".replace(document.querySelector("#randomise").innerHTML, "").split("").choose();
+					var mousedown = new Event("mousedown");
+					mousedown.button = 0;
+					document.querySelector("#connect").dispatchEvent(mousedown);
 				}
+			});
+
+			Interface.clearSettings = function () {
+				var classList = document.querySelector("#settings").classList;
+				if (!classList.contains("hidden")) {
+					classList.add("hidden");
+					var button = document.querySelector("#settings button");
+					if (button.hasOwnProperty("listener")) {
+						button.removeEventListener("mousedown", button.listener);
+						delete button.listener;
+					}
+				}
+			};
+
+			foreach(document.querySelectorAll("#settings select"), function (element) {
+				element.addEventListener("mousedown", function (event) {
+					event.stopPropagation();
+				});
+			});
+
+			Interface.popup = function (element, fn, below) {
+				var settings = document.querySelector("#settings"), buttonRect = element.getBoundingClientRect();
+				if (!settings.classList.contains("hidden")) {
+					if (settings.hasOwnProperty("overElement") && settings.overElement !== element) {
+						Interface.clearSettings();
+					} else {
+						var mousedown = new Event("mousedown");
+						mousedown.button = 0;
+						document.querySelector("#settings button").dispatchEvent(mousedown);
+						return;
+					}
+				}
+				settings.overElement = element;
+				settings.classList.remove("hidden");
+				var settingsRect = document.querySelector("#settings").getBoundingClientRect();
+				if (below) {
+					settings.classList.add("below");
+					settings.style.top = "calc(" + Math.round(buttonRect.bottom) + "px + 20pt - 4pt)";
+				} else {
+					settings.style.top = "calc(" + Math.round(buttonRect.top - settingsRect.height) + "px - 20pt + 4pt)";
+				}
+				settings.style.left = Math.round(buttonRect.left + buttonRect.width / 2 - settingsRect.width / 2) + "px";
+				var button = settings.querySelector("button");
+				button.addEventListener("mousedown", button.listener = function (event) {
+					event.stopPropagation();
+					button.removeEventListener("mousedown", button.listener);
+					delete button.listener;
+					settings.classList.add("hidden");
+					settings.classList.remove("below");
+					delete settings.overElement;
+					fn(event);
+				});
+			};
+
+			Interface.issue = function (element, message) {
+				var issue = document.createElement("div");
+				issue.classList.add("issue");
+				issue.innerHTML = message;
+				document.body.appendChild(issue);
+				var buttonRect = element.getBoundingClientRect();
+				issue.style.left = "calc(" + Math.round(buttonRect.right) + "px + 4pt - 2pt)";
+				issue.style.top = (buttonRect.top + buttonRect.height / 2 - issue.getBoundingClientRect().height / 2) + "px";
+			};
+
+			document.querySelector("#local").addEventListener("mousedown", function (event) {
+				if (event.button !== 0)
+					return;
+				event.stopPropagation();
+				Interface.popup(document.querySelector("#local"), function (event) {
+					document.querySelector("#local").disabled = true;
+					Game.takePossessionOf(new trainer({
+						name : document.querySelector("#name").value,
+						party : Interface.buildParty()
+					}));
+					Battle.beginWildBattle([new pokemon({
+						species : "Bulbasaur",
+						level : 50
+					}), new pokemon({
+						species : "Ivysaur",
+						level : 50
+					})], Interface.buildSettings());
+				}, true);
 			});
 
 			Object.observe(Client, function (changes) {
 				foreach(changes, function (change) {
 					if (change.name === "connected") {
 						if (Client.connected) {
-							document.getElementById("connect").innerHTML = "Connected";
-							document.getElementById("connect").className = "active";
+							document.querySelector("#connect").innerHTML = "Connected";
+							document.querySelector("#connect").className = "active";
 						} else {
-							document.getElementById("connect").innerHTML = "Connect";
-							document.getElementById("connect").className = "";
-							document.getElementById("connect").disabled = false;
+							document.querySelector("#connect").innerHTML = "Connect";
+							document.querySelector("#connect").className = "";
+							document.querySelector("#connect").disabled = false;
 						}
 					}
 				});
 			});
 
-			document.getElementById("name").addEventListener("mousedown", function (event) {
+			document.querySelector("#name").addEventListener("mousedown", function (event) {
+				if (event.button !== 0)
+					return;
 				event.stopPropagation();
 			});
 
 			if (localStorage["name"])
-				document.getElementById("name").value = localStorage["name"];
+				document.querySelector("#name").value = localStorage["name"];
 
-			document.getElementById("name").addEventListener("input", function (event) {
-				localStorage["name"] = document.getElementById("name").value;
+			document.querySelector("#name").addEventListener("input", function (event) {
+				localStorage["name"] = document.querySelector("#name").value;
 			});
+
+			var team = document.querySelector("#team"), addMove = function (li, first) {
+				if (!first)
+					li.appendChild(document.createTextNode(", "));
+				var select = document.createElement("select"), option, moves = [];
+				forevery(Moves, function (move, name) {
+					if (["_Confused", "Struggle"].contains(name))
+						return;
+					moves.push(name);
+				});
+				moves.sort();
+				foreach(moves, function (name) {
+					option = document.createElement("option");
+					option.innerHTML = name;
+					option.value = name;
+					select.appendChild(option);
+				});
+				li.appendChild(select);
+				return select;
+			}, disableMoves = function (group) {
+				var exclude = [];
+				foreach(group, function (select) {
+					exclude.push(select.selectedIndex);
+				});
+				foreach(group, function (select) {
+					foreach(select.options, function (option, i) {
+						select.options[i].disabled = (select.selectedIndex !== i && exclude.contains(i));
+					});
+				});
+			}, addPokemon = function () {
+				var li = document.createElement("li"), select = document.createElement("select"), option;
+				forevery(Pokemon, function (poke, name) {
+					if (name === "Missingno.")
+						return;
+					option = document.createElement("option");
+					option.innerHTML = name;
+					option.value = name;
+					select.appendChild(option);
+				});
+				select.selectedIndex = randomInt(0, select.childNodes.length - 1);
+				li.appendChild(select);
+				li.appendChild(document.createTextNode(", level "));
+				var level = document.createElement("input");
+				level.type = "text";
+				level.value = 50;
+				level.addEventListener("mousedown", function (event) {
+					event.stopPropagation();
+					event.preventDefault();
+					level.setSelectionRange(0, level.value.length);
+				});
+				level.addEventListener("input", function (event) {
+					level.value = level.value.replace(/[^0-9]/g, "");
+					if (level.value === "") {
+						level.value = 1;
+						level.setSelectionRange(0, 1);
+					} else
+						level.value = Math.clamp(1, parseInt(level.value), 100);
+				});
+				li.appendChild(level);
+				li.appendChild(document.createTextNode(", with moves:"));
+				li.appendChild(document.createElement("br"));
+				var group = [];
+				for (var i = 0; i < 3; ++ i)
+					group.push(addMove(li, i === 0));
+				foreach(group, function (moveSelect) {
+					moveSelect.addEventListener("change", function (event) {
+						disableMoves(group);
+					});
+					moveSelect.selectedIndex = range(0, moveSelect.options.length - 1).filter(function (index) { return !moveSelect.options[index].disabled; }).choose();
+					disableMoves(group);
+				});
+				team.appendChild(li);
+			};
+			for (var i = 0; i < 3; ++ i)
+				addPokemon();
+
+			Interface.buildParty = function () {
+				var pokes = new party();
+				foreach(document.querySelector("#team").childNodes, function (li) {
+					var moves = [];
+					foreach(li.querySelectorAll("select:not(:first-of-type)"), function (select, i) {
+						var move = select.value;
+						moves.push({
+							move : move,
+							PP : Moves[move].PP,
+							PPups : 0,
+							number : i
+						});
+					});
+					pokes.add(new pokemon({
+						species : li.querySelector("select").value,
+						level : li.querySelector("input").value,
+						moves : moves
+					}));
+				});
+				return pokes.store();
+			};
+
+			Interface.buildSettings = function () {
+				var settings = {
+					style : (document.querySelector("#style").value === "double" ? Battles.style.double : Battles.style.normal),
+					weather : (Weathers.hasOwnProperty(document.querySelector("#weather").value) ? Weathers[document.querySelector("#weather").value] : Weathers.clear),
+					scene : (Scenes.contains(document.querySelector("#scene").value) ? document.querySelector("#scene").value : "Clearing"),
+					rules : {
+						levels : document.querySelector("#rule-levels").value,
+						party : document.querySelector("#rule-party").value,
+						items : document.querySelector("#rule-items").value
+					}
+				};
+				return settings;
+			}
 		});
+
+		window.addEventListener("mousedown", function (event) {
+				if (event.button !== 0)
+					return;
+				var classList = document.querySelector("#settings").classList;
+				if (!classList.contains("hidden")) {
+					Interface.clearSettings();
+				} else
+					Game.click();
+				foreach(document.querySelectorAll(".issue"), function (issue) {
+					issue.parentElement.removeChild(issue);
+				});
+			});
 		</script>
 	</body>
 </html>
