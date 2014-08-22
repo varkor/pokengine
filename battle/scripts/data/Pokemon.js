@@ -1,3 +1,7 @@
+PokemonIDs = {
+	0 : "Missingno."
+};
+
 Pokemon = {
 	"Missingno." : {
 		region : "Nintendo",

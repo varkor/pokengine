@@ -688,9 +688,11 @@ Battle = {
 			if (trainer.isAnNPC())
 				Battle.AI.action(trainer);
 			else if (trainer.type === Trainers.type.online) {
-				for (var i = 0, action; i < trainer.battlers().length && Battle.communication.notEmpty(); ++ i) {
-					action = Battle.communication.shift();
-					Battle.input(action.primary, action.secondary, action.tertiary, trainer, i);
+				for (var i = 0, action; i < trainer.battlers().length; ++ i) {
+					if (!Battle.pokemonForcedIntoAction(trainer.battlers()[i])) {
+						action = Battle.communication.shift();
+						Battle.input(action.primary, action.secondary, action.tertiary, trainer, i);
+					}
 				}
 			}
 		});

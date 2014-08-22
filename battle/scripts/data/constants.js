@@ -1,27 +1,27 @@
 var q;
 
 Types = {
-	unknown : q = 0,
-	typeless : q,
-	normal : ++ q,
-	fighting : ++ q,
-	flying : ++ q,
-	poison : ++ q,
-	ground : ++ q,
-	rock : ++ q,
-	bug : ++ q,
-	ghost : ++ q,
-	steel : ++ q,
-	fire : ++ q,
-	water : ++ q,
-	grass : ++ q,
-	electric : ++ q,
-	psychic : ++ q,
-	ice : ++ q,
-	dragon : ++ q,
-	dark : ++ q,
-	fairy : ++ q,
-	bird : ++ q
+	"unknown" : q = 0,
+	"typeless" : q,
+	"normal" : ++ q,
+	"fighting" : ++ q,
+	"flying" : ++ q,
+	"poison" : ++ q,
+	"ground" : ++ q,
+	"rock" : ++ q,
+	"bug" : ++ q,
+	"ghost" : ++ q,
+	"steel" : ++ q,
+	"fire" : ++ q,
+	"water" : ++ q,
+	"grass" : ++ q,
+	"electric" : ++ q,
+	"psychic" : ++ q,
+	"ice" : ++ q,
+	"dragon" : ++ q,
+	"dark" : ++ q,
+	"fairy" : ++ q,
+	"bird" : ++ q
 };
 
 Stats = {

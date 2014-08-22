@@ -25,11 +25,50 @@ function forevery (dictionary, fn) {
 	return broke;
 }
 
-function  _ (object, path) {
-	var keys = path.split(/ ?-> ?/g), value = object;
-	while (keys.length)
-		value = value[keys.shift()];
-	return value;
+function _ (object, path) {
+	object = { object : object };
+	if (/^[-=]> ?/.test(path))
+		path = "object " + path;
+	else
+		path = "object => " + path;
+	var subpaths = path.split(/ ?=> ?/g), routes = [];
+	for (var index = 0, subpath, keys; index < subpaths.length; ++ index) {
+		subpath = subpaths[index];
+		routes.unshift([]);
+		keys = subpath.split(/ ?-> ?/g);
+		for (var length = keys.length; length > 0; -- length) {
+			routes[0].push(keys.slice(0, length).join(" => "));
+		}
+	}
+	var paths = [], burrow = function (index, current) {
+		for (var route = 0, next; route < routes[index].length; ++ route) {
+			next = (current ? current + "=>" : "") + routes[index][route];
+			if (index > 0) {
+				burrow(index - 1, next);
+			} else
+				paths.push(next);
+		}
+
+	};
+	burrow(routes.length - 1, "");
+	var follow = function (object, path) {
+		var keys = path.split(/ ?=> ?/g), value = object, key;
+		while (keys.length) {
+			key = keys.shift();
+			if (value.hasOwnProperty(key))
+				value = value[key];
+			else if (value.hasOwnProperty(key = key.replace(/ ?\(.*\)/, "")))
+				value = value[key];
+			else throw "That object has no property with that name.";
+		}
+		return value;
+	}
+	for (var take = 0; take < paths.length; ++ take) {
+		try {
+			return follow(object, paths[take]);
+		} catch (error) {}
+	}
+	throw "That object has no property with that name.";
 }
 
 function random (x, y) {
