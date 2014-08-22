@@ -51,7 +51,7 @@ Client = {
 									ip : user.ip
 								},
 								trainer : new trainer({
-									name : user.user,
+									name : document.querySelector("#name").value,
 									party : Interface.buildParty()
 								}).store(),
 								settings : Interface.buildSettings(),
@@ -92,7 +92,7 @@ Client = {
 							ip : message.from.ip
 						},
 						trainer : new trainer({
-							name : message.from.user,
+							name : document.querySelector("#name").value,
 							party : Interface.buildParty()
 						}).store()
 					});

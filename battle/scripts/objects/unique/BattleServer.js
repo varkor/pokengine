@@ -35,10 +35,10 @@ exports.BattleServer = {
 					exports.BattleServer.clients.splice(index, 1);
 				index = -1;
 				exports.BattleServer.battles.forEach(function (battle, i) {
-					if (battle.clientA === from) {
+					if (battle.clientA.client === from) {
 						index = i;
 						return;
-					} else if (battle.clientB === from) {
+					} else if (battle.clientB.client === from) {
 						index = i;
 						return;
 					}
@@ -132,17 +132,17 @@ exports.BattleServer = {
 				break;
 			case "actions":
 				exports.BattleServer.battles.forEach(function (battle) {
-					if (battle.clientA === from) {
+					if (battle.clientA.client === from) {
 						exports.BattleServer.send({
 							action : "actions",
 							actions : message.actions
-						}, battle.clientB);
+						}, battle.clientB.client);
 						return;
-					} else if (battle.clientB === from) {
+					} else if (battle.clientB.client === from) {
 						exports.BattleServer.send({
 							action : "actions",
 							actions : message.actions
-						}, battle.clientA);
+						}, battle.clientA.client);
 						return;
 					}
 				});
@@ -178,13 +178,13 @@ exports.BattleServer = {
 							// No validation or changes are needed with this setting
 							break;
 						case "flatten: 50":
-							foreach(trainer.party, function (poke) {
+							trainer.party.forEach(function (poke) {
 								poke.level = 50;
 								poke.experience = 0;
 							});
 							break;
 						case "flatten: 100":
-							foreach(trainer.party, function (poke) {
+							trainer.party.forEach(function (poke) {
 								poke.level = 100;
 								poke.experience = 0;
 							});
@@ -236,7 +236,7 @@ exports.BattleServer = {
 	battleForClient : function (client) {
 		var which = null;
 		exports.BattleServer.battles.forEach(function (battle) {
-			if (battle.clientA === client || battle.clientB === client) {
+			if (battle.clientA.client === client || battle.clientB.client === client) {
 				which = battle;
 				return;
 			}

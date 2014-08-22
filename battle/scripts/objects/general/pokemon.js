@@ -13,7 +13,6 @@ function pokemon (data) {
 	setProperty("species", "Missingno.");
 	setProperty("nickname", null);
 	setProperty("unique", Game.unique());
-	setProperty("trainer", null);
 	setProperty("level", 1);
 	setProperty("nature", Natures.Lonely);
 	setProperty("gender", Genders.male);
@@ -48,6 +47,7 @@ function pokemon (data) {
 	setProperty("caught", null);
 	setProperty("ribbons", []);
 
+	self.trainer = null;
 	self.stats = [];
 	self.stats[Stats.health] = function () {
 		return Math.floor(((self.IVs[Stats.health] + 2 * _(Pokemon, self.species).stats[Stats.health] + self.EVs[Stats.health] / 4 + 100) * self.level) / 100 + 10);
@@ -77,16 +77,9 @@ function pokemon (data) {
 	self.store = function () {
 		// Returns an object that contains all the data for the Pokémon, without any methods
 		var store = {};
-		foreach(["species", "item", "moves", "ability", "pokeball", "nickname", "unique", "level", "nature", "gender", "status", "IVs", "EVs", "experience", "nationality", "form", "friendship", "shiny", "egg", "ribbons"], function (property) {
+		foreach(["species", "item", "moves", "ability", "pokeball", "nickname", "unique", "level", "nature", "gender", "status", "IVs", "EVs", "experience", "nationality", "form", "friendship", "shiny", "egg", "ribbons", "caught"], function (property) {
 			store[property] = JSONcopy(_(self, property));
 		});
-		store.trainer = (self.trainer ? self.trainer.unique : null);
-		if (store.caught = (self.caught ? {
-			location : self.caught.location,
-			level : self.caught.location,
-			trainer : self.caught.trainer.unique
-		} : null))
-			store.caught.trainer = (self.caught ? self.caught.trainer.unique : null);
 		return JSONcopy(store);
 	};
 
@@ -168,7 +161,7 @@ function pokemon (data) {
 			return;
 		sharedBetween = sharedBetween || 1;
 		var participated = true, eventModifiers = product(Battle.triggerEvent(Events.experience, {}, defeated, self));
-		var gain = Math.ceil((((Battle.situation === Battles.situation.trainer ? 1.5 : 1) * _(Pokemon, defeated.species).yield.experience * defeated.level) / (5 * (participated ? 1 : 2)) * Math.pow((2 * defeated.level + 10) / (defeated.level + self.level + 10), 2.5) + 1) * (self.caught && self.trainer === self.caught.trainer ? 1 : self.trainer.nationality === self.nationality ? 1.5 : 1.7) * eventModifiers / sharedBetween);
+		var gain = Math.ceil((((Battle.situation === Battles.situation.trainer ? 1.5 : 1) * _(Pokemon, defeated.species).yield.experience * defeated.level) / (5 * (participated ? 1 : 2)) * Math.pow((2 * defeated.level + 10) / (defeated.level + self.level + 10), 2.5) + 1) * (self.caught && self.trainer.unique === self.caught.trainer ? 1 : self.trainer.nationality === self.nationality ? 1.5 : 1.7) * eventModifiers / sharedBetween);
 		if (Battle.active)
 			Textbox.state(self.name() + " gained " + gain + " experience!");
 		while (self.level < 100 && self.experience + gain >= self.experienceFromLevelToNextLevel()) {
@@ -330,7 +323,7 @@ function pokemon (data) {
 			self.caught = {
 				location : who.location,
 				level : self.level,
-				trainer : who
+				trainer : who.unique
 			};
 		}
 		self.trainer = who;
@@ -421,7 +414,7 @@ function pokemon (data) {
 	};
 
 	self.disobey = function () {
-		if (self.trainer !== null && (self.trainer !== self.caught.trainer && self.trainer.holdsControlOverPokemonUpToLevel() < self.level && srandom.chance(2))) {
+		if (self.trainer !== null && (self.trainer.unique !== self.caught.trainer && self.trainer.holdsControlOverPokemonUpToLevel() < self.level && srandom.chance(2))) {
 			return srandom.choose(
 				function (poke) {
 					Textbox.state(poke.name() + srandom.choose(" is loafing around!", " turned away!", " won't obey!"));
