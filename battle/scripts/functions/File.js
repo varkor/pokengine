@@ -1,8 +1,10 @@
 File = {
-	load : function (store, object, loadEvent, uponLoad, directory, filetype, path, alias, external) {
+	load : function (store, object, loadEvent, uponLoad, directory, filetype, paths, alias, external, uponError) {
 		if (!Files.hasOwnProperty(store))
 			Files[store] = {};
 		store = Files[store];
+		paths = wrapArray(paths);
+		var path = paths.shift();
 		alias = alias || path;
 		if (store.hasOwnProperty(alias))
 			return store[alias];
@@ -11,11 +13,20 @@ File = {
 			return store[alias];
 		}
 		var file = new object();
-		file.src = (!external ? directory + "/" + path + "." + filetype : path);
-		store[path] = null;
-		store[alias] = null;
+		file.src = (!(external || path.substr(0, 5) === "data:") ? directory + "/" + path + "." + filetype : path);
+		store[alias] = store[path] = null;
 		file.addEventListener(loadEvent, function (event) {
 			uponLoad(event, file, store, path, alias);
+		});
+		file.addEventListener("error", function (message, url, line) {
+			delete store[alias];
+			delete store[path];
+			if (paths.notEmpty()) {
+				File.load(store, object, loadEvent, uponLoad, directory, filetype, paths, alias, external, uponError);
+				return true;
+			} else {
+				return uponError ? uponError(message, url, line) : false;
+			}
 		});
 		return null;
 	}
@@ -23,7 +34,7 @@ File = {
 Files = {};
 
 Sprite = {
-	load : function (path, alias, external) {
+	load : function (paths, alias, external, uponError) {
 		return File.load("sprites", Image, "load", function (event, image, store, path, alias) {
 			var data = {
 				image : image,
@@ -41,12 +52,12 @@ Sprite = {
 				}
 			}
 			store[alias] = store[path] = data;
-		}, "images", "png", path, alias, external || path.substr(0, 5) === "data:");
+		}, "images", "png", paths, alias, external, uponError);
 	}
 };
 
 Sound = {
-	load : function (path, alias, external, playImmediately) {
+	load : function (paths, alias, external, uponError, playImmediately) {
 		return File.load("sounds", Audio, "canplaythrough", function (event, sound, store, path, alias) {
 			var data = {
 				sound : sound
@@ -54,12 +65,12 @@ Sound = {
 			store[alias] = store[path] = data;
 			if (playImmediately && _(Settings, "sound effects"))
 				sound.play();
-		}, "sounds", "mp3", path, alias, external);
+		}, "sounds", "mp3", path, alias, external, uponError);
 	},
-	play : function (path, alias, external) {
+	play : function (paths, alias, external, uponError) {
 		if (_(Settings, "sound effects")) {
 			var sound;
-			if (sound = Sound.load(path, alias, external, true)) {
+			if (sound = Sound.load(paths, alias, external, uponError, true)) {
 				sound.sound.currentTime = 0;
 				sound.sound.play();
 			}
