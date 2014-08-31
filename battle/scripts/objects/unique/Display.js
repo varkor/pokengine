@@ -3,15 +3,10 @@ Display = {
 		if (poke === NoPokemon)
 			return NoPokemon;
 		var newPoke = new pokemon(poke.store());
-		foreach(["name", "gender", "species", "level", "health", "experience", "experienceFromLevelToNextLevel"], function (property) {
-			newPoke[property] = (typeof poke[property] === "function" ? function (value) { return function () { return value; }; }(poke[property]()) : poke[property]);
-		});
 		if (poke.hasOwnProperty("original"))
 			newPoke.original = poke.original;
 		else
 			newPoke.original = poke;
-		newPoke.stats[Stats.health] = function (value) { return function () { return value; }; }(poke.stats[Stats.health]());
-		newPoke.sprite.path = function (value) { return function (which) { return value + (which ? "~" + which : ""); }; }(poke.sprite.path());
 		newPoke.battler.side = poke.battler.side;
 		newPoke.battler.display = deepCopy(poke.battler.display);
 		return newPoke;

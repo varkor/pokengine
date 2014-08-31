@@ -25,12 +25,24 @@ Weather = {
 			var width = Game.canvas.element.width, height = Game.canvas.element.height;
 			var particle = {
 				type : Weather.weather,
-				position : {x : null, y : 0},
-				velocity : {speed : random(5, 8), direction : (1 / 2) * Math.PI + (Math.PI / 32) * random(-1, 1)},
+				position : {
+					x : null,
+					y : 0
+				},
+				velocity : {
+					speed : random(5, 8),
+					direction : (1 / 2) * Math.PI + (Math.PI / 32) * random(-1, 1)
+				},
 				landed : null,
-				calc : {cos : null, sin : null}
+				calc : {
+					cos : null,
+					sin : null
+				}
 			};
-			particle.calc = {cos : Math.cos(particle.velocity.direction), sin : Math.sin(particle.velocity.direction)};
+			particle.calc = {
+				cos : Math.cos(particle.velocity.direction),
+				sin : Math.sin(particle.velocity.direction)
+			};
 			var horizontalTravelling = particle.calc.cos * (height / particle.calc.sin);
 			particle.position.x = random(0 - horizontalTravelling, width + horizontalTravelling);
 			switch (particle.type) {
@@ -64,7 +76,7 @@ Weather = {
 						if (!(poke = Display.pokemonInState(poke)))
 							return;
 						position = Battle.draw.position(poke);
-						sprite = Sprite.load(poke.sprite.path(ally ? "back" : "front"));
+						sprite = Sprite.load(poke.paths.sprite(ally ? "back" : "front"));
 						if (sprite && (inRange(particle.position.x, position.x - (sprite.width / 2) * position.scale, position.x + (sprite.width / 2) * position.scale) && inRange(particle.position.y, position.y - sprite.height * position.scale + position.z * (ally ? 1 : -1), position.y + position.z * (ally ? 1 : -1)))) {
 							return true;
 						}

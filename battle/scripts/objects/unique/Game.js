@@ -139,42 +139,52 @@ Game = {
 			Game.redraw();
 		},
 		draw : {
-			sprite : function (path, x, y, aligned, filters, transformation) {
+			sprite : function (path, x, y, aligned, filters, transformation, time) {
 				var sprite = Sprite.load(path);
 				if (sprite) {
-					var image = sprite, positionModification = {x : 0, y : 0};
+					var image = sprite.image, positionModification = {
+						x : 0,
+						y : 0
+					}, progress = (sprite.animated ? (arguments.length < 7 ? Time.now() : time) % sum(sprite.durations) : 0), frame = 0;
+					if (sprite.animated) {
+						while (progress > sprite.durations[frame])
+							progress -= sprite.durations[frame ++];
+					}
 					if (aligned) {
 						switch (Game.canvas.context.textAlign) {
 							case "center":
-								positionModification.x = - image.width / 2;
+								positionModification.x = - sprite.width / 2;
 								break;
 							case "right":
-								positionModification.x = - image.width;
+								positionModification.x = - sprite.width;
 								break;
 						}
 						switch (Game.canvas.context.textBaseline) {
 							case "middle":
-								positionModification.y = - image.height / 2;
+								positionModification.y = - sprite.height / 2;
 								break;
 							case "bottom":
-								positionModification.y = - image.height;
+								positionModification.y = - sprite.height;
 								break;
 						}
 					}
 					positionModification.x -= View.position.x;
 					positionModification.y -= View.position.y;
+					Game.canvas.temporary[2].width = sprite.width;
+					Game.canvas.temporary[2].height = sprite.height;
+					Game.canvas.temporary[2].context.drawImage(image, frame * sprite.width, 0, sprite.width, sprite.height, 0, 0, sprite.width, sprite.height);
+					image = Game.canvas.temporary[2];
 					if (filters) {
-						if (!Array.isArray(filters))
-							filters = [filters];
+						filters = wrapArray(filters);
 						foreach(filters, function (filter, number) {
 							foreach(Game.canvas.temporary, function (canvas, i) {
-								if (i === 2 && number !== 0)
+								if (i === 2)
 									return;
 								canvas.width = sprite.width;
 								canvas.height = sprite.height;
 							});
 							if (!filter.hasOwnProperty("type")) {
-								Game.canvas.temporary[0].context.drawImage(sprite, 0, 0);
+								Game.canvas.temporary[0].context.drawImage(image, 0, 0);
 								var imageData = Game.canvas.temporary[0].context.getImageData(0, 0, Game.canvas.temporary[0].width, Game.canvas.temporary[0].height), pixels = imageData.data;
 								for (var i = 0, newPixel, excludeBlankPixels = true; i < pixels.length; i += 4) {
 									if (pixels[i + 3] === 0 && excludeBlankPixels)
@@ -234,23 +244,25 @@ Game = {
 							positionModification.y *= Math.abs(transformation[3]);
 						if (transformation[1] && aligned) {
 							if (Game.canvas.context.textAlign === "right" && transformation[0] >= 0 || Game.canvas.context.textAlign === "left" && transformation[0] < 0)
-								positionModification.y -= image.width * transformation[1];
+								positionModification.y -= sprite.width * transformation[1];
 							if (Game.canvas.context.textAlign === "center")
-								positionModification.y -= image.width * transformation[1] * 0.5;
+								positionModification.y -= sprite.width * transformation[1] * 0.5;
 						}
 						if (transformation[2] && aligned) {
 							if (Game.canvas.context.textBaseline === "bottom" && transformation[3] >= 0 || Game.canvas.context.textBaseline === "top" && transformation[3] < 0)
-								positionModification.x -= image.height * transformation[2];
+								positionModification.x -= sprite.height * transformation[2];
 							if (Game.canvas.context.textBaseline === "middle")
-								positionModification.x -= image.height * transformation[2] * 0.5;
+								positionModification.x -= sprite.height * transformation[2] * 0.5;
 						}
 						if (transformation[0] < 0)
-							positionModification.x = image.width * Math.abs(transformation[0]) - positionModification.x;
+							positionModification.x = sprite.width * Math.abs(transformation[0]) - positionModification.x;
 						if (transformation[3] < 0)
-							positionModification.y = image.height * Math.abs(transformation[3]) - positionModification.y;
+							positionModification.y = sprite.height * Math.abs(transformation[3]) - positionModification.y;
 					}
 					x += positionModification.x;
 					y += positionModification.y;
+					x = Math.round(x);
+					y = Math.round(y);
 					if (transformation) {
 						Game.canvas.context.save();
 						Game.canvas.context.translate(x, y);

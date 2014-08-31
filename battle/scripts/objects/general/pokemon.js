@@ -64,9 +64,12 @@ function pokemon (data) {
 
 	self.battler = new battler(self);
 
-	self.sprite = {
-		path : function (which) {
+	self.paths = {
+		sprite : function (which) {
 			return "pokemon/" + _(Pokemon, self.species).region + "/" + self.species + (which ? "~" + which : "");
+		},
+		cry : function () {
+			return "pokemon/" + _(Pokemon, self.species).region + "/" + self.species;
 		}
 	};
 
@@ -77,7 +80,7 @@ function pokemon (data) {
 	self.store = function () {
 		// Returns an object that contains all the data for the Pokémon, without any methods
 		var store = {};
-		foreach(["species", "item", "moves", "ability", "pokeball", "nickname", "unique", "level", "nature", "gender", "status", "IVs", "EVs", "experience", "nationality", "form", "friendship", "shiny", "egg", "ribbons", "caught"], function (property) {
+		foreach(["species", "health", "item", "moves", "ability", "pokeball", "nickname", "unique", "level", "nature", "gender", "status", "IVs", "EVs", "experience", "nationality", "form", "friendship", "shiny", "egg", "ribbons", "caught"], function (property) {
 			store[property] = JSONcopy(_(self, property));
 		});
 		return JSONcopy(store);
@@ -510,5 +513,9 @@ function pokemon (data) {
 		foreach(self.moves, function (move) {
 			move.PP = Moves[move.move].PP * (1 + 0.2 * move.PPups);
 		})
+	};
+
+	self.cry = function () {
+		Sound.play(self.paths.cry());
 	};
 }

@@ -205,7 +205,8 @@ exports.BattleServer = {
 									valid = false;
 									exports.BattleServer.send({
 										action : "issue",
-										message : "Only 3 Pokémon are allowed, but you have " + trainer.party.length + "!"
+										message : "Only 3 Pokémon are allowed, but you have " + trainer.party.length + "!",
+										reference : reference
 									}, client);
 								}
 							}
@@ -219,7 +220,8 @@ exports.BattleServer = {
 									valid = false;
 									exports.BattleServer.send({
 										action : "issue",
-										message : "Only one Pokémon is allowed, but you have " + trainer.party.length + "!"
+										message : "Only one Pokémon is allowed, but you have " + trainer.party.length + "!",
+										reference : reference
 									}, client);
 								}
 							}

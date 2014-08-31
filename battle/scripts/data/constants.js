@@ -266,7 +266,13 @@ Directions = {
 	left : ++ q
 };
 
-Scenes = ["Clearing"];
+Scenes = {
+	"Field Clearing" : {},
+	"Walls at Night" : {
+		lighting : "hsla(245, 100%, 25%, 0.2)"
+	},
+	"Forest Trail" : {}
+};
 
 NoPokemon = {};
 

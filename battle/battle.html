@@ -5,7 +5,8 @@
 		<title>Battle Engine</title>
 		<script src="scripts/functions/functions.js"></script>
 		<script src="scripts/functions/random.js"></script>
-		<script src="scripts/functions/Sprite.js"></script>
+		<script src="scripts/objects/unique/FileData.js"></script>
+		<script src="scripts/functions/File.js"></script>
 		<script src="scripts/data/constants.js"></script>
 		<script src="scripts/objects/unique/Type.js"></script>
 		<script src="scripts/objects/unique/Move.js"></script>
@@ -63,7 +64,9 @@
 				<tr class="hidden-">
 					<td>scene</td>
 					<td><div class="select"><select id="scene">
-						<option value="clearing">clearing</option>
+						<option value="Field Clearing">clearing</option>
+						<option value="Walls at Night">clearing at night</option>
+						<option value="Forest Trail">forest trail</option>
 					</select></div></td>
 				</tr>
 			</table>
@@ -168,9 +171,9 @@
 				var settingsRect = document.querySelector("#settings").getBoundingClientRect();
 				if (below) {
 					settings.classList.add("below");
-					settings.style.top = "calc(" + Math.round(buttonRect.bottom) + "px + 20pt - 4pt)";
+					settings.style.top = "calc(" + Math.round(buttonRect.bottom) + "px + 20pt/* - 4pt*/)";
 				} else {
-					settings.style.top = "calc(" + Math.round(buttonRect.top - settingsRect.height) + "px - 20pt + 4pt)";
+					settings.style.top = "calc(" + Math.round(buttonRect.top - settingsRect.height) + "px - 20pt/* + 4pt*/)";
 				}
 				settings.style.left = Math.round(buttonRect.left + buttonRect.width / 2 - settingsRect.width / 2) + "px";
 				var button = settings.querySelector("button");
@@ -191,7 +194,7 @@
 				issue.innerHTML = message;
 				document.body.appendChild(issue);
 				var buttonRect = element.getBoundingClientRect();
-				issue.style.left = "calc(" + Math.round(buttonRect.right) + "px + 4pt - 2pt)";
+				issue.style.left = "calc(" + Math.round(buttonRect.right) + "px + 4pt/* - 2pt*/)";
 				issue.style.top = (buttonRect.top + buttonRect.height / 2 - issue.getBoundingClientRect().height / 2) + "px";
 			};
 
@@ -344,7 +347,7 @@
 				var settings = {
 					style : (document.querySelector("#style").value === "double" ? Battles.style.double : Battles.style.normal),
 					weather : (Weathers.hasOwnProperty(document.querySelector("#weather").value) ? Weathers[document.querySelector("#weather").value] : Weathers.clear),
-					scene : (Scenes.contains(document.querySelector("#scene").value) ? document.querySelector("#scene").value : "Clearing"),
+					scene : (Scenes.hasOwnProperty(document.querySelector("#scene").value) ? document.querySelector("#scene").value : "Field Clearing"),
 					rules : {
 						levels : document.querySelector("#rule-levels").value,
 						party : document.querySelector("#rule-party").value,
@@ -353,6 +356,10 @@
 				};
 				return settings;
 			}
+		});
+
+		document.querySelector("#settings").addEventListener("mousedown", function (event) {
+			event.stopPropagation();
 		});
 
 		window.addEventListener("mousedown", function (event) {

@@ -27,7 +27,8 @@ function forevery (dictionary, fn) {
 
 function _ (object, path) {
 	object = { object : object };
-	if (/^[-=]> ?/.test(path))
+	path = path.trim();
+	if (/^ ?[~\-=]> ?/.test(path))
 		path = "object " + path;
 	else
 		path = "object => " + path;
@@ -42,7 +43,7 @@ function _ (object, path) {
 	}
 	var paths = [], burrow = function (index, current) {
 		for (var route = 0, next; route < routes[index].length; ++ route) {
-			next = (current ? current + "=>" : "") + routes[index][route];
+			next = (current ? current + " => " : "") + routes[index][route];
 			if (index > 0) {
 				burrow(index - 1, next);
 			} else
@@ -52,7 +53,7 @@ function _ (object, path) {
 	};
 	burrow(routes.length - 1, "");
 	var follow = function (object, path) {
-		var keys = path.split(/ ?=> ?/g), value = object, key;
+		var keys = path.replace(/ ?~> ?/g, " => ").split(/ ?=> ?/g), value = object, key;
 		while (keys.length) {
 			key = keys.shift();
 			if (value.hasOwnProperty(key))
@@ -152,7 +153,7 @@ function wrapArray (wrap) {
 }
 
 function sum (array) {
-	var result = 1;
+	var result = 0;
 	foreach(array, function (number) {
 		result += number;
 	});

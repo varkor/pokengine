@@ -22,7 +22,7 @@ Client = {
 						button.innerHTML = "Accept";
 					else
 						button.innerHTML = "Invite";
-					button.disabled = true;
+					button.disabled = false;
 				}
 				break;
 			case "users":
@@ -44,21 +44,19 @@ Client = {
 						Interface.popup(button, function (event) {
 							button.innerHTML = "Invited";
 							button.disabled = true;
+							var other = {
+								user : user.user,
+								ip : user.ip
+							};
 							Client.send({
 								action : "invite",
-								who : {
-									user : user.user,
-									ip : user.ip
-								},
+								who : other,
 								trainer : new trainer({
 									name : document.querySelector("#name").value,
 									party : Interface.buildParty()
 								}).store(),
 								settings : Interface.buildSettings(),
-								reference : {
-									user : user.user,
-									ip : user.ip
-								}
+								reference : other
 							});
 						}, false);
 					});
@@ -85,16 +83,18 @@ Client = {
 					button.innerHTML = "Accepted";
 					button.disabled = true;
 					console.log("%cAccepting the invitation to battle...", "color : hsl(170, 100%, 30%)");
+					var other = {
+						user : message.from.user,
+						ip : message.from.ip
+					};
 					Client.send({
 						action : "accept",
-						who : {
-							user : message.from.user,
-							ip : message.from.ip
-						},
+						who : other,
 						trainer : new trainer({
 							name : document.querySelector("#name").value,
 							party : Interface.buildParty()
-						}).store()
+						}).store(),
+						reference : other
 					});
 				})
 				li.appendChild(button);

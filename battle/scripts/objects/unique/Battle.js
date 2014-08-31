@@ -169,7 +169,7 @@ Battle = {
 		}
 	},
 	redraw : function () {
-		var self = Battle, context = Game.canvas.context, display = Display.state.current;
+		var self = Battle, context = Game.canvas.context, display = Display.state.current, now = Time.now();
 		context.fillStyle = "black";
 		context.fillRect(0, 0, Game.canvas.element.width, Game.canvas.element.height);
 		if (!self.active)
@@ -190,15 +190,22 @@ Battle = {
 			position = Battle.draw.position(poke);
 			context.strokeWidth = position.scale * 2;
 			transition = (poke.fainted() ? 1 : poke.battler.display.transition);
-			Game.canvas.draw.sprite(poke.sprite.path(side), position.x, position.y - position.z + poke.battler.display.position.y, true, [{type : "fill", colour : "hsla(0, 0%, 0%, " + shadowOpacity + ")"}, {type : "crop", heightRatio : poke.battler.display.height}], shadowMatrix.scale(position.scale * transition).scale(Math.pow(2, -poke.battler.display.position.y / 100)).matrix);
+			// Shadow
+			Game.canvas.draw.sprite(poke.paths.sprite(side), position.x, position.y - position.z + poke.battler.display.position.y, true, [{ type : "fill", colour : "hsla(0, 0%, 0%, " + shadowOpacity + ")" }, { type : "crop", heightRatio : poke.battler.display.height }], shadowMatrix.scale(position.scale * transition).scale(Math.pow(2, -poke.battler.display.position.y / 100)).matrix, now);
+			// Outline
 			if (poke.battler.display.outlined) {
 				for (var angle = 0; angle < Math.PI * 2; angle += Math.PI / 2) {
-					Game.canvas.draw.sprite(poke.sprite.path(side), position.x + Math.cos(angle) * context.strokeWidth, position.y - position.z + Math.sin(angle) * context.strokeWidth, true, [{type : "fill", colour : context.strokeStyle}, {type : "crop", heightRatio : poke.battler.display.height}], matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix);
+					Game.canvas.draw.sprite(poke.paths.sprite(side), position.x + Math.cos(angle) * context.strokeWidth, position.y - position.z + Math.sin(angle) * context.strokeWidth, true, [{ type : "fill", colour : context.strokeStyle }, { type : "crop", heightRatio : poke.battler.display.height }], matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix, now);
 				}
 			}
-			Game.canvas.draw.sprite(poke.sprite.path(side), position.x, position.y - position.z, true, {type : "crop", heightRatio : poke.battler.display.height}, matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix);
+			// Pokémon
+			Game.canvas.draw.sprite(poke.paths.sprite(side), position.x, position.y - position.z, true, { type : "crop", heightRatio : poke.battler.display.height }, matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix, now);
+			// Lighting
+			if (_(Scenes, Battle.scene).hasOwnProperty("lighting"))
+				Game.canvas.draw.sprite(poke.paths.sprite(side), position.x, position.y - position.z, true, [{ type : "fill", colour : _(Scenes, Battle.scene).lighting }, { type : "crop", heightRatio : poke.battler.display.height }], matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix, now);
+			// Glow / Fade
 			if (transition > 0 && transition < 1)
-				Game.canvas.draw.sprite(poke.sprite.path(side), position.x, position.y - position.z, true, [{type : "fill", colour : "white"}, {type : "opacity", value : Math.pow(1 - transition, 0.4)}, {type : "crop", heightRatio : poke.battler.display.height}], matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix);
+				Game.canvas.draw.sprite(poke.paths.sprite(side), position.x, position.y - position.z, true, [{ type : "fill", colour : "white" }, { type : "opacity", value : Math.pow(1 - transition, 0.4) }, { type : "crop", heightRatio : poke.battler.display.height }], matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix, now);
 		});
 		if (_(Settings, "visual weather effects") || display.flags.weather)
 			Weather.draw(Game.canvas.context);
@@ -266,7 +273,7 @@ Battle = {
 			if (arguments.length < 3 || typeof settings === "undefined" || settings === null)
 				settings = {};
 			if (!settings.hasOwnProperty("scene"))
-				settings.scene = "Clearing";
+				settings.scene = "Field Clearing";
 			if (!settings.hasOwnProperty("style"))
 				settings.style = Battles.style.normal;
 			if (!settings.hasOwnProperty("weather"))
@@ -1384,6 +1391,9 @@ Battle = {
 			var displayInitial = Display.state.save();
 			Textbox.state("A wild " + poke.name() + " was right behind!", function () { Display.state.load(displayInitial); });
 		}
+		Textbox.effect(function () {
+			poke.cry();
+		});
 		foreach(Battle.opponentsTo(poke), function (opponent) {
 			poke.battler.opponents.pushIfNotAlreadyContained(opponent);
 			opponent.battler.opponents.pushIfNotAlreadyContained(poke);
