@@ -6,7 +6,10 @@ File = {
 		store = Files[store];
 		paths = wrapArray(paths);
 		redirectedPaths = redirectedPaths || [];
-		var path = paths.shift(), successful = function (data) {
+		var path = paths.shift();
+		if (/(.*)\.(\w+)/.test(path))
+			path = path.match(/(.*)\.(\w+)/)[1];
+		var successful = function (data) {
 			foreach(redirectedPaths.concat(path), function (redirect) {
 				store[redirect] = data;
 			});
@@ -18,7 +21,7 @@ File = {
 			return store[path];
 		}
 		var file = new object();
-		file.src = (!(path.substr(0, 5) === "data:" || path.substr(0, 5) === "http:" || path.substr(0, 6) === "https:") ? directory + "/" + path + (/.*\.(\w+)/.test(path) ? "" : "." + filetype) : path);
+		file.src = (!(path.substr(0, 5) === "data:" || path.substr(0, 5) === "http:" || path.substr(0, 6) === "https:") ? directory + "/" + path + "." + filetype : path);
 		store[path] = null;
 		file.addEventListener(loadEvent, function (event) {
 			successful(dataForFile(event, file, store, path));
@@ -30,21 +33,25 @@ File = {
 				File.load(substore, object, loadEvent, dataForFile, directory, filetype, paths, uponLoad, uponError, redirectedPaths);
 				return true;
 			} else
-				return uponError ? uponError(message, url, line) : false;
+				return uponError ? uponError(redirectedPaths, message) : false;
 		});
 		return null;
 	},
 	load : function (paths, uponLoad, uponError) {
 		paths = wrapArray(paths);
 		var filetype = paths[0].match(/.*\.(\w+)/);
-		if (filetype === null)
+		if (filetype === null) {
+			uponError(paths, "The supplied file (" + paths[0] + ") had no filtype.");
 			return null;
+		}
 		switch (filetype[1]) {
 			case "png":
-			case "jpg":
 				return Sprite.load(paths, uponLoad, uponError);
 			case "mp3":
 				return Sound.load(paths, uponLoad, uponError);
+			default:
+				uponError(paths, "The supplied file (" + paths[0] + ") had an unsupported filtype.");
+				break;
 		}
 	}
 };
@@ -54,20 +61,20 @@ Sprite = {
 	load : function (paths, uponLoad, uponError) {
 		return File.loadFileOfType("sprites", Image, "load", function (event, image, store, path) {
 			var data = {
-				image : image,
-				width : image.width,
-				height : image.height,
-				animated : false
+				animated : false,
+				frames : 1
 			};
-			if (ImageData.hasOwnProperty(path.replace(/~.*/, ""))) {
-				var imageData = ImageData[path.replace(/~.*/, "")];
-				data.animated = imageData.animated;
-				if (data.animated) {
-					data.frames = imageData.durations.length;
-					data.durations = imageData.durations;
-					data.width /= data.frames;
-				}
+			var fileData;
+			if ((fileData = FileData.images).hasOwnProperty(path.replace(/~.*/, "")) || (fileData = FileData.typefaces).hasOwnProperty(path)) {
+				data = JSONCopy(fileData[path.replace(/~.*/, "")]);
+				if (data.hasOwnProperty("durations"))
+					data.frames = data.durations.length;
+				else if (data.hasOwnProperty("map"))
+					data.frames = data.map.length;
 			}
+			data.image = image;
+			data.width = image.width / data.frames;
+			data.height = image.height;
 			return data;
 		}, "images", "png", paths, uponLoad, uponError);
 	},
@@ -81,6 +88,11 @@ Sprite = {
 			if (sprite.animated) {
 				while (progress > sprite.durations[frame])
 					progress -= sprite.durations[frame ++];
+			} else if (arguments.length >= 8) {
+				if (time >= 0 && time < sprite.frames)
+					frame = time;
+				else
+					return false;
 			}
 			if (aligned) {
 				switch (canvas.context.textAlign) {
@@ -230,5 +242,32 @@ Sound = {
 				sound.sound.play();
 			}
 		}
+	}
+};
+
+Typeface = {
+	draw : function (canvas, path, string, x, y) {
+		var origin = { x : x, y : y };
+		var sprite, index;
+		if (sprite = Sprite.load(path)) {
+			canvas.context.fillStyle = sprite.colour;
+			canvas.context.font = sprite.height + "px Arial";
+			foreach(string, function (character) {
+				if (character !== "\n") {
+					if ((index = sprite.map.indexOf(character)) > -1) {
+						Sprite.draw(canvas, path, x, y, null, null, null, index);
+						x += sprite.kerning[character];
+					} else {
+						canvas.context.fillText(character, x, y);
+						x += canvas.context.measureText(character).width;
+					}
+				} else {
+					x = origin.x;
+					y += sprite.height;
+				}
+			});
+			return true;
+		}
+		return false;
 	}
 };

@@ -92,9 +92,9 @@ function pokemon (data) {
 		// Returns an object that contains all the data for the Pokémon, without any methods
 		var store = {};
 		foreach(["species", "health", "item", "moves", "ability", "pokeball", "nickname", "unique", "level", "nature", "gender", "status", "IVs", "EVs", "experience", "nationality", "form", "friendship", "shiny", "egg", "ribbons", "caught"], function (property) {
-			store[property] = JSONcopy(self._(property));
+			store[property] = JSONCopy(self._(property));
 		});
-		return JSONcopy(store);
+		return JSONCopy(store);
 	};
 
 	self.learn = function (move, initial, learnRegardless) {

@@ -1,5 +1,3 @@
-/* jshint loopfunc: true */
-
 TheWild = new trainer({
 	name : "The Wild"
 });
@@ -188,6 +186,15 @@ Battle = {
 			context.strokeText((Battle.state.progress * 100).toFixed(0) + "%", Game.canvas.element.width / 2, Game.canvas.element.height / 2);
 			context.fillStyle = "black";
 			context.fillText((Battle.state.progress * 100).toFixed(0) + "%", Game.canvas.element.width / 2, Game.canvas.element.height / 2);
+			if (Battle.state.failed.notEmpty()) {
+				context.textBaseline = "top";
+				context.fillStyle = "hsl(0, 0%, 90%)";
+				context.fillText("Failed to load " + Battle.state.failed.length + " file" + (Battle.state.failed.length !== 1 ? "s" : "") + ":", Game.canvas.element.width / 2, Game.canvas.element.height / 2 + 20 + 6);
+				context.fillStyle = "hsl(0, 0%, 50%)";
+				foreach(Battle.state.failed, function (failed, i) {
+					context.fillText(failed, Game.canvas.element.width / 2, Game.canvas.element.height / 2 + 20 + 6 + 16 * (i + 1));
+				});
+			}
 		} else {
 			Sprite.draw(Game.canvas, "scenes/" + Battle.scene, 0, 0);
 			context.textAlign = "center";
@@ -272,25 +279,31 @@ Battle = {
 	load : function (alliedTrainers, opposingTrainers, settings) {
 		Battle.state = {
 			kind : "loading",
-			progress : 0
+			progress : 0,
+			failed : []
 		};
-		var resources = ["scenes/" + settings.scene + ".png"], loaded = 0;
+		var resources = ["typefaces/Standard.png", "scenes/" + settings.scene + ".png"], loaded = 0;
 		foreach([].concat(alliedTrainers, opposingTrainers), function (trainer) {
 			foreach(trainer.party.pokemon, function (poke) {
 				resources.push(poke.paths.sprite("front", true), poke.paths.sprite("back", true), poke.paths.cry(true));
 			});
 		});
+		var progress = function () {
+			Battle.state.progress = ++ loaded / resources.length;
+			if (loaded === resources.length) {
+				Textbox.stateUntil("", function () { return Battle.state.kind !== "opening"; });
+				Battle.state = {
+					kind : "opening",
+					transition : 0
+				};
+			}
+		};
 		foreach(resources, function (resource) {
-			File.load(resource, function () {
-				if (++ loaded === resources.length) {
-					Textbox.stateUntil("", function () { return Battle.state.kind !== "opening"; });
-					Battle.state = {
-						kind : "opening",
-						transition : 0
-					};
-				} else {
-					Battle.state.progress = loaded / resources.length;
-				}
+			File.load(resource, progress, function (resource, message) {
+				Battle.state.failed.push(resource);
+				if (Settings._("ignore missing files"))
+					progress();
+				console.log("%cThere was an error loading one of the files:", "color : hsl(0, 100%, 40%)", message);
 			});
 		});
 	},

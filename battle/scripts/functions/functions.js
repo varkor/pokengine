@@ -243,7 +243,7 @@ Array.prototype.last = function () {
 	return this[this.length - 1];
 };
 
-function JSONcopy (object) {
+function JSONCopy (object) {
 	return JSON.parse(JSON.stringify(object));
 }
 

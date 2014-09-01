@@ -106,8 +106,8 @@ Game = {
 			Game.click();
 		});*/
 		window.addEventListener("mousemove", function (event) {
-			Game.cursor.x = event.clientX - Game.canvas.element.offsetLeft + Game.canvas.element.width / 2;
-			Game.cursor.y = event.clientY - Game.canvas.element.offsetTop + Game.canvas.element.height / 2;
+			Game.cursor.x = event.clientX - Game.canvas.element.offsetLeft + Game.canvas.element.width / 2 + window.scrollX;
+			Game.cursor.y = event.clientY - Game.canvas.element.offsetTop + Game.canvas.element.height / 2 + window.scrollY;
 		});
 	},
 	increment : 0,

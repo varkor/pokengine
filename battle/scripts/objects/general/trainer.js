@@ -1,6 +1,8 @@
 function trainer (data) {
 	var self = this;
 
+	_method(self);
+
 	if (arguments.length < 1)
 		data = {};
 	var setProperty = function (property, value) {
@@ -33,11 +35,11 @@ function trainer (data) {
 		// Returns an object that contains all the data for the trainer, without any methods
 		var store = {};
 		foreach(["name", "unique", "gender", "money", "nationality", "badges", "location"], function (property) {
-			store[property] = JSONcopy(self._(property));
+			store[property] = JSONCopy(self._(property));
 		});
 		store.party = self.party.store();
 		store.bag = self.bag.items;
-		return JSONcopy(store);
+		return JSONCopy(store);
 	};
 
 	self.pronoun = function () {

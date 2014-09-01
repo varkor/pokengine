@@ -32,7 +32,7 @@ Textbox = {
 		*/
 		var self = Textbox, colours = [];
 		if (text !== null) {
-			text = String(text);
+			text = "" + text;
 			console.log(text);
 			var command, colour, previousColour, colourStack = [];
 			while ((command = text.search(/<colour:.*?>/i)) > -1) {

@@ -10,6 +10,7 @@ Settings = {
 	"switch transition duration" : 0, // How many seconds should Pokémon being sent out, fainting, etc. take?
 	"visual weather effects" : true, // Whether weather constantly displays visually, or just at the end of each turn
 	"particle collision-testing" : false, // Whether weather particles should implement proper collision testing
-	"sound effects" : false // Whether sounds play or not
+	"sound effects" : false, // Whether sounds play or not
+	"ignore missing files" : false // Whether the battle should start even if some of the required files were not loaded successfully
 };
 _method(Settings);
