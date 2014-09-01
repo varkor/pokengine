@@ -208,7 +208,7 @@
 						name : document.querySelector("#name").value,
 						party : Interface.buildParty()
 					}));
-					Battle.beginWildBattle([new pokemon({
+					Battle.beginWildBattle(Game.player, [new pokemon({
 						species : "Bulbasaur",
 						level : 50
 					}), new pokemon({

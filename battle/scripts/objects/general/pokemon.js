@@ -67,11 +67,11 @@ function pokemon (data) {
 	self.battler = new battler(self);
 
 	self.paths = {
-		sprite : function (which) {
-			return "pokemon/" + _(Pokemon, self.species).region + "/" + self.species + (which ? "~" + which : "");
+		sprite : function (which, includeFiletype) {
+			return "pokemon/" + _(Pokemon, self.species).region + "/" + self.species + (which ? "~" + which : "") + (includeFiletype ? ".png" : "");
 		},
-		cry : function () {
-			return "pokemon/" + _(Pokemon, self.species).region + "/" + self.species;
+		cry : function (includeFiletype) {
+			return "pokemon/" + _(Pokemon, self.species).region + "/" + self.species + (includeFiletype ? ".mp3" : "");
 		}
 	};
 

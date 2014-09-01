@@ -1,5 +1,4 @@
 Game = {
-	debug : false,
 	control : {
 		schemes : {
 			mouse : q = 0,

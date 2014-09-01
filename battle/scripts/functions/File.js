@@ -1,41 +1,58 @@
 File = {
-	load : function (store, object, loadEvent, uponLoad, directory, filetype, paths, alias, external, uponError) {
+	loadFileOfType : function (store, object, loadEvent, dataForFile, directory, filetype, paths, uponLoad, uponError, redirectedPaths) {
 		if (!Files.hasOwnProperty(store))
 			Files[store] = {};
+		var substore = store;
 		store = Files[store];
 		paths = wrapArray(paths);
-		var path = paths.shift();
-		alias = alias || path;
-		if (store.hasOwnProperty(alias))
-			return store[alias];
-		else if (store.hasOwnProperty(path)) {
-			store[alias] = store[path];
-			return store[alias];
+		redirectedPaths = redirectedPaths || [];
+		var path = paths.shift(), successful = function (data) {
+			foreach(redirectedPaths.concat(path), function (redirect) {
+				store[redirect] = data;
+			});
+			if (uponLoad)
+				uponLoad(data);
+		};
+		if (store.hasOwnProperty(path)) {
+			successful(store[path]);
+			return store[path];
 		}
 		var file = new object();
-		file.src = (!(external || path.substr(0, 5) === "data:") ? directory + "/" + path + "." + filetype : path);
-		store[alias] = store[path] = null;
+		file.src = (!(path.substr(0, 5) === "data:" || path.substr(0, 5) === "http:" || path.substr(0, 6) === "https:") ? "/" + directory + "/" + path + (/.*\.(\w+)/.test(path) ? "" : "." + filetype) : path);
+		store[path] = null;
 		file.addEventListener(loadEvent, function (event) {
-			uponLoad(event, file, store, path, alias);
+			successful(dataForFile(event, file, store, path));
 		});
 		file.addEventListener("error", function (message, url, line) {
-			delete store[alias];
 			delete store[path];
+			redirectedPaths.push(path);
 			if (paths.notEmpty()) {
-				File.load(store, object, loadEvent, uponLoad, directory, filetype, paths, alias, external, uponError);
+				File.load(substore, object, loadEvent, dataForFile, directory, filetype, paths, uponLoad, uponError, redirectedPaths);
 				return true;
-			} else {
+			} else
 				return uponError ? uponError(message, url, line) : false;
-			}
 		});
 		return null;
+	},
+	load : function (paths, uponLoad, uponError) {
+		paths = wrapArray(paths);
+		var filetype = paths[0].match(/.*\.(\w+)/);
+		if (filetype === null)
+			return null;
+		switch (filetype[1]) {
+			case "png":
+			case "jpg":
+				return Sprite.load(paths, uponLoad, uponError);
+			case "mp3":
+				return Sound.load(paths, uponLoad, uponError);
+		}
 	}
 };
 Files = {};
 
 Sprite = {
-	load : function (paths, alias, external, uponError) {
-		return File.load("sprites", Image, "load", function (event, image, store, path, alias) {
+	load : function (paths, uponLoad, uponError) {
+		return File.loadFileOfType("sprites", Image, "load", function (event, image, store, path) {
 			var data = {
 				image : image,
 				width : image.width,
@@ -51,8 +68,8 @@ Sprite = {
 					data.width /= data.frames;
 				}
 			}
-			store[alias] = store[path] = data;
-		}, "images", "png", paths, alias, external, uponError);
+			return data;
+		}, "images", "png", paths, uponLoad, uponError);
 	},
 	draw : function (canvas, path, x, y, aligned, filters, transformation, time) {
 		var sprite = Sprite.load(path);
@@ -195,20 +212,20 @@ Sprite = {
 };
 
 Sound = {
-	load : function (paths, alias, external, uponError, playImmediately) {
-		return File.load("sounds", Audio, "canplaythrough", function (event, sound, store, path, alias) {
+	load : function (paths, uponLoad, uponError, playImmediately) {
+		return File.loadFileOfType("sounds", Audio, "canplaythrough", function (event, sound, store, path) {
 			var data = {
 				sound : sound
 			};
-			store[alias] = store[path] = data;
 			if (playImmediately && Settings._("sound effects"))
 				sound.play();
-		}, "sounds", "mp3", path, alias, external, uponError);
+			return store[path] = data;
+		}, "sounds", "mp3", paths, uponLoad, uponError);
 	},
-	play : function (paths, alias, external, uponError) {
+	play : function (paths, uponError) {
 		if (Settings._("sound effects")) {
 			var sound;
-			if (sound = Sound.load(paths, alias, external, uponError, true)) {
+			if (sound = Sound.load(paths, uponLoad, uponError, true)) {
 				sound.sound.currentTime = 0;
 				sound.sound.play();
 			}

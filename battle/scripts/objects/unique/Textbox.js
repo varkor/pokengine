@@ -297,10 +297,12 @@ Textbox = {
 				self.progress(true);
 			}
 			if (/*!self.pausing && */self.slide < 1)
-				self.slide += (1 / Time.framerate) * 6;
+				// self.slide += (1 / Time.framerate) * 6;
+				self.slide = 1;
 		}
 		if ((/*self.pausing || */!self.dialogue.length) && self.slide > 0)
-			self.slide -= (1 / Time.framerate) * 6;
+			// self.slide -= (1 / Time.framerate) * 6;
+			self.slide = 0;
 		self.slide = Math.clamp(0, self.slide, 1);
 		if (self.slide === 0) {
 			self.active = false;
@@ -319,8 +321,6 @@ Textbox = {
 		var self = Textbox;
 		var fullHeight = self.height * self.slide, context = Game.canvas.context;
 		context.fillStyle = "hsla(0, 0%, 0%, 0.8)";
-		if (self.dialogue.length && self.dialogue[0].text === "")
-			fullHeight = 0;
 		context.fillRect(0, Game.canvas.element.height - fullHeight, Game.canvas.element.width, fullHeight);
 		context.textAlign = "left";
 		context.textBaseline = "top";
@@ -377,7 +377,7 @@ Textbox = {
 				if (self.dialogue[0].hasOwnProperty("hover"))
 					self.dialogue[0].hover(null, null);
 			}
-			if (Game.debug) {
+			if (Settings._("debug mode")) {
 				context.fillStyle = "red";
 				context.fillCircle(self.responsePosition.x * Game.canvas.element.width, Math.floor(Game.canvas.element.height - fullHeight - height - ((self.responsePosition.y === 0) && minors ? (self.lineHeight() + self.padding * 2) / 3 : 0)), 4);
 			}

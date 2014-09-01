@@ -8,7 +8,7 @@ Battle = {
 	active : false,
 	finished : true,
 	kind : null,
-	state : 0,
+	state : null,
 	situation : null,
 	style : null,
 	allies : [],
@@ -169,56 +169,73 @@ Battle = {
 		}
 	},
 	redraw : function () {
-		var self = Battle, context = Game.canvas.context, display = Display.state.current, now = Time.now();
+		var context = Game.canvas.context, display = Display.state.current, now = Time.now();
 		context.fillStyle = "black";
 		context.fillRect(0, 0, Game.canvas.element.width, Game.canvas.element.height);
-		if (!self.active)
+		if (!Battle.active)
 			return;
-		Sprite.draw(Game.canvas, "scenes/" + Battle.scene, 0, 0);
-		context.textAlign = "center";
-		context.textBaseline = "bottom";
-		context.strokeWidth = 2;
-		context.strokeStyle = "white";
-		var shadowOpacity = Lighting.shadows.opacity(), shadowMatrix = new Matrix ([1, 0.1, -0.6, 0.4, 0, 0]), matrix = new Matrix(), position, transition, side;
-		var sortDisplay = Battle.cache || (Battle.cache = Display.states[Display.state.save(Display.state.current)]), poke;
-		var all = [].concat(sortDisplay.allies, sortDisplay.opponents.reverse()).filter(onlyPokemon).sort(function (a, b) {
-			return Battle.draw.position(Display.pokemonInState(b)).z - Battle.draw.position(Display.pokemonInState(a)).z;
-		});
-		foreach(all, function (poke) {
-			poke = Display.pokemonInState(poke);
-			side = (poke.battler.side === Battles.side.near ? "back" : "front");
-			position = Battle.draw.position(poke);
-			context.strokeWidth = position.scale * 2;
-			transition = (poke.fainted() ? 1 : poke.battler.display.transition);
-			// Shadow
-			Sprite.draw(Game.canvas, poke.paths.sprite(side), position.x, position.y - position.z + poke.battler.display.position.y, true, [{ type : "fill", colour : "hsla(0, 0%, 0%, " + shadowOpacity + ")" }, { type : "crop", heightRatio : poke.battler.display.height }], shadowMatrix.scale(position.scale * transition).scale(Math.pow(2, -poke.battler.display.position.y / 100)).matrix, now);
-			// Outline
-			if (poke.battler.display.outlined) {
-				for (var angle = 0; angle < Math.PI * 2; angle += Math.PI / 2) {
-					Sprite.draw(Game.canvas, poke.paths.sprite(side), position.x + Math.cos(angle) * context.strokeWidth, position.y - position.z + Math.sin(angle) * context.strokeWidth, true, [{ type : "fill", colour : context.strokeStyle }, { type : "crop", heightRatio : poke.battler.display.height }], matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix, now);
+		if (Battle.state.kind === "loading") {
+			context.fillStyle = "hsl(0, 0%, 20%)";
+			context.fillRect(40, Game.canvas.element.height / 2 - 10, Game.canvas.element.width - 80, 20);
+			context.fillStyle = "hsl(0, 0%, 90%)";
+			context.fillRect(40, Game.canvas.element.height / 2 - 10, (Game.canvas.element.width - 80) * Battle.state.progress, 20);
+			context.textAlign = "center";
+			context.textBaseline = "middle";
+			context.font = "12px Helvetica Neue";
+			context.strokeStyle = "hsl(0, 0%, 90%)";
+			context.lineWidth = 5;
+			context.strokeText((Battle.state.progress * 100).toFixed(0) + "%", Game.canvas.element.width / 2, Game.canvas.element.height / 2);
+			context.fillStyle = "black";
+			context.fillText((Battle.state.progress * 100).toFixed(0) + "%", Game.canvas.element.width / 2, Game.canvas.element.height / 2);
+		} else {
+			Sprite.draw(Game.canvas, "scenes/" + Battle.scene, 0, 0);
+			context.textAlign = "center";
+			context.textBaseline = "bottom";
+			context.lineWidth = 2;
+			context.strokeStyle = "white";
+			var shadowOpacity = Lighting.shadows.opacity(), shadowMatrix = new Matrix ([1, 0.1, -0.6, 0.4, 0, 0]), matrix = new Matrix(), position, transition, side;
+			var sortDisplay = Battle.cache || (Battle.cache = Display.states[Display.state.save(Display.state.current)]), poke;
+			var all = [].concat(sortDisplay.allies, sortDisplay.opponents.reverse()).filter(onlyPokemon).sort(function (a, b) {
+				return Battle.draw.position(Display.pokemonInState(b)).z - Battle.draw.position(Display.pokemonInState(a)).z;
+			});
+			foreach(all, function (poke) {
+				poke = Display.pokemonInState(poke);
+				side = (poke.battler.side === Battles.side.near ? "back" : "front");
+				position = Battle.draw.position(poke);
+				context.lineWidth = position.scale * 2;
+				transition = (poke.fainted() ? 1 : poke.battler.display.transition);
+				// Shadow
+				Sprite.draw(Game.canvas, poke.paths.sprite(side), position.x, position.y - position.z + poke.battler.display.position.y, true, [{ type : "fill", colour : "hsla(0, 0%, 0%, " + shadowOpacity + ")" }, { type : "crop", heightRatio : poke.battler.display.height }], shadowMatrix.scale(position.scale * transition).scale(Math.pow(2, -poke.battler.display.position.y / 100)).matrix, now);
+				// Outline
+				if (poke.battler.display.outlined) {
+					for (var angle = 0; angle < Math.PI * 2; angle += Math.PI / 2) {
+						Sprite.draw(Game.canvas, poke.paths.sprite(side), position.x + Math.cos(angle) * context.lineWidth, position.y - position.z + Math.sin(angle) * context.lineWidth, true, [{ type : "fill", colour : context.strokeStyle }, { type : "crop", heightRatio : poke.battler.display.height }], matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix, now);
+					}
 				}
+				// Pokémon
+				Sprite.draw(Game.canvas, poke.paths.sprite(side), position.x, position.y - position.z, true, { type : "crop", heightRatio : poke.battler.display.height }, matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix, now);
+				// Lighting
+				if (_(Scenes, Battle.scene).hasOwnProperty("lighting"))
+					Sprite.draw(Game.canvas, poke.paths.sprite(side), position.x, position.y - position.z, true, [{ type : "fill", colour : _(Scenes, Battle.scene).lighting }, { type : "crop", heightRatio : poke.battler.display.height }], matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix, now);
+				// Glow / Fade
+				if (transition > 0 && transition < 1)
+					Sprite.draw(Game.canvas, poke.paths.sprite(side), position.x, position.y - position.z, true, [{ type : "fill", colour : "white" }, { type : "opacity", value : Math.pow(1 - transition, 0.4) }, { type : "crop", heightRatio : poke.battler.display.height }], matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix, now);
+			});
+			if (Settings._("visual weather effects") || display.flags.weather)
+				Weather.draw(Game.canvas.context);
+			foreach(display.opponents, function (poke, place) {
+				if (poke !== NoPokemon)
+					Battle.draw.bar(poke, false, 30 + 34 * place);
+			});
+			foreach(display.allies, function (poke, place) {
+				if (poke !== NoPokemon)
+					Battle.draw.bar(poke, true, 120 + 42 * place, true);
+			});
+			if (Battle.state.kind === "opening") {
+				context.fillStyle = "hsla(0, 0%, 0%, " + (1 - Math.clamp(0, Battle.state.transition, 1)).toFixed(3) + ")";
+				context.fillRect(0, 0, Game.canvas.element.width, Game.canvas.element.height);
 			}
-			// Pokémon
-			Sprite.draw(Game.canvas, poke.paths.sprite(side), position.x, position.y - position.z, true, { type : "crop", heightRatio : poke.battler.display.height }, matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix, now);
-			// Lighting
-			if (_(Scenes, Battle.scene).hasOwnProperty("lighting"))
-				Sprite.draw(Game.canvas, poke.paths.sprite(side), position.x, position.y - position.z, true, [{ type : "fill", colour : _(Scenes, Battle.scene).lighting }, { type : "crop", heightRatio : poke.battler.display.height }], matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix, now);
-			// Glow / Fade
-			if (transition > 0 && transition < 1)
-				Sprite.draw(Game.canvas, poke.paths.sprite(side), position.x, position.y - position.z, true, [{ type : "fill", colour : "white" }, { type : "opacity", value : Math.pow(1 - transition, 0.4) }, { type : "crop", heightRatio : poke.battler.display.height }], matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix, now);
-		});
-		if (Settings._("visual weather effects") || display.flags.weather)
-			Weather.draw(Game.canvas.context);
-		foreach(display.opponents, function (poke, place) {
-			if (poke !== NoPokemon)
-				self.draw.bar(poke, false, 30 + 34 * place);
-		});
-		foreach(display.allies, function (poke, place) {
-			if (poke !== NoPokemon)
-				self.draw.bar(poke, true, 120 + 42 * place, true);
-		});
-		context.fillStyle = "hsla(0, 0%, 0%, " + (1 - Math.clamp(0, Battle.state, 1)).toFixed(3) + ")";
-		context.fillRect(0, 0, Game.canvas.element.width, Game.canvas.element.height);
+		}
 	},
 	all : function (excludeNoPokemon) {
 		var all = [].concat(Battle.allies, Battle.opponents);
@@ -244,31 +261,61 @@ Battle = {
 		return [];
 	},
 	update : function () {
-		var self = Battle;
-		if (self.active && self.state < 1)
-			self.state += (1 / Time.framerate) * 4;
-		self.state = Math.clamp(0, self.state, 1);
+		if (Battle.active && Battle.state.kind === "opening") {
+			Battle.state.transition += 1 / Time.framerate;
+			Battle.state.transition = Math.clamp(0, Battle.state.transition, 1);
+			if (Battle.state.transition === 1)
+				Battle.begin();
+		}
+	},
+	load : function (alliedTrainers, opposingTrainers, settings) {
+		Battle.state = {
+			kind : "loading",
+			progress : 0
+		};
+		var resources = ["scenes/" + settings.scene + ".png"], loaded = 0;
+		foreach([].concat(alliedTrainers, opposingTrainers), function (trainer) {
+			foreach(trainer.party.pokemon, function (poke) {
+				resources.push(poke.paths.sprite("front", true), poke.paths.sprite("back", true), poke.paths.cry(true));
+			});
+		});
+		foreach(resources, function (resource) {
+			File.load(resource, function () {
+				if (++ loaded === resources.length) {
+					Textbox.stateUntil("", function () { return Battle.state.kind !== "opening"; });
+					Battle.state = {
+						kind : "opening",
+						transition : 0
+					};
+				} else {
+					Battle.state.progress = loaded / resources.length;
+				}
+			});
+		});
 	},
 	playRecording : function (recording, alliedTrainers, opposingTrainers) {
 		recording.teamA = alliedTrainers;
 		recording.teamB = opposingTrainers;
 		Battle.recording = recording;
 		srandom.seed = Battle.recording.seed;
-		Battle.begin(Battle.recording.teamA, Battle.recording.teamB, Battle.recording.style, Battle.recording.weather, Battle.recording.scene, Battles.kind.recording);
+		Battle.initiate(Battle.recording.teamA, Battle.recording.teamB, Battle.recording.style, Battle.recording.weather, Battle.recording.scene, Battles.kind.recording);
 	},
 	beginOnline : function (seed, alliedTrainers, opposingTrainers, settings) {
 		srandom.seed = seed;
-		Battle.begin(alliedTrainers, opposingTrainers, settings, Battles.kind.online);
+		Battle.initiate(alliedTrainers, opposingTrainers, settings, Battles.kind.online);
 	},
-	beginWildBattle : function (pokes, settings) {
+	beginWildBattle : function (alliedTrainers, pokes, settings) {
 		pokes = wrapArray(pokes);
 		TheWild.party.empty();
 		foreach(pokes, function (poke) {
 			TheWild.give(poke);
 		});
-		Battle.begin(Game.player, TheWild, settings);
+		Battle.initiate(alliedTrainers, TheWild, settings);
 	},
-	begin : function (alliedTrainers, opposingTrainers, settings, kind) {
+	beginTrainerBattle : function (alliedTrainers, opposingTrainers, settings) {
+		Battle.initiate(alliedTrainers, opposingTrainers, settings);
+	},
+	initiate : function (alliedTrainers, opposingTrainers, settings, kind) {
 		if (!Battle.active) {
 			if (arguments.length < 3 || typeof settings === "undefined" || settings === null)
 				settings = {};
@@ -293,74 +340,10 @@ Battle = {
 				alliedTrainers = [alliedTrainers];
 			if (!(opposingTrainers instanceof Array))
 				opposingTrainers = [opposingTrainers];
-			foreach(alliedTrainers, function (participant) {
-				Battle.alliedTrainers.push(participant);
-				for (var i = 0, newPoke; i < Math.min((Battle.style === Battles.style.normal ? 1 : 2) / alliedTrainers.length, participant.healthyPokemon().length); ++ i) {
-					newPoke = participant.healthyPokemon()[i];
-					Battle.queue.push({
-						poke : newPoke,
-						doesNotRequirePokemonToBeBattling : true,
-						priority : 1 - (1 / (alliedTrainers.length + 3)) * (i + 1),
-						action : function (which) {return function () {
-							Battle.enter(which, true, null, true);
-						}; }(newPoke)});
-				}
-			});
-			foreach(opposingTrainers, function (participant) {
-				if (participant instanceof trainer) {
-					if (!participant.hasHealthyPokemon()) {
-						Textbox.state(participant.name + " doesn't have any Pokémon! The battle must be stopped!", function () { Battle.end(); });
-						Battle.finish();
-						return;
-					} else {
-						Battle.opposingTrainers.push(participant);
-						for (var i = 0, newPoke; i < Math.min((Battle.style === Battles.style.normal ? 1 : 2) / opposingTrainers.length, participant.healthyPokemon().length); ++ i) {
-							newPoke = participant.healthyPokemon()[i];
-							if (newPoke.trainer === TheWild)
-								Battle.enter(newPoke, true, null, true);
-							else Battle.queue.push({
-								poke : newPoke,
-								doesNotRequirePokemonToBeBattling : true,
-								priority : (1 - (1 / (opposingTrainers.length + 3)) * (i + 1)) / 10,
-								action : function (which) {return function () {
-									Battle.enter(which, true, null, true);
-								}; }(newPoke)});
-						}
-					}
-				} else {
-					participant.battler.reset();
-					participant.battler.side = Battles.side.far;
-					Battle.opponents.push(participant);
-				}
-			});
+			Battle.alliedTrainers = alliedTrainers;
+			Battle.opposingTrainers = opposingTrainers;
 			if (!Battle.opposingTrainers.contains(TheWild))
 				Battle.situation = Battles.situation.trainer;
-			Display.state.load(Display.state.save());
-			var names = [], number = 0;
-			switch (Battle.situation) {
-				case Battles.situation.wild:
-					var wildPokemon = TheWild.healthyPokemon();
-					if (wildPokemon.length === 1)
-						Textbox.state("A wild " + wildPokemon[0].name() + " appeared!");
-					else {
-						foreach(wildPokemon, function (poke) {
-							names.push(poke.name());
-							++ number;
-						});
-						Textbox.state("A " + (wildPokemon.length === 2 ? "pair of" : "group of " + number) + " wild Pokémon appeared: " + commaSeparatedList(names) + "!");
-					}
-					break;
-				case Battles.situation.trainer:
-					foreach(Battle.opposingTrainers, function (trainer) {
-						names.push(trainer.name);
-						++ number;
-					});
-					if (names.length === 1)
-						Textbox.state(names[0] + " is challenging " + Battle.alliedTrainers[0].pronoun() + " to a battle. " + (Battle.opposingTrainers[0].gender === Genders.male ? "He" : "She") + " has " + numberword(Battle.opposingTrainers[0].pokemon()) + " Pokémon.");
-					if (names.length > 1)
-						Textbox.state(commaSeparatedList(names) + " are challenging " + Battle.alliedTrainers[0].pronoun() + " to a battle. They have " + number + " Pokémon between them.");
-					break;
-			}
 			if (Battle.kind !== Battles.kind.recording) {
 				Battle.recording = {
 					seed : srandom.seed,
@@ -372,12 +355,82 @@ Battle = {
 					actions : []
 				};
 			}
-			Battle.race(Battle.queue);
-			Battle.queue = [];
-			Battle.startTurn();
-		} else {
+			foreach(Battle.alliedTrainers, function (participant) {
+				for (var i = 0, newPoke; i < Math.min((Battle.style === Battles.style.normal ? 1 : 2) / Battle.alliedTrainers.length, participant.healthyPokemon().length); ++ i) {
+					newPoke = participant.healthyPokemon()[i];
+					Battle.queue.push({
+						poke : newPoke,
+						doesNotRequirePokemonToBeBattling : true,
+						priority : 1 - (1 / (Battle.alliedTrainers.length + 3)) * (i + 1),
+						action : function (which) {return function () {
+							Battle.enter(which, true, null, true);
+						}; }(newPoke)});
+				}
+			});
+			foreach(Battle.opposingTrainers, function (participant) {
+				if (participant instanceof trainer) {
+					if (!participant.hasHealthyPokemon()) {
+						Textbox.state(participant.name + " doesn't have any Pokémon! The battle must be stopped!", function () { Battle.end(); });
+						Battle.finish();
+						return;
+					} else {
+						for (var i = 0, newPoke; i < Math.min((Battle.style === Battles.style.normal ? 1 : 2) / Battle.opposingTrainers.length, participant.healthyPokemon().length); ++ i) {
+							newPoke = participant.healthyPokemon()[i];
+							if (newPoke.trainer === TheWild)
+								Battle.enter(newPoke, true, null, true);
+							else Battle.queue.push({
+								poke : newPoke,
+								doesNotRequirePokemonToBeBattling : true,
+								priority : (1 - (1 / (Battle.opposingTrainers.length + 3)) * (i + 1)) / 10,
+								action : function (which) {return function () {
+									Battle.enter(which, true, null, true);
+								}; }(newPoke)});
+						}
+					}
+				} else {
+					participant.battler.reset();
+					participant.battler.side = Battles.side.far;
+					Battle.opponents.push(participant);
+				}
+			});
+			Display.state.load(Display.state.save());
+			Battle.load(alliedTrainers, opposingTrainers, settings);
+		} else
 			throw "You've tried to start a battle when one is already in progress!";
+	},
+	begin : function () {
+		Battle.state = {
+			kind : "running"
+		};
+		Display.state.load(Display.state.save());
+		var names = [], number = 0;
+		switch (Battle.situation) {
+			case Battles.situation.wild:
+				var wildPokemon = TheWild.healthyPokemon();
+				if (wildPokemon.length === 1)
+					Textbox.state("A wild " + wildPokemon[0].name() + " appeared!");
+				else {
+					foreach(wildPokemon, function (poke) {
+						names.push(poke.name());
+						++ number;
+					});
+					Textbox.state("A " + (wildPokemon.length === 2 ? "pair of" : "group of " + number) + " wild Pokémon appeared: " + commaSeparatedList(names) + "!");
+				}
+				break;
+			case Battles.situation.trainer:
+				foreach(Battle.opposingTrainers, function (trainer) {
+					names.push(trainer.name);
+					++ number;
+				});
+				if (names.length === 1)
+					Textbox.state(names[0] + " is challenging " + Battle.alliedTrainers[0].pronoun() + " to a battle. " + (Battle.opposingTrainers[0].gender === Genders.male ? "He" : "She") + " has " + numberword(Battle.opposingTrainers[0].pokemon()) + " Pokémon.");
+				if (names.length > 1)
+					Textbox.state(commaSeparatedList(names) + " are challenging " + Battle.alliedTrainers[0].pronoun() + " to a battle. They have " + number + " Pokémon between them.");
+				break;
 		}
+		Battle.race(Battle.queue);
+		Battle.queue = [];
+		Battle.startTurn();
 	},
 	finish : function () {
 		Battle.finished = true;
@@ -684,8 +737,10 @@ Battle = {
 			if (Battle.kind !== Battles.kind.online || Battle.communication !== null)
 				Battle.giveTrainersActions();
 			else {
-				Battle.stage = 2;
-				Textbox.stateUntil("Waiting for the other player to make a decision...", function () { return Battle.stage !== 2; });
+				Battle.state = {
+					kind : "waiting"
+				};
+				Textbox.stateUntil("Waiting for the other player to make a decision...", function () { return Battle.state.kind !== "waiting"; });
 			}
 		} else
 			Battle.prompt();
@@ -706,8 +761,10 @@ Battle = {
 		Battle.communication = null;
 		Battle.queue = Battle.queue.concat(Battle.actions);
 		Battle.actions = [];
-		if (Battle.stage === 2) {
-			Battle.stage = 1;
+		if (Battle.state.kind === "waiting") {
+			Battle.state = {
+				kind : "running"
+			};
 			Textbox.update();
 		}
 		Battle.processTurn();
@@ -715,7 +772,7 @@ Battle = {
 	receiveActions : function (actions) {
 		// Receive the opponent's actions, in an online battle
 		Battle.communication = actions;
-		if (Battle.stage === 2)
+		if (Battle.state.kind === "waiting")
 			Battle.giveTrainersActions();
 	},
 	changeWeather : function (weather) {

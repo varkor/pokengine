@@ -4,6 +4,7 @@
 	switchTransitionDuration : 0.2 // How many seconds should Pokémon being sent out, fainting, etc. take?
 };*/
 Settings = {
+	"debug mode" : false, // Whether debug mode is enabled, which shows extra details for some objects
 	"animated moves" : false, // Whether moves display an animation when used
 	"stat transition duration" : 0, // How many seconds should health / experience, etc. transitions take?
 	"switch transition duration" : 0, // How many seconds should Pokémon being sent out, fainting, etc. take?
