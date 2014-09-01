@@ -174,7 +174,7 @@ Battle = {
 		context.fillRect(0, 0, Game.canvas.element.width, Game.canvas.element.height);
 		if (!self.active)
 			return;
-		Game.canvas.draw.sprite("scenes/" + Battle.scene, 0, 0);
+		Sprite.draw(Game.canvas, "scenes/" + Battle.scene, 0, 0);
 		context.textAlign = "center";
 		context.textBaseline = "bottom";
 		context.strokeWidth = 2;
@@ -191,21 +191,21 @@ Battle = {
 			context.strokeWidth = position.scale * 2;
 			transition = (poke.fainted() ? 1 : poke.battler.display.transition);
 			// Shadow
-			Game.canvas.draw.sprite(poke.paths.sprite(side), position.x, position.y - position.z + poke.battler.display.position.y, true, [{ type : "fill", colour : "hsla(0, 0%, 0%, " + shadowOpacity + ")" }, { type : "crop", heightRatio : poke.battler.display.height }], shadowMatrix.scale(position.scale * transition).scale(Math.pow(2, -poke.battler.display.position.y / 100)).matrix, now);
+			Sprite.draw(Game.canvas, poke.paths.sprite(side), position.x, position.y - position.z + poke.battler.display.position.y, true, [{ type : "fill", colour : "hsla(0, 0%, 0%, " + shadowOpacity + ")" }, { type : "crop", heightRatio : poke.battler.display.height }], shadowMatrix.scale(position.scale * transition).scale(Math.pow(2, -poke.battler.display.position.y / 100)).matrix, now);
 			// Outline
 			if (poke.battler.display.outlined) {
 				for (var angle = 0; angle < Math.PI * 2; angle += Math.PI / 2) {
-					Game.canvas.draw.sprite(poke.paths.sprite(side), position.x + Math.cos(angle) * context.strokeWidth, position.y - position.z + Math.sin(angle) * context.strokeWidth, true, [{ type : "fill", colour : context.strokeStyle }, { type : "crop", heightRatio : poke.battler.display.height }], matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix, now);
+					Sprite.draw(Game.canvas, poke.paths.sprite(side), position.x + Math.cos(angle) * context.strokeWidth, position.y - position.z + Math.sin(angle) * context.strokeWidth, true, [{ type : "fill", colour : context.strokeStyle }, { type : "crop", heightRatio : poke.battler.display.height }], matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix, now);
 				}
 			}
 			// Pokémon
-			Game.canvas.draw.sprite(poke.paths.sprite(side), position.x, position.y - position.z, true, { type : "crop", heightRatio : poke.battler.display.height }, matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix, now);
+			Sprite.draw(Game.canvas, poke.paths.sprite(side), position.x, position.y - position.z, true, { type : "crop", heightRatio : poke.battler.display.height }, matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix, now);
 			// Lighting
 			if (_(Scenes, Battle.scene).hasOwnProperty("lighting"))
-				Game.canvas.draw.sprite(poke.paths.sprite(side), position.x, position.y - position.z, true, [{ type : "fill", colour : _(Scenes, Battle.scene).lighting }, { type : "crop", heightRatio : poke.battler.display.height }], matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix, now);
+				Sprite.draw(Game.canvas, poke.paths.sprite(side), position.x, position.y - position.z, true, [{ type : "fill", colour : _(Scenes, Battle.scene).lighting }, { type : "crop", heightRatio : poke.battler.display.height }], matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix, now);
 			// Glow / Fade
 			if (transition > 0 && transition < 1)
-				Game.canvas.draw.sprite(poke.paths.sprite(side), position.x, position.y - position.z, true, [{ type : "fill", colour : "white" }, { type : "opacity", value : Math.pow(1 - transition, 0.4) }, { type : "crop", heightRatio : poke.battler.display.height }], matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix, now);
+				Sprite.draw(Game.canvas, poke.paths.sprite(side), position.x, position.y - position.z, true, [{ type : "fill", colour : "white" }, { type : "opacity", value : Math.pow(1 - transition, 0.4) }, { type : "crop", heightRatio : poke.battler.display.height }], matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix, now);
 		});
 		if (Settings._("visual weather effects") || display.flags.weather)
 			Weather.draw(Game.canvas.context);
