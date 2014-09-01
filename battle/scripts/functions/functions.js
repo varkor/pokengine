@@ -12,9 +12,11 @@ function foreach (array, fn) {
 	return broke;
 }
 
-function forevery (dictionary, fn) {
+function forevery (dictionary, fn, includePrototype) {
 	var deletion = [], broke = false;
 	for (var key in dictionary) {
+		if (key === "_" && !includePrototype)
+			continue;
 		if (fn(dictionary[key], key)) {
 			broke = true;
 			break;
@@ -56,11 +58,14 @@ function _ (object, path) {
 		var keys = path.replace(/ ?~> ?/g, " => ").split(/ ?=> ?/g), value = object, key;
 		while (keys.length) {
 			key = keys.shift();
-			if (value.hasOwnProperty(key))
-				value = value[key];
-			else if (value.hasOwnProperty(key = key.replace(/ ?\(.*\)/, "")))
-				value = value[key];
-			else throw "That object has no property with that name.";
+			if (keys.length || key.substr(-1) !== "?") {
+				if (value.hasOwnProperty(key))
+					value = value[key];
+				else if (value.hasOwnProperty(key = key.replace(/ ?\(.*\)/, "")))
+					value = value[key];
+				else throw "That object has no property with that name.";
+			} else
+				return value.hasOwnProperty(key.slice(0, -1));
 		}
 		return value;
 	}
@@ -70,6 +75,12 @@ function _ (object, path) {
 		} catch (error) {}
 	}
 	throw "That object has no property with that name.";
+}
+
+function _method (object) {
+	object._ = function (path) {
+		return _(object, path);
+	}
 }
 
 function random (x, y) {

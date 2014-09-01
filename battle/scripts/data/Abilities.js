@@ -58,3 +58,4 @@ Abilities = {
 		]
 	}
 };
+_method(Abilities);

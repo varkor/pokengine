@@ -546,9 +546,9 @@ Moves = {
 		targets : Move.targets.opponents,
 		effect : {
 			constant : function (self, target) {
-				if (!Battle.hasEffectOnSide(_(Moves, "Heal Block"), target.battler.side)) {
+				if (!Battle.hasEffectOnSide(Moves._("Heal Block"), target.battler.side)) {
 					Textbox.state(self.name() + " put a Heal Block into effect.");
-					Battle.bringIntoEffect(_(Moves, "Heal Block"), Battles.when.afterFiveTurns, target.battler.side);
+					Battle.bringIntoEffect(Moves._("Heal Block"), Battles.when.afterFiveTurns, target.battler.side);
 				} else {
 					return {
 						failed : true
@@ -739,7 +739,7 @@ Moves = {
 			],
 			effect : function (target, data) {
 				Textbox.state(target.name() + " took the Future Sight attack!");
-				Battle.damage(target, Move.damage(data.self, target, "Future Sight", null, _(Moves, "Future Sight").type, true));
+				Battle.damage(target, Move.damage(data.self, target, "Future Sight", null, Moves._("Future Sight").type, true));
 			}
 		}
 	},
@@ -1027,7 +1027,7 @@ Moves = {
 						repetitions = 1;
 					Battle.damage(target, Move.damage(self, target, "Pin Missile"), repetitions === 1);
 					if (target !== NoPokemon && (repetitions < 2 || (repetitions <= 3 && srandom.chance(3)) || (repetitions <= 5 && srandom.chance(6))))
-						_(Moves, "Pin Missile").effect.use[0](self, target, constant, ++ repetitions);
+						Moves._("Pin Missile").effect.use[0](self, target, constant, ++ repetitions);
 				}
 			]
 		}
@@ -1071,7 +1071,7 @@ Moves = {
 				}
 			],
 			hazard : function (target, stack) {
-				if (target.effectiveness(_(Moves, "Spikes").type) > 0) {
+				if (target.effectiveness(Moves._("Spikes").type) > 0) {
 					Textbox.state("The sharp spikes hurt " + target.name() + "!");
 					Battle.damage(target, {damage : Math.floor(target.stats[Stats.health]() / (8 - 2 * (stack - 1)))});
 				}
@@ -1223,3 +1223,4 @@ forevery(Moves, function (move) {
 	move.classification.push(Type.string(move.type));
 });
 Move.Struggle.move = "Struggle";
+_method(Moves);

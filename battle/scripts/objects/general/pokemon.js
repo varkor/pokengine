@@ -1,6 +1,8 @@
 function pokemon (data) {
 	var self = this;
 
+	_method(self);
+
 	if (arguments.length < 1)
 		data = {};
 	var setProperty = function (property, value) {

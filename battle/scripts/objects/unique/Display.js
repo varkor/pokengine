@@ -56,7 +56,7 @@ Display = {
 		transition : function (state, track, original) {
 			var self = Display, from = self.state.current, to = self.states[state], fromAll, toAll, originalAll, completed = true;
 			if (to === null)
-				throw "You've tried to transition to an older state than the current one!";
+				throw "You've tried to transition to an older state than the current one! (State " + state + ")";
 			if (arguments.length < 2) {
 				track = {
 					completed : false
@@ -73,7 +73,7 @@ Display = {
 				if (fromAll[i] === NoPokemon || toAll[i] === NoPokemon || originalAll[i] === NoPokemon)
 					continue;
 				foreach(["health", "experience"], function (property) {
-					var difference = (toAll[i][property] - originalAll[i][property]) * ((1 / _(Settings, "stat transition duration")) / Time.framerate);
+					var difference = (toAll[i][property] - originalAll[i][property]) * ((1 / Settings._("stat transition duration")) / Time.framerate);
 					fromAll[i][property] += difference;
 					if (Math.abs(fromAll[i][property] - toAll[i][property]) > Math.abs(difference))
 						completed = false;
@@ -81,7 +81,7 @@ Display = {
 						fromAll[i][property] = toAll[i][property];
 				});
 				foreach(["transition", "height"], function (property) {
-					var difference = (toAll[i].battler.display[property] - originalAll[i].battler.display[property]) * ((1 / _(Settings, "switch transition duration")) / Time.framerate);
+					var difference = (toAll[i].battler.display[property] - originalAll[i].battler.display[property]) * ((1 / Settings._("switch transition duration")) / Time.framerate);
 					fromAll[i].battler.display[property] += difference;
 					if (Math.abs(fromAll[i].battler.display[property] - toAll[i].battler.display[property]) > Math.abs(difference))
 						completed = false;

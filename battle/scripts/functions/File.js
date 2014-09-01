@@ -63,12 +63,12 @@ Sound = {
 				sound : sound
 			};
 			store[alias] = store[path] = data;
-			if (playImmediately && _(Settings, "sound effects"))
+			if (playImmediately && Settings._("sound effects"))
 				sound.play();
 		}, "sounds", "mp3", path, alias, external, uponError);
 	},
 	play : function (paths, alias, external, uponError) {
-		if (_(Settings, "sound effects")) {
+		if (Settings._("sound effects")) {
 			var sound;
 			if (sound = Sound.load(paths, alias, external, uponError, true)) {
 				sound.sound.currentTime = 0;

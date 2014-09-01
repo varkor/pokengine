@@ -11,3 +11,4 @@ Settings = {
 	"particle collision-testing" : false, // Whether weather particles should implement proper collision testing
 	"sound effects" : false // Whether sounds play or not
 };
+_method(Settings);

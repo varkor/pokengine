@@ -67,7 +67,7 @@ Items = {
 		},
 		"Sitrus" : {
 			effect : function (self, poke) {
-				Battle.healPercentage(poke, 0.25, _(Items, "Berries => Sitrus"));
+				Battle.healPercentage(poke, 0.25, Items._("Berries => Sitrus"));
 			},
 			effects : [
 				{
@@ -94,3 +94,4 @@ forevery(Items, function (category) {
 		item.fullname = name + (["Berry", "Ball"].contains(item.category) ? " " + item.category : "");
 	});
 });
+_method(Items);

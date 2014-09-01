@@ -112,3 +112,4 @@ forevery(Pokemon, function (poke, name) {
 		poke.yield.EVs[Stats.speed] = 2;
 	}
 });
+_method(Pokemon);

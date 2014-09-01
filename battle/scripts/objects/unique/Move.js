@@ -146,12 +146,13 @@ Move = {
 			if (animationEffect !== null)
 				Textbox.removeEffects(animationEffect);
 			if (stateEffect !== null) {
+				Textbox.remove(stateEffect);
 				battler.resetDisplay(mover);
 				foreach(affected, function (targeted) {
 					battler.resetDisplay(targeted);
 				});
 				displayRendered = Display.state.save();
-				stateEffect.trigger = function () { Display.state.load(displayRendered); };
+				Textbox.effect(function () { Display.state.load(displayRendered); });
 			}
 		}
 		return !completelyFailed;
@@ -195,7 +196,7 @@ Move = {
 				completed : false,
 				progress : 0
 			};
-			if (!_(Settings, "animated moves") || move.animation.length - 1 < stage || move.animation[stage].length === 0) {
+			if (!Settings._("animated moves") || move.animation.length - 1 < stage || move.animation[stage].length === 0) {
 				track.completed = true;
 				return track;
 			}
