@@ -65,12 +65,10 @@ Sprite = {
 				frames : 1
 			};
 			var fileData;
-			if ((fileData = FileData.images).hasOwnProperty(path.replace(/~.*/, "")) || (fileData = FileData.typefaces).hasOwnProperty(path)) {
+			if ((fileData = FileData.images).hasOwnProperty(path.replace(/~.*/, ""))) {
 				data = JSONCopy(fileData[path.replace(/~.*/, "")]);
 				if (data.hasOwnProperty("durations"))
 					data.frames = data.durations.length;
-				else if (data.hasOwnProperty("map"))
-					data.frames = data.map.length;
 			}
 			data.image = image;
 			data.width = image.width / data.frames;
@@ -242,32 +240,5 @@ Sound = {
 				sound.sound.play();
 			}
 		}
-	}
-};
-
-Typeface = {
-	draw : function (canvas, path, string, x, y) {
-		var origin = { x : x, y : y };
-		var sprite, index;
-		if (sprite = Sprite.load(path)) {
-			canvas.context.fillStyle = sprite.colour;
-			canvas.context.font = sprite.height + "px Arial";
-			foreach(string, function (character) {
-				if (character !== "\n") {
-					if ((index = sprite.map.indexOf(character)) > -1) {
-						Sprite.draw(canvas, path, x, y, null, null, null, index);
-						x += sprite.kerning[character];
-					} else {
-						canvas.context.fillText(character, x, y);
-						x += canvas.context.measureText(character).width;
-					}
-				} else {
-					x = origin.x;
-					y += sprite.height;
-				}
-			});
-			return true;
-		}
-		return false;
 	}
 };

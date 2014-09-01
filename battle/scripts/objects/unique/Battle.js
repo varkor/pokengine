@@ -282,7 +282,7 @@ Battle = {
 			progress : 0,
 			failed : []
 		};
-		var resources = ["typefaces/Standard.png", "scenes/" + settings.scene + ".png"], loaded = 0;
+		var resources = ["scenes/" + settings.scene + ".png"], loaded = 0;
 		foreach([].concat(alliedTrainers, opposingTrainers), function (trainer) {
 			foreach(trainer.party.pokemon, function (poke) {
 				resources.push(poke.paths.sprite("front", true), poke.paths.sprite("back", true), poke.paths.cry(true));

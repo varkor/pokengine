@@ -218,3 +218,8 @@ caption span {
 	padding: 0 4pt;
 	background: hsl(0, 0%, 90%);
 }
+
+@font-face {
+	font-family: "Standard";
+	src: url("images/typefaces/Standard.ttf");
+}
