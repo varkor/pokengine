@@ -50,7 +50,7 @@ Move = {
 	},
 	use : function (move, stage, mover, target) {
 		moveName = move;
-		move = _(Moves, move);
+		move = Moves._(move);
 		if (target instanceof pokemon)
 			target = Battle.placeOfPokemon(target);
 		var constant = {},
@@ -245,7 +245,7 @@ Move = {
 		}
 	},
 	damage : function (attacker, target, move, power, type, noCritical) {
-		move = _(Moves, move);
+		move = Moves._(move);
 		var weather = Battle.weather, multiTarget = (Battle.style === Battles.style.double);
 		power = power || move.power;
 		if (arguments.length < 5)
@@ -282,7 +282,7 @@ Move = {
 				cause : NoPokemon,
 				targets : Move.target.none
 			};
-		move = _(Moves, move);
+		move = Moves._(move);
 		if (arguments.length < 5)
 			type = move.type;
 		return {

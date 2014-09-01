@@ -18,7 +18,7 @@ File = {
 			return store[path];
 		}
 		var file = new object();
-		file.src = (!(path.substr(0, 5) === "data:" || path.substr(0, 5) === "http:" || path.substr(0, 6) === "https:") ? "/" + directory + "/" + path + (/.*\.(\w+)/.test(path) ? "" : "." + filetype) : path);
+		file.src = (!(path.substr(0, 5) === "data:" || path.substr(0, 5) === "http:" || path.substr(0, 6) === "https:") ? directory + "/" + path + (/.*\.(\w+)/.test(path) ? "" : "." + filetype) : path);
 		store[path] = null;
 		file.addEventListener(loadEvent, function (event) {
 			successful(dataForFile(event, file, store, path));

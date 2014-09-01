@@ -9,6 +9,7 @@ Display = {
 			newPoke.original = poke;
 		newPoke.battler.side = poke.battler.side;
 		newPoke.battler.display = deepCopy(poke.battler.display);
+		newPoke.battler.transform = poke.battler.transform;
 		return newPoke;
 	},
 	pokemonInState : function (poke, state) {

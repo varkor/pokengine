@@ -273,6 +273,7 @@ Scenes = {
 	},
 	"Forest Trail" : {}
 };
+_method(Scenes);
 
 NoPokemon = {};
 

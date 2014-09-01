@@ -47,71 +47,72 @@ Battle = {
 			} while (context.measureText(poke.name()).width > 60);
 			var shapes = [
 				{
-					points : [{x : 0, y : -16}, {x : 82}, {x : 98, y : 0}, {x : 162}, {x : 146, y : 16}, {x : 0}],
+					points : [{ x : 0, y : -16 }, { x : 82 }, { x : 98, y : 0 }, { x : 162 }, { x : 146, y : 16 }, { x : 0 }],
 					colour : "hsla(0, 0%, 0%, 0.6)"
 				},
 				{
 					text :  poke.name(),
-					position : {x : (78 + 20) / 2, y : (-16 + 4) / 2},
-					align : {x : "center" , y : "middle"},
+					position : { x : (78 + 20) / 2, y : (-16 + 4) / 2 },
+					align : { x : "center" , y : "middle" },
 					colour : "white",
 					font : "lighter " + pixelWidth + "px Helvetica Neue"
 				},
 				{
-					points : [{x : 0, y : 6}, {x : 148 - 148 * (1 - percentageHealth)}, {x : 144 - 148 * (1 - percentageHealth), y : 10}, {x : 0}],
+					points : [{ x : 0, y : 6 }, { x : 148 - 148 * (1 - percentageHealth) }, { x : 144 - 148 * (1 - percentageHealth), y : 10 }, { x : 0 }],
 					colour : (percentageHealth > 1 / 2 ? "hsl(110, 100%, 40%)" : percentageHealth > 1 / 4 ? "hsl(40, 100%, 50%)" : "hsl(0, 100%, 50%)")
 				},
 				{
 					text :  "Lv.",
-					position : {x : 4, y : -16},
-					align : {x : (right ? "right" : "left") , y : "top"},
+					position : { x : 4, y : -16 },
+					align : { x : (right ? "right" : "left") , y : "top" },
 					colour : "white",
 					font : "lighter 8px Helvetica Neue"
 				},
 				{
 					text :  poke.level,
-					position : {x : 4, y : -8},
-					align : {x : (right ? "right" : "left") , y : "top"},
+					position : { x : 4, y : -8 },
+					align : { x : (right ? "right" : "left") , y : "top" },
 					colour : "white",
 					font : "lighter 10px Helvetica Neue"
 				},
-			], width = 0, current = {x : 0, y : 0};
-			if (poke.gender !== Genders.neuter)
+			], width = 0, current = { x : 0, y : 0 };
+			var gender = poke._("-> battler ~> transform => gender");
+			if (gender !== Genders.neuter)
 				shapes = shapes.concat([
 					{
-						points : [{x : 82, y : -16}, {x : 106}, {x : 122, y : 0}, {x : 98}],
-						colour : (poke.gender === Genders.male ? "hsl(195, 100%, 45%)" : "hsl(325, 100%, 80%)")
+						points : [{ x : 82, y : -16 }, { x : 106 }, { x : 122, y : 0 }, { x : 98 }],
+						colour : (gender === Genders.male ? "hsl(195, 100%, 45%)" : "hsl(325, 100%, 80%)")
 					},
 					{
-						text :  (poke.gender === Genders.male ? "♂" : "♀"),
-						position : {x : (82 + 122) / 2, y : (-16 + 0) / 2},
-						align : {x : "center", y : "middle"},
-						colour : (poke.gender === Genders.male ? "hsl(195, 100%, 5%)" : "hsl(325, 100%, 40%)"),
+						text :  (gender === Genders.male ? "♂" : "♀"),
+						position : { x : (82 + 122) / 2, y : (-16 + 0) / 2 },
+						align : { x : "center", y : "middle" },
+						colour : (gender === Genders.male ? "hsl(195, 100%, 5%)" : "hsl(325, 100%, 40%)"),
 						font : "lighter 12px Helvetica Neue"
 					}
 				]);
 			if (right) {
 				shapes = shapes.concat([
 					{
-						points : [{x : 146, y : 16}, {x : 138, y : 24}, {x : 90}, {x : 82, y : 16}],
+						points : [{ x : 146, y : 16 }, {x  : 138, y : 24 }, { x : 90 }, { x : 82, y : 16 }],
 						colour : "hsla(0, 0%, 0%, 0.6)"
 					},
 					{
 						text :  poke.health + " / " + poke.stats[Stats.health](),
-						position : {x : (138 + 90) / 2, y : 22},
-						align : {x : "center" , y : "bottom"},
+						position : { x : (138 + 90) / 2, y : 22 },
+						align : { x : "center" , y : "bottom" },
 						colour : "white",
 						font : "lighter 10px Helvetica Neue"
 					}
 				]);
 				if (Battle.kind !== Battles.kind.online) {
 					shapes = shapes.concat([{
-						points : [{x : 0, y : 18}, {x : 80}, {x : 86, y : 24}, {x : 0}],
+						points : [{ x : 0, y : 18 }, { x : 80 }, { x : 86, y : 24 }, { x : 0 }],
 						colour : "hsla(0, 0%, 0%, 0.6)"
 					}]);
 					if (percentageExperience > 0) {
 						shapes = shapes.concat([{
-							points : [{x : 0, y : 20}, {x : 78 - 80 * (1 - percentageExperience)}, {x : 80 - 80 * (1 - percentageExperience), y : 22}, {x : 0}],
+							points : [{ x : 0, y : 20 }, { x : 78 - 80 * (1 - percentageExperience) }, { x : 80 - 80 * (1 - percentageExperience), y : 22 }, { x : 0 }],
 							colour : "hsl(190, 100%, 50%)"
 						}]);
 					}
@@ -215,8 +216,8 @@ Battle = {
 				// Pokémon
 				Sprite.draw(Game.canvas, poke.paths.sprite(side), position.x, position.y - position.z, true, { type : "crop", heightRatio : poke.battler.display.height }, matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix, now);
 				// Lighting
-				if (_(Scenes, Battle.scene).hasOwnProperty("lighting"))
-					Sprite.draw(Game.canvas, poke.paths.sprite(side), position.x, position.y - position.z, true, [{ type : "fill", colour : _(Scenes, Battle.scene).lighting }, { type : "crop", heightRatio : poke.battler.display.height }], matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix, now);
+				if (Scenes._(Battle.scene).hasOwnProperty("lighting"))
+					Sprite.draw(Game.canvas, poke.paths.sprite(side), position.x, position.y - position.z, true, [{ type : "fill", colour : Scenes._(Battle.scene).lighting }, { type : "crop", heightRatio : poke.battler.display.height }], matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix, now);
 				// Glow / Fade
 				if (transition > 0 && transition < 1)
 					Sprite.draw(Game.canvas, poke.paths.sprite(side), position.x, position.y - position.z, true, [{ type : "fill", colour : "white" }, { type : "opacity", value : Math.pow(1 - transition, 0.4) }, { type : "crop", heightRatio : poke.battler.display.height }], matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix, now);
@@ -262,7 +263,7 @@ Battle = {
 	},
 	update : function () {
 		if (Battle.active && Battle.state.kind === "opening") {
-			Battle.state.transition += 1 / Time.framerate;
+			Battle.state.transition += 1 / (Time.framerate * 0.1);
 			Battle.state.transition = Math.clamp(0, Battle.state.transition, 1);
 			if (Battle.state.transition === 1)
 				Battle.begin();
@@ -478,7 +479,7 @@ Battle = {
 		var names, positions, currentBattler = inBattle[selection];
 		switch (primary) {
 			case "Fight":
-				var chosenMove = currentBattler.usableMoves()[secondary], chosenActualMove = _(Moves, chosenMove.move);
+				var chosenMove = currentBattler.usableMoves()[secondary], chosenActualMove = Moves._(chosenMove.move);
 				var who = null;
 				if (typeof tertiary !== "undefined" && tertiary !== null)
 					who = tertiary;
@@ -572,7 +573,7 @@ Battle = {
 						var usableItems = character.bag.usableItems(), actualItem, items = [], indices = [], hotkeys = {};
 						hotkeys[Game.key.secondary] = "Cancel";
 						foreach(usableItems, function (item) {
-							actualItem = _(Items, item.item);
+							actualItem = Items._(item.item);
 							if (actualItem.direct) { // If the item can be used directly, instead of when being held
 								items.push(actualItem.fullname + " ×" + (item.quantity - item.intentToUse));
 								indices.push(character.bag.indexOfItem(item.item));
@@ -587,7 +588,7 @@ Battle = {
 					}
 				} else {
 					if (arguments.length === 2) {
-						var targets = _(Items, character.bag.items[secondary].item).targets;
+						var targets = Items._(character.bag.items[secondary].item).targets;
 						if (targets === Move.targets.party) {
 							targets = character.party.pokemon;
 						} else if (targets === Move.targets.opponents) {
@@ -605,7 +606,7 @@ Battle = {
 							names.push(poke.name());
 							positions.push(Battle.placeOfPokemon(poke));
 						});
-						Textbox.ask("On which Pokémon do you want to use the " + _(Items, character.bag.items[secondary].item).fullname + "?", names, function (response, i) {
+						Textbox.ask("On which Pokémon do you want to use the " + Items._(character.bag.items[secondary].item).fullname + "?", names, function (response, i) {
 							if (response !== "Cancel")
 								Battle.input("Bag", secondary, positions[i]);
 							else
@@ -896,7 +897,7 @@ Battle = {
 			foreach(group, function (poke) {
 				var disobey = poke.battler.disobeying;
 				if (!disobey) {
-					var usableMoves = poke.usableMoves(), use = srandom.chooseFromArray(usableMoves), useActual = _(Moves, use.move), againstWhom;
+					var usableMoves = poke.usableMoves(), use = srandom.chooseFromArray(usableMoves), useActual = Moves._(use.move), againstWhom;
 					againstWhom = srandom.chooseFromArray(Battle.targetsForMove(poke, useActual, true));
 					if (!Battle.pokemonForcedIntoAction(poke)) {
 						Battle.queue.push({
@@ -1091,7 +1092,7 @@ Battle = {
 				return true;
 			++ poke.battler.battlingForDuration;
 			if (poke.status !== Statuses.frozen && poke.status !== Statuses.sleep && !poke.flinching && !poke.battler.recharging) {
-				foreach(poke.moves, function (move) {
+				foreach(poke.currentMoves(), function (move) {
 					if (move.disabled)
 						-- move.disabled;
 				});
@@ -1322,7 +1323,7 @@ Battle = {
 			trainer = Game.player;
 		var modifiers = {
 			status : 1,
-			species : !poke.battler.transform.transformed ? _(Pokemon, poke.species).catchRate : _(Pokemon, poke.battler.transform.species).catchRate,
+			species : Pokemon._(poke.species).catchRate,
 			ball : (typeof ball.catchRate === "number" ? ball.catchRate : ball.catchRate())
 		};
 		switch (poke.status) {
@@ -1586,7 +1587,7 @@ Battle = {
 			}
 		}))
 			hazardSide.push({
-				type : _(Moves, hazard),
+				type : Moves._(hazard),
 				stack : 1
 			});
 	},
@@ -1608,7 +1609,7 @@ Battle = {
 			repeating = false;
 		if (data)
 			Battle.effects.specific.push({
-				type : _(Moves, move).effect.effect,
+				type : Moves._(move).effect.effect,
 				due : Battle.turns + when,
 				target : target,
 				data : data,
@@ -1617,7 +1618,7 @@ Battle = {
 			});
 		else
 			Battle.effects.specific.push({
-				type : _(Moves, move).effect.effect,
+				type : Moves._(move).effect.effect,
 				due : Battle.turns + when,
 				target : target,
 				expired : false,
@@ -1628,7 +1629,7 @@ Battle = {
 		Battle.moveHaveEffect(move, when, target, data, true);
 	},
 	moveHasEffect : function (move, target) {
-		return Battle.hasEffect(_(Moves, move).effect.effect, target);
+		return Battle.hasEffect(Moves._(move).effect.effect, target);
 	},
 	haveEffect : function (effect, when, target) {
 		Battle.effects.specific.push({type : effect, due : Battle.turns + when, target : target, expired : false});

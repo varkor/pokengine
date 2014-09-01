@@ -49,15 +49,6 @@ function battler (pokemon) {
 		self.damaged[Move.category.physical] = 0;
 		self.damaged[Move.category.special] = 0;
 		battler.resetDisplay(self);
-		if (self.hasOwnProperty("transform") && self.transform.transformed) { // Reverse the Transform
-			self.pokemon.species = self.transform.species;
-			self.pokemon.moves = self.transform.moves;
-			self.pokemon.shiny = self.transform.shiny;
-			self.pokemon.ability = self.transform.ability;
-			self.pokemon.form = self.transform.form;
-			self.pokemon.IVs = self.transform.IVs;
-			self.pokemon.gender = self.transform.gender;
-		}
 		self.transform = {
 			transformed : false
 		};

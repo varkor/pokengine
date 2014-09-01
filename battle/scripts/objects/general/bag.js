@@ -88,7 +88,7 @@ function bag (items) {
 	};
 
 	self.use = function (item, on, who) {
-		var index = self.indexOfItem(item), item = _(Items, self.items[index].item);
+		var index = self.indexOfItem(item), item = Items._(self.items[index].item);
 		-- self.items[index].intentToUse;
 		if (item.useMessage)
 			Textbox.state(capitalise(who.pronoun()) + " used the " + item.fullname + " on " + on.name() + "!");

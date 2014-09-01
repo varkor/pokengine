@@ -254,13 +254,13 @@ Moves = {
 						};
 					} else {
 						var which = null;
-						foreach(target.moves, function (move) {
+						foreach(target.currentMoves(), function (move) {
 							if (move.move === target.battler.previousMoves.last().move)
 								which = move.number;
 						});
 						if (which !== null) {
-							Textbox.state(self.name() + " disabled " + target.name() + "'s " + target.moves[which].move + ".");
-							target.moves[which].disabled = 4;
+							Textbox.state(self.name() + " disabled " + target.name() + "'s " + target.currentMoves()[which].move + ".");
+							target.currentMoves()[which].disabled = 4;
 						} else {
 							return {
 								failed : true
@@ -474,26 +474,19 @@ Moves = {
 					}
 					self.battler.transform = {
 						transformed : true,
-						species : self.species,
-						IVs : self.IVs,
-						moves : self.moves,
-						shiny : self.shiny,
-						ability : self.ability,
-						form : self.form,
-						gender : self.gender
+						species : target.species,
+						IVs : target.IVs.clone(),
+						moves : target.moves.deepCopy(),
+						shiny : target.shiny,
+						ability : target.ability,
+						form : target.form,
+						gender : target.gender
 					};
-					self.species = target.species;
-					self.IVs = target.IVs.clone();
-					self.gender = target.gender;
 					self.battler.statLevel = target.battler.statLevel.clone();
-					self.moves = target.moves.deepCopy();
-					foreach(self.moves, function (move) {
+					foreach(self.battler.transform.moves, function (move) {
 						move.PP = 5;
 						move.PPups = 0;
 					});
-					self.shiny = target.shiny;
-					self.ability = target.ability;
-					self.form = target.form;
 					var display = Display.state.save();
 					Textbox.state(self.name() + " transformed itself into " + target.species + ".", /*transform animation, has finishing transforming, */function () { Display.state.load(display); });
 				}
