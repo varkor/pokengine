@@ -38,11 +38,7 @@ Battle = {
 	cache : null,
 	draw : {
 		bar : function (poke, right, y, detailed) {
-			var context = Game.canvas.context, pixelWidth = 14, percentageHealth = poke.health / poke.stats[Stats.health](), percentageExperience = poke.experience / poke.experienceFromLevelToNextLevel();
-			do {
-				context.font = "lighter " + pixelWidth + "px Helvetica Neue";
-				pixelWidth -= 2;
-			} while (context.measureText(poke.name()).width > 60);
+			var context = Game.canvas.context, percentageHealth = poke.health / poke.stats[Stats.health](), percentageExperience = poke.experience / poke.experienceFromLevelToNextLevel();
 			var shapes = [
 				{
 					points : [{ x : 0, y : -16 }, { x : 82 }, { x : 98, y : 0 }, { x : 162 }, { x : 146, y : 16 }, { x : 0 }],
@@ -53,7 +49,7 @@ Battle = {
 					position : { x : (78 + 20) / 2, y : (-16 + 4) / 2 },
 					align : { x : "center" , y : "middle" },
 					colour : "white",
-					font : "lighter " + pixelWidth + "px Helvetica Neue"
+					font : "16px HGSS"
 				},
 				{
 					points : [{ x : 0, y : 6 }, { x : 148 - 148 * (1 - percentageHealth) }, { x : 144 - 148 * (1 - percentageHealth), y : 10 }, { x : 0 }],
@@ -64,14 +60,14 @@ Battle = {
 					position : { x : 4, y : -16 },
 					align : { x : (right ? "right" : "left") , y : "top" },
 					colour : "white",
-					font : "lighter 8px Helvetica Neue"
+					font : "12px HGSS"
 				},
 				{
 					text :  poke.level,
 					position : { x : 4, y : -8 },
 					align : { x : (right ? "right" : "left") , y : "top" },
 					colour : "white",
-					font : "lighter 10px Helvetica Neue"
+					font : "16px HGSS"
 				},
 			], width = 0, current = { x : 0, y : 0 };
 			var gender = poke._("-> battler ~> transform => gender");
@@ -86,7 +82,7 @@ Battle = {
 						position : { x : (82 + 122) / 2, y : (-16 + 0) / 2 },
 						align : { x : "center", y : "middle" },
 						colour : (gender === Genders.male ? "hsl(195, 100%, 5%)" : "hsl(325, 100%, 40%)"),
-						font : "lighter 12px Helvetica Neue"
+						font : "12px HGSS"
 					}
 				]);
 			if (right) {
@@ -100,7 +96,7 @@ Battle = {
 						position : { x : (138 + 90) / 2, y : 22 },
 						align : { x : "center" , y : "bottom" },
 						colour : "white",
-						font : "lighter 10px Helvetica Neue"
+						font : "12px HGSS"
 					}
 				]);
 				if (Battle.kind !== Battles.kind.online) {
@@ -124,7 +120,7 @@ Battle = {
 					});
 				}
 			});
-			foreach(shapes, function (shape) {
+			foreach(shapes, function (shape, i) {
 				context.fillStyle = shape.colour;
 				if (shape.hasOwnProperty("points")) {
 					context.beginPath();
@@ -141,7 +137,7 @@ Battle = {
 					context.font = shape.font;
 					context.textAlign = shape.align.x;
 					context.textBaseline = shape.align.y;
-					context.fillText(shape.text, Game.canvas.element.width * (right ? 1 : 0) + (shape.position.x - (width * (1 - poke.battler.display.transition)) + (poke.battler.display.outlined ? 0 : 0)) * (right ? -1 : 1), y + shape.position.y);
+					Text.draw(Game.canvas, shape.text, Game.canvas.element.width * (right ? 1 : 0) + (shape.position.x - (width * (1 - poke.battler.display.transition)) + (poke.battler.display.outlined ? 0 : 0)) * (right ? -1 : 1), y + shape.position.y, "Battle:" + poke.unique + ":" + i);
 				}
 			});
 		},
@@ -476,6 +472,7 @@ Battle = {
 			Battle.escapeAttempts = 0;
 			Battle.turns = 0;
 			communication = null;
+			Textbox.effect(function () { Text.clear() });
 		}
 	},
 	input : function (primary, secondary, tertiary, character, selection) {
@@ -1432,9 +1429,11 @@ Battle = {
 			Battle.finish();
 			return;
 		}
+		Textbox.effect(function () { Text.clear(); });
 	},
 	swap : function (out, replacement, forced) {
 		Battle.enter(replacement, false, Battle.withdraw(out, forced));
+		Textbox.effect(function () { Text.clear(); });
 	},
 	enter : function (poke, startOrEndOfTurn, place, initial) {
 		poke.battler.reset();
