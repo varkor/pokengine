@@ -15,7 +15,12 @@ body {
 }
 canvas {
 	display: block;
+	background: black;
 	box-shadow: hsla(0, 0%, 0%, 0.4) 0 4px 16px;
+}
+canvas:focus {
+	/*box-shadow: hsl(200, 100%, 50%) 0 0 1px 2px, hsla(0, 0%, 0%, 0.4) 0 4px 16px;*/
+	outline: none;
 }
 .hover {
 	cursor: pointer;
@@ -220,6 +225,6 @@ caption span {
 }
 
 @font-face {
-	font-family: "Standard";
-	src: url("images/typefaces/Standard.ttf");
+	font-family: "HGSS";
+	src: url("images/typefaces/HGSS.ttf");
 }

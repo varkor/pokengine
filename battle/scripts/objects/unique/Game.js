@@ -31,7 +31,7 @@ Game = {
 			});
 			return pressed;
 		},
-		press : function (key) {
+		press : function (key, hasFocus) {
 			if (!Game.keys.held.hasOwnProperty(key))
 				Game.keys.held[key] = 1;
 			if (key !== "unknown") {
@@ -40,19 +40,19 @@ Game = {
 						switch (key) {
 							case Game.key.primary:
 								Textbox.progress();
-								break;
+								return true;
 							case Game.key.up:
 								Textbox.selectAdjacent(Directions.up);
-								break;
+								return true;
 							case Game.key.right:
 								Textbox.selectAdjacent(Directions.right);
-								break;
+								return true;
 							case Game.key.down:
 								Textbox.selectAdjacent(Directions.down);
-								break;
+								return true;
 							case Game.key.left:
 								Textbox.selectAdjacent(Directions.left);
-								break;
+								return true;
 							default:
 								if (key !== "unknown") {
 									Game.control.current = Game.control.schemes.keyboard;
@@ -95,10 +95,14 @@ Game = {
 	initialise : function () {
 		Game.control.current = Game.control.schemes.keyboard;
 		window.addEventListener("keydown", function (event) {
-			Game.keys.press(keyname(event.keyCode));
+			var hasFocus = document.activeElement === Game.canvas.element;
+			if (Game.keys.press(keyname(event.keyCode), hasFocus) && hasFocus)
+				event.preventDefault();
 		});
 		window.addEventListener("keyup", function (event) {
-			Game.keys.release(keyname(event.keyCode));
+			var hasFocus = document.activeElement === Game.canvas.element;
+			if (Game.keys.release(keyname(event.keyCode), hasFocus) || hasFocus)
+				event.preventDefault();
 		});
 		/*window.addEventListener("mousedown", function (event) {
 			if (event.button !== 0)
@@ -122,8 +126,8 @@ Game = {
 		initialise : function () {
 			var self = Game.canvas.element = document.querySelector("#battle");
 			Game.canvas.context = self.getContext("2d");
-			self.width = 356;
-			self.height = 288;
+			self.width = Settings._("screen dimensions").width;
+			self.height = Settings._("screen dimensions").height;
 			Game.canvas.context.imageSmoothingEnabled = false;
 			for (var i = 0; i < 3; ++ i) {
 				Game.canvas.temporary[i] = document.createElement("canvas");
@@ -134,6 +138,7 @@ Game = {
 			Game.fps.context = Game.fps.element.getContext("2d");
 			Game.fps.element.width = 96;
 			Game.fps.element.height = 32;
+			Textbox.initialise();
 			Game.update();
 			Game.redraw();
 		}

@@ -5,6 +5,7 @@
 		<title>Battle Engine</title>
 		<script src="scripts/functions/functions.js"></script>
 		<script src="scripts/functions/random.js"></script>
+		<script src="scripts/objects/unique/Settings.js"></script>
 		<script src="scripts/functions/File.js"></script>
 		<script src="scripts/objects/unique/FileData.js"></script>
 		<script src="scripts/data/constants.js"></script>
@@ -17,7 +18,6 @@
 		<script src="scripts/data/Items.js"></script>
 		<script src="scripts/data/machines.js"></script>
 		<script src="scripts/data/accessories.js"></script>
-		<script src="scripts/objects/unique/Settings.js"></script>
 		<script src="scripts/objects/unique/Textbox.js"></script>
 		<script src="scripts/objects/unique/Display.js"></script>
 		<script src="scripts/objects/unique/View.js"></script>
@@ -34,7 +34,7 @@
 		<link rel="stylesheet" href="battle.css">
 	</head>
 	<body>
-		<canvas id="battle" class="centre"></canvas>
+		<canvas id="battle" tabindex="1" class="centre"></canvas>
 		<canvas id="fps" class="corner"></canvas>
 		<button id="connect">Connect</button>
 		<span>with the name</span>
@@ -208,6 +208,7 @@
 						name : document.querySelector("#name").value,
 						party : Interface.buildParty()
 					}));
+					Game.canvas.element.focus();
 					Battle.beginWildBattle(Game.player, [new pokemon({
 						species : "Bulbasaur",
 						level : 50

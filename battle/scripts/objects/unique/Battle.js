@@ -993,7 +993,7 @@ Battle = {
 					Battle.input("Fight", i);
 				} else
 					Battle.input(response);
-			}, actions, null, hotkeys, "Action: " + currentBattler.unique);
+			}, actions, null, hotkeys, "Action: " + currentBattler.unique, null, true);
 		} else {
 			var action = Battle.recording.actions[Battle.turns][Battle.selection];
 			Battle.input(action.primary, action.secondary, action.tertiary);

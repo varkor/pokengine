@@ -188,7 +188,7 @@ Time = {
 	now : function () {
 		return new Date().getTime();
 	},
-	framerate : 60,
+	framerate : Settings._("framerate"),
 	millisecond : 1,
 	milliseconds : 1,
 	second : 1000,

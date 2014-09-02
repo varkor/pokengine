@@ -116,6 +116,7 @@ Client = {
 						ip : message.other.ip
 					}
 				};
+				Game.canvas.element.focus();
 				Battle.beginOnline(message.seed, you, them, message.settings);
 				break;
 			case "disconnect":
