@@ -126,7 +126,7 @@ Game = {
 		context : null,
 		temporary : [],
 		initialise : function () {
-			var self = Game.canvas.element = document.querySelector("#battle");
+			var self = Game.canvas.element = document.querySelector("#game-battle");
 			Game.canvas.context = self.getContext("2d");
 			self.width = Settings._("screen dimensions").width;
 			self.height = Settings._("screen dimensions").height;

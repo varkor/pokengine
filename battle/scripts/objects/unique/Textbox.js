@@ -23,7 +23,7 @@ Textbox = {
 	messages : 0,
 	namedDialogue : {}, // Allows the textbox to remember the user's last response to dialogue like "Fight, Run, Bag, etc."
 	initialise : function () {
-		Textbox.canvas = document.createElement("canvas");
+		Textbox.canvas = document.querySelector("#game-textbox");
 		Textbox.canvas.width = Game.canvas.element.width;
 		Textbox.canvas.height = Game.canvas.element.height;
 		Textbox.canvas.context = Textbox.canvas.getContext("2d");
@@ -410,6 +410,5 @@ Textbox = {
 				context.fillCircle(Textbox.responsePosition.x * Textbox.canvas.width, Math.floor(Textbox.canvas.height - fullHeight - height - ((Textbox.responsePosition.y === 0) && minors ? (Textbox.lineHeight() + Textbox.padding * 2) / 3 : 0)), 4);
 			}
 		}
-		Game.canvas.context.drawImage(Textbox.canvas, 0, Game.canvas.element.height - Textbox.canvas.height);
 	}
 };
