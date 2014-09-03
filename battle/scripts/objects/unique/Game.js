@@ -110,8 +110,10 @@ Game = {
 			Game.click();
 		});*/
 		window.addEventListener("mousemove", function (event) {
-			Game.cursor.x = event.clientX - Game.canvas.element.offsetLeft + Game.canvas.element.width / 2 + window.scrollX;
-			Game.cursor.y = event.clientY - Game.canvas.element.offsetTop + Game.canvas.element.height / 2 + window.scrollY;
+			if (Game.canvas.element) {
+				Game.cursor.x = event.clientX - Game.canvas.element.offsetLeft + Game.canvas.element.width / 2 + window.scrollX;
+				Game.cursor.y = event.clientY - Game.canvas.element.offsetTop + Game.canvas.element.height / 2 + window.scrollY;
+			}
 		});
 	},
 	increment : 0,
@@ -198,8 +200,7 @@ Game = {
 		context.fillStyle = gradient;
 		context.fill();
 		context.fillStyle = "white";
-		
-		context.font = "lighter 16px Helvetica Neue";
+		context.font = Font.load(16);
 		context.fillText("fps: " + fps.toFixed(1), 16, Game.fps.element.height / 2);
 		window.requestAnimationFrame(Game.redraw);
 	},

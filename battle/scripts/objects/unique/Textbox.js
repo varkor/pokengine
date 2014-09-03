@@ -181,7 +181,7 @@ Textbox = {
 	},
 	wrap : function (text) {
 		var context = Textbox.canvas.context;
-		context.font = "lighter " + Textbox.lineHeight() + "px Helvetica Neue";
+		context.font = Font.load(Textbox.lineHeight());
 		for (var i = 0, width = 0, character, breakpoint = null; i < text.length; ++ i) {
 			character = text[i];
 			if (character === "\n") {
@@ -349,7 +349,7 @@ Textbox = {
 		context.fillRect(0, Textbox.canvas.height - fullHeight, Textbox.canvas.width, fullHeight);
 		context.textAlign = "left";
 		context.textBaseline = "top";
-		context.font = "lighter " + Textbox.lineHeight() + "px Helvetica Neue";
+		context.font = Font.load(Textbox.lineHeight());
 		var lines = Textbox.displayed.split("\n");
 		for (var line = 0, letters = 0, y, lineWidth, colour = Textbox.colour, colouring; line < lines.length; ++ line) {
 			lineWidth = context.measureText(lines[line]).width;
@@ -384,9 +384,9 @@ Textbox = {
 				height = Math.round(major ? (Textbox.lineHeight() + Textbox.padding * 2) * (minors ? 2 / 3 : 1) : (Textbox.lineHeight() + Textbox.padding * 2) / 3);
 				x = Math.ceil(major ? response * width : (response - Textbox.dialogue[0].minorResponses) * width);
 				y = Math.round(Textbox.canvas.height - fullHeight - height - (major && minors ? (Textbox.lineHeight() + Textbox.padding * 2) / 3 : 0));
-				fontSize = Math.ceil(Textbox.lineHeight() / (major ? 1 : 1.5));
+				fontSize = Math.ceil(Textbox.lineHeight() / (major ? 1 : 1.8));
 				do {
-					context.font = "lighter " + fontSize + "px Helvetica Neue";
+					context.font = Font.load(fontSize);
 					fontSize -= 4;
 				} while (context.measureText(Textbox.dialogue[0].responses[response]).width > width);
 				selected = (hover = Game.cursor.inArea(x, y, width, height)) || (Game.control.current === Game.control.schemes.keyboard && !hovered && Textbox.response === response);

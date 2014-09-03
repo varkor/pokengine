@@ -40,7 +40,7 @@ Battle = {
 		bar : function (poke, right, y, detailed) {
 			var context = Game.canvas.context, pixelWidth = 14, percentageHealth = poke.health / poke.stats[Stats.health](), percentageExperience = poke.experience / poke.experienceFromLevelToNextLevel();
 			do {
-				context.font = "lighter " + pixelWidth + "px Helvetica Neue";
+				context.font = pixelWidth + "px " + Settings._("font")
 				pixelWidth -= 2;
 			} while (context.measureText(poke.name()).width > 60);
 			var shapes = [
@@ -53,7 +53,7 @@ Battle = {
 					position : { x : (78 + 20) / 2, y : (-16 + 4) / 2 },
 					align : { x : "center" , y : "middle" },
 					colour : "white",
-					font : "lighter " + pixelWidth + "px Helvetica Neue"
+					font : Font.load(pixelWidth, null, "")
 				},
 				{
 					points : [{ x : 0, y : 6 }, { x : 148 - 148 * (1 - percentageHealth) }, { x : 144 - 148 * (1 - percentageHealth), y : 10 }, { x : 0 }],
@@ -64,14 +64,14 @@ Battle = {
 					position : { x : 4, y : -16 },
 					align : { x : (right ? "right" : "left") , y : "top" },
 					colour : "white",
-					font : "lighter 8px Helvetica Neue"
+					font : Font.load(8)
 				},
 				{
 					text :  poke.level,
 					position : { x : 4, y : -8 },
 					align : { x : (right ? "right" : "left") , y : "top" },
 					colour : "white",
-					font : "lighter 10px Helvetica Neue"
+					font : Font.load(10)
 				},
 			], width = 0, current = { x : 0, y : 0 };
 			var gender = poke._("-> battler ~> transform => gender");
@@ -86,7 +86,7 @@ Battle = {
 						position : { x : (82 + 122) / 2, y : (-16 + 0) / 2 },
 						align : { x : "center", y : "middle" },
 						colour : (gender === Genders.male ? "hsl(195, 100%, 5%)" : "hsl(325, 100%, 40%)"),
-						font : "lighter 12px Helvetica Neue"
+						font : Font.load(12)
 					}
 				]);
 			if (right) {
@@ -100,7 +100,7 @@ Battle = {
 						position : { x : (138 + 90) / 2, y : 22 },
 						align : { x : "center" , y : "bottom" },
 						colour : "white",
-						font : "lighter 10px Helvetica Neue"
+						font : Font.load(8)
 					}
 				]);
 				if (Battle.kind !== Battles.kind.online) {
@@ -180,7 +180,7 @@ Battle = {
 			context.fillRect(40, Game.canvas.element.height / 2 - 10, (Game.canvas.element.width - 80) * Battle.state.progress, 20);
 			context.textAlign = "center";
 			context.textBaseline = "middle";
-			context.font = "12px Helvetica Neue";
+			context.font = "12px " + Settings._("font")
 			context.strokeStyle = "hsl(0, 0%, 90%)";
 			context.lineWidth = 5;
 			context.strokeText((Battle.state.progress * 100).toFixed(0) + "%", Game.canvas.element.width / 2, Game.canvas.element.height / 2);

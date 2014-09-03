@@ -6,6 +6,10 @@
 Settings = {
 	"screen dimensions" : { width : 356, height : 288 },
 	"framerate" : 60,
+	"font" : {
+		typeface : "Source Sans Pro",
+		weight : "300"
+	},
 	"debug mode" : false, // Whether debug mode is enabled, which shows extra details for some objects
 	"animated moves" : false, // Whether moves display an animation when used
 	"stat transition duration" : 0, // How many seconds should health / experience, etc. transitions take?

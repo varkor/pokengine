@@ -242,3 +242,11 @@ Sound = {
 		}
 	}
 };
+
+Font = {
+	load : function (size, typeface, weight) {
+		if (!["px", "pt", "em", "rem"].contains(("" + size).substr(-2)))
+			size += "px";
+		return (weight || Settings._("font").weight) + " " + size + " " + (typeface || Settings._("font").typeface);
+	}
+};
