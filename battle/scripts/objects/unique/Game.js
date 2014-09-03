@@ -209,6 +209,5 @@ Game = {
 		entity.type = Trainers.type.local;
 	}
 };
-window.addEventListener("load", function () {
-	Game.initialise();
-});
+
+Game.initialise();

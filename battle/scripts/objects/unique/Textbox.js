@@ -232,7 +232,6 @@ Textbox = {
 			Textbox.displayed = "";
 			Textbox.character = 0;
 			Textbox.line = 0;
-			Text.clear();
 			Textbox.prepareNextMessage();
 		} else {
 			if (Textbox.displayed.split("\n").length - Textbox.lines > Textbox.line)
@@ -364,9 +363,7 @@ Textbox = {
 				colouring.addColorStop(context.measureText(lines[line].substr(0, letter + 1)).width / lineWidth, colour);
 			}
 			context.fillStyle = colouring;
-			//context.fillText(lines[line], Textbox.padding, y);
-			context.font = Math.pow(2, Math.round(Math.log(Textbox.lineHeight()) / Math.log(2))) + "px HGSS";
-			Text.draw(Textbox.canvas, lines[line], Textbox.padding, y, "Textbox:" + line);
+			context.fillText(lines[line], Textbox.padding, y);
 			letters += lines[line].length;
 		}
 		context.clearRect(0, 0, Textbox.canvas.width, Textbox.canvas.height - fullHeight);
@@ -402,9 +399,7 @@ Textbox = {
 				context.fillStyle = (selected ? "hsla(0, 0%, 100%, 0.8)" : "hsla(0, 0%, 0%, 0.4)");
 				context.fillRect(x, y, width, height);
 				context.fillStyle = (selected ? "black" : Textbox.colour);
-				//context.fillText(Textbox.dialogue[0].responses[response], x + width / 2, y + height / 2);
-				context.font = Math.pow(2, Math.round(Math.log(fontSize) / Math.log(2))) + "px HGSS";
-				Text.draw(Textbox.canvas, Textbox.dialogue[0].responses[response], x + width / 2, y + height / 2, "Response:" + response);
+				context.fillText(Textbox.dialogue[0].responses[response], x + width / 2, y + height / 2);
 			}
 			if (!selected) {
 				if (Textbox.dialogue[0].hasOwnProperty("hover"))

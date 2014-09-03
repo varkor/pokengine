@@ -10,6 +10,7 @@ body {
 .centre {
 	position: absolute;
 	left: 50%; top: 50%;
+	-webkit-transform: translate(-50%, -50%);
 	transform: translate(-50%, -50%);
 }
 canvas {
@@ -226,25 +227,4 @@ caption span {
 @font-face {
 	font-family: "HGSS";
 	src: url("images/typefaces/HGSS.ttf");
-}
-
-.pixel-font {
-	-webkit-font-smoothing: none;
-}
-
-.canvas-element {
-	-webkit-user-select: none;
-	pointer-events: none;
-	-webkit-font-smoothing: none;
-	position: absolute;
-	display: block;
-}
-
-.preload {
-	opacity: 0;
-	-webkit-user-select: none;
-	pointer-events: none;
-	position: absolute;
-	display: block;
-	width: 0; height: 0;
 }
