@@ -32,7 +32,7 @@
 		<script src="scripts/objects/unique/Client.js"></script>
 		<script src="scripts/objects/unique/Battle.js"></script>
 		<link href="battle.css" rel="stylesheet" type="text/css">
-		<link href="http://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400" rel="stylesheet" type="text/css">
+		<link href="http://fonts.googleapis.com/css?family=Open+Sans:300" rel="stylesheet" type="text/css">
 	</head>
 	<body>
 		<canvas id="game-battle" tabindex="1" class="centre"></canvas>
@@ -221,20 +221,16 @@
 				}, true);
 			});
 
-			Object.observe(Client, function (changes) {
-				foreach(changes, function (change) {
-					if (change.name === "connected") {
-						if (Client.connected) {
-							document.querySelector("#connect").innerHTML = "Connected";
-							document.querySelector("#connect").className = "active";
-						} else {
-							document.querySelector("#connect").innerHTML = "Connect";
-							document.querySelector("#connect").className = "";
-							document.querySelector("#connect").disabled = false;
-						}
-					}
-				});
-			});
+			Interface.connectionStatusChange = function () {
+				if (Client.connected) {
+					document.querySelector("#connect").innerHTML = "Connected";
+					document.querySelector("#connect").className = "active";
+				} else {
+					document.querySelector("#connect").innerHTML = "Connect";
+					document.querySelector("#connect").className = "";
+					document.querySelector("#connect").disabled = false;
+				}
+			};
 
 			document.querySelector("#name").addEventListener("mousedown", function (event) {
 				if (event.button !== 0)

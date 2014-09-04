@@ -1623,7 +1623,7 @@ Battle = {
 		if (data)
 			Battle.effects.specific.push({
 				type : Moves._(move).effect.effect,
-				due : Battle.turns + when,
+				due : (!repeating ? Battle.turns : 0) + when,
 				target : target,
 				data : data,
 				expired : false,
@@ -1632,7 +1632,7 @@ Battle = {
 		else
 			Battle.effects.specific.push({
 				type : Moves._(move).effect.effect,
-				due : Battle.turns + when,
+				due : (!repeating ? Battle.turns : 0) + when,
 				target : target,
 				expired : false,
 				repeating : repeating

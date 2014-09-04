@@ -7,7 +7,7 @@ Settings = {
 	"screen dimensions" : { width : 356, height : 288 },
 	"framerate" : 60,
 	"font" : {
-		typeface : "Source Sans Pro",
+		typeface : "Open Sans",
 		weight : "300"
 	},
 	"debug mode" : false, // Whether debug mode is enabled, which shows extra details for some objects

@@ -155,6 +155,7 @@ Client = {
 				console.log("%cConnected with the server.", "color : hsl(110, 100%, 40%)");
 				Client.connected = true;
 				Client.connecting = false;
+				Interface.connectionStatusChange();
 				var user;
 				if (arguments.length > 0)
 					user = as;
@@ -168,6 +169,7 @@ Client = {
 			Client.socket.addEventListener("close", function () {
 				console.log("%cDisconnected from the server.", "color : hsl(0, 100%, 40%)");
 				Client.connected = false;
+				Interface.connectionStatusChange();
 				Battle.end(true);
 			});
 			Client.socket.addEventListener("message", function (event) {

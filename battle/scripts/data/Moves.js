@@ -1088,7 +1088,7 @@ Moves = {
 						Textbox.state(self.name() + " rooted " + self.selfPronoun() + " firmly.");
 						self.battler.grounded = true;
 						self.battler.trapped.pushIfNotAlreadyContained("Ingrain");
-						Battle.moveHaveRepeatingEffect("Ingrain", Battles.when.endOfThisTurn, self);
+						Battle.moveHaveRepeatingEffect("Ingrain", Battles.when.endOfTurn, self);
 					} else
 						return {
 							failed : true

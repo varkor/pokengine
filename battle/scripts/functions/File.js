@@ -71,6 +71,7 @@ Sprite = {
 					data.frames = data.durations.length;
 			}
 			data.image = image;
+			data.cache = {};
 			data.width = image.width / data.frames;
 			data.height = image.height;
 			return data;
@@ -114,7 +115,17 @@ Sprite = {
 			positionModification.y -= View.position.y;
 			canvas.temporary[2].width = sprite.width;
 			canvas.temporary[2].height = sprite.height;
-			canvas.temporary[2].context.drawImage(image, frame * sprite.width, 0, sprite.width, sprite.height, 0, 0, sprite.width, sprite.height);
+			if (sprite.animated && sprite.cache.hasOwnProperty(frame)) {
+				canvas.temporary[2].context.drawImage(sprite.cache[frame], 0, 0);
+			} else {
+				canvas.temporary[2].context.drawImage(image, frame * sprite.width, 0, sprite.width, sprite.height, 0, 0, sprite.width, sprite.height);
+				if (sprite.animated) {
+					sprite.cache[frame] = document.createElement("canvas");
+					sprite.cache[frame].width = sprite.width;
+					sprite.cache[frame].height = sprite.height;
+					sprite.cache[frame].getContext("2d").drawImage(canvas.temporary[2], 0, 0);
+				}
+			}
 			image = canvas.temporary[2];
 			if (filters) {
 				filters = wrapArray(filters);
