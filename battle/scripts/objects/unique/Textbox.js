@@ -402,7 +402,7 @@ Textbox = {
 				context.fillStyle = (selected ? "black" : Textbox.colour);
 				context.fillText(Textbox.dialogue[0].responses[response], x + width / 2, y + height / 2);
 			}
-			if (!selected) {
+			if (!hovered) {
 				if (Textbox.dialogue[0].hasOwnProperty("hover"))
 					Textbox.dialogue[0].hover(null, null);
 			}
