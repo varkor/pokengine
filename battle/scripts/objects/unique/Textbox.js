@@ -111,8 +111,9 @@ Textbox = {
 		return Textbox.say(null, Textbox.standardInterval, trigger, pause, after);
 	},
 	ask : function (query, responses, callback, minors, defaultResponse, hotkeys, name, hover, showTextImmediately) {
-		var latest;
-		latest = Textbox.messageWithId(Textbox.say(query));
+		var latest  = Textbox.messageWithId(Textbox.say(query));
+		responses = wrapArray(responses);
+		minors = wrapArray(minors);
 		latest.responses = responses.concat(minors || []);
 		latest.callback = callback;
 		latest.minorResponses = responses.length;
