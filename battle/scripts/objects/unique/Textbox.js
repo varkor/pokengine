@@ -49,6 +49,8 @@ Textbox = {
 
 				<colour: COLOUR-NAME-HERE> will make all text after that tag coloured
 				<size: SIZE-IN-PIXELS-HERE> will make all text after that tag a different size
+				<weight: bold> will make all text after that tag bold
+				<style: italic> will make all text after that tag italic
 			progress : How long to wait after displaying all the text before continuing ("manual" will require input from the user),
 			trigger : A function to execute before continuing,
 			pause : A condition to wait upon before finishing,
@@ -60,6 +62,12 @@ Textbox = {
 			},
 			"size" : {
 				type : "number"
+			},
+			"weight" : {
+				type : "string"
+			},
+			"style" : {
+				type : "string"
 			}
 		};
 		forevery(commands, function (settings, command) {
@@ -226,7 +234,11 @@ Textbox = {
 	},
 	wrap : function (text, styling) {
 		var context = Textbox.canvas.context;
-		context.font = Font.load(Textbox.lineHeight);
+		var current = {
+			size : Textbox.lineHeight,
+			weight : 300,
+			style : ""
+		};
 		for (var i = 0, width = 0, character, breakpoint = null, softBreakpoint = null; i < text.length; ++ i) {
 			character = text[i];
 			if (character === "\n") {
@@ -236,10 +248,13 @@ Textbox = {
 			}
 			if (/\s/.test(character))
 				breakpoint = i;
-			if (styling["size"].hasOwnProperty(i)) {
-				var size = styling["size"][i];
-				context.font = Font.load(size !== "default" ? size : Textbox.lineHeight);
-			}
+			if (styling["size"].hasOwnProperty(i))
+				current["size"] = styling["size"][i];
+			if (styling["weight"].hasOwnProperty(i))
+				current["weight"] = styling["weight"][i];
+			if (styling["style"].hasOwnProperty(i))
+				current["style"] = styling["style"][i];
+			context.font = Font.load(current["size"] !== "default" ? current["size"] : Textbox.lineHeight, current["weight"] !== "default" ? current["weight"] : 300, current["style"] !== "default" ? current["style"] : "");
 			width += context.measureText(text[i]).width;
 			if (width > Textbox.canvas.width - Textbox.padding.horizontal * 2) {
 				if (breakpoint) {
@@ -274,19 +289,28 @@ Textbox = {
 	heightsOfLines : function () {
 		if (Textbox.dialogue.notEmpty() && Textbox.dialogue.first().text !== null) {
 			var lines = Textbox.dialogue.first().text.split("\n"), partitionPositions = [], partitions, characters = 0;
-			forevery(Textbox.dialogue.first().styling["size"], function (size, position) {
+			forevery(Textbox.dialogue.first().styling["size"], function (__, position) {
 				partitionPositions.push(parseInt(position));
 			});
+			forevery(Textbox.dialogue.first().styling["weight"], function (__, position) {
+				partitionPositions.push(parseInt(position));
+			});
+			forevery(Textbox.dialogue.first().styling["style"], function (__, position) {
+				partitionPositions.push(parseInt(position));
+			});
+			partitionPositions.sort(function (a, b) { return a - b; });
 			var current = {
-				size : Textbox.lineHeight
+				size : Textbox.lineHeight,
+				weight : 300,
+				style : ""
 			}, lineHeights = [];
 			foreach(lines, function (line, lineNumber) {
 				partitions = Textbox.splitAtPositions(line, partitionPositions, characters);
 				var maximumPartitionHeight = 0;
 				foreach(partitions, function (part) {
 					Textbox.measurement.innerHTML = "";
-					var size = Textbox.dialogue.first().styling["size"].hasOwnProperty(characters) ? Textbox.dialogue.first().styling["size"][characters] : current["size"];
-					Textbox.measurement.style.font = Font.load(current["size"] = (size !== "default" ? size : Textbox.lineHeight));
+					var size = Textbox.dialogue.first().styling["size"].hasOwnProperty(characters) ? Textbox.dialogue.first().styling["size"][characters] : current["size"], weight = Textbox.dialogue.first().styling["weight"].hasOwnProperty(characters) ? Textbox.dialogue.first().styling["weight"][characters] : current["weight"], style = Textbox.dialogue.first().styling["style"].hasOwnProperty(characters) ? Textbox.dialogue.first().styling["style"][characters] : current["style"];
+					Textbox.measurement.style.font = Font.load(current["size"] = (size !== "default" ? size : Textbox.lineHeight), current["weight"] = (weight !== "default" ? weight : 300), current["style"] = (style !== "default" ? style : ""));
 					Textbox.measurement.appendChild(document.createTextNode(part));
 					maximumPartitionHeight = Math.max(maximumPartitionHeight, Textbox.measurement.getBoundingClientRect().height);
 					characters += part.length;
@@ -470,22 +494,33 @@ Textbox = {
 		context.font = Font.load(Textbox.lineHeight);
 		if (Textbox.dialogue.notEmpty() && Textbox.dialogue.first().text !== null) {
 			var lines = Textbox.displayed.split("\n"), partitionPositions = [], partitions, characters = 0;
-			forevery(Textbox.dialogue.first().styling["size"], function (size, position) {
+			forevery(Textbox.dialogue.first().styling["size"], function (__, position) {
 				partitionPositions.push(parseInt(position));
 			});
+			forevery(Textbox.dialogue.first().styling["weight"], function (__, position) {
+				partitionPositions.push(parseInt(position));
+			});
+			forevery(Textbox.dialogue.first().styling["style"], function (__, position) {
+				partitionPositions.push(parseInt(position));
+			});
+			partitionPositions.sort(function (a, b) { return a - b; });
 			var position = {
 				x : 0
 			}, current = {
 				size : Textbox.lineHeight,
+				weight : 300,
+				style : "",
 				colour : Textbox.colour
 			}, lineHeights = Textbox.heightsOfLines(), currentLineStatistics = Textbox.linesCurrentlyVisible();
 			lines = Textbox.displayed.split("\n");
 			foreach(lines, function (line, lineNumber) {
 				partitions = Textbox.splitAtPositions(line, partitionPositions, characters);
 				foreach(partitions, function (part) {
-					var size, colouring, partitionWidth, verticalPosition = Textbox.canvas.height - Textbox.padding.vertical - currentLineStatistics.totalHeight - (currentLineStatistics.totalHeight < Textbox.height * Math.pow(2, Game.zoom - 1) - Textbox.padding.vertical * 2 ? Textbox.height * Math.pow(2, Game.zoom - 1) - Textbox.padding.vertical * 2 - currentLineStatistics.cumulativeHeight : 0) + sum(lineHeights, lineNumber + 1);
+					var size, weight, style, colouring, partitionWidth, verticalPosition = Textbox.canvas.height - Textbox.padding.vertical - currentLineStatistics.totalHeight - (currentLineStatistics.totalHeight < Textbox.height * Math.pow(2, Game.zoom - 1) - Textbox.padding.vertical * 2 ? Textbox.height * Math.pow(2, Game.zoom - 1) - Textbox.padding.vertical * 2 - currentLineStatistics.cumulativeHeight : 0) + sum(lineHeights, lineNumber + 1);
 					size = Textbox.dialogue.first().styling["size"].hasOwnProperty(characters) ? Textbox.dialogue.first().styling["size"][characters] : current["size"];
-					context.font = Font.load(current["size"] = (size !== "default" ? size : Textbox.lineHeight));
+					weight = Textbox.dialogue.first().styling["weight"].hasOwnProperty(characters) ? Textbox.dialogue.first().styling["weight"][characters] : current["weight"];
+					style = Textbox.dialogue.first().styling["style"].hasOwnProperty(characters) ? Textbox.dialogue.first().styling["style"][characters] : current["style"];
+					context.font = Font.load(current["size"] = (size !== "default" ? size : Textbox.lineHeight), current["weight"] = (weight !== "default" ? weight : 300), current["style"] = (style !== "default" ? style : ""));
 					partitionWidth = context.measureText(part).width;
 					colouring = context.createLinearGradient(Textbox.padding.horizontal, verticalPosition, Textbox.padding.horizontal + partitionWidth, verticalPosition);
 					for (var character = 0, colour; character < part.length; ++ character) {

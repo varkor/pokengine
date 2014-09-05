@@ -185,9 +185,7 @@ Genders = {
 };
 
 Time = {
-	now : function () {
-		return new Date().getTime();
-	},
+	now : Date.now,
 	framerate : Settings._("framerate"),
 	millisecond : 1,
 	milliseconds : 1,
