@@ -79,6 +79,7 @@ Game = {
 			return combo.sort().join(", ");
 		}
 	},
+	zoom : 1,
 	cursor : {
 		x : null,
 		y : null,
@@ -174,8 +175,7 @@ Game = {
 	redraw : function () {
 		if (Battle.active)
 			Battle.redraw();
-		if (Textbox.active)
-			Textbox.redraw();
+		Textbox.redraw();
 		var context = Game.fps.context;
 		context.textAlign = "left";
 		context.textBaseline = "middle";

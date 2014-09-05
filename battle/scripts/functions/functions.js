@@ -163,10 +163,14 @@ function wrapArray (wrap) {
 	return Array.isArray(wrap) ? wrap : [wrap];
 }
 
-function sum (array) {
+function sum (array, partial) {
 	var result = 0;
+	if (arguments.length < 2)
+		partial = array.length;
 	foreach(array, function (number) {
-		result += number;
+		result += number * Math.min(1, partial --);
+		if (partial <= 0)
+			return true;
 	});
 	return result;
 }

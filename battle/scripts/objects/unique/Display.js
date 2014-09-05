@@ -50,7 +50,7 @@ Display = {
 			for (var i = 0; i < state; ++ i)
 				self.states[i] = null;
 			if (self.states[state] === null)
-				throw "You've tried to load an older state than the current one!";
+				throw "You've tried to load an older state than the current one! (State " + state + ")";
 			self.state.current = self.states[state];
 			Battle.cache = null;
 		},
