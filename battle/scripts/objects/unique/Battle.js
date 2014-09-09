@@ -277,6 +277,7 @@ Battle = {
 		}
 	},
 	load : function (alliedTrainers, opposingTrainers, settings) {
+		Battle.active = true;
 		Battle.state = {
 			kind : "loading",
 			progress : 0,
@@ -331,6 +332,7 @@ Battle = {
 	},
 	initiate : function (alliedTrainers, opposingTrainers, settings, kind) {
 		if (!Battle.active) {
+			Textbox.setStyle("battle");
 			if (arguments.length < 3 || typeof settings === "undefined" || settings === null)
 				settings = {};
 			if (!settings.hasOwnProperty("scene"))
@@ -339,7 +341,6 @@ Battle = {
 				settings.style = Battles.style.normal;
 			if (!settings.hasOwnProperty("weather"))
 				settings.weather = Weathers.clear;
-			Battle.active = true;
 			Battle.finished = false;
 			if (arguments.length >= 4)
 				Battle.kind = kind;
@@ -454,6 +455,7 @@ Battle = {
 			Battle.active = false;
 			if (forcefully)
 				Textbox.clear();
+			Textbox.setStyle("standard");
 			Battle.redraw();
 			Battle.situation = null;
 			foreach(Battle.all(true), function (poke) {
@@ -580,7 +582,7 @@ Battle = {
 					advance = false;
 					reprompt = false;
 					if (character.bag.empty()) {
-						Textbox.state("You don't have any items.");
+						Textbox.messageWithId(Textbox.state("You don't have any items.")).showTextImmediately = true;
 						reprompt = true;
 					} else {
 						var usableItems = character.bag.usableItems(), actualItem, items = [], indices = [], hotkeys = {};
@@ -597,7 +599,7 @@ Battle = {
 								Battle.input("Bag", indices[i]);
 							else
 								Battle.prompt();
-						}, ["Cancel"], null, hotkeys, "Item");
+						}, ["Cancel"], null, hotkeys, "Item", null, true);
 					}
 				} else {
 					if (arguments.length === 2) {
@@ -633,7 +635,7 @@ Battle = {
 								if (poke.inBattle())
 									Display.pokemonInState(poke).battler.display.outlined = true;
 							}
-						});
+						}, true);
 						advance = false;
 						reprompt = false;
 					}
@@ -673,7 +675,7 @@ Battle = {
 								Battle.input("Pokémon", positions[i]);
 							else
 								Battle.prompt();
-						}, ["Cancel"], null, hotkeys);
+						}, ["Cancel"], null, hotkeys, null, null, true);
 						reprompt = false;
 					} else {
 						Textbox.state("All your Pokémon are already battling!");
@@ -978,8 +980,10 @@ Battle = {
 			currentBattler.battler.display.outlined = false;
 		}
 		if (Battle.kind !== Battles.kind.recording) {
-			var actions = ["Pokémon", "Run"], hotkeys = {};
-			if (Battle.rules.items === "allowed")
+			var actions = ["Run"], hotkeys = {};
+			if (!Widgets.isAvailable("Pokémon"))
+				actions = ["Pokémon"].concat(actions);
+			if (Battle.rules.items === "allowed" && !Widgets.isAvailable("Bag"))
 				actions.push("Bag");
 			hotkeys[Game.key.secondary] = "Run";
 			var moves = [];
@@ -1219,7 +1223,7 @@ Battle = {
 				Textbox.ask("Which Pokémon do you want to send out?", names, function (response, i) {
 					Battle.enter(trainer.healthyPokemon(true)[i], true, empty);
 					Battle.fillEmptyPlaces();
-				});
+				}, null, null, null, null, null, true);
 			}
 		} else
 			progress = true;

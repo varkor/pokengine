@@ -18,6 +18,7 @@
 		<script src="scripts/data/Items.js"></script>
 		<script src="scripts/data/machines.js"></script>
 		<script src="scripts/data/accessories.js"></script>
+		<script src="scripts/objects/unique/Widgets.js"></script>
 		<script src="scripts/objects/unique/Textbox.js"></script>
 		<script src="scripts/objects/unique/Display.js"></script>
 		<script src="scripts/objects/unique/View.js"></script>
@@ -173,11 +174,11 @@
 				var settingsRect = document.querySelector("#settings").getBoundingClientRect();
 				if (below) {
 					settings.classList.add("below");
-					settings.style.top = "calc(" + Math.round(buttonRect.bottom) + "px + 20pt/* - 4pt*/)";
+					settings.style.top = "calc(" + Math.round(buttonRect.bottom + window.scrollY) + "px + 20pt/* - 4pt*/)";
 				} else {
-					settings.style.top = "calc(" + Math.round(buttonRect.top - settingsRect.height) + "px - 20pt/* + 4pt*/)";
+					settings.style.top = "calc(" + Math.round(buttonRect.top - settingsRect.height + window.scrollY) + "px - 20pt/* + 4pt*/)";
 				}
-				settings.style.left = Math.round(buttonRect.left + buttonRect.width / 2 - settingsRect.width / 2) + "px";
+				settings.style.left = Math.round(buttonRect.left + buttonRect.width / 2 - settingsRect.width / 2 + window.scrollX) + "px";
 				var button = settings.querySelector("button");
 				button.addEventListener("mousedown", button.listener = function (event) {
 					event.stopPropagation();
@@ -196,8 +197,8 @@
 				issue.innerHTML = message;
 				document.body.appendChild(issue);
 				var buttonRect = element.getBoundingClientRect();
-				issue.style.left = "calc(" + Math.round(buttonRect.right) + "px + 4pt/* - 2pt*/)";
-				issue.style.top = (buttonRect.top + buttonRect.height / 2 - issue.getBoundingClientRect().height / 2) + "px";
+				issue.style.left = "calc(" + Math.round(buttonRect.right + window.scrollX) + "px + 4pt/* - 2pt*/)";
+				issue.style.top = (buttonRect.top + buttonRect.height / 2 - issue.getBoundingClientRect().height / 2 + window.scrollY) + "px";
 			};
 
 			document.querySelector("#local").addEventListener("mousedown", function (event) {
