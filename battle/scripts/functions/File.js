@@ -57,7 +57,8 @@ File = {
 };
 Files = {};
 
-Sprite = {
+Sprite = FunctionObject.new({
+	canvases : [],
 	load : function (paths, uponLoad, uponError) {
 		return File.loadFileOfType("sprites", Image, "load", function (event, image, store, path) {
 			var data = {
@@ -94,7 +95,7 @@ Sprite = {
 					return false;
 			}
 			if (aligned) {
-				switch (canvas.context.textAlign) {
+				switch (canvas.getContext("2d").textAlign) {
 					case "center":
 						positionModification.x = - sprite.width / 2;
 						break;
@@ -102,7 +103,7 @@ Sprite = {
 						positionModification.x = - sprite.width;
 						break;
 				}
-				switch (canvas.context.textBaseline) {
+				switch (canvas.getContext("2d").textBaseline) {
 					case "middle":
 						positionModification.y = - sprite.height / 2;
 						break;
@@ -113,32 +114,32 @@ Sprite = {
 			}
 			positionModification.x -= View.position.x;
 			positionModification.y -= View.position.y;
-			canvas.temporary[2].width = sprite.width;
-			canvas.temporary[2].height = sprite.height;
+			Sprite.canvases[2].width = sprite.width;
+			Sprite.canvases[2].height = sprite.height;
 			if (sprite.animated && sprite.cache.hasOwnProperty(frame)) {
-				canvas.temporary[2].context.drawImage(sprite.cache[frame], 0, 0);
+				Sprite.canvases[2].getContext("2d").drawImage(sprite.cache[frame], 0, 0);
 			} else {
-				canvas.temporary[2].context.drawImage(image, frame * sprite.width, 0, sprite.width, sprite.height, 0, 0, sprite.width, sprite.height);
+				Sprite.canvases[2].getContext("2d").drawImage(image, frame * sprite.width, 0, sprite.width, sprite.height, 0, 0, sprite.width, sprite.height);
 				if (sprite.animated) {
 					sprite.cache[frame] = document.createElement("canvas");
 					sprite.cache[frame].width = sprite.width;
 					sprite.cache[frame].height = sprite.height;
-					sprite.cache[frame].getContext("2d").drawImage(canvas.temporary[2], 0, 0);
+					sprite.cache[frame].getContext("2d").drawImage(Sprite.canvases[2], 0, 0);
 				}
 			}
-			image = canvas.temporary[2];
+			image = Sprite.canvases[2];
 			if (filters) {
 				filters = wrapArray(filters);
 				foreach(filters, function (filter, number) {
-					foreach(canvas.temporary, function (temporaryCanvas, i) {
+					foreach(Sprite.canvases, function (temporaryCanvas, i) {
 						if (i === 2)
 							return;
 						temporaryCanvas.width = sprite.width;
 						temporaryCanvas.height = sprite.height;
 					});
 					if (!filter.hasOwnProperty("type")) {
-						canvas.temporary[0].context.drawImage(image, 0, 0);
-						var imageData = canvas.temporary[0].context.getImageData(0, 0, canvas.temporary[0].width, canvas.temporary[0].height), pixels = imageData.data;
+						Sprite.canvases[0].getContext("2d").drawImage(image, 0, 0);
+						var imageData = Sprite.canvases[0].getContext("2d").getImageData(0, 0, Sprite.canvases[0].width, Sprite.canvases[0].height), pixels = imageData.data;
 						for (var i = 0, newPixel, excludeBlankPixels = true; i < pixels.length; i += 4) {
 							if (pixels[i + 3] === 0 && excludeBlankPixels)
 								continue;
@@ -148,24 +149,24 @@ Sprite = {
 							pixels[i + 2] = Math.floor(newPixel[2]);
 							pixels[i + 3] = Math.floor(newPixel[3]);
 						}
-						canvas.temporary[0].context.clearRect(0, 0, canvas.temporary[0].width, canvas.temporary[0].height);
-						canvas.temporary[0].context.putImageData(imageData, 0, 0);
+						Sprite.canvases[0].getContext("2d").clearRect(0, 0, Sprite.canvases[0].width, Sprite.canvases[0].height);
+						Sprite.canvases[0].getContext("2d").putImageData(imageData, 0, 0);
 					} else {
 						switch (filter.type) {
 							case "fill":
-								canvas.temporary[0].context.fillStyle = filter.colour;
-								canvas.temporary[0].context.fillRect(0, 0, canvas.temporary[0].width, canvas.temporary[0].height);
-								canvas.temporary[1].context.fillStyle = "black";
-								canvas.temporary[1].context.fillRect(0, 0, canvas.temporary[1].width, canvas.temporary[1].height);
-								canvas.temporary[1].context.globalCompositeOperation = "destination-out";
-								canvas.temporary[1].context.drawImage(image, 0, 0);
-								canvas.temporary[0].context.globalCompositeOperation = "destination-out";
-								canvas.temporary[0].context.drawImage(canvas.temporary[1], 0, 0);
-								canvas.temporary[0].context.globalCompositeOperation = "source-over";
-								canvas.temporary[1].context.globalCompositeOperation = "source-over";
+								Sprite.canvases[0].getContext("2d").fillStyle = filter.colour;
+								Sprite.canvases[0].getContext("2d").fillRect(0, 0, Sprite.canvases[0].width, Sprite.canvases[0].height);
+								Sprite.canvases[1].getContext("2d").fillStyle = "black";
+								Sprite.canvases[1].getContext("2d").fillRect(0, 0, Sprite.canvases[1].width, Sprite.canvases[1].height);
+								Sprite.canvases[1].getContext("2d").globalCompositeOperation = "destination-out";
+								Sprite.canvases[1].getContext("2d").drawImage(image, 0, 0);
+								Sprite.canvases[0].getContext("2d").globalCompositeOperation = "destination-out";
+								Sprite.canvases[0].getContext("2d").drawImage(Sprite.canvases[1], 0, 0);
+								Sprite.canvases[0].getContext("2d").globalCompositeOperation = "source-over";
+								Sprite.canvases[1].getContext("2d").globalCompositeOperation = "source-over";
 								break;
 							case "crop":
-								var width = canvas.temporary[0].width, height = canvas.temporary[0].height;
+								var width = Sprite.canvases[0].width, height = Sprite.canvases[0].height;
 								if (filter.hasOwnProperty("width"))
 									width = filter.width;
 								else if (filter.hasOwnProperty("widthRatio"))
@@ -175,19 +176,19 @@ Sprite = {
 								else if (filter.hasOwnProperty("heightRatio"))
 									height *= filter.heightRatio;
 								if (width > 0 && height > 0)
-									canvas.temporary[0].context.drawImage(image, 0, 0, width, height, 0, 0, width, height);
-								positionModification.y += canvas.temporary[0].height - height;
+									Sprite.canvases[0].getContext("2d").drawImage(image, 0, 0, width, height, 0, 0, width, height);
+								positionModification.y += Sprite.canvases[0].height - height;
 								break;
 							case "opacity":
-								canvas.temporary[0].context.globalAlpha = filter.value;
-								canvas.temporary[0].context.drawImage(image, 0, 0);
-								canvas.temporary[0].context.globalAlpha = 1;
+								Sprite.canvases[0].getContext("2d").globalAlpha = filter.value;
+								Sprite.canvases[0].getContext("2d").drawImage(image, 0, 0);
+								Sprite.canvases[0].getContext("2d").globalAlpha = 1;
 								break;
 						}
 					}
-					canvas.temporary[2].context.clearRect(0, 0, canvas.temporary[2].width, canvas.temporary[2].height);
-					canvas.temporary[2].context.drawImage(canvas.temporary[0], 0, 0);
-					image = canvas.temporary[2];
+					Sprite.canvases[2].getContext("2d").clearRect(0, 0, Sprite.canvases[2].width, Sprite.canvases[2].height);
+					Sprite.canvases[2].getContext("2d").drawImage(Sprite.canvases[0], 0, 0);
+					image = Sprite.canvases[2];
 				});
 			}
 			if (transformation) {
@@ -196,15 +197,15 @@ Sprite = {
 				if (transformation[3])
 					positionModification.y *= Math.abs(transformation[3]);
 				if (transformation[1] && aligned) {
-					if (canvas.context.textAlign === "right" && transformation[0] >= 0 || canvas.context.textAlign === "left" && transformation[0] < 0)
+					if (canvas.getContext("2d").textAlign === "right" && transformation[0] >= 0 || canvas.getContext("2d").textAlign === "left" && transformation[0] < 0)
 						positionModification.y -= sprite.width * transformation[1];
-					if (canvas.context.textAlign === "center")
+					if (canvas.getContext("2d").textAlign === "center")
 						positionModification.y -= sprite.width * transformation[1] * 0.5;
 				}
 				if (transformation[2] && aligned) {
-					if (canvas.context.textBaseline === "bottom" && transformation[3] >= 0 || canvas.context.textBaseline === "top" && transformation[3] < 0)
+					if (canvas.getContext("2d").textBaseline === "bottom" && transformation[3] >= 0 || canvas.getContext("2d").textBaseline === "top" && transformation[3] < 0)
 						positionModification.x -= sprite.height * transformation[2];
-					if (canvas.context.textBaseline === "middle")
+					if (canvas.getContext("2d").textBaseline === "middle")
 						positionModification.x -= sprite.height * transformation[2] * 0.5;
 				}
 				if (transformation[0] < 0)
@@ -217,20 +218,30 @@ Sprite = {
 			x = Math.round(x);
 			y = Math.round(y);
 			if (transformation) {
-				canvas.context.save();
-				canvas.context.translate(x, y);
-				canvas.context.transform(transformation[0], transformation[1], transformation[2], transformation[3], transformation[4], transformation[5]);
+				canvas.getContext("2d").save();
+				canvas.getContext("2d").translate(x, y);
+				canvas.getContext("2d").transform(transformation[0], transformation[1], transformation[2], transformation[3], transformation[4], transformation[5]);
 				x = y = 0;
 			}
-			canvas.context.drawImage(image, x, y);
+			canvas.getContext("2d").drawImage(image, x, y);
 			if (transformation) {
-				canvas.context.restore();
+				canvas.getContext("2d").restore();
 			}
 			return true;
 		}
 		return false;
 	}
-};
+}, {
+	initialise : function () {
+		for (var i = 0, canvas; i < 3; ++ i) {
+			canvas = document.createElement("canvas");
+			canvas.width = Settings._("screen dimensions => width");
+			canvas.height = Settings._("screen dimensions => height");
+			canvas.getContext("2d").imageSmoothingEnabled = false;
+			Sprite.canvases.push(canvas);
+		}
+	}
+});
 
 Sound = {
 	load : function (paths, uponLoad, uponError, playImmediately) {

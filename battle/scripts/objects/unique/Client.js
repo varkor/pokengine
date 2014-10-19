@@ -82,7 +82,7 @@ Client = {
 					event.stopPropagation();
 					button.innerHTML = "Accepted";
 					button.disabled = true;
-					console.log("%cAccepting the invitation to battle...", "color : hsl(170, 100%, 30%)");
+					console.log("%cAccepting the invitation to Battle...", "color : hsl(170, 100%, 30%)");
 					var other = {
 						user : message.from.user,
 						ip : message.from.ip
@@ -127,7 +127,7 @@ Client = {
 						user.parentElement.removeChild(user);
 					}
 				});
-				if (Client.battle !== null && Client.battle.other.ip === message.who.ip && Client.battle.other.user === message.who.user) {
+				if (Client.battle !== null && Client.Battle.other.ip === message.who.ip && Client.Battle.other.user === message.who.user) {
 					console.log("%cThe other player disconnected from the server!", "color : hsl(0, 100%, 40%)");
 					Battle.end(true);
 				}

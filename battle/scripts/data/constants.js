@@ -264,14 +264,13 @@ Directions = {
 	left : ++ q
 };
 
-Scenes = {
+Scenes.addData({
 	"Field Clearing" : {},
 	"Walls at Night" : {
 		lighting : "hsla(245, 100%, 25%, 0.2)"
 	},
 	"Forest Trail" : {}
-};
-_method(Scenes);
+});
 
 NoPokemon = {};
 

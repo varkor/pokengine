@@ -35,10 +35,10 @@ exports.BattleServer = {
 					exports.BattleServer.clients.splice(index, 1);
 				index = -1;
 				exports.BattleServer.battles.forEach(function (battle, i) {
-					if (battle.clientA.client === from) {
+					if (Battle.clientA.client === from) {
 						index = i;
 						return;
-					} else if (battle.clientB.client === from) {
+					} else if (Battle.clientB.client === from) {
 						index = i;
 						return;
 					}
@@ -102,29 +102,29 @@ exports.BattleServer = {
 							};
 							exports.BattleServer.battles.push(battle);
 							var clientAInfo = {
-								user : battle.clientA.client.user,
-								ip : battle.clientA.client.ip,
-								trainer : battle.clientA.trainer
+								user : Battle.clientA.client.user,
+								ip : Battle.clientA.client.ip,
+								trainer : Battle.clientA.trainer
 							}, clientBInfo = {
-								user : battle.clientB.client.user,
-								ip : battle.clientB.client.ip,
-								trainer : battle.clientB.trainer
+								user : Battle.clientB.client.user,
+								ip : Battle.clientB.client.ip,
+								trainer : Battle.clientB.trainer
 							};
 							exports.BattleServer.send({
 								action : "begin",
 								team : 0,
 								self : clientAInfo,
 								other : clientBInfo,
-								seed : battle.seed,
-								settings : battle.settings
+								seed : Battle.seed,
+								settings : Battle.settings
 							}, clientA);
 							exports.BattleServer.send({
 								action : "begin",
 								team : 1,
 								self : clientBInfo,
 								other : clientAInfo,
-								seed : battle.seed,
-								settings : battle.settings
+								seed : Battle.seed,
+								settings : Battle.settings
 							}, clientB);
 						}
 					}
@@ -132,17 +132,17 @@ exports.BattleServer = {
 				break;
 			case "actions":
 				exports.BattleServer.battles.forEach(function (battle) {
-					if (battle.clientA.client === from) {
+					if (Battle.clientA.client === from) {
 						exports.BattleServer.send({
 							action : "actions",
 							actions : message.actions
-						}, battle.clientB.client);
+						}, Battle.clientB.client);
 						return;
-					} else if (battle.clientB.client === from) {
+					} else if (Battle.clientB.client === from) {
 						exports.BattleServer.send({
 							action : "actions",
 							actions : message.actions
-						}, battle.clientA.client);
+						}, Battle.clientA.client);
 						return;
 					}
 				});
@@ -238,7 +238,7 @@ exports.BattleServer = {
 	battleForClient : function (client) {
 		var which = null;
 		exports.BattleServer.battles.forEach(function (battle) {
-			if (battle.clientA.client === client || battle.clientB.client === client) {
+			if (Battle.clientA.client === client || Battle.clientB.client === client) {
 				which = battle;
 				return;
 			}

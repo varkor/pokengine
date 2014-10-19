@@ -77,7 +77,7 @@ Weather = {
 							return;
 						position = Battle.draw.position(poke);
 						sprite = Sprite.load(poke.paths.sprite(ally ? "back" : "front"));
-						if (sprite && (inRange(particle.position.x, position.x - (sprite.width / 2) * position.scale, position.x + (sprite.width / 2) * position.scale) && inRange(particle.position.y, position.y - sprite.height * position.scale + position.z * (ally ? 1 : -1), position.y + position.z * (ally ? 1 : -1)))) {
+						if (sprite && (inRange(particle.position.x, position.x - (Sprite.width / 2) * position.scale, position.x + (Sprite.width / 2) * position.scale) && inRange(particle.position.y, position.y - Sprite.height * position.scale + position.z * (ally ? 1 : -1), position.y + position.z * (ally ? 1 : -1)))) {
 							return true;
 						}
 					}) : false);

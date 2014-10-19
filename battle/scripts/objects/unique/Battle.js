@@ -2,7 +2,7 @@ TheWild = new trainer({
 	name : "The Wild"
 });
 
-Battle = {
+Battle = FunctionObject.new({
 	active : false,
 	finished : true,
 	kind : null,
@@ -36,9 +36,9 @@ Battle = {
 		weather : false
 	},
 	cache : null,
-	draw : {
+	drawing : {
 		bar : function (poke, right, y, detailed) {
-			var context = Game.canvas.context, pixelWidth = 14, percentageHealth = poke.health / poke.stats[Stats.health](), percentageExperience = poke.experience / poke.experienceFromLevelToNextLevel();
+			var context = Battle.canvas.getContext("2d"), pixelWidth = 14, percentageHealth = poke.health / poke.stats[Stats.health](), percentageExperience = poke.experience / poke.experienceFromLevelToNextLevel();
 			do {
 				context.font = pixelWidth + "px " + Settings._("font")
 				pixelWidth -= 2;
@@ -133,7 +133,7 @@ Battle = {
 							current.x = point.x;
 						if (point.hasOwnProperty("y"))
 							current.y = point.y;
-						context.lineTo(Game.canvas.element.width * (right ? 1 : 0) + (current.x - (width * (1 - poke.battler.display.transition)) + (poke.battler.display.outlined ? 0 : 0)) * (right ? -1 : 1), y + current.y);
+						context.lineTo(Battle.canvas.width * (right ? 1 : 0) + (current.x - (width * (1 - poke.battler.display.transition)) + (poke.battler.display.outlined ? 0 : 0)) * (right ? -1 : 1), y + current.y);
 					});
 					context.fill();
 				}
@@ -141,7 +141,7 @@ Battle = {
 					context.font = shape.font;
 					context.textAlign = shape.align.x;
 					context.textBaseline = shape.align.y;
-					context.fillText(shape.text, Game.canvas.element.width * (right ? 1 : 0) + (shape.position.x - (width * (1 - poke.battler.display.transition)) + (poke.battler.display.outlined ? 0 : 0)) * (right ? -1 : 1), y + shape.position.y);
+					context.fillText(shape.text, Battle.canvas.width * (right ? 1 : 0) + (shape.position.x - (width * (1 - poke.battler.display.transition)) + (poke.battler.display.outlined ? 0 : 0)) * (right ? -1 : 1), y + shape.position.y);
 				}
 			});
 		},
@@ -167,84 +167,6 @@ Battle = {
 			return position;
 		}
 	},
-	redraw : function () {
-		var context = Game.canvas.context, display = Display.state.current, now = Time.now();
-		context.fillStyle = "black";
-		context.fillRect(0, 0, Game.canvas.element.width, Game.canvas.element.height);
-		if (!Battle.active)
-			return;
-		if (Battle.state.kind === "loading") {
-			context.fillStyle = "hsl(0, 0%, 20%)";
-			context.fillRect(40, Game.canvas.element.height / 2 - 10, Game.canvas.element.width - 80, 20);
-			context.fillStyle = "hsl(0, 0%, 90%)";
-			context.fillRect(40, Game.canvas.element.height / 2 - 10, (Game.canvas.element.width - 80) * Battle.state.progress, 20);
-			context.textAlign = "center";
-			context.textBaseline = "middle";
-			context.font = "12px " + Settings._("font")
-			context.strokeStyle = "hsl(0, 0%, 90%)";
-			context.lineWidth = 5;
-			context.strokeText((Battle.state.progress * 100).toFixed(0) + "%", Game.canvas.element.width / 2, Game.canvas.element.height / 2);
-			context.fillStyle = "black";
-			context.fillText((Battle.state.progress * 100).toFixed(0) + "%", Game.canvas.element.width / 2, Game.canvas.element.height / 2);
-			if (Battle.state.failed.notEmpty()) {
-				context.textBaseline = "top";
-				context.fillStyle = "hsl(0, 0%, 90%)";
-				context.fillText("Failed to load " + Battle.state.failed.length + " file" + (Battle.state.failed.length !== 1 ? "s" : "") + ":", Game.canvas.element.width / 2, Game.canvas.element.height / 2 + 20 + 6);
-				context.fillStyle = "hsl(0, 0%, 50%)";
-				foreach(Battle.state.failed, function (failed, i) {
-					context.fillText(failed, Game.canvas.element.width / 2, Game.canvas.element.height / 2 + 20 + 6 + 16 * (i + 1));
-				});
-			}
-		} else {
-			Sprite.draw(Game.canvas, "scenes/" + Battle.scene, 0, 0);
-			context.textAlign = "center";
-			context.textBaseline = "bottom";
-			context.lineWidth = 2;
-			context.strokeStyle = "white";
-			var shadowOpacity = Lighting.shadows.opacity(), shadowMatrix = new Matrix ([1, 0.1, -0.6, 0.4, 0, 0]), matrix = new Matrix(), position, transition, side;
-			var sortDisplay = Battle.cache || (Battle.cache = Display.states[Display.state.save(Display.state.current)]), poke;
-			var all = [].concat(sortDisplay.allies, sortDisplay.opponents.reverse()).filter(onlyPokemon).sort(function (a, b) {
-				return Battle.draw.position(Display.pokemonInState(b)).z - Battle.draw.position(Display.pokemonInState(a)).z;
-			});
-			foreach(all, function (poke) {
-				poke = Display.pokemonInState(poke);
-				side = (poke.battler.side === Battles.side.near ? "back" : "front");
-				position = Battle.draw.position(poke);
-				context.lineWidth = position.scale * 2;
-				transition = (poke.fainted() ? 1 : poke.battler.display.transition);
-				// Shadow
-				Sprite.draw(Game.canvas, poke.paths.sprite(side), position.x, position.y - position.z + poke.battler.display.position.y, true, [{ type : "fill", colour : "hsla(0, 0%, 0%, " + shadowOpacity + ")" }, { type : "crop", heightRatio : poke.battler.display.height }], shadowMatrix.scale(position.scale * transition).scale(Math.pow(2, -poke.battler.display.position.y / 100)).matrix, now);
-				// Outline
-				if (poke.battler.display.outlined) {
-					for (var angle = 0; angle < Math.PI * 2; angle += Math.PI / 2) {
-						Sprite.draw(Game.canvas, poke.paths.sprite(side), position.x + Math.cos(angle) * context.lineWidth, position.y - position.z + Math.sin(angle) * context.lineWidth, true, [{ type : "fill", colour : context.strokeStyle }, { type : "crop", heightRatio : poke.battler.display.height }], matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix, now);
-					}
-				}
-				// Pokémon
-				Sprite.draw(Game.canvas, poke.paths.sprite(side), position.x, position.y - position.z, true, { type : "crop", heightRatio : poke.battler.display.height }, matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix, now);
-				// Lighting
-				if (Scenes._(Battle.scene).hasOwnProperty("lighting"))
-					Sprite.draw(Game.canvas, poke.paths.sprite(side), position.x, position.y - position.z, true, [{ type : "fill", colour : Scenes._(Battle.scene).lighting }, { type : "crop", heightRatio : poke.battler.display.height }], matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix, now);
-				// Glow / Fade
-				if (transition > 0 && transition < 1)
-					Sprite.draw(Game.canvas, poke.paths.sprite(side), position.x, position.y - position.z, true, [{ type : "fill", colour : "white" }, { type : "opacity", value : Math.pow(1 - transition, 0.4) }, { type : "crop", heightRatio : poke.battler.display.height }], matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix, now);
-			});
-			if (Settings._("visual weather effects") || display.flags.weather)
-				Weather.draw(Game.canvas.context);
-			foreach(display.opponents, function (poke, place) {
-				if (poke !== NoPokemon)
-					Battle.draw.bar(poke, false, 30 + 34 * place);
-			});
-			foreach(display.allies, function (poke, place) {
-				if (poke !== NoPokemon)
-					Battle.draw.bar(poke, true, 120 + 42 * place, true);
-			});
-			if (Battle.state.kind === "opening") {
-				context.fillStyle = "hsla(0, 0%, 0%, " + (1 - Math.clamp(0, Battle.state.transition, 1)).toFixed(3) + ")";
-				context.fillRect(0, 0, Game.canvas.element.width, Game.canvas.element.height);
-			}
-		}
-	},
 	all : function (excludeNoPokemon) {
 		var all = [].concat(Battle.allies, Battle.opponents);
 		if (excludeNoPokemon)
@@ -267,14 +189,6 @@ Battle = {
 		if (Battle.opponents.indexOf(poke) > -1)
 			return Battle.allies;
 		return [];
-	},
-	update : function () {
-		if (Battle.active && Battle.state.kind === "opening") {
-			Battle.state.transition += 1 / (Time.framerate * 0.1);
-			Battle.state.transition = Math.clamp(0, Battle.state.transition, 1);
-			if (Battle.state.transition === 1)
-				Battle.begin();
-		}
 	},
 	load : function (alliedTrainers, opposingTrainers, settings) {
 		Battle.active = true;
@@ -438,9 +352,9 @@ Battle = {
 					++ number;
 				});
 				if (names.length === 1)
-					Textbox.state(names[0] + " is challenging " + Battle.alliedTrainers[0].pronoun() + " to a battle. " + (Battle.opposingTrainers[0].gender === Genders.male ? "He" : "She") + " has " + numberword(Battle.opposingTrainers[0].pokemon()) + " Pokémon.");
+					Textbox.state(names[0] + " is challenging " + Battle.alliedTrainers[0].pronoun() + " to a Battle. " + (Battle.opposingTrainers[0].gender === Genders.male ? "He" : "She") + " has " + numberword(Battle.opposingTrainers[0].pokemon()) + " Pokémon.");
 				if (names.length > 1)
-					Textbox.state(commaSeparatedList(names) + " are challenging " + Battle.alliedTrainers[0].pronoun() + " to a battle. They have " + number + " Pokémon between them.");
+					Textbox.state(commaSeparatedList(names) + " are challenging " + Battle.alliedTrainers[0].pronoun() + " to a Battle. They have " + number + " Pokémon between them.");
 				break;
 		}
 		Battle.race(Battle.queue);
@@ -456,7 +370,7 @@ Battle = {
 			if (forcefully)
 				Textbox.clear();
 			Textbox.setStyle("standard");
-			Battle.redraw();
+			Battle.draw();
 			Battle.situation = null;
 			foreach(Battle.all(true), function (poke) {
 				if (poke.status === Statuses.badlyPoisoned)
@@ -539,7 +453,7 @@ Battle = {
 						targets.reverse();
 						targetNames.reverse();
 						var displayAll = [].concat(Display.state.current.allies, Display.state.current.opponents), hotkeys = {};
-						hotkeys[Game.key.secondary] = "Cancel";
+						hotkeys[Settings._("keys => secondary")] = "Cancel";
 						Textbox.ask("Whom do you want " + currentBattler.name() + " to attack?", targetNames, function (response, i, major) {
 							if (response !== "Cancel")
 								Battle.input("Fight", secondary, targets[i].target);
@@ -586,7 +500,7 @@ Battle = {
 						reprompt = true;
 					} else {
 						var usableItems = character.bag.usableItems(), actualItem, items = [], indices = [], hotkeys = {};
-						hotkeys[Game.key.secondary] = "Cancel";
+						hotkeys[Settings._("keys => secondary")] = "Cancel";
 						foreach(usableItems, function (item) {
 							actualItem = Items._(item.item);
 							if (actualItem.direct) { // If the item can be used directly, instead of when being held
@@ -616,7 +530,7 @@ Battle = {
 						names = [];
 						positions = [];
 						var displayAll = [].concat(Display.state.current.allies, Display.state.current.opponents), hotkeys = {};
-						hotkeys[Game.key.secondary] = "Cancel";
+						hotkeys[Settings._("keys => secondary")] = "Cancel";
 						foreach(targets, function (poke) {
 							names.push(poke.name());
 							positions.push(Battle.placeOfPokemon(poke));
@@ -668,7 +582,7 @@ Battle = {
 					});
 					advance = false;
 					var hotkeys = {};
-					hotkeys[Game.key.secondary] = "Cancel";
+					hotkeys[Settings._("keys => secondary")] = "Cancel";
 					if (names.length) {
 						Textbox.ask("Which Pokémon do you want to send out?", names, function (response, i) {
 							if (response !== "Cancel")
@@ -985,7 +899,7 @@ Battle = {
 				actions = ["Pokémon"].concat(actions);
 			if (Battle.rules.items === "allowed" && !Widgets.isAvailable("Bag"))
 				actions.push("Bag");
-			hotkeys[Game.key.secondary] = "Run";
+			hotkeys[Settings._("keys => secondary")] = "Run";
 			var moves = [];
 			foreach(currentBattler.usableMoves(), function (move) {
 				moves.push(move.move);
@@ -1682,4 +1596,99 @@ Battle = {
 			}, srandom.int(1, 5), poke);
 		}
 	}
-};
+}, {
+	update : function () {
+		if (Battle.active && Battle.state.kind === "opening") {
+			Battle.state.transition += 1 / (Time.framerate * 0.1);
+			Battle.state.transition = Math.clamp(0, Battle.state.transition, 1);
+			if (Battle.state.transition === 1)
+				Battle.begin();
+		}
+	},
+	drawing : {
+		canvas : {
+			width : Settings._("screen dimensions => width"),
+			height : Settings._("screen dimensions => height"),
+			className : "centre",
+			smoothing : false
+		},
+		draw : function (canvas) {
+			var context = canvas.getContext("2d"), display = Display.state.current, now = Time.now();
+			context.fillStyle = "black";
+			context.fillRect(0, 0, canvas.width, canvas.height);
+			if (!Battle.active)
+				return;
+			if (Battle.state.kind === "loading") {
+				context.fillStyle = "hsl(0, 0%, 20%)";
+				context.fillRect(40, canvas.height / 2 - 10, canvas.width - 80, 20);
+				context.fillStyle = "hsl(0, 0%, 90%)";
+				context.fillRect(40, canvas.height / 2 - 10, (canvas.width - 80) * Battle.state.progress, 20);
+				context.textAlign = "center";
+				context.textBaseline = "middle";
+				context.font = "12px " + Settings._("font")
+				context.strokeStyle = "hsl(0, 0%, 90%)";
+				context.lineWidth = 5;
+				context.strokeText((Battle.state.progress * 100).toFixed(0) + "%", canvas.width / 2, canvas.height / 2);
+				context.fillStyle = "black";
+				context.fillText((Battle.state.progress * 100).toFixed(0) + "%", canvas.width / 2, canvas.height / 2);
+				if (Battle.state.failed.notEmpty()) {
+					context.textBaseline = "top";
+					context.fillStyle = "hsl(0, 0%, 90%)";
+					context.fillText("Failed to load " + Battle.state.failed.length + " file" + (Battle.state.failed.length !== 1 ? "s" : "") + ":", canvas.width / 2, canvas.height / 2 + 20 + 6);
+					context.fillStyle = "hsl(0, 0%, 50%)";
+					foreach(Battle.state.failed, function (failed, i) {
+						context.fillText(failed, canvas.width / 2, canvas.height / 2 + 20 + 6 + 16 * (i + 1));
+					});
+				}
+			} else {
+				Sprite.draw(canvas, "scenes/" + Battle.scene, 0, 0);
+				context.textAlign = "center";
+				context.textBaseline = "bottom";
+				context.lineWidth = 2;
+				context.strokeStyle = "white";
+				var shadowOpacity = Lighting.shadows.opacity(), shadowMatrix = new Matrix ([1, 0.1, -0.6, 0.4, 0, 0]), matrix = new Matrix(), position, transition, side;
+				var sortDisplay = Battle.cache || (Battle.cache = Display.states[Display.state.save(Display.state.current)]), poke;
+				var all = [].concat(sortDisplay.allies, sortDisplay.opponents.reverse()).filter(onlyPokemon).sort(function (a, b) {
+					return Battle.drawing.position(Display.pokemonInState(b)).z - Battle.drawing.position(Display.pokemonInState(a)).z;
+				});
+				foreach(all, function (poke) {
+					poke = Display.pokemonInState(poke);
+					side = (poke.battler.side === Battles.side.near ? "back" : "front");
+					position = Battle.drawing.position(poke);
+					context.lineWidth = position.scale * 2;
+					transition = (poke.fainted() ? 1 : poke.battler.display.transition);
+					// Shadow
+					Sprite.draw(canvas, poke.paths.sprite(side), position.x, position.y - position.z + poke.battler.display.position.y, true, [{ type : "fill", colour : "hsla(0, 0%, 0%, " + shadowOpacity + ")" }, { type : "crop", heightRatio : poke.battler.display.height }], shadowMatrix.scale(position.scale * transition).scale(Math.pow(2, -poke.battler.display.position.y / 100)).matrix, now);
+					// Outline
+					if (poke.battler.display.outlined) {
+						for (var angle = 0; angle < Math.PI * 2; angle += Math.PI / 2) {
+							Sprite.draw(canvas, poke.paths.sprite(side), position.x + Math.cos(angle) * context.lineWidth, position.y - position.z + Math.sin(angle) * context.lineWidth, true, [{ type : "fill", colour : context.strokeStyle }, { type : "crop", heightRatio : poke.battler.display.height }], matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix, now);
+						}
+					}
+					// Pokémon
+					Sprite.draw(canvas, poke.paths.sprite(side), position.x, position.y - position.z, true, { type : "crop", heightRatio : poke.battler.display.height }, matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix, now);
+					// Lighting
+					if (Scenes._(Battle.scene).hasOwnProperty("lighting"))
+						Sprite.draw(canvas, poke.paths.sprite(side), position.x, position.y - position.z, true, [{ type : "fill", colour : Scenes._(Battle.scene).lighting }, { type : "crop", heightRatio : poke.battler.display.height }], matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix, now);
+					// Glow / Fade
+					if (transition > 0 && transition < 1)
+						Sprite.draw(canvas, poke.paths.sprite(side), position.x, position.y - position.z, true, [{ type : "fill", colour : "white" }, { type : "opacity", value : Math.pow(1 - transition, 0.4) }, { type : "crop", heightRatio : poke.battler.display.height }], matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix, now);
+				});
+				if (Settings._("visual weather effects") || display.flags.weather)
+					Weather.draw(canvas.context);
+				foreach(display.opponents, function (poke, place) {
+					if (poke !== NoPokemon)
+						Battle.drawing.bar(poke, false, 30 + 34 * place);
+				});
+				foreach(display.allies, function (poke, place) {
+					if (poke !== NoPokemon)
+						Battle.drawing.bar(poke, true, 120 + 42 * place, true);
+				});
+				if (Battle.state.kind === "opening") {
+					context.fillStyle = "hsla(0, 0%, 0%, " + (1 - Math.clamp(0, Battle.state.transition, 1)).toFixed(3) + ")";
+					context.fillRect(0, 0, canvas.width, canvas.height);
+				}
+			}
+		}
+	}
+});

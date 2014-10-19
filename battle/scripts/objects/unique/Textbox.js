@@ -1,4 +1,4 @@
-Textbox = {
+Textbox = FunctionObject.new({
 	active : false,
 	slide : 0,
 	displayed : "",
@@ -140,17 +140,6 @@ Textbox = {
 		metrics.inner.top = metrics.top + style.padding.vertical;
 		return metrics;
 	},
-	initialise : function () {
-		_method(Textbox.styles);
-		Textbox.canvas = document.querySelector("#game-textbox");
-		Textbox.canvas.width = Game.canvas.element.width;
-		Textbox.canvas.height = Game.canvas.element.height;
-		Textbox.canvas.context = Textbox.canvas.getContext("2d");
-		Textbox.measurement = document.createElement("div");
-		Textbox.measurement.style.opacity = 0;
-		Textbox.measurement.style.position = "absolute";
-		document.body.appendChild(Textbox.measurement);
-	},
 	currentIndex : function () {
 		return Textbox.dialogue.last().id;
 	},
@@ -177,7 +166,6 @@ Textbox = {
 		});
 		if (text !== null) {
 			text = "" + text;
-			console.log(text);
 			var regex, exclusive, position, value = null, previousValue, valueStack = [];
 			forevery(Textbox.commands, function (settings, command) {
 				regex = new RegExp("<" + command + ": ?(.*?)>", "i");
@@ -322,7 +310,7 @@ Textbox = {
 	},
 	confirm : function (query, callback, minors, defaultResponse, name, hover) {
 		var hotkeys = {};
-		hotkeys[Game.key.secondary] = "No";
+		hotkeys[Settings._("keys => secondary")] = "No";
 		return Textbox.ask(query, ["No", "Yes"], callback, minors, defaultResponse, hotkeys, name, hover);
 	},
 	remove : function (id) {
@@ -357,7 +345,7 @@ Textbox = {
 		});
 	},
 	wrap : function (text, styling) {
-		var context = Textbox.canvas.context, style = Textbox.styles._(Textbox.style), metrics = Textbox.metrics(style), styleContext = Textbox.newStyleContext(style);
+		var context = Textbox.canvas.getContext("2d"), style = Textbox.styles._(Textbox.style), metrics = Textbox.metrics(style), styleContext = Textbox.newStyleContext(style);
 		for (var i = 0, width = 0, character, breakpoint = null, softBreakpoint = null; i < text.length; ++ i) {
 			character = text[i];
 			if (character === "\n") {
@@ -453,9 +441,9 @@ Textbox = {
 		if (Textbox.dialogue.first().text === null || (Textbox.lowestVisibleLine === Textbox.dialogue.first().text.split("\n").length - 1 && Textbox.displayed.length === Textbox.dialogue.first().text.length)) {
 			if (Textbox.dialogue.first().responses.length && !automatic) {
 				var response;
-				if (Textbox.hoverResponse !== null || (Game.control.current === Game.control.schemes.keyboard && Textbox.response !== null)) {
+				if (Textbox.hoverResponse !== null || (Input.controlScheme === "keyboard" && Textbox.response !== null)) {
 					response = (Textbox.hoverResponse !== null ? Textbox.hoverResponse : Textbox.response);
-					Game.canvas.element.classList.remove("hover");
+					Battle.canvas.classList.remove("hover");
 					if (Textbox.dialogue.first().hasOwnProperty("name"))
 						Textbox.namedDialogue[Textbox.dialogue.first().name] = response;
 					Textbox.dialogue.first().callback(Textbox.dialogue.first().responses[response], response, response < Textbox.dialogue.first().minorResponses);
@@ -534,7 +522,13 @@ Textbox = {
 					break;
 				}
 				Textbox.responsePosition.x = Math.mod(Textbox.responsePosition.x, 1);
-				Textbox.response = Math.min(majorResponses, Textbox.responsePosition.y * style.responsesPerRow) + Math.round(roundTo(Textbox.responsePosition.x - 1 / responsesOnRow / 2, 1 / responsesOnRow) * responsesOnRow);
+				//Textbox.response = Math.min(majorResponses, Textbox.responsePosition.y * style.responsesPerRow) + Math.max(0, (Textbox.responsePosition.y - Math.ceil(majorResponses / style.responsesPerRow)) * style.responsesPerRow) + Math.round(roundTo(Textbox.responsePosition.x - 1 / responsesOnRow / 2, 1 / responsesOnRow) * responsesOnRow);
+				if (Textbox.responsePosition.y < Math.ceil(majorResponses / style.responsesPerRow)) {
+					Textbox.response = Textbox.responsePosition.y * style.responsesPerRow + Math.round(Textbox.responsePosition.x * responsesOnRow - 0.5);
+				} else {
+					Textbox.response = majorResponses + (Textbox.responsePosition.y - Math.ceil(majorResponses / style.responsesPerRow)) * style.responsesPerRow + Math.round(Textbox.responsePosition.x * responsesOnRow - 0.5);
+				}
+				//console.log(Textbox.responsePosition, Textbox.response, Math.min(majorResponses, Textbox.responsePosition.y * style.responsesPerRow), Math.round(roundTo(Textbox.responsePosition.x - 1 / responsesOnRow / 2, 1 / responsesOnRow) * responsesOnRow));
 			}
 		}
 	},
@@ -543,6 +537,19 @@ Textbox = {
 			if (Textbox.dialogue.first().hotkeys.hasOwnProperty(keys))
 				Textbox.selectResponse(Textbox.dialogue.first().hotkeys[keys]);
 		}
+	},
+	clear : function () {
+		Textbox.dialogue = [];
+		Textbox.displayed = "";
+		Textbox.character = 0;
+	}
+}, {
+	initialise : function () {
+		_method(Textbox.styles);
+		Textbox.measurement = document.createElement("div");
+		Textbox.measurement.style.opacity = 0;
+		Textbox.measurement.style.position = "absolute";
+		document.body.appendChild(Textbox.measurement);
 	},
 	update : function () {
 		if (Textbox.pausing && Textbox.pausing()) {
@@ -593,100 +600,104 @@ Textbox = {
 			Textbox.active = false;
 		}
 	},
-	clear : function () {
-		Textbox.dialogue = [];
-		Textbox.displayed = "";
-		Textbox.character = 0;
-	},
-	redraw : function () {
-		var context = Textbox.canvas.context;
-		// Clear the canvas
-		context.clearRect(0, 0, Textbox.canvas.width, Textbox.canvas.height);
-		if (Textbox.slide > 0) {
-			// Draw the textbox
-			var style = Textbox.currentStyle(), metrics = Textbox.metrics();
-			context.fillStyle = "hsla(0, 0%, 0%, 0.8)";
-			context.fillRect(metrics.left, metrics.top, metrics.width, metrics.height);
-			if (Settings._("debug mode")) {
-				context.fillStyle = "hsla(0, 0%, 100%, 0.2)";
-				context.fillRect(metrics.inner.left, metrics.inner.top, metrics.inner.width, metrics.inner.height);
-			}
-			// Draw the text
-			if (Textbox.dialogue.notEmpty() && Textbox.dialogue.first().text !== null) {
-				var dialogue = Textbox.dialogue.first(), responses = dialogue.responses.length, majorResponses = dialogue.minorResponses, minorResponses = responses - dialogue.minorResponses;
-				// Formatting
-				context.textAlign = "left";
-				context.textBaseline = "alphabetic";
-				// Draw the actual characters
-				var lines = Textbox.displayed.split("\n"), partitionPositions = [], partitions, characters = 0;
-				forevery(Textbox.dialogue.first().styling, function (details) {
-					forevery(details, function (__, position) {
-						partitionPositions.push(parseInt(position));
+	drawing : {
+		canvas : {
+			width : Settings._("screen dimensions => width"),
+			height : Settings._("screen dimensions => height"),
+			className : "centre clickthrough"
+		},
+		draw : function (canvas) {
+			var context = canvas.getContext("2d");
+			// Clear the canvas
+			context.clearRect(0, 0, canvas.width, canvas.height);
+			if (Textbox.slide > 0) {
+				// Draw the textbox
+				var style = Textbox.currentStyle(), metrics = Textbox.metrics();
+				context.fillStyle = "hsla(0, 0%, 0%, 0.8)";
+				context.fillRect(metrics.left, metrics.top, metrics.width, metrics.height);
+				if (Settings._("debug mode")) {
+					context.fillStyle = "hsla(0, 0%, 100%, 0.2)";
+					context.fillRect(metrics.inner.left, metrics.inner.top, metrics.inner.width, metrics.inner.height);
+				}
+				// Draw the text
+				if (Textbox.dialogue.notEmpty() && Textbox.dialogue.first().text !== null) {
+					var dialogue = Textbox.dialogue.first(), responses = dialogue.responses.length, majorResponses = dialogue.minorResponses, minorResponses = responses - dialogue.minorResponses;
+					// Formatting
+					context.textAlign = "left";
+					context.textBaseline = "alphabetic";
+					// Draw the actual characters
+					var lines = Textbox.displayed.split("\n"), partitionPositions = [], partitions, characters = 0;
+					forevery(Textbox.dialogue.first().styling, function (details) {
+						forevery(details, function (__, position) {
+							partitionPositions.push(parseInt(position));
+						});
 					});
-				});
-				partitionPositions.sort(function (a, b) { return a - b; });
-				var position = {
-					x : 0
-				}, styleContext = Textbox.newStyleContext(), lineHeights = Textbox.heightsOfLines(), currentLineStatistics = Textbox.currentlyVisibleLines();
-				lines = Textbox.displayed.split("\n");
-				foreach(lines, function (line, lineNumber) {
-					partitions = Textbox.splitAtPositions(line, partitionPositions, characters);
-					foreach(partitions, function (part) {
-						var partitionWidth, verticalPosition = metrics.top + metrics.height - (style.padding.vertical + currentLineStatistics.totalHeight + (currentLineStatistics.totalHeight < metrics.inner.height ? metrics.inner.height - currentLineStatistics.cumulativeHeight : 0)) + sum(lineHeights, lineNumber + 1);
-						Textbox.updateStyleContext(styleContext, Textbox.dialogue.first().styling, characters);
-						context.font = Font.loadFromStyle(styleContext);
-						partitionWidth = context.measureText(part).width;
-						context.fillStyle = styleContext.colour;
-						context.fillText(part, style.margin.horizontal + style.padding.horizontal + position.x, verticalPosition);
-						position.x += partitionWidth;
-						characters += part.length;
+					partitionPositions.sort(function (a, b) { return a - b; });
+					var position = {
+						x : 0
+					}, styleContext = Textbox.newStyleContext(), lineHeights = Textbox.heightsOfLines(), currentLineStatistics = Textbox.currentlyVisibleLines();
+					lines = Textbox.displayed.split("\n");
+					foreach(lines, function (line, lineNumber) {
+						partitions = Textbox.splitAtPositions(line, partitionPositions, characters);
+						foreach(partitions, function (part) {
+							var partitionWidth, verticalPosition = metrics.top + metrics.height - (style.padding.vertical + currentLineStatistics.totalHeight + (currentLineStatistics.totalHeight < metrics.inner.height ? metrics.inner.height - currentLineStatistics.cumulativeHeight : 0)) + sum(lineHeights, lineNumber + 1);
+							Textbox.updateStyleContext(styleContext, Textbox.dialogue.first().styling, characters);
+							context.font = Font.loadFromStyle(styleContext);
+							partitionWidth = context.measureText(part).width;
+							context.fillStyle = styleContext.colour;
+							context.fillText(part, style.margin.horizontal + style.padding.horizontal + position.x, verticalPosition);
+							position.x += partitionWidth;
+							characters += part.length;
+						});
+						position.x = 0;
+						characters += 1; // The newline character, which has been removed.
 					});
-					position.x = 0;
-					characters += 1; // The newline character, which has been removed.
-				});
-				context.clearRect(0, 0, Textbox.canvas.width, metrics.top);
-				context.clearRect(0, metrics.top + metrics.height, Textbox.canvas.width, Textbox.canvas.height - metrics.top - metrics.height);
-				if (Textbox.displayed.length === dialogue.text.length) {
-					context.textAlign = "center";
-					context.textBaseline = "middle";
-					var responseMetrics = {}, cursorIsOverAResponse = Game.cursor.inArea(metrics.left, metrics.top + metrics.height, metrics.width, Textbox.canvas.height - (metrics.top + metrics.height + style.margin.vertical));
-					Game.canvas.element.classList.remove("hover");
-					Textbox.hoverResponse = null;
-					if (cursorIsOverAResponse)
-						Game.canvas.element.classList.add("hover");
-					else if (dialogue.hasOwnProperty("hover"))
-						dialogue.hover(null, null);
-					for (var response = 0, responsesOfKind, relativeResponse, selected, hovered, isMajor; response < responses; ++ response) {
-						isMajor = response < majorResponses;
-						responsesOfKind = isMajor ? majorResponses : minorResponses;
-						relativeResponse = response - (isMajor ? 0 : majorResponses);
-						responseMetrics.width = metrics.width / (responsesOfKind % style.responsesPerRow !== 0 && relativeResponse >= responsesOfKind - (responsesOfKind % style.responsesPerRow) ? responsesOfKind % style.responsesPerRow : style.responsesPerRow);
-						responseMetrics.x = metrics.left + (relativeResponse % style.responsesPerRow) * responseMetrics.width;
-						responseMetrics.y = metrics.top + metrics.height + (isMajor ? Math.floor(relativeResponse / style.responsesPerRow) * metrics.response.major.height : Math.ceil(majorResponses / style.responsesPerRow) * metrics.response.major.height + Math.floor(relativeResponse / style.responsesPerRow) * metrics.response.minor.height)
-						responseMetrics.height = (isMajor ? metrics.response.major : metrics.response.minor).height;
-						selected = (hovered = Game.cursor.inArea(responseMetrics.x, responseMetrics.y, responseMetrics.width, responseMetrics.height)) || (Game.control.current === Game.control.schemes.keyboard && Textbox.response === response && !cursorIsOverAResponse);
-						context.fillStyle = (selected ? "hsla(0, 0%, 100%, 0.8)" : "hsla(0, 0%, 0%, 0.6)");
-						context.fillRect(responseMetrics.x, responseMetrics.y, responseMetrics.width, responseMetrics.height);
-						context.font = Font.load((isMajor ? metrics.response.major : metrics.response.minor).height * 0.8);
-						context.fillStyle = (selected ? "black" : "white");
-						context.fillText(dialogue.responses[response], responseMetrics.x + responseMetrics.width / 2, responseMetrics.y + responseMetrics.height / 2);
-						if (selected) {
-							if (hovered)
-								Textbox.hoverResponse = response;
+					context.clearRect(0, 0, canvas.width, metrics.top);
+					context.clearRect(0, metrics.top + metrics.height, canvas.width, canvas.height - metrics.top - metrics.height);
+					if (Textbox.displayed.length === dialogue.text.length) {
+						context.textAlign = "center";
+						context.textBaseline = "middle";
+						var responseMetrics = {}, cursorIsOverAResponse = Cursor.inArea(canvas, metrics.left, metrics.top + metrics.height, metrics.width, canvas.height - (metrics.top + metrics.height + style.margin.vertical));
+						Textbox.hoverResponse = null;
+						if (cursorIsOverAResponse)
+							Battle.canvas.classList.add("hover");
+						else {
+							Battle.canvas.classList.remove("hover");
 							if (dialogue.hasOwnProperty("hover"))
-								dialogue.hover(response, isMajor);
+								dialogue.hover(null, null);
 						}
+						for (var response = 0, responsesOfKind, relativeResponse, selected, hovered, isMajor; response < responses; ++ response) {
+							isMajor = response < majorResponses;
+							responsesOfKind = isMajor ? majorResponses : minorResponses;
+							relativeResponse = response - (isMajor ? 0 : majorResponses);
+							responseMetrics.width = Math.ceil(metrics.width / (responsesOfKind % style.responsesPerRow !== 0 && relativeResponse >= responsesOfKind - (responsesOfKind % style.responsesPerRow) ? responsesOfKind % style.responsesPerRow : style.responsesPerRow));
+							responseMetrics.x = Math.ceil(metrics.left + (relativeResponse % style.responsesPerRow) * responseMetrics.width);
+							responseMetrics.y = metrics.top + metrics.height + (isMajor ? Math.floor(relativeResponse / style.responsesPerRow) * metrics.response.major.height : Math.ceil(majorResponses / style.responsesPerRow) * metrics.response.major.height + Math.floor(relativeResponse / style.responsesPerRow) * metrics.response.minor.height)
+							responseMetrics.height = (isMajor ? metrics.response.major : metrics.response.minor).height;
+							selected = (hovered = Cursor.inArea(canvas, responseMetrics.x, responseMetrics.y, responseMetrics.width, responseMetrics.height)) || (Input.controlScheme === "keyboard" && Textbox.response === response && !cursorIsOverAResponse);
+							context.fillStyle = (selected ? "hsla(0, 0%, 100%, 0.8)" : "hsla(0, 0%, 0%, 0.6)");
+							context.fillRect(responseMetrics.x, responseMetrics.y, responseMetrics.width, responseMetrics.height);
+							context.font = Font.load((isMajor ? metrics.response.major : metrics.response.minor).height * 0.8);
+							context.fillStyle = (selected ? "black" : "white");
+							context.fillText(dialogue.responses[response], responseMetrics.x + responseMetrics.width / 2, responseMetrics.y + responseMetrics.height / 2);
+							if (selected) {
+								if (hovered)
+									Textbox.hoverResponse = response;
+								if (dialogue.hasOwnProperty("hover"))
+									dialogue.hover(response, isMajor);
+							}
+						}
+						if (Settings._("debug mode")) {
+							context.fillStyle = "hsla(0, 100%, 50%, 0.8)";
+							var majorResponses = dialogue.minorResponses;
+							context.fillCircle(metrics.left + Textbox.responsePosition.x * metrics.width, metrics.top + metrics.height + (Textbox.response < majorResponses ? Textbox.responsePosition.y + 0.5 : Math.ceil(majorResponses / style.responsesPerRow)) * metrics.response.major.height + (Textbox.response < majorResponses ? 0 : Textbox.responsePosition.y - Math.ceil(majorResponses / style.responsesPerRow) + 0.5) * metrics.response.minor.height, 3);
+						}
+					} else if (responses > 0) {
+						context.fillStyle = "hsla(0, 0%, 0%, 0.6)";
+						context.fillRect(0, metrics.top + metrics.height, canvas.width, canvas.height - metrics.top - metrics.height);
 					}
-					if (Settings._("debug mode")) {
-						context.fillStyle = "hsla(0, 100%, 50%, 0.8)";
-						var majorResponses = dialogue.minorResponses;
-						context.fillCircle(metrics.left + Textbox.responsePosition.x * metrics.width, metrics.top + metrics.height + (Textbox.response < majorResponses ? Textbox.responsePosition.y + 0.5 : Math.ceil(majorResponses / style.responsesPerRow)) * metrics.response.major.height + (Textbox.response < majorResponses ? 0 : Textbox.responsePosition.y - Math.ceil(majorResponses / style.responsesPerRow) + 0.5) * metrics.response.minor.height, 3);
-					}
-				} else if (responses > 0) {
-					context.fillStyle = "hsla(0, 0%, 0%, 0.6)";
-					context.fillRect(0, metrics.top + metrics.height, Textbox.canvas.width, Textbox.canvas.height - metrics.top - metrics.height);
 				}
 			}
 		}
 	}
-};
+});
