@@ -443,7 +443,7 @@ Textbox = FunctionObject.new({
 				var response;
 				if (Textbox.hoverResponse !== null || (Input.controlScheme === "keyboard" && Textbox.response !== null)) {
 					response = (Textbox.hoverResponse !== null ? Textbox.hoverResponse : Textbox.response);
-					Battle.canvas.classList.remove("hover");
+					Textbox.canvas.classList.remove("hover");
 					if (Textbox.dialogue.first().hasOwnProperty("name"))
 						Textbox.namedDialogue[Textbox.dialogue.first().name] = response;
 					Textbox.dialogue.first().callback(Textbox.dialogue.first().responses[response], response, response < Textbox.dialogue.first().minorResponses);
@@ -660,9 +660,9 @@ Textbox = FunctionObject.new({
 						var responseMetrics = {}, cursorIsOverAResponse = Cursor.inArea(canvas, metrics.left, metrics.top + metrics.height, metrics.width, canvas.height - (metrics.top + metrics.height + style.margin.vertical));
 						Textbox.hoverResponse = null;
 						if (cursorIsOverAResponse)
-							Battle.canvas.classList.add("hover");
+							Textbox.canvas.classList.add("hover");
 						else {
-							Battle.canvas.classList.remove("hover");
+							Textbox.canvas.classList.remove("hover");
 							if (dialogue.hasOwnProperty("hover"))
 								dialogue.hover(null, null);
 						}

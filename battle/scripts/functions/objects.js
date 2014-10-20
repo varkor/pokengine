@@ -2,7 +2,6 @@ DataObject = {
 	new : function () {
 		var object = {
 			data : {},
-			methods : {},
 			_ : function (path) {
 				return _(object.data, path);
 			},
@@ -21,7 +20,10 @@ DataObject = {
 			},
 			addMethods : function (methods) {
 				for (var key in methods) {
-					object.methods[key] = methods[key];
+					if (!object.hasOwnProperty(key))
+						object[key] = methods[key];
+					else
+						throw "That object already has a property with the name: " + key;
 				}
 			}
 		};

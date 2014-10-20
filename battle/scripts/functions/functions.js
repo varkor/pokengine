@@ -63,7 +63,7 @@ function _ (object, path) {
 					value = value[key];
 				else if (value.hasOwnProperty(key = key.replace(/ ?\(.*\)/, "")))
 					value = value[key];
-				else throw "That object has no property with that name.";
+				else throw "That object has no property with the path:" + path;
 			} else
 				return value.hasOwnProperty(key.slice(0, -1));
 		}
@@ -74,7 +74,7 @@ function _ (object, path) {
 			return follow(object, paths[take]);
 		} catch (error) {}
 	}
-	throw "That object has no property with that name.";
+	throw "That object has no property with the path:" + path;
 }
 
 function _method (object) {

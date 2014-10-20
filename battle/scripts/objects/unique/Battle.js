@@ -203,7 +203,11 @@ Battle = FunctionObject.new({
 				resources.push(poke.paths.sprite("front", true), poke.paths.sprite("back", true), poke.paths.cry(true));
 			});
 		});
-		var progress = function () {
+		var timeout = 3 * Time.seconds;
+		window.ress = resources.slice(0);
+		var progress = function (resource) {
+			window.ress.remove(window.ress.indexOf(resource));
+			console.log(window.ress);
 			Battle.state.progress = ++ loaded / resources.length;
 			if (loaded === resources.length) {
 				Textbox.stateUntil("", function () { return Battle.state.kind !== "opening"; });
@@ -214,13 +218,19 @@ Battle = FunctionObject.new({
 			}
 		};
 		foreach(resources, function (resource) {
-			File.load(resource, progress, function (resource, message) {
+			File.load(resource, function (resource) { return function () {
+				progress(resource);
+			}; }(resource), function (resource, message) {
 				Battle.state.failed.push(resource);
 				if (Settings._("ignore missing files"))
 					progress();
 				console.log("%cThere was an error loading one of the files:", "color : hsl(0, 100%, 40%)", message);
 			});
 		});
+		setTimeout(function () {
+			if (window.ress.notEmpty())
+				Battle.state.failed = Battle.state.failed.concat(window.ress);
+		}, timeout);
 	},
 	playRecording : function (recording, alliedTrainers, opposingTrainers) {
 		recording.teamA = alliedTrainers;
@@ -616,7 +626,7 @@ Battle = FunctionObject.new({
 							poke : currentBattler,
 							priority : 6,
 							action : function (poke) {
-								Battle.swap(currentBattler, character.party.pokemon[secondary]); 
+								Battle.swap(currentBattler, character.party.pokemon[secondary]);
 							}
 						});
 					}
@@ -1105,7 +1115,32 @@ Battle = FunctionObject.new({
 				if (!emptyPlaces.length)
 					return true;
 				while (trainer.battlers().length < Math.min((Battle.style === Battles.style.normal ? 1 : 2) / Battle.opposingTrainers.length) && trainer.hasHealthyPokemon(true) && emptyPlaces.length) {
-					var poke = trainer.healthyPokemon(true).first();
+					var poke = trainer.healthyPokemon(true).first(), immediatelyAfter;
+					if (poke.trainer !== TheWild)
+						Textbox.state(trainer.name + " is about to send out " + poke.name() + ".");
+					else
+						Textbox.state("A wild " + poke.name() + " is about to appear!");
+					var character = Game.player; //? Will not work for replays, also multiplayer?
+					if (character.healthyPokemon(true).notEmpty()) {
+						immediatelyAfter = Textbox.ask("Do you want to switch a different Pokémon in?", ["Yes", "No"], function (response, i) {
+							if (i === 0) {
+								Textbox.insertAfter(Textbox.state("Well, bad luck!"), immediatelyAfter);
+								foreach(character.healthyPokemon(true), function (poke, i) {
+									names.push(poke.name());
+									positions.push(character.party.pokemon.indexOf(poke));
+								});
+								var hotkeys = {};
+								hotkeys[Settings._("keys => secondary")] = "Cancel";
+								Textbox.ask("Which Pokémon do you want to switch in?", names, function (response, i) {
+									if (response !== "Cancel")
+										Battle.input("Pokémon", positions[i]);
+									else
+										Battle.prompt();
+								}, ["Cancel"], null, hotkeys, null, null, true);
+								Battle.swap(currentBattler, character.party.pokemon[secondary]);
+							}
+						});
+					}
 					Battle.enter(poke, true, emptyPlaces.shift());
 				}
 			});
