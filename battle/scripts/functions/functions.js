@@ -350,49 +350,6 @@ function numberword (number) {
 	}
 }
 
-function keyname (key) {
-	if (typeof key === "string")
-		return key;
-	switch (key) {
-		case 9:
-			return "tab";
-		case 13:
-			return "return";
-		case 16:
-			return "shift";
-		case 17:
-			return "control";
-		case 18:
-			return "option";
-		case 20:
-			return "caps lock";
-		case 27:
-			return "escape";
-		case 32:
-			return "space";
-		case 37:
-			return "left";
-		case 38:
-			return "up";
-		case 39:
-			return "right";
-		case 40:
-			return "down";
-		case 67:
-			return "c";
-		case 83:
-			return "s";
-		case 86:
-			return "v";
-		case 88:
-			return "x";
-		case 90:
-			return "z";
-		default:
-			return "unknown";
-	}
-}
-
 Matrix = function (matrix) {
 	var self = this;
 	if (arguments.length)

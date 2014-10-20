@@ -7,7 +7,7 @@ Settings.addData({
 	},
 	"keys" : {
 		primary : "space",
-		secondary : "z",
+		secondary : "Z",
 		up : "up",
 		right : "right",
 		down : "down",

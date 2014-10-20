@@ -9,6 +9,88 @@ Input = FunctionObject.new({
 });
 
 Keys = {
+	name : function (key) {
+		if (typeof key === "string")
+			return key;
+		if (key >= 65 && key <= 90) {
+			return String.fromCharCode(key);
+		}
+		if (key >= 96 && key <= 105) {
+			return "numpad " + (key - 96);
+		}
+		switch (key) {
+			case 8:
+				return "backspace";
+			case 9:
+				return "tab";
+			case 13:
+				return "return";
+			case 16:
+				return "shift";
+			case 17:
+				return "control";
+			case 18:
+				return "option";
+			case 20:
+				return "caps lock";
+			case 27:
+				return "escape";
+			case 32:
+				return "space";
+			case 33:
+				return "page up";
+			case 34:
+				return "page down";
+			case 35:
+				return "end";
+			case 36:
+				return "home";
+			case 37:
+				return "left";
+			case 38:
+				return "up";
+			case 39:
+				return "right";
+			case 40:
+				return "down";
+			case 46:
+				return "delete";
+			case 106:
+				return "numpad *";
+			case 107:
+				return "numpad +";
+			case 109:
+				return "numpad -";
+			case 110:
+				return "numpad .";
+			case 111:
+				return "numpad /";
+			case 186:
+				return ";";
+			case 187:
+				return "=";
+			case 188:
+				return ",";
+			case 189:
+				return "-";
+			case 190:
+				return ".";
+			case 191:
+				return "/";
+			case 192:
+				return "`";
+			case 219:
+				return "[";
+			case 220:
+				return "\\";
+			case 221:
+				return "]";
+			case 222:
+				return "\"";
+			default:
+				return "unknown (" + key + ")";
+		}
+	},
 	held : {},
 	heldKeys : function () {
 		var held = [];
@@ -73,13 +155,13 @@ Keys = {
 	}
 };
 window.addEventListener("keydown", function (event) {
-	if (Keys.press(keyname(event.keyCode))) {
+	if (Keys.press(Keys.name(event.keyCode))) {
 		event.preventDefault();
 		event.stopPropagation();
 	}
 });
 window.addEventListener("keydown", function (event) {
-	if (Keys.release(keyname(event.keyCode))) {
+	if (Keys.release(Keys.name(event.keyCode))) {
 		event.preventDefault();
 		event.stopPropagation();
 	}
