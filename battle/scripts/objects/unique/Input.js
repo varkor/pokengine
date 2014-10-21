@@ -116,7 +116,7 @@ Keys = {
 		if (!Keys.held.hasOwnProperty(key))
 			Keys.held[key] = 1;
 		if (!/unknown (.*)/.test(key)) {
-			if (Input.controlScheme !== "keyboard" && (Textbox.dialogue.empty() || Textbox.dialogue[0].responses.empty()))
+			if (Input.controlScheme !== "keyboard" && (Textbox.dialogue.empty() || Textbox.dialogue.first().responses.empty()))
 				Input.controlScheme = "keyboard";
 			if (Input.controlScheme === "keyboard") {
 				if (Textbox.active) {

@@ -340,7 +340,7 @@ Textbox = FunctionObject.new({
 			if (styling[command].hasOwnProperty(position)) {
 				styleContext[command] = styling[command][position];
 				if (styleContext[command] === "default")
-					styleContext[command] = (typeof Textbox.commands[command] !== "function" ? Textbox.commands[command] : Textbox.commands[command](style));
+					styleContext[command] = (typeof Textbox.commands[command].default !== "function" ? Textbox.commands[command].default : Textbox.commands[command].default(style));
 			}
 		});
 	},
