@@ -602,6 +602,7 @@ Textbox = FunctionObject.new({
 	},
 	drawing : {
 		canvas : {
+			selector : "#game-textbox",
 			width : Settings._("screen dimensions => width"),
 			height : Settings._("screen dimensions => height"),
 			className : "centre clickthrough"

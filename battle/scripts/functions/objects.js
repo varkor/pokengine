@@ -44,10 +44,10 @@ FunctionObject = {
 				object.initialise = function () {
 					if (initialise)
 						initialise();
-					var canvas;
+					var canvas = null;
 					if (details.drawing.canvas.hasOwnProperty("selector"))
 						canvas = document.querySelector(details.drawing.canvas.selector);
-					else {
+					if (canvas === null) {
 						canvas = document.createElement("canvas");
 						if (document.body.childNodes.length > 0)
 							document.body.insertBefore(canvas, document.body.childNodes[0]);

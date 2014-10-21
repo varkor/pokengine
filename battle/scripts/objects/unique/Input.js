@@ -110,7 +110,7 @@ Keys = {
 	press : function (key) {
 		if (!Keys.held.hasOwnProperty(key))
 			Keys.held[key] = 1;
-		if (key !== "unknown") {
+		if (!/unknown (.*)/.test(key)) {
 			if (Input.controlScheme === "keyboard") {
 				if (Textbox.active) {
 					switch (key) {
@@ -130,7 +130,7 @@ Keys = {
 							Textbox.selectAdjacent(Directions.left);
 							return true;
 						default:
-							if (key !== "unknown") {
+							if (!/unknown (.*)/.test(key)) {
 								Textbox.key(Keys.combination(Keys.heldKeys()));
 							}
 							break;
@@ -160,7 +160,7 @@ window.addEventListener("keydown", function (event) {
 		event.stopPropagation();
 	}
 });
-window.addEventListener("keydown", function (event) {
+window.addEventListener("keyup", function (event) {
 	if (Keys.release(Keys.name(event.keyCode))) {
 		event.preventDefault();
 		event.stopPropagation();

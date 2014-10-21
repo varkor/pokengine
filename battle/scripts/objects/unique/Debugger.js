@@ -14,8 +14,10 @@ Debugger = FunctionObject.new({
 }, {
 	update : function () {
 		var thisFrame = Time.now();
-		Debugger.fps.timeline.push(Time.second / (thisFrame - Debugger.previousFrame));
-		Debugger.previousFrame = thisFrame;
+		if (thisFrame !== Debugger.previousFrame) { // Occasionally the timestep is so small it's called in the same millisecond as the previous call, so we just want to ignore those
+			Debugger.fps.timeline.push(Time.second / (thisFrame - Debugger.previousFrame));
+			Debugger.previousFrame = thisFrame;
+		}
 	},
 	drawing : {
 		canvas : {
