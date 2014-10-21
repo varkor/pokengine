@@ -12,10 +12,13 @@ Keys = {
 	name : function (key) {
 		if (typeof key === "string")
 			return key;
-		if (key >= 65 && key <= 90) {
+		if (key >= 48 && key <= 57) { // Numbers
 			return String.fromCharCode(key);
 		}
-		if (key >= 96 && key <= 105) {
+		if (key >= 65 && key <= 90) { // Letters
+			return String.fromCharCode(key);
+		}
+		if (key >= 96 && key <= 105) { // Numpad numbers
 			return "numpad " + (key - 96);
 		}
 		switch (key) {
@@ -55,6 +58,8 @@ Keys = {
 				return "down";
 			case 46:
 				return "delete";
+			case 91:
+				return "command";
 			case 106:
 				return "numpad *";
 			case 107:
