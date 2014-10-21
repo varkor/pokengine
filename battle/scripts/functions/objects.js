@@ -2,20 +2,30 @@ DataObject = {
 	new : function () {
 		var object = {
 			data : {},
+			flags : {},
+			dataForFlag : function (forFlag) {
+				var filtered = {};
+				object.__(function (data, key, flag) {
+					if (flag === forFlag)
+						filtered[key] = data;
+				});
+				return filtered;
+			},
 			_ : function (path) {
 				return _(object.data, path);
 			},
 			__ : function (fn) {
 				var broken = false;
 				for (var key in object.data) {
-					if (broken = fn(object.data[key], key, object.data))
+					if (broken = fn(object.data[key], key, object.flags[key], object.data))
 						return broken;
 				}
 				return broken;
 			},
-			addData : function (data) {
+			addData : function (data, flag) {
 				for (var key in data) {
 					object.data[key] = data[key];
+					object.flags[key] = flag;
 				}
 			},
 			addMethods : function (methods) {
