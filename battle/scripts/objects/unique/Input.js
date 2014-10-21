@@ -119,7 +119,7 @@ Keys = {
 			if (Input.controlScheme !== "keyboard" && (Textbox.dialogue.empty() || Textbox.dialogue.first().responses.empty()))
 				Input.controlScheme = "keyboard";
 			if (Input.controlScheme === "keyboard") {
-				if (Textbox.active) {
+				if (Game.focused && Textbox.active) {
 					switch (key) {
 						case Settings._("keys => primary"):
 							Textbox.progress();
