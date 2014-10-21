@@ -116,6 +116,8 @@ Keys = {
 		if (!Keys.held.hasOwnProperty(key))
 			Keys.held[key] = 1;
 		if (!/unknown (.*)/.test(key)) {
+			if (Input.controlScheme !== "keyboard" && (Textbox.dialogue.empty() || Textbox.dialogue[0].responses.empty()))
+				Input.controlScheme = "keyboard";
 			if (Input.controlScheme === "keyboard") {
 				if (Textbox.active) {
 					switch (key) {
@@ -176,8 +178,7 @@ Cursor = {
 	x : null,
 	y : null,
 	inArea : function (element, x, y, width, height) {
-		var cursorX = Cursor.x - element.offsetLeft + element.width / 2 + window.scrollX, cursorY = Cursor.y - element.offsetTop + element.height / 2 + window.scrollY;
-		// console.log(Cursor.x, Cursor.y, x, y, width, height);
+		var boundingRect = element.getBoundingClientRect(), cursorX = Cursor.x - boundingRect.left, cursorY = Cursor.y - boundingRect.top;
 		return (cursorX >= x && cursorX < x + width && cursorY >= y && cursorY < y + height);
 	},
 	click : function () {
