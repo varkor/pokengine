@@ -8,7 +8,12 @@ Settings.addData({
 	"debug mode" : false, // Whether debug mode is enabled, which shows extra details for some objects
 	"stat transition duration" : 0, // How many seconds should health / experience, etc. transitions take? [0.5]
 	"switch transition duration" : 0, // How many seconds should Pokémon being sent out, fainting, etc. take? [0.2]
-	"ignore missing files" : false // Whether the battle should start even if some of the required files were not loaded successfully
+	"ignore missing files" : false, // Whether the battle should start even if some of the required files were not loaded successfully
+	"text replacements" : {
+		"pokemon" : "Pokémon",
+		"pokedex" : "Pokédex",
+		"pokeball" : "Poké Ball"
+	}
 }, true);
 Settings.addData({
 	"keys" : {

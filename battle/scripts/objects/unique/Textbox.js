@@ -166,6 +166,16 @@ Textbox = FunctionObject.new({
 		});
 		if (text !== null) {
 			text = "" + text;
+			var replacements = Settings._("text replacements").data;
+			forevery(Settings._("text replacements"), function (replacement, original) {
+				text = text.replace(new RegExp("(^|[^a-zA-Z0-9])(\\\\)?(" + original + ")(?:\\b)", "g"), function (match, start, escaped, text) {
+					console.log(match, escaped, text);
+					if (escaped)
+						return start + original;
+					else
+						return start + replacement;
+				});
+			});
 			var regex, exclusive, position, value = null, previousValue, valueStack = [];
 			forevery(Textbox.commands, function (settings, command) {
 				regex = new RegExp("<" + command + ": ?(.*?)>", "i");

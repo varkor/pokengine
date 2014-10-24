@@ -116,10 +116,10 @@ Keys = {
 		if (!Keys.held.hasOwnProperty(key))
 			Keys.held[key] = 1;
 		if (!/unknown (.*)/.test(key)) {
-			if (Input.controlScheme !== "keyboard" && (Textbox.dialogue.empty() || Textbox.dialogue.first().responses.empty()))
+			if (Input.controlScheme !== "keyboard" && (typeof Textbox === "undefined" || Textbox.dialogue.empty() || Textbox.dialogue.first().responses.empty()))
 				Input.controlScheme = "keyboard";
 			if (Input.controlScheme === "keyboard") {
-				if (Game.focused && Textbox.active) {
+				if (Game.focused && typeof Textbox !== "undefined" && Textbox.active) {
 					switch (key) {
 						case Settings._("keys => primary"):
 							Textbox.progress();
@@ -183,8 +183,10 @@ Cursor = {
 	},
 	click : function () {
 		Input.controlScheme = "mouse";
-		if (Cursor.inArea(Textbox.canvas, 0, 0, Textbox.canvas.width, Textbox.canvas.height))
-			Textbox.progress();
+		if (typeof Textbox !== "undefined" && Textbox.canvas) {
+			if (Cursor.inArea(Textbox.canvas, 0, 0, Textbox.canvas.width, Textbox.canvas.height))
+				Textbox.progress();
+		}
 	}
 };
 window.addEventListener("mousemove", function (event) {
