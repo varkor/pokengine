@@ -48,7 +48,7 @@ Move = {
 		PP : Infinity,
 		PPups : 0
 	},
-	use : function (move, stage, mover, target) {
+	use : function (move, stage, mover, target, inception) {
 		moveName = move;
 		move = Moves._(move);
 		if (target instanceof pokemon)
@@ -154,6 +154,8 @@ Move = {
 				displayRendered = Display.state.save();
 				Textbox.effect(function () { Display.state.load(displayRendered); });
 			}
+		} else {
+			Battle.survey();
 		}
 		return !completelyFailed;
 	},

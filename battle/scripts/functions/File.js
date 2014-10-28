@@ -21,6 +21,7 @@ File = {
 			return store[path];
 		}
 		var file = new object();
+		window.ress2.push({paths:paths, obj:file});
 		file.src = (!(path.substr(0, 5) === "data:" || path.substr(0, 5) === "http:" || path.substr(0, 6) === "https:") ? directory + "/" + path + "." + filetype : path);
 		store[path] = null;
 		file.addEventListener(loadEvent, function (event) {

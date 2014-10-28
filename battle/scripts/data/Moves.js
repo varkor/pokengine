@@ -813,7 +813,7 @@ Moves = {
 			use : [
 				function (self, target) {
 					if (Battle.weather === Weathers.intenseSunlight) {
-						Move.use("Solar Beam", ++ self.battler.moveStage, self, target);
+						Move.use("Solar Beam", ++ self.battler.moveStage, self, target, true);
 						return;
 					}
 					Textbox.state(self.name() + " began absorbing sunlight.");
@@ -1016,11 +1016,13 @@ Moves = {
 		effect : {
 			use : [
 				function (self, target, constant, repetitions) {
+					var finished = false;
 					if (arguments.length < 4)
 						repetitions = 1;
 					Battle.damage(target, Move.damage(self, target, "Pin Missile"), repetitions === 1);
-					if (target !== NoPokemon && (repetitions < 2 || (repetitions <= 3 && srandom.chance(3)) || (repetitions <= 5 && srandom.chance(6))))
-						Moves._("Pin Missile").effect.use[0](self, target, constant, ++ repetitions);
+					if (target !== NoPokemon && !target.fainted() && (repetitions < 2 || (repetitions <= 3 && srandom.chance(3)) || (repetitions <= 5 && srandom.chance(6)))) {
+						Moves._("Pin Missile").effect.use[0](self, target, constant, ++ repetitions); // Not the standard Move.use() form, so that it can take advantage of repetitions
+					} else Textbox.state("Hit " + target.name() + " " + repetitions + " time" + (repetitions !== 1 ? "s" : "") + "!");
 				}
 			]
 		}
@@ -1161,7 +1163,7 @@ Moves = {
 						return Battle.distanceBetween(self, targetA.poke) - Battle.distanceBetween(self, targetB.poke);
 					});
 					if (targets.notEmpty()) {
-						Move.use(choice, 0, self, targets[0].place); // Pick the closest target (this shouldn't be an ally unless it's a friendly move)
+						Move.use(choice, 0, self, targets[0].place, true); // Pick the closest target (this shouldn't be an ally unless it's a friendly move)
 					} else
 						return {
 							failed : true

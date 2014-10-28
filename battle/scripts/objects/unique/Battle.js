@@ -205,9 +205,9 @@ Battle = FunctionObject.new({
 		});
 		var timeout = 3 * Time.seconds;
 		window.ress = resources.slice(0);
+		window.ress2 = [];
 		var progress = function (resource) {
 			window.ress.remove(window.ress.indexOf(resource));
-			console.log(window.ress);
 			Battle.state.progress = ++ loaded / resources.length;
 			if (loaded === resources.length) {
 				Textbox.stateUntil("", function () { return Battle.state.kind !== "opening"; });
@@ -1125,6 +1125,7 @@ Battle = FunctionObject.new({
 						immediatelyAfter = Textbox.ask("Do you want to switch a different Pokémon in?", ["Yes", "No"], function (response, i) {
 							if (i === 0) {
 								Textbox.insertAfter(Textbox.state("Well, bad luck!"), immediatelyAfter);
+								var names = [], positions = [];
 								foreach(character.healthyPokemon(true), function (poke, i) {
 									names.push(poke.name());
 									positions.push(character.party.pokemon.indexOf(poke));
@@ -1222,19 +1223,29 @@ Battle = FunctionObject.new({
 			poke.battler.damaged[damage.category] += amount;
 		var display = Display.state.save();
 		Textbox.effect(function () { return Display.state.transition(display); });
-		if (poke.fainted()) {
-			poke.battler.display.transition = 0;
-			poke.battler.display.height = 0;
-			var displayFaint = Display.state.save();
-			Textbox.state(poke.name() + " fainted!", function () { return Display.state.transition(displayFaint); });
-			if (poke.friendship > 0)
-				-- poke.friendship;
-			Battle.removeFromBattle(poke);
-		} else {
+		if (!poke.fainted()) {
 			Battle.triggerEvent(Events.health, {
 				change : -amount
 			}, damage.cause, poke);
 		}
+	},
+	survey : function () {
+		/*
+			Battle.survey() looks at all the Pokémon after a move has been used to check whether any of the Pokémon should faint.
+			This means that fainting happens when all Pokémon have been damaged, rather than after each individual effect of damage
+			has been dealt out.
+		*/
+		foreach(Battle.all(true), function (poke) {
+			if (poke.fainted()) {
+				poke.battler.display.transition = 0;
+				poke.battler.display.height = 0;
+				var displayFaint = Display.state.save();
+				Textbox.state(poke.name() + " fainted!", function () { return Display.state.transition(displayFaint); });
+				if (poke.friendship > 0)
+					-- poke.friendship;
+				Battle.removeFromBattle(poke);
+			}
+		});
 	},
 	heal : function (poke, amount, cause) {
 		if (amount < 0)
