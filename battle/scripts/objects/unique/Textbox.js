@@ -318,10 +318,12 @@ Textbox = FunctionObject.new({
 		Textbox.prepareNextMessage();
 		return latest.id;
 	},
-	confirm : function (query, callback, minors, defaultResponse, name, hover) {
+	confirm : function (query, callback, defaultResponse, name, hover, showTextImmediately) {
 		var hotkeys = {};
 		hotkeys[Settings._("keys => secondary")] = "No";
-		return Textbox.ask(query, ["No", "Yes"], callback, minors, defaultResponse, hotkeys, name, hover);
+		return Textbox.ask(query, ["No", "Yes"], function (response, i) {
+			callback(response === "Yes");
+		}, null, defaultResponse, hotkeys, name, hover, showTextImmediately);
 	},
 	remove : function (id) {
 		var found = Textbox.messageIndexForId(id);

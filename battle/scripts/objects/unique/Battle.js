@@ -1110,7 +1110,8 @@ Battle = FunctionObject.new({
 			if (poke === NoPokemon)
 				emptyPlaces.push(i);
 		});
-		if (emptyPlaces.length) {
+		//? Experience rates are messed up
+		if (emptyPlaces.notEmpty()) {
 			foreach(Battle.opposingTrainers, function (trainer) {
 				if (!emptyPlaces.length)
 					return true;
@@ -1122,25 +1123,33 @@ Battle = FunctionObject.new({
 						Textbox.state("A wild " + poke.name() + " is about to appear!");
 					var character = Game.player; //? Will not work for replays, also multiplayer?
 					if (character.healthyPokemon(true).notEmpty()) {
-						immediatelyAfter = Textbox.ask("Do you want to switch a different Pokémon in?", ["Yes", "No"], function (response, i) {
-							if (i === 0) {
-								Textbox.insertAfter(Textbox.state("Well, bad luck!"), immediatelyAfter);
+						immediatelyAfter = Textbox.confirm("Do you want to switch a different Pokémon in?", function (yes) {
+							if (yes) {
 								var names = [], positions = [];
 								foreach(character.healthyPokemon(true), function (poke, i) {
 									names.push(poke.name());
 									positions.push(character.party.pokemon.indexOf(poke));
 								});
-								var hotkeys = {};
+								var hotkeys = {}, appendAfter;
 								hotkeys[Settings._("keys => secondary")] = "Cancel";
-								Textbox.ask("Which Pokémon do you want to switch in?", names, function (response, i) {
-									if (response !== "Cancel")
-										Battle.input("Pokémon", positions[i]);
-									else
-										Battle.prompt();
-								}, ["Cancel"], null, hotkeys, null, null, true);
-								Battle.swap(currentBattler, character.party.pokemon[secondary]);
+								Textbox.insertAfter(appendAfter = Textbox.ask("Which Pokémon do you want to switch in?", names, function (response, i) {
+									if (response !== "Cancel") {
+										if (character.battlers().length > 1) {
+											names = [];
+											foreach(character.battlers(), function (replace) {
+												names.push(replace.name());
+											});
+											Textbox.insertAfter(Textbox.ask("Which Pokémon do you want to switch out for " + character.party.pokemon[positions[i]].name() + "?", names, function (response, j) {
+												if (response !== "Cancel") {
+													Battle.swap(character.battlers()[j], character.party.pokemon[positions[i]]);
+												}
+											}, ["Cancel"], null, hotkeys, null, null, true), appendAfter);
+										} else
+											Battle.swap(character.battlers().first(), character.party.pokemon[positions[i]]); //? Or in empty slot, if one exists?
+									}
+								}, ["Cancel"], null, hotkeys, null, null, true), immediatelyAfter);
 							}
-						});
+						}, null, null, null, true);
 					}
 					Battle.enter(poke, true, emptyPlaces.shift());
 				}
