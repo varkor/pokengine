@@ -314,7 +314,7 @@
 					var settings = {
 						style : (document.querySelector("#style").value === "double" ? Battles.style.double : Battles.style.normal),
 						weather : (Weathers.hasOwnProperty(document.querySelector("#weather").value) ? Weathers[document.querySelector("#weather").value] : Weathers.clear),
-						scene : (Scenes.hasOwnProperty(document.querySelector("#scene").value) ? document.querySelector("#scene").value : "Field Clearing"),
+						scene : (Scenes._(document.querySelector("#scene").value + "?") ? document.querySelector("#scene").value : "Field Clearing"),
 						rules : {
 							levels : document.querySelector("#rule-levels").value,
 							party : document.querySelector("#rule-party").value,

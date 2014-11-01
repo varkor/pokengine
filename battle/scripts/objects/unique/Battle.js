@@ -1766,7 +1766,7 @@ Battle = FunctionObject.new({
 						Sprite.draw(canvas, poke.paths.sprite(side), position.x, position.y - position.z, true, [{ type : "fill", colour : "white" }, { type : "opacity", value : Math.pow(1 - transition, 0.4) }, { type : "crop", heightRatio : poke.battler.display.height }], matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix, now);
 				});
 				if (Settings._("visual weather effects") || display.flags.weather)
-					Weather.draw(canvas.context);
+					Weather.draw(context);
 				foreach(display.opponents, function (poke, place) {
 					if (poke !== NoPokemon)
 						Battle.drawing.bar(poke, false, 30 + 34 * place);

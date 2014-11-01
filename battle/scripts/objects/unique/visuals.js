@@ -22,7 +22,7 @@ Weather = {
 		all : [],
 		maximum : 100,
 		add : function () {
-			var width = Game.canvas.element.width, height = Game.canvas.element.height;
+			var width = Battle.canvas.width, height = Battle.canvas.height;
 			var particle = {
 				type : Weather.weather,
 				position : {
@@ -92,7 +92,7 @@ Weather = {
 						particle.calc = {cos : Math.cos(particle.velocity.direction), sin : Math.sin(particle.velocity.direction)};
 					}
 				}
-				if (!inRange(particle.position.x, 0 - particle.size, Game.canvas.element.width + particle.size) || !inRange(particle.position.y, 0 - particle.size, Game.canvas.element.height + particle.size) || (particle.position.y >= particle.landed && particle.velocity.speed === 0))
+				if (!inRange(particle.position.x, 0 - particle.size, Battle.canvas.width + particle.size) || !inRange(particle.position.y, 0 - particle.size, Battle.canvas.height + particle.size) || (particle.position.y >= particle.landed && particle.velocity.speed === 0))
 					deletion.push(i);
 			});
 		},
@@ -136,7 +136,7 @@ Weather = {
 		}
 		if (overlay) {
 			context.fillStyle = overlay;
-			context.fillRect(0, 0, Game.canvas.element.width, Game.canvas.element.height);
+			context.fillRect(0, 0, Battle.canvas.width, Battle.canvas.height);
 		}
 	}
 };

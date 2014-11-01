@@ -112,6 +112,12 @@ Keys = {
 		});
 		return pressed;
 	},
+	isHeld : function (key) {
+		return Keys.held.hasOwnProperty(key);
+	},
+	isPressed : function (key) {
+		return Keys.isHeld(key) && Keys.held[key].duration === 1;
+	},
 	press : function (key) {
 		if (!Keys.held.hasOwnProperty(key))
 			Keys.held[key] = 1;
