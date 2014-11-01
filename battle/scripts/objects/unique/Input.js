@@ -3,6 +3,46 @@ Input = FunctionObject.new({
 }, {
 	update : function () {
 		forevery(Keys.held, function (duration, key) {
+			if (!foreach(Keys.handlers, function (handler) {
+				if (handler.keys.contains(key) && handler.handler(key, duration === 1))
+					return true;
+				if (Keys.heldKeys().length > 1 && handler.keys.contains(Keys.combination(Keys.heldKeys())) && handler.handler(Keys.combination(Keys.heldKeys()), duration === 1))
+					return true;
+			})) {
+				if (duration === 1 && !/unknown (.*)/.test(key)) {
+					if (Input.controlScheme !== "keyboard" && (typeof Textbox === "undefined" || Textbox.dialogue.empty() || Textbox.dialogue.first().responses.empty()))
+						Input.controlScheme = "keyboard";
+					if (Input.controlScheme === "keyboard") {
+						if (Game.focused && typeof Textbox !== "undefined" && Textbox.active) {
+							switch (key) {
+								case Settings._("keys => primary"):
+									Textbox.progress();
+									return true;
+								case Settings._("keys => up"):
+									Textbox.selectAdjacent(Directions.up);
+									return true;
+								case Settings._("keys => right"):
+									Textbox.selectAdjacent(Directions.right);
+									return true;
+								case Settings._("keys => down"):
+									Textbox.selectAdjacent(Directions.down);
+									return true;
+								case Settings._("keys => left"):
+									Textbox.selectAdjacent(Directions.left);
+									return true;
+								default:
+									if (!/unknown (.*)/.test(key)) {
+										Textbox.key(Keys.combination(Keys.heldKeys()));
+									}
+									break;
+							}
+						}
+					}
+					Input.controlScheme = "keyboard";
+				}
+			}
+		});
+		forevery(Keys.held, function (duration, key) {
 			Keys.held[key] = duration + 1;
 		});
 	}
@@ -97,6 +137,7 @@ Keys = {
 		}
 	},
 	held : {},
+	handlers : [],
 	heldKeys : function () {
 		var held = [];
 		forevery(Keys.held, function (duration, key) {
@@ -118,43 +159,20 @@ Keys = {
 	isPressed : function (key) {
 		return Keys.isHeld(key) && Keys.held[key].duration === 1;
 	},
+	addHandler : function (handler, forWhichKeys) {
+		Keys.handlers.push({
+			handler : handler,
+			keys : forWhichKeys
+		});
+	},
 	press : function (key) {
 		if (!Keys.held.hasOwnProperty(key))
 			Keys.held[key] = 1;
-		if (!/unknown (.*)/.test(key)) {
-			if (Input.controlScheme !== "keyboard" && (typeof Textbox === "undefined" || Textbox.dialogue.empty() || Textbox.dialogue.first().responses.empty()))
-				Input.controlScheme = "keyboard";
-			if (Input.controlScheme === "keyboard") {
-				if (Game.focused && typeof Textbox !== "undefined" && Textbox.active) {
-					switch (key) {
-						case Settings._("keys => primary"):
-							Textbox.progress();
-							return true;
-						case Settings._("keys => up"):
-							Textbox.selectAdjacent(Directions.up);
-							return true;
-						case Settings._("keys => right"):
-							Textbox.selectAdjacent(Directions.right);
-							return true;
-						case Settings._("keys => down"):
-							Textbox.selectAdjacent(Directions.down);
-							return true;
-						case Settings._("keys => left"):
-							Textbox.selectAdjacent(Directions.left);
-							return true;
-						default:
-							if (!/unknown (.*)/.test(key)) {
-								Textbox.key(Keys.combination(Keys.heldKeys()));
-							}
-							break;
-					}
-				}
-			}
-			Input.controlScheme = "keyboard";
-		}
+		return true;
 	},
 	release : function (key) {
 		delete Keys.held[key];
+		return true;
 	},
 	combination : function (keys) {
 		var combo = [];
