@@ -10,6 +10,12 @@ Debugger = FunctionObject.new({
 		},
 		timeline: [],
 		canvas : null,
+	},
+	error : function (message, specific) {
+		if (arguments.length < 2)
+			console.log("%c" + message, "color : hsl(0, 100%, 40%)");
+		else
+			console.log("%c" + message, "color : hsl(0, 100%, 40%)", specific);
 	}
 }, {
 	update : function () {
@@ -49,8 +55,9 @@ Debugger = FunctionObject.new({
 			context.fillStyle = gradient;
 			context.fill();
 			context.fillStyle = "white";
-			context.font = Font.load(16);
-			context.fillText("fps: " + fps.toFixed(1), 16, canvas.height / 2);
+			var fontSize = Math.min(canvas.width / 6, canvas.height / 2);
+			context.font = Font.load(fontSize);
+			context.fillText("fps: " + fps.toFixed(1), Math.min(fontSize, 16), canvas.height / 2);
 		}
 	}
 });
