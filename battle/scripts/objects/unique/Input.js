@@ -187,15 +187,17 @@ Keys = {
 };
 window.addEventListener("keydown", function (event) {
 	if (Keys.press(Keys.name(event.keyCode))) {
-		event.preventDefault();
 		event.stopPropagation();
 	}
+	if (!(event.metaKey || event.ctrlKey))
+		event.preventDefault();
 });
 window.addEventListener("keyup", function (event) {
 	if (Keys.release(Keys.name(event.keyCode))) {
-		event.preventDefault();
 		event.stopPropagation();
 	}
+	if (!(event.metaKey || event.ctrlKey))
+		event.preventDefault();
 });
 
 Cursor = {
