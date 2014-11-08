@@ -303,7 +303,7 @@
 						});
 						pokes.add(new pokemon({
 							species : li.querySelector("select").value,
-							level : li.querySelector("input").value,
+							level : parseInt(li.querySelector("input").value),
 							moves : moves
 						}));
 					});
