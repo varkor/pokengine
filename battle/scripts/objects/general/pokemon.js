@@ -5,17 +5,23 @@ function pokemon (data) {
 
 	if (arguments.length < 1)
 		data = {};
-	var setProperty = function (property, value) {
-		if (data.hasOwnProperty(property))
-			self[property] = data[property];
-		else
-			self[property] = (typeof value === "function" ? value() : value);
+	var setProperty = function (property, value, type) {
+		if (data.hasOwnProperty(property)) {
+			if (arguments.length < 3 || typeof data[property] === type || data[property] === null)
+				self[property] = data[property];
+			else throw "Incorrect type given to property: " + property;
+		} else {
+			var propertyValue = (typeof value === "function" ? value() : value);
+			if (arguments.length < 3 || typeof propertyValue === type || propertyValue === null)
+				self[property] = propertyValue;
+			else throw "Incorrect type given to property: " + property;
+		}
 	};
 
 	setProperty("species", "Missingno.");
 	setProperty("nickname", null);
 	setProperty("unique", Game.unique());
-	setProperty("level", 1);
+	setProperty("level", 1, "number");
 	setProperty("nature", Natures.Lonely);
 	setProperty("gender", Genders.male);
 	setProperty("moves", function () {
@@ -36,7 +42,7 @@ function pokemon (data) {
 		return IVs;
 	});
 	setProperty("EVs", [0, 0, 0, 0, 0, 0]);
-	setProperty("experience", 0);
+	setProperty("experience", 0, "number");
 	setProperty("nationality", Nationalities.British);
 	setProperty("item", null);
 	setProperty("form", null);
