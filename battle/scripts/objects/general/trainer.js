@@ -58,7 +58,15 @@ function trainer (data) {
 			Gives the player a Pokémon, ensuring it now has the correct trainer details.
 		*/
 		poke.belong(self);
-		self.rent(poke);
+		if (self === Game.player) {
+			Pokedex.capture(poke.species);
+		}
+		if (self.party.pokemon.length < self.party.space)
+			self.party.add(poke);
+		else if (self === Game.player) {
+			var placement = Storage.store(poke);
+			Textbox.say(poke.name() + " has been placed in \"" + placement.box + "\".");
+		}
 	};
 
 	self.rent = function (poke) {
@@ -66,10 +74,8 @@ function trainer (data) {
 			Gives the trainer a Pokémon, but only temporarily, so it is not added to the Pokédex.
 			This is used for some tournament battles, such as in the Battle Factory
 		*/
-		self.party.add(poke);
-		if (self === Game.player) {
-			Pokedex.capture(poke.species);
-		}
+		if (self.party.pokemon.length < self.party.space) // Otherwise, it cannot be added to the party
+			self.party.add(poke);
 	};
 
 	self.release = function (poke) {

@@ -29,6 +29,7 @@ var paths = [
 	"scripts/objects/general/trainer.js",
 	"scripts/objects/general/battler.js",
 	"scripts/objects/general/pokemon.js",
+	"scripts/objects/unique/Storage.js",
 	"scripts/objects/unique/Client.js",
 	"scripts/objects/unique/Battle.js",
 	"scripts/objects/unique/Debugger.js"
