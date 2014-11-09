@@ -12,7 +12,7 @@ Lighting = {
 				case Weathers.sandstorm:
 					return 0.15;
 				case Weathers.fog:
-					return 0.05;
+					return 0.1;
 				case Weathers.shadowyAura:
 					return 0.4;
 			};
@@ -181,11 +181,13 @@ Weather = {
 				gradient.addColorStop(0, "hsla(215, 5%, 100%, 0.6)");
 				gradient.addColorStop(1, "hsla(215, 5%, 60%, 0.8)");
 				overlay = gradient;
+				break;
 			case Weathers.shadowyAura:
 				var gradient = context.createRadialGradient(Battle.canvas.width / 2, Battle.canvas.height / 4, 0, Battle.canvas.width / 2, Battle.canvas.height / 4, Math.min(Battle.canvas.width, Battle.canvas.height) * 0.65);
 				gradient.addColorStop(0, "hsla(280, 60%, 30%, 0.4)");
 				gradient.addColorStop(1, "hsla(280, 0%, 0%, 0.80)");
 				overlay = gradient;
+				break;
 		}
 		if (overlay) {
 			context.fillStyle = overlay;
