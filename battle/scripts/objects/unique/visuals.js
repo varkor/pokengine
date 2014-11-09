@@ -3,12 +3,18 @@ Lighting = {
 		opacity : function () {
 			switch (Weather.weather) {
 				case Weathers.clear:
+				case Weathers.diamondDust:
 					return 0.3;
 				case Weathers.intenseSunlight:
 					return 0.5;
 				case Weathers.rain:
 				case Weathers.hail:
+				case Weathers.sandstorm:
 					return 0.15;
+				case Weathers.fog:
+					return 0.05;
+				case Weathers.shadowyAura:
+					return 0.4;
 			};
 		}
 	}
@@ -22,7 +28,7 @@ Weather = {
 		all : [],
 		maximum : 100,
 		add : function () {
-			var width = Battle.canvas.width, height = Battle.canvas.height;
+			var width = Battle.canvas.width, height = Battle.canvas.height, appearFromTop = true;
 			var particle = {
 				type : Weather.weather,
 				position : {
@@ -39,12 +45,6 @@ Weather = {
 					sin : null
 				}
 			};
-			particle.calc = {
-				cos : Math.cos(particle.velocity.direction),
-				sin : Math.sin(particle.velocity.direction)
-			};
-			var horizontalTravelling = particle.calc.cos * (height / particle.calc.sin);
-			particle.position.x = random(0 - horizontalTravelling, width + horizontalTravelling);
 			switch (particle.type) {
 				case Weathers.rain:
 					particle.size = particle.velocity.speed * 4;
@@ -52,8 +52,32 @@ Weather = {
 				case Weathers.hail:
 					particle.size = random(1, 2);
 					break;
+				case Weathers.sandstorm:
+					particle.size = random(1, 2);
+					particle.velocity = {
+						speed : random(10, 16),
+						direction : (0 / 2) * Math.PI + (Math.PI / 32) * random(-1, 1)
+					}
+					appearFromTop = false;
+					break;
+				case Weathers.diamondDust:
+					particle.size = random(4, 8);
+					particle.velocity.speed = random(1, 2);
+					break;
 			}
-			particle.position.y = - particle.size;
+			particle.calc = {
+				cos : Math.cos(particle.velocity.direction),
+				sin : Math.sin(particle.velocity.direction)
+			};
+			if (appearFromTop) {
+				var horizontalTravelling = particle.calc.cos * (height / particle.calc.sin);
+				particle.position.x = random(0 - horizontalTravelling, width + horizontalTravelling);
+				particle.position.y = - particle.size;
+			} else {
+				var verticalTravelling = particle.calc.sin * (width / particle.calc.cos);
+				particle.position.x = - particle.size;
+				particle.position.y = random(0 - verticalTravelling, height + verticalTravelling);
+			}
 			Weather.particles.all.push(particle);
 			return particle;
 		},
@@ -81,7 +105,7 @@ Weather = {
 							return true;
 						}
 					}) : false);
-					if (particle.position.y >= Weather.skyHeight && !overPokemon && chance(Time.framerate / 4)) {
+					if (particle.type !== Weathers.sandstorm && particle.position.y >= Weather.skyHeight && !overPokemon && chance(Time.framerate / 4)) {
 						particle.landed = particle.position.y;
 						if (particle.type === Weathers.hail) {
 							particle.velocity.direction = (3 / 2) * Math.PI;
@@ -111,6 +135,19 @@ Weather = {
 						context.fillStyle = "hsla(225, 55%, 95%, 0.8)";
 						context.fillCircle(particle.position.x, particle.position.y, particle.size);
 						break;
+					case Weathers.sandstorm:
+						context.fillStyle = "hsla(" + randomInt(30, 50) + ", " + randomInt(20, 50) + "%, " + randomInt(35, 50) + "%, " + random(0.6, 1) + ")";
+						context.fillCircle(particle.position.x, particle.position.y, particle.size);
+						break;
+					case Weathers.diamondDust:
+						context.beginPath();
+						context.moveTo(particle.position.x, particle.position.y);
+						var points = 4, size = particle.size / 2 + (Math.sin(particle.position.y / 3) + 1) / 2 * particle.size / 2;
+						for (var i = 0; i < points * 2 + 1; ++ i)
+							context.lineTo(particle.position.x + Math.cos(2 * Math.PI / (points * 2) * i) * (i % 2 === 0 ? size : size / 2), particle.position.y + Math.sin(2 * Math.PI / (points * 2) * i) * (i % 2 === 0 ? size : size / 2));
+						context.fillStyle = "hsla(225, 0%, 100%, 0.9)";
+						context.fill();
+						break;
 				}
 			});
 		}
@@ -118,7 +155,7 @@ Weather = {
 	draw : function (context, weather) {
 		if (arguments.length < 2)
 			weather = Weather.weather;
-		if ([Weathers.rain, Weathers.hail].contains(Weather.weather)) {
+		if ([Weathers.rain, Weathers.hail, Weathers.sandstorm, Weathers.diamondDust].contains(Weather.weather)) {
 			while (Weather.particles.all.length < Weather.particles.maximum && (1 / Weather.time < random()))
 				Weather.particles.add();
 		}
@@ -133,6 +170,22 @@ Weather = {
 			case Weathers.hail:
 				overlay = "hsla(215, 35%, 45%, 0.4)";
 				break;
+			case Weathers.sandstorm:
+				overlay = "hsla(45, 60%, 50%, 0.4)";
+				break;
+			case Weathers.diamondDust:
+				overlay = "hsla(215, 0%, 100%, 0.5)";
+				break;
+			case Weathers.fog:
+				var gradient = context.createLinearGradient(0, 0, 0, Battle.canvas.height);
+				gradient.addColorStop(0, "hsla(215, 5%, 100%, 0.6)");
+				gradient.addColorStop(1, "hsla(215, 5%, 60%, 0.8)");
+				overlay = gradient;
+			case Weathers.shadowyAura:
+				var gradient = context.createRadialGradient(Battle.canvas.width / 2, Battle.canvas.height / 4, 0, Battle.canvas.width / 2, Battle.canvas.height / 4, Math.min(Battle.canvas.width, Battle.canvas.height) * 0.65);
+				gradient.addColorStop(0, "hsla(280, 60%, 30%, 0.4)");
+				gradient.addColorStop(1, "hsla(280, 0%, 0%, 0.80)");
+				overlay = gradient;
 		}
 		if (overlay) {
 			context.fillStyle = overlay;

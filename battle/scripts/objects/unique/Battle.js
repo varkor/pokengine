@@ -818,7 +818,7 @@ Battle = FunctionObject.new({
 			};
 	},
 	pokemonInPlace : function (place) {
-		return (place.hasOwnProperty("side") ? (place.team === Game.player.team ? Battle.allies : Battle.opponents)[place.position] : Battle.trainerOfTeam(place.team).party.pokemon[place.position]);
+		return (place.hasOwnProperty("side") ? (place.team === Game.player.team ? Battle.allies : Battle.opponents)[place.position] : Battle.trainerOfTeam(place.team).party.pokemon[place.position]); //? Will not work for replays?
 	},
 	trainerOfTeam : function (team) {
 		var trainerOfTeam = null, all = Battle.allTrainers();
@@ -1111,8 +1111,6 @@ Battle = FunctionObject.new({
 			if (poke === NoPokemon)
 				emptyPlaces.push(i);
 		});
-		//? Experience rates are messed up
-		//? Battle.opponentsTo doesn't work properly here. Need a mechanism like at battle start.
 		//? Are these priorities correct?
 		var anyQueries = false, continueToNextTurn = function () {
 			Battle.race(Battle.queue);
@@ -1120,6 +1118,7 @@ Battle = FunctionObject.new({
 			++ Battle.turns;
 			Battle.fillEmptyPlaces();
 		};
+		//? This whole system should not occur for replays
 		if (emptyPlaces.notEmpty()) {
 			foreach(Battle.opposingTrainers, function (trainer) {
 				if (!emptyPlaces.length)
