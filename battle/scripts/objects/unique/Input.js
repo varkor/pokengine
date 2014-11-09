@@ -162,7 +162,7 @@ Keys = {
 	addHandler : function (handler, forWhichKeys) {
 		Keys.handlers.push({
 			handler : handler,
-			keys : forWhichKeys
+			keys : wrapArray(forWhichKeys)
 		});
 	},
 	press : function (key) {
@@ -183,6 +183,12 @@ Keys = {
 				combo.push(arguments[i]);
 		}
 		return combo.sort().join(", ");
+	},
+	simulate : function (key) {
+		foreach(Keys.handlers, function (handler) {
+			if (handler.keys.contains(key))
+				handler.handler(key, true);
+		});
 	}
 };
 window.addEventListener("keydown", function (event) {
