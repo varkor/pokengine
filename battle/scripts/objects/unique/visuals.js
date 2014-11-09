@@ -126,7 +126,7 @@ Weather = {
 					case Weathers.rain:
 						context.beginPath();
 						context.strokeStyle = "hsla(225, 55%, 95%, 0.4)";
-						context.strokeWidth = 1;
+						context.lineWidth = 1;
 						context.moveTo(particle.position.x - particle.calc.cos * particle.size, particle.position.y - particle.calc.sin * particle.size);
 						context.lineTo(particle.position.x + particle.calc.cos * particle.size, particle.position.y + particle.calc.sin * particle.size);
 						context.stroke();

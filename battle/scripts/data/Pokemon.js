@@ -47,9 +47,9 @@ Pokemon = {
 		types : [Types.grass, Types.poison],
 		experience : Experiences.fast,
 		forms : {
-			Normal : {
+			"Normal" : {
 			},
-			Metallic : {
+			"Metallic" : {
 				types : [Types.grass, Types.steel],
 				attack : 200
 			}

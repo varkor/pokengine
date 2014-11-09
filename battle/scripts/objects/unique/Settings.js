@@ -28,5 +28,6 @@ Settings.addData({
 	"visual weather effects" : true, // Whether weather constantly displays visually, or just at the end of each turn
 	"particle collision-testing" : false, // Whether weather particles should implement proper collision testing
 	"sound effects" : false, // Whether sounds play or not
-	"text speed" : 4
+	"text speed" : 4,
+	"switching chance" : true // Whether the player gets a chance to switch a Pokémon in before the opponent sends theirs in
 }, false);

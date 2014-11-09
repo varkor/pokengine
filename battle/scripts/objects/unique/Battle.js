@@ -203,11 +203,9 @@ Battle = FunctionObject.new({
 				resources.push(poke.paths.sprite("front", true), poke.paths.sprite("back", true), poke.paths.cry(true));
 			});
 		});
-		var timeout = 3 * Time.seconds;
-		window.ress = resources.slice(0);
-		window.ress2 = [];
+		var timeout = 3 * Time.seconds, unloadedResources = resources.slice(0);
 		var progress = function (resource) {
-			window.ress.remove(window.ress.indexOf(resource));
+			unloadedResources.remove(unloadedResources.indexOf(resource));
 			Battle.state.progress = ++ loaded / resources.length;
 			if (loaded === resources.length) {
 				Textbox.stateUntil("", function () { return Battle.state.kind !== "opening"; });
@@ -228,8 +226,8 @@ Battle = FunctionObject.new({
 			});
 		});
 		setTimeout(function () {
-			if (window.ress.notEmpty())
-				Battle.state.failed = Battle.state.failed.concat(window.ress);
+			if (unloadedResources.notEmpty())
+				Battle.state.failed = Battle.state.failed.concat(unloadedResources);
 		}, timeout);
 	},
 	playRecording : function (recording, alliedTrainers, opposingTrainers) {
@@ -1126,57 +1124,59 @@ Battle = FunctionObject.new({
 				var sendingOut = 0;
 				while (trainer.battlers().length + sendingOut < Math.min((Battle.style === Battles.style.normal ? 1 : 2) / Battle.opposingTrainers.length) && trainer.hasHealthyPokemon(true) && emptyPlaces.length) {
 					var poke = trainer.healthyPokemon(true).first(), immediatelyAfter;
-					if (poke.trainer !== TheWild)
-						Textbox.state(trainer.name + " is about to send out " + poke.name() + ".");
-					else
-						Textbox.state("A wild " + poke.name() + " is about to appear!");
-					var character = Game.player; //? Will not work for replays, also multiplayer?
-					if (character.healthyPokemon(true).notEmpty()) {
-						anyQueries = true;
-						immediatelyAfter = Textbox.confirm("Do you want to switch a different Pokémon in?", function (yes) {
-							if (yes) {
-								var names = [], positions = [];
-								foreach(character.healthyPokemon(true), function (poke, i) {
-									names.push(poke.name());
-									positions.push(character.party.pokemon.indexOf(poke));
-								});
-								var hotkeys = {}, appendAfter;
-								hotkeys[Settings._("keys => secondary")] = "Cancel";
-								Textbox.insertAfter(appendAfter = Textbox.ask("Which Pokémon do you want to switch in?", names, function (response, i) {
-									if (response !== "Cancel") {
-										if (character.battlers().length > 1) {
-											names = [];
-											foreach(character.battlers(), function (replace) {
-												names.push(replace.name());
-											});
-											Textbox.insertAfter(Textbox.ask("Which Pokémon do you want to switch out for " + character.party.pokemon[positions[i]].name() + "?", names, function (response, j) {
-												if (response !== "Cancel") {
-													Battle.queue.push({
-														poke : poke,
-														doesNotRequirePokemonToBeBattling : true,
-														priority : 2,
-														action : function (which, withWhat) {return function () {
-															Battle.swap(character.battlers()[which], character.party.pokemon[positions[withWhat]]);
-														}; }(j, i)
-													});
-													continueToNextTurn();
-												} else continueToNextTurn();
-											}, ["Cancel"], null, hotkeys, null, null, true), appendAfter);
-										} else {
-											Battle.queue.push({
-												poke : poke,
-												doesNotRequirePokemonToBeBattling : true,
-												priority : 2,
-												action : function (which) {return function () {
-													Battle.swap(character.battlers().first(), character.party.pokemon[positions[which]]); //? Or in empty slot, if one exists?
-												}; }(i)
-											});
-											continueToNextTurn();
-										}
-									} else continueToNextTurn();
-								}, ["Cancel"], null, hotkeys, null, null, true), immediatelyAfter);
-							} else continueToNextTurn();
-						}, null, null, null, true);
+					if (Battle.kind !== Battles.kind.online && Settings._("switching chance")) {
+						var character = Game.player; //? Will not work for replays, also multiplayer?
+						if (character.healthyPokemon(true).notEmpty()) {
+							if (poke.trainer !== TheWild)
+								Textbox.state(trainer.name + " is about to send out " + poke.name() + ".");
+							else
+								Textbox.state("A wild " + poke.name() + " is about to appear!");
+							anyQueries = true;
+							immediatelyAfter = Textbox.confirm("Do you want to switch a different Pokémon in?", function (yes) {
+								if (yes) {
+									var names = [], positions = [];
+									foreach(character.healthyPokemon(true), function (poke, i) {
+										names.push(poke.name());
+										positions.push(character.party.pokemon.indexOf(poke));
+									});
+									var hotkeys = {}, appendAfter;
+									hotkeys[Settings._("keys => secondary")] = "Cancel";
+									Textbox.insertAfter(appendAfter = Textbox.ask("Which Pokémon do you want to switch in?", names, function (response, i) {
+										if (response !== "Cancel") {
+											if (character.battlers().length > 1) {
+												names = [];
+												foreach(character.battlers(), function (replace) {
+													names.push(replace.name());
+												});
+												Textbox.insertAfter(Textbox.ask("Which Pokémon do you want to switch out for " + character.party.pokemon[positions[i]].name() + "?", names, function (response, j) {
+													if (response !== "Cancel") {
+														Battle.queue.push({
+															poke : poke,
+															doesNotRequirePokemonToBeBattling : true,
+															priority : 2,
+															action : function (which, withWhat) {return function () {
+																Battle.swap(character.battlers()[which], character.party.pokemon[positions[withWhat]]);
+															}; }(j, i)
+														});
+														continueToNextTurn();
+													} else continueToNextTurn();
+												}, ["Cancel"], null, hotkeys, null, null, true), appendAfter);
+											} else {
+												Battle.queue.push({
+													poke : poke,
+													doesNotRequirePokemonToBeBattling : true,
+													priority : 2,
+													action : function (which) {return function () {
+														Battle.swap(character.battlers().first(), character.party.pokemon[positions[which]]); //? Or in empty slot, if one exists?
+													}; }(i)
+												});
+												continueToNextTurn();
+											}
+										} else continueToNextTurn();
+									}, ["Cancel"], null, hotkeys, null, null, true), immediatelyAfter);
+								} else continueToNextTurn();
+							}, null, null, null, true);
+						}
 					}
 					Battle.queue.push({
 						poke : poke,

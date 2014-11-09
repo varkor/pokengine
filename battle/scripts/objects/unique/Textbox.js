@@ -78,25 +78,30 @@ Textbox = FunctionObject.new({
 	messages : 0,
 	namedDialogue : {}, // Allows the textbox to remember the user's last response to dialogue like "Fight, Run, Bag, etc."
 	commands : {
-		"colour" : {
-			type : "string",
-			default : "white"
-		},
-		"size" : {
-			type : "number",
-			default : function (style) {
-				return (style || Textbox.currentStyle()).lineHeight;
+		formatting : {
+			"colour" : {
+				type : "string",
+				default : "white"
+			},
+			"size" : {
+				type : "number",
+				default : function (style) {
+					return (style || Textbox.currentStyle()).lineHeight;
+				}
+			},
+			"weight" : {
+				type : "string",
+				default : function () {
+					return Settings._("font => weight");
+				}
+			},
+			"style" : {
+				type : "string",
+				default : ""
 			}
 		},
-		"weight" : {
-			type : "string",
-			default : function () {
-				return Settings._("font => weight");
-			}
-		},
-		"style" : {
-			type : "string",
-			default : ""
+		entities : {
+			"image" : {}
 		}
 	},
 	setStyle : function (style) {
@@ -155,21 +160,21 @@ Textbox = FunctionObject.new({
 				<size: SIZE-IN-PIXELS-HERE> will make all text after that tag a different size
 				<weight: bold> will make all text after that tag bold
 				<style: italic> will make all text after that tag italic
+				<image: IMAGE-PATH-HERE> will display an inline image at that point in the text
 			progress : How long to wait after displaying all the text before continuing ("manual" will require input from the user),
 			trigger : A function to execute before continuing,
 			pause : A condition to wait upon before finishing,
 			after : A function to execute after pausing
 		*/
-		var styling = {};
-		forevery(Textbox.commands, function (settings, command) {
+		var message = {}, styling = {}, entities = [], wrappedText;
+		forevery(Textbox.commands.formatting, function (settings, command) {
 			styling[command] = {};
 		});
 		if (text !== null) {
-			text = "" + text;
+			text = "" + text.trim();
 			var replacements = Settings._("text replacements").data;
 			forevery(Settings._("text replacements"), function (replacement, original) {
 				text = text.replace(new RegExp("(^|[^a-zA-Z0-9])(\\\\)?(" + original + ")(?:\\b)", "g"), function (match, start, escaped, text) {
-					console.log(match, escaped, text);
 					if (escaped)
 						return start + original;
 					else
@@ -177,44 +182,61 @@ Textbox = FunctionObject.new({
 				});
 			});
 			var regex, exclusive, position, value = null, previousValue, valueStack = [];
-			forevery(Textbox.commands, function (settings, command) {
-				regex = new RegExp("<" + command + ": ?(.*?)>", "i");
-				exclusive = text;
-				forevery(Textbox.commands, function (__, exclude) {
-					if (exclude === command)
-						return;
-					exclusive = exclusive.replace(new RegExp("<" + exclude + ": ?(.*?)>", "gi"), "");
-				});
-				while ((position = exclusive.search(regex)) > -1) {
-					previousValue = value;
-					value = regex.exec(exclusive)[1];
-					if (value === "" && valueStack.notEmpty())
-						value = valueStack.pop();
-					else if (value === ":" || (value === "" && valueStack.empty()))
-						value = "default";
-					else if (previousValue)
-						valueStack.push(previousValue);
-					styling[command][position] = value;
-					if (styling[command][position] !== "default") {
-						switch (settings.type) {
-							case "string":
-								break;
-							case "number":
-								styling[command][position] = parseFloat(styling[command][position]);
-								break;
+			forevery(Textbox.commands, function (subcommands, commandType) {
+				forevery(subcommands, function (settings, command) {
+					regex = new RegExp("<" + command + ": ?(.*?)>", "i");
+					exclusive = text;
+					forevery(Textbox.commands.formatting, function (__, exclude) {
+						if (exclude === command)
+							return;
+						exclusive = exclusive.replace(new RegExp("<" + exclude + ": ?(.*?)>", "gi"), "");
+					});
+					while ((position = exclusive.search(regex)) > -1) {
+						previousValue = value;
+						value = regex.exec(exclusive)[1];
+						if (commandType === "formatting") {
+							if (value === "" && valueStack.notEmpty())
+								value = valueStack.pop();
+							else if (value === ":" || (value === "" && valueStack.empty()))
+								value = "default";
+							else if (previousValue)
+								valueStack.push(previousValue);
+							styling[command][position] = value;
+							if (styling[command][position] !== "default") {
+								switch (settings.type) {
+									case "string":
+										break;
+									case "number":
+										styling[command][position] = parseFloat(styling[command][position]);
+										break;
+								}
+							}
+						} else {
+							var entity = {
+								entity : value,
+								position : position
+							};
+							entities.push(entity);
+							if (command === "image")
+								Sprite.load(value, function () {
+									message.text = Textbox.wrap(text, styling, entities);
+								}, function(entity){ return function () {
+									entities.remove(entities.indexOf(entity));
+								}}(entity));
 						}
+						exclusive = exclusive.replace(regex, "");
 					}
-					exclusive = exclusive.replace(regex, "");
-				}
-				text = text.replace(new RegExp(regex.source, "gi"), "");
+					text = text.replace(new RegExp(regex.source, "gi"), "");
+				});
 			});
-			text = Textbox.wrap(text, styling);
+			wrappedText = Textbox.wrap(text, styling, entities);
 		}
-		var message = {
+		message = {
 			id : Textbox.messages ++,
-			text : text,
+			text : wrappedText,
 			style : Textbox.style,
 			styling : styling,
+			entities : entities,
 			responses : [],
 			progress : (arguments.length > 1 && progress !== null ? progress : "manual"),
 			trigger : trigger,
@@ -342,29 +364,37 @@ Textbox = FunctionObject.new({
 	},
 	newStyleContext : function (style) {
 		var styleContext = {};
-		forevery(Textbox.commands, function (settings, command) {
+		forevery(Textbox.commands.formatting, function (settings, command) {
 			styleContext[command] = (typeof settings.default !== "function" ? settings.default : settings.default(style));
 		});
 		return styleContext;
 	},
 	updateStyleContext : function (styleContext, styling, position, style) {
-		forevery(Textbox.commands, function (__, command) {
+		forevery(Textbox.commands.formatting, function (settings, command) {
 			if (styling[command].hasOwnProperty(position)) {
 				styleContext[command] = styling[command][position];
 				if (styleContext[command] === "default")
-					styleContext[command] = (typeof Textbox.commands[command].default !== "function" ? Textbox.commands[command].default : Textbox.commands[command].default(style));
+					styleContext[command] = (typeof Textbox.commands.formatting[command].default !== "function" ? Textbox.commands.formatting[command].default : Textbox.commands.formatting[command].default(style));
 			}
 		});
 	},
-	wrap : function (text, styling) {
+	wrap : function (text, styling, entities) {
 		var context = Textbox.canvas.getContext("2d"), style = Textbox.styles._(Textbox.style), metrics = Textbox.metrics(style), styleContext = Textbox.newStyleContext(style);
+		entities = entities.slice(0);
 		for (var i = 0, width = 0, character, breakpoint = null, softBreakpoint = null; i < text.length; ++ i) {
 			character = text[i];
 			if (character === "\n") {
 				breakpoint = softBreakpoint = null;
 				width = 0;
-				continue;
 			}
+			while (entities.notEmpty() && entities.first().position === i) {
+				var dimensions = Sprite.load(entities.shift().entity);
+				if (dimensions) {
+					width += dimensions.width;
+				}
+			}
+			if (character === "\n")
+				continue;
 			if (/\s/.test(character))
 				breakpoint = i;
 			Textbox.updateStyleContext(styleContext, styling, i, style);
@@ -534,13 +564,11 @@ Textbox = FunctionObject.new({
 					break;
 				}
 				Textbox.responsePosition.x = Math.mod(Textbox.responsePosition.x, 1);
-				//Textbox.response = Math.min(majorResponses, Textbox.responsePosition.y * style.responsesPerRow) + Math.max(0, (Textbox.responsePosition.y - Math.ceil(majorResponses / style.responsesPerRow)) * style.responsesPerRow) + Math.round(roundTo(Textbox.responsePosition.x - 1 / responsesOnRow / 2, 1 / responsesOnRow) * responsesOnRow);
 				if (Textbox.responsePosition.y < Math.ceil(majorResponses / style.responsesPerRow)) {
 					Textbox.response = Textbox.responsePosition.y * style.responsesPerRow + Math.round(Textbox.responsePosition.x * responsesOnRow - 0.5);
 				} else {
 					Textbox.response = majorResponses + (Textbox.responsePosition.y - Math.ceil(majorResponses / style.responsesPerRow)) * style.responsesPerRow + Math.round(Textbox.responsePosition.x * responsesOnRow - 0.5);
 				}
-				//console.log(Textbox.responsePosition, Textbox.response, Math.min(majorResponses, Textbox.responsePosition.y * style.responsesPerRow), Math.round(roundTo(Textbox.responsePosition.x - 1 / responsesOnRow / 2, 1 / responsesOnRow) * responsesOnRow));
 			}
 		}
 	},
@@ -645,11 +673,16 @@ Textbox = FunctionObject.new({
 							partitionPositions.push(parseInt(position));
 						});
 					});
+					foreach(Textbox.dialogue.first().entities, function (entity) {
+						partitionPositions.push(parseInt(entity.position)); // Add two partitions, to fit in the gap between the two
+						partitionPositions.push(parseInt(entity.position));
+					});
 					partitionPositions.sort(function (a, b) { return a - b; });
 					var position = {
 						x : 0
 					}, styleContext = Textbox.newStyleContext(), lineHeights = Textbox.heightsOfLines(), currentLineStatistics = Textbox.currentlyVisibleLines();
 					lines = Textbox.displayed.split("\n");
+					var entities = Textbox.dialogue.first().entities.slice(0);
 					foreach(lines, function (line, lineNumber) {
 						partitions = Textbox.splitAtPositions(line, partitionPositions, characters);
 						foreach(partitions, function (part) {
@@ -657,6 +690,12 @@ Textbox = FunctionObject.new({
 							Textbox.updateStyleContext(styleContext, Textbox.dialogue.first().styling, characters);
 							context.font = Font.loadFromStyle(styleContext);
 							partitionWidth = context.measureText(part).width;
+							if (entities.notEmpty() && entities.first().position === characters) {
+								if (Sprite.draw(Textbox.canvas, entities.first().entity, style.margin.horizontal + style.padding.horizontal + position.x, verticalPosition, true)) {
+									position.x += Sprite.load(entities.first().entity).width;
+								}
+								entities.shift();
+							}
 							context.fillStyle = styleContext.colour;
 							context.fillText(part, style.margin.horizontal + style.padding.horizontal + position.x, verticalPosition);
 							position.x += partitionWidth;
