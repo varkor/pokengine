@@ -4,25 +4,57 @@ Client = {
 	socket : null,
 	battle : null,
 	receive : function (message) {
+		var createInvitationButton = function (li, user) {
+			var originalButton = li.querySelector("button");
+			if (originalButton !== null)
+				originalButton.parentElement.removeChild(originalButton);
+			var button = document.createElement("button");
+			button.innerHTML = "Invite";
+			button.addEventListener("mousedown", function (event) {
+				event.stopPropagation();
+				Interface.popup(button, function (event) {
+					button.innerHTML = "Invited";
+					button.disabled = true;
+					var other = {
+						user : user.user,
+						ip : user.ip
+					};
+					Client.send({
+						action : "invite",
+						who : other,
+						trainer : new trainer({
+							name : document.querySelector("#name").value,
+							party : Interface.buildParty()
+						}).store(),
+						settings : Interface.buildSettings(),
+						reference : other
+					});
+				}, false);
+			});
+			li.appendChild(button);
+			return button;
+		};
 		console.log("%cReceived the following message from the server:", "color : hsl(170, 100%, 30%)", message);
 		switch (message.action) {
 			case "issue":
 				console.log("%c" + message.message, "color : hsl(0, 100%, 40%)");
 				var li = null;
-				foreach(document.querySelectorAll("#users li"), function (user) {
-					if (user.getAttribute("data-ip") === message.reference.ip && user.getAttribute("data-user") === message.reference.user) {
-						li = user;
+				foreach(document.querySelectorAll("#users li"), function (userElement) {
+					if (userElement.getAttribute("data-ip") === message.reference.ip && userElement.getAttribute("data-user") === message.reference.user) {
+						li = userElement;
 						return true;
 					}
 				});
 				if (li) {
+					Client.send({
+						action : "reject",
+						who : {
+							user : message.reference.user,
+							ip : message.reference.ip
+						}
+					});
 					Interface.issue(li, message.message);
-					var button = li.querySelector("button");
-					if (button.classList.contains("active"))
-						button.innerHTML = "Accept";
-					else
-						button.innerHTML = "Invite";
-					button.disabled = false;
+					button = createInvitationButton(li, message.reference);
 				}
 				break;
 			case "users":
@@ -37,30 +69,7 @@ Client = {
 					li.setAttribute("data-user", user.user);
 					li.setAttribute("data-ip", user.ip);
 					li.innerHTML = user.user;
-					button = document.createElement("button");
-					button.innerHTML = "Invite";
-					button.addEventListener("mousedown", function (event) {
-						event.stopPropagation();
-						Interface.popup(button, function (event) {
-							button.innerHTML = "Invited";
-							button.disabled = true;
-							var other = {
-								user : user.user,
-								ip : user.ip
-							};
-							Client.send({
-								action : "invite",
-								who : other,
-								trainer : new trainer({
-									name : document.querySelector("#name").value,
-									party : Interface.buildParty()
-								}).store(),
-								settings : Interface.buildSettings(),
-								reference : other
-							});
-						}, false);
-					});
-					li.appendChild(button);
+					createInvitationButton(li, user);
 					document.querySelector("#users").appendChild(li);
 				});
 				break;
@@ -82,7 +91,7 @@ Client = {
 					event.stopPropagation();
 					button.innerHTML = "Accepted";
 					button.disabled = true;
-					console.log("%cAccepting the invitation to Battle...", "color : hsl(170, 100%, 30%)");
+					console.log("%cAccepting the invitation to battle...", "color : hsl(170, 100%, 30%)");
 					var other = {
 						user : message.from.user,
 						ip : message.from.ip
@@ -96,7 +105,7 @@ Client = {
 						}).store(),
 						reference : other
 					});
-				})
+				});
 				li.appendChild(button);
 				break;
 			case "begin":
@@ -116,8 +125,21 @@ Client = {
 						ip : message.other.ip
 					}
 				};
-				Game.canvas.element.focus();
+				Battle.canvas.focus();
 				Battle.beginOnline(message.seed, you, them, message.settings);
+				break;
+			case "reject":
+				console.log("%cYour invitation to battle has been rejected...", "color : hsl(170, 100%, 30%)");
+				var li = null;
+				foreach(document.querySelectorAll("#users li"), function (userElement) {
+					if (userElement.getAttribute("data-ip") === message.who.ip && userElement.getAttribute("data-user") === message.who.user) {
+						li = userElement;
+						return true;
+					}
+				});
+				if (li) {
+					createInvitationButton(li, message.who);
+				}
 				break;
 			case "disconnect":
 				var list = document.querySelector("#users").childNodes;

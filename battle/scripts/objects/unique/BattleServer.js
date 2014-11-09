@@ -130,6 +130,21 @@ exports.BattleServer = {
 					}
 				}
 				break;
+			case "reject":
+				exports.BattleServer.clients.forEach(function (client) {
+					if (client !== from && client.ip === message.who.ip && client.user === message.who.user) {
+						delete client.invitations[from.user + ":" + from.ip];
+						exports.BattleServer.send({
+							action : "reject",
+							who : {
+								user : from.user,
+								ip : from.ip
+							}
+						}, client);
+						return true;
+					}
+				});
+				break;
 			case "actions":
 				exports.BattleServer.battles.forEach(function (battle) {
 					if (Battle.clientA.client === from) {

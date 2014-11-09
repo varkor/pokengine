@@ -168,11 +168,11 @@ Keys = {
 	press : function (key) {
 		if (!Keys.held.hasOwnProperty(key))
 			Keys.held[key] = 1;
-		return true;
+		return false;
 	},
 	release : function (key) {
 		delete Keys.held[key];
-		return true;
+		return false;
 	},
 	combination : function (keys) {
 		var combo = [];
@@ -195,15 +195,15 @@ window.addEventListener("keydown", function (event) {
 	if (Keys.press(Keys.name(event.keyCode))) {
 		event.stopPropagation();
 	}
-	if (!(event.metaKey || event.ctrlKey))
-		event.preventDefault();
+	// if (!(event.metaKey || event.ctrlKey))
+	// 	event.preventDefault();
 });
 window.addEventListener("keyup", function (event) {
 	if (Keys.release(Keys.name(event.keyCode))) {
 		event.stopPropagation();
 	}
-	if (!(event.metaKey || event.ctrlKey))
-		event.preventDefault();
+	// if (!(event.metaKey || event.ctrlKey))
+	// 	event.preventDefault();
 });
 
 Cursor = {
