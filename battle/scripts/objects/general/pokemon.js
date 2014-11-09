@@ -303,17 +303,19 @@ function pokemon (data) {
 		return false;
 	};
 
-	self.pronoun = function () {
+	self.pronoun = function (capitalised) {
 		return (self.gender === Genders.male ? "he" : self.gender === Genders.female ? "she" : "it");
 	};
-	self.possessivePronoun = function () {
-		return (self.gender === Genders.male ? "his" : self.gender === Genders.female ? "her" : "its");
+	self.possessivePronoun = function (capitalised) {
+		var word = (self.gender === Genders.male ? "his" : self.gender === Genders.female ? "her" : "its");
+		return (capitalised ? capitalise(word) : word);
 	};
-	self.personalPronoun = function () {
-		return (self.gender === Genders.male ? "him" : self.gender === Genders.female ? "her" : "it");
+	self.personalPronoun = function (capitalised) {
+		var word = (self.gender === Genders.male ? "him" : self.gender === Genders.female ? "her" : "it");
+		return (capitalised ? capitalise(word) : word);
 	};
-	self.selfPronoun = function () {
-		return self.personalPronoun() + "self";
+	self.selfPronoun = function (capitalised) {
+		return self.personalPronoun(capitalised) + "self";
 	};
 
 	self.effectiveness = function (attackType, byWhom) {

@@ -42,14 +42,15 @@ function trainer (data) {
 		return JSONCopy(store);
 	};
 
-	self.pronoun = function () {
-		return (self === Game.player ? "you" : self.name);
+	self.pronoun = function (capitalised) {
+		return (self === Game.player ? (capitalised ? "You" : "you") : self.name);
 	};
-	self.genderPronoun = function () {
-		return (self === Game.player ? "you" : (self.gender === Genders.male ? "he" : self.gender === Genders.female ? "her" : "it"));
+	self.genderPronoun = function (capitalised) {
+		var word = (self === Game.player ? "you" : (self.gender === Genders.male ? "he" : self.gender === Genders.female ? "her" : "it"));
+		return (capitalised ? capitalise(word) : word);
 	};
-	self.possessivePronoun = function () {
-		return (self === Game.player ? "your" : self.name + "'s");
+	self.possessivePronoun = function (capitalised) {
+		return (self === Game.player ? (capitalised ? "Your" : "your") : self.name + "'s");
 	};
 	
 	self.give = function (poke) {

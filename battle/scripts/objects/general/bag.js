@@ -91,7 +91,7 @@ function bag (items) {
 		var index = self.indexOfItem(item), item = Items._(self.items[index].item);
 		-- self.items[index].intentToUse;
 		if (item.useMessage)
-			Textbox.state(capitalise(who.pronoun()) + " used the " + item.fullname + " on " + on.name() + "!");
+			Textbox.state(who.pronoun(true) + " used the " + item.fullname + " on " + on.name() + "!");
 		item.effect(item, on, who);
 		self.remove(index);
 	};

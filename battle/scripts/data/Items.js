@@ -29,10 +29,10 @@ Items = {
 			useMessage : false,
 			effect : function (self, poke, trainer) {
 				if (Battle.situation === Battles.situation.wild) {
-					Textbox.state(capitalise(trainer.pronoun()) + " threw a " + self.fullname + " at " + poke.name() + "!");
+					Textbox.state(trainer.pronoun(true) + " threw a " + self.fullname + " at " + poke.name() + "!");
 					Battle.attemptCapture(poke, self, trainer);
 				} else {
-					Textbox.state(capitalise(poke.trainer.pronoun()) + " blocked " + trainer.possessivePronoun() + " " + self.fullname + "! " + (trainer === Game.player ? "You can't catch other people's Pokémon!" : capitalise(trainer.pronoun()) + " tried to capture your Pokémon!"));
+					Textbox.state(poke.trainer.pronoun(true) + " blocked " + trainer.possessivePronoun() + " " + self.fullname + "! " + (trainer === Game.player ? "You can't catch other people's Pokémon!" : trainer.pronoun(true) + " tried to capture your Pokémon!"));
 				}
 			}
 		},
@@ -49,9 +49,9 @@ Items = {
 			catchRate : 255,
 			effect : function (self, poke, trainer) {
 				var thrownByPlayer = (poke.trainer !== Battle.alliedTrainers[0]);
-				Textbox.state(capitalise((thrownByPlayer ? Battle.alliedTrainers[0] : Battle.opposingTrainers[0]).pronoun()) + " threw a " + self.fullname + " at " + poke.name() + "!");
+				Textbox.state((thrownByPlayer ? Battle.alliedTrainers[0] : Battle.opposingTrainers[0]).pronoun(true) + " threw a " + self.fullname + " at " + poke.name() + "!");
 				if (Battle.situation !== Battles.situation.wild)
-					Textbox.state(capitalise((thrownByPlayer ? Battle.opposingTrainers[0] : Battle.alliedTrainers[0]).pronoun()) + " look" + (thrownByPlayer ? "s" : "") + " on helplessly as " + (thrownByPlayer ? Battle.alliedTrainers[0] : Battle.opposingTrainers[0]).possessivePronoun() + " " + self.fullname + " closes in!");
+					Textbox.state((thrownByPlayer ? Battle.opposingTrainers[0] : Battle.alliedTrainers[0]).pronoun(true) + " look" + (thrownByPlayer ? "s" : "") + " on helplessly as " + (thrownByPlayer ? Battle.alliedTrainers[0] : Battle.opposingTrainers[0]).possessivePronoun() + " " + self.fullname + " closes in!");
 				Battle.attemptCapture(poke, self, trainer);
 			}
 		}

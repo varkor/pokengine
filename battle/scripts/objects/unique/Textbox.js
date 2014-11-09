@@ -166,7 +166,7 @@ Textbox = FunctionObject.new({
 			pause : A condition to wait upon before finishing,
 			after : A function to execute after pausing
 		*/
-		var message = {}, styling = {}, entities = [], wrappedText;
+		var message = {}, styling = {}, entities = [], wrappedText = text;
 		forevery(Textbox.commands.formatting, function (settings, command) {
 			styling[command] = {};
 		});

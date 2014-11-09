@@ -361,9 +361,9 @@ Battle = FunctionObject.new({
 					++ number;
 				});
 				if (names.length === 1)
-					Textbox.state(names[0] + " is challenging " + Battle.alliedTrainers[0].pronoun() + " to a Battle. " + (Battle.opposingTrainers[0].gender === Genders.male ? "He" : "She") + " has " + numberword(Battle.opposingTrainers[0].pokemon()) + " Pokémon.");
+					Textbox.state(names[0] + " is challenging " + Battle.alliedTrainers[0].pronoun() + " to a battle. " + (Battle.opposingTrainers[0].gender === Genders.male ? "He" : "She") + " has " + numberword(Battle.opposingTrainers[0].pokemon()) + " Pokémon.");
 				if (names.length > 1)
-					Textbox.state(commaSeparatedList(names) + " are challenging " + Battle.alliedTrainers[0].pronoun() + " to a Battle. They have " + number + " Pokémon between them.");
+					Textbox.state(commaSeparatedList(names) + " are challenging " + Battle.alliedTrainers[0].pronoun() + " to a battle. They have " + number + " Pokémon between them.");
 				break;
 		}
 		Battle.race(Battle.queue);
@@ -1002,13 +1002,13 @@ Battle = FunctionObject.new({
 			return;
 		foreach(Battle.effects.near, function (effect, i, deletion) {
 			if (Battle.turns >= Math.floor(effect.expiration)) {
-				Textbox.state(capitalise(Battle.alliedTrainers[0].possessivePronoun()) + effect.type + " ran out.");
+				Textbox.state(Battle.alliedTrainers[0].possessivePronoun(true) + effect.type + " ran out.");
 				deletion.push(i);
 			}
 		});
 		foreach(Battle.effects.far, function (effect, i, deletion) {
 			if (Battle.turns >= Math.floor(effect.expiration)) {
-				Textbox.state(capitalise(Battle.opposingTrainers[0].possessivePronoun()) + effect.type + " ran out.");
+				Textbox.state(Battle.opposingTrainers[0].possessivePronoun(true) + effect.type + " ran out.");
 				deletion.push(i);
 			}
 		});
@@ -1331,11 +1331,11 @@ Battle = FunctionObject.new({
 			var escapeChance = (currentBattler.stats[Stats.speed](true) * 32) / ((maxSpeed / 4) % 256) + 30 * (Battle.escapeAttempts ++);
 			if (escapeChance > 255 || randomInt(255) < escapeChance) {
 				Battle.queue.push({priority : 6, action : function () {
-					Textbox.state(capitalise(Battle.alliedTrainers[0].pronoun()) + " escaped successfully!", function () { Battle.end(); }); Battle.finish(); }
+					Textbox.state(Battle.alliedTrainers[0].pronoun(true) + " escaped successfully!", function () { Battle.end(); }); Battle.finish(); }
 				});
 			} else
 				Battle.queue.push({priority : 6, action : function () {
-					Textbox.state(capitalise(Battle.alliedTrainers[0].pronoun()) + " couldn't get away!");
+					Textbox.state(Battle.alliedTrainers[0].pronoun(true) + " couldn't get away!");
 				}});
 		}
 	},
@@ -1427,7 +1427,7 @@ Battle = FunctionObject.new({
 		}
 		poke.battler.reset();
 		if (!poke.trainer.hasHealthyPokemon(true, poke) && !poke.trainer.hasHealthyPokemon(false, poke)) {
-			var defeatedMessage = capitalise(Battle.alliedTrainers[0].pronoun()) + " " + (poke.trainer === Game.player ? "has" : "have") + " ";
+			var defeatedMessage = Battle.alliedTrainers[0].pronoun(true) + " " + (poke.trainer === Game.player ? "has" : "have") + " ";
 			if (poke.trainer === Game.player)
 				defeatedMessage += "been defeated!";
 			else if (Battle.situation === Battles.situation.trainer)
@@ -1465,7 +1465,7 @@ Battle = FunctionObject.new({
 			var displayInitial = Display.state.save();
 			poke.battler.display.transition = 1;
 			var display = Display.state.save();
-			Textbox.state(capitalise(poke.trainer.pronoun()) + " sent out " + poke.name() + "!", function () { Display.state.load(displayInitial); return Display.state.transition(display); });
+			Textbox.state(poke.trainer.pronoun(true) + " sent out " + poke.name() + "!", function () { Display.state.load(displayInitial); return Display.state.transition(display); });
 		} else if (!initial) {
 			var displayInitial = Display.state.save();
 			Textbox.state("A wild " + poke.name() + " was right behind!", function () { Display.state.load(displayInitial); });
