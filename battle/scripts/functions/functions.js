@@ -27,13 +27,27 @@ function forevery (dictionary, fn, includePrototype) {
 	return broke;
 }
 
-function _ (object, path) {
-	object = { object : object };
-	path = path.trim();
+function _ (_object, _path) {
+	object = { object : _object };
+	path = _path.trim();
 	if (/^ ?[~\-=]> ?/.test(path))
 		path = "object " + path;
 	else
 		path = "object => " + path;
+	// Special cases to speed up trivial path traversals
+	var checkForProperty = path.slice(-1) === "?", specialCase = path.split(/ ?[~\-=]> ?/g);
+	if (specialCase.length === 2) {
+		return checkForProperty ? object.object.hasOwnProperty(specialCase[1].slice(0, -1)) : object.object[specialCase[1]];
+	}
+	var oSpecialCase = path.split(/ ?[~\-]> ?/g);
+	if (oSpecialCase.length === 1) {
+		var property = object.object;
+		while ((specialCase = specialCase.slice(1)).notEmpty()) {
+			property = (checkForProperty && specialCase.length === 1 ? property.hasOwnProperty(specialCase.first().slice(0, -1)) : property[specialCase.first()]);
+		}
+		return property;
+	}
+	// End of special cases
 	var subpaths = path.split(/ ?=> ?/g), routes = [];
 	for (var index = 0, subpath, keys; index < subpaths.length; ++ index) {
 		subpath = subpaths[index];
@@ -54,6 +68,7 @@ function _ (object, path) {
 
 	};
 	burrow(routes.length - 1, "");
+	var error = {};
 	var follow = function (object, path) {
 		var keys = path.replace(/ ?~> ?/g, " => ").split(/ ?=> ?/g), value = object, key;
 		while (keys.length) {
@@ -63,22 +78,26 @@ function _ (object, path) {
 					value = value[key];
 				else if (value.hasOwnProperty(key = key.replace(/ ?\(.*\)/, "")))
 					value = value[key];
-				else throw "That object has no property with the path:" + path;
+				else {
+					error.message = "That object has no property with the path:" + path;
+					return error;
+				}
 			} else
 				return value.hasOwnProperty(key.slice(0, -1));
 		}
 		return value;
 	}
-	for (var take = 0; take < paths.length; ++ take) {
-		try {
-			return follow(object, paths[take]);
-		} catch (error) {}
+	for (var take = 0, returned; take < paths.length; ++ take) {
+		returned = follow(object, paths[take]);
+		if (returned !== error) {
+			return returned;
+		}
 	}
 	throw "That object has no property with the path:" + path;
 }
 
 function _method (object) {
-	object._ = function (path) {
+	return object._ = function (path) {
 		return _(object, path);
 	}
 }
@@ -164,12 +183,12 @@ function wrapArray (wrap) {
 }
 
 function sum (array, partial) {
-	var result = 0;
+	var result = 0, partialAmount = partial;
 	if (arguments.length < 2)
-		partial = array.length;
+		partialAmount = array.length;
 	foreach(array, function (number) {
-		result += number * Math.min(1, partial --);
-		if (partial <= 0)
+		result += number * Math.min(1, partialAmount --);
+		if (partialAmount <= 0)
 			return true;
 	});
 	return result;
@@ -217,9 +236,10 @@ Array.prototype.removeDuplicates = function () {
 };
 
 Array.prototype.remove = function (index, number) {
+	var numberOfElements = number;
 	if (arguments.length < 2)
-		number = 1;
-	this.splice(index, number);
+		numberOfElements = 1;
+	this.splice(index, numberOfElements);
 };
 
 Array.prototype.removeElementsOfValue = function (element) {

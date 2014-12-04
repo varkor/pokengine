@@ -60,6 +60,18 @@ Pokemon = {
 		moveset : {
 			3 : ["Metronome"]
 		},
+		evolution : [
+			{
+				species : "Charizard",
+				method : [Evolution.level],
+				level : 2
+			},
+			{
+				species : "Blastoise",
+				method : [Evolution.level],
+				level : 3
+			}
+		],
 		friendship : 70,
 		catchRate : 45
 	},

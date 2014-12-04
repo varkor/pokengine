@@ -51,6 +51,8 @@ FunctionObject = {
 		if (details.hasOwnProperty("drawing")) {
 			if (details.drawing.hasOwnProperty("canvas")) {
 				var initialise = object.initialise;
+				var passive = details.drawing.hasOwnProperty("passive") && details.drawing.passive;
+				object.requestRedraw = false;
 				object.initialise = function () {
 					if (initialise)
 						initialise();
@@ -72,12 +74,18 @@ FunctionObject = {
 						canvas.getContext("2d").imageSmoothingEnabled = false;
 					object.canvas = canvas;
 					object.draw = function () {
-						details.drawing.draw(object.canvas);
+						if (!passive || object.requestRedraw)
+							details.drawing.draw(object.canvas);
+						object.requestRedraw = false;
 					};
 				}
 				details.initialise = object.initialise;
 			} else {
-				object.draw = details.drawing.draw;
+				object.draw = function () {
+					if (!passive || object.requestRedraw)
+						details.drawing.draw();
+					object.requestRedraw = false;
+				}
 			}
 		}
 		FunctionObject.objects.push({

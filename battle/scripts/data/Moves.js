@@ -509,7 +509,7 @@ Moves = {
 		effect : {
 			use : [
 				function (self, target) {
-					if (self.battler.transform.transformed || target.battler.previousMoves.notEmpty() || target.battler.previousMoves.last().failed)
+					if (self.battler.transform.transformed || target.battler.previousMoves.empty() || target.battler.previousMoves.last().failed)
 						return {
 							failed : true
 						};
@@ -1163,7 +1163,16 @@ Moves = {
 						return Battle.distanceBetween(self, targetA.poke) - Battle.distanceBetween(self, targetB.poke);
 					});
 					if (targets.notEmpty()) {
-						Move.use(choice, 0, self, targets[0].place, true); // Pick the closest target (this shouldn't be an ally unless it's a friendly move)
+						self.battler.moveStage = 0;
+						self.battler.previousTarget = targets[0].poke;
+						var used = Move.use(choice, self.battler.moveStage, self, targets[0].place, true); // Pick the closest target (this shouldn't be an ally unless it's a friendly move)
+						self.battler.previousMoves.push({
+							move : choice,
+							failed : used.succeeded
+						});
+						return {
+							modifiedMove : true
+						};
 					} else
 						return {
 							failed : true

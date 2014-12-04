@@ -12,7 +12,8 @@ Display = {
 		newPoke.battler.transform = poke.battler.transform;
 		return newPoke;
 	},
-	pokemonInState : function (poke, state) {
+	pokemonInState : function (poke, _state) {
+		state = _state;
 		if (arguments.length < 2)
 			state = Display.state.current;
 		else

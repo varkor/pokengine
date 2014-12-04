@@ -264,6 +264,7 @@
 					level.addEventListener("mousedown", function (event) {
 						event.stopPropagation();
 						event.preventDefault();
+						level.focus();
 						level.setSelectionRange(0, level.value.length);
 					});
 					level.addEventListener("input", function (event) {

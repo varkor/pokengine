@@ -116,33 +116,34 @@ Textbox = FunctionObject.new({
 		}
 	},
 	metrics : function (style) {
+		var styleForMetrics = style;
 		if (arguments.length < 1)
-			style = Textbox.currentStyle();
+			styleForMetrics = Textbox.currentStyle();
 		var metrics = {
-			left : style.margin.horizontal,
+			left : styleForMetrics.margin.horizontal,
 			top : null, // Calculate top after height
-			width : Textbox.canvas.width - style.margin.horizontal * 2,
-			height : style.height * Math.pow(2, Game.zoom - 1),
+			width : Textbox.canvas.width - styleForMetrics.margin.horizontal * 2,
+			height : styleForMetrics.height * Math.pow(2, Game.zoom - 1),
 			inner : {
-				left : style.margin.horizontal + style.padding.horizontal,
+				left : styleForMetrics.margin.horizontal + styleForMetrics.padding.horizontal,
 				top : null,
-				width : Textbox.canvas.width - (style.margin.horizontal + style.padding.horizontal) * 2,
-				height : style.height * Math.pow(2, Game.zoom - 1) - style.padding.vertical * 2
+				width : Textbox.canvas.width - (styleForMetrics.margin.horizontal + styleForMetrics.padding.horizontal) * 2,
+				height : styleForMetrics.height * Math.pow(2, Game.zoom - 1) - styleForMetrics.padding.vertical * 2
 			}
 		};
-		metrics.top = Textbox.canvas.height - (style.margin.vertical + metrics.height) * Textbox.slide;
+		metrics.top = Textbox.canvas.height - (styleForMetrics.margin.vertical + metrics.height) * Textbox.slide;
 		if (Textbox.dialogue.notEmpty() && Textbox.dialogue.first().responses.notEmpty()) {
 			metrics.response = {
 				major : {
-					height : Math.round((style.lineHeight + style.padding.vertical * 2) * style.buttonProportion)
+					height : Math.round((styleForMetrics.lineHeight + styleForMetrics.padding.vertical * 2) * styleForMetrics.buttonProportion)
 				},
 				minor : {
-					height : Math.round((style.lineHeight + style.padding.vertical * 2) * style.buttonProportion * (2 / 3))
+					height : Math.round((styleForMetrics.lineHeight + styleForMetrics.padding.vertical * 2) * styleForMetrics.buttonProportion * (2 / 3))
 				}
 			};
-			metrics.top -= (Math.ceil(Textbox.dialogue.first().minorResponses / style.responsesPerRow) * metrics.response.major.height + Math.ceil((Textbox.dialogue.first().responses.length - Textbox.dialogue.first().minorResponses) / style.responsesPerRow) * metrics.response.minor.height) * Textbox.slide;
+			metrics.top -= (Math.ceil(Textbox.dialogue.first().minorResponses / styleForMetrics.responsesPerRow) * metrics.response.major.height + Math.ceil((Textbox.dialogue.first().responses.length - Textbox.dialogue.first().minorResponses) / styleForMetrics.responsesPerRow) * metrics.response.minor.height) * Textbox.slide;
 		}
-		metrics.inner.top = metrics.top + style.padding.vertical;
+		metrics.inner.top = metrics.top + styleForMetrics.padding.vertical;
 		return metrics;
 	},
 	currentIndex : function () {
@@ -507,6 +508,7 @@ Textbox = FunctionObject.new({
 			Textbox.displayed = "";
 			Textbox.character = 0;
 			Textbox.prepareNextMessage();
+			Textbox.requestRedraw = true;
 		} else {
 			if (Textbox.displayed.split("\n").length - 1 > Textbox.lowestVisibleLine)
 				Textbox.lowestVisibleLine += Math.clamp(0, Textbox.scrollSpeed, 1);
@@ -537,6 +539,7 @@ Textbox = FunctionObject.new({
 		var style = Textbox.currentStyle(), majorResponses = Textbox.dialogue.first().minorResponses;
 		Textbox.responsePosition.y = (response < majorResponses ? Math.floor(response / style.responsesPerRow) : Math.ceil(majorResponses / style.responsesPerRow) + Math.floor((response - majorResponses) / style.responsesPerRow));
 		Textbox.responsePosition.x = (response < majorResponses ? (response - Textbox.responsePosition.y * style.responsesPerRow + 0.5) : (response - majorResponses - (Textbox.responsePosition.y - Math.ceil(majorResponses / style.responsesPerRow)) * style.responsesPerRow + 0.5)) / Textbox.responsesOnRow();
+		Textbox.requestRedraw = true;
 	},
 	selectAdjacent : function (direction) {
 		if (Textbox.dialogue.length && Textbox.dialogue.first().responses.length) {
@@ -571,6 +574,7 @@ Textbox = FunctionObject.new({
 				}
 			}
 		}
+		Textbox.requestRedraw = true;
 	},
 	key : function (keys) {
 		if (Textbox.dialogue.length && Textbox.dialogue.first().responses.length) {
@@ -582,6 +586,7 @@ Textbox = FunctionObject.new({
 		Textbox.dialogue = [];
 		Textbox.displayed = "";
 		Textbox.character = 0;
+		Textbox.requestRedraw = true;
 	}
 }, {
 	initialise : function () {
@@ -598,6 +603,7 @@ Textbox = FunctionObject.new({
 			Textbox.pausing = false;
 			Textbox.after = null;
 		}
+		var slideBefore = Textbox.slide;
 		if (Textbox.dialogue.notEmpty()) {
 			var nullMessage = (Textbox.dialogue.first().text === null);
 			if (Textbox.slide === 1 && !Textbox.pausing && !nullMessage) {
@@ -615,8 +621,11 @@ Textbox = FunctionObject.new({
 					}
 					Textbox.character = Math.clamp(0, Textbox.character, Math.min(maxLength, Textbox.dialogue.first().text.length));
 					Textbox.displayed = Textbox.dialogue.first().text.substr(0, Math.floor(Textbox.character));
+					Textbox.requestRedraw = true;
 				}
 			}
+			if (Textbox.dialogue.first().responses.notEmpty() && Cursor.lastMoved <= 1)
+				Textbox.requestRedraw = true;
 			// Null text means no text is going to be displayed, and the Textbox is just being used to initiate an event
 			if ((nullMessage || Textbox.displayed.length === Textbox.dialogue.first().text.length || Textbox.dialogue.first().text.split("\n").length - 1 === Textbox.lowestVisibleLine) && Textbox.finished === null) {
 				Textbox.finished = Time.now();
@@ -636,9 +645,10 @@ Textbox = FunctionObject.new({
 		if (Textbox.dialogue.empty() && Textbox.slide > 0)
 			Textbox.slide = 0;
 		Textbox.slide = Math.clamp(0, Textbox.slide, 1);
-		if (Textbox.slide === 0) {
+		if (Textbox.slide === 0)
 			Textbox.active = false;
-		}
+		if (slideBefore !== Textbox.slide)
+			Textbox.requestRedraw = true;
 	},
 	drawing : {
 		canvas : {
@@ -647,6 +657,7 @@ Textbox = FunctionObject.new({
 			height : Settings._("screen dimensions => height"),
 			className : "centre clickthrough"
 		},
+		passive : true,
 		draw : function (canvas) {
 			var context = canvas.getContext("2d");
 			// Clear the canvas

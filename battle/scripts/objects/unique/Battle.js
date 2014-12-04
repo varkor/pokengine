@@ -6,13 +6,17 @@ Battle = FunctionObject.new({
 	active : false,
 	finished : true,
 	kind : null,
-	state : null,
+	state : {
+		kind : "inactive"
+	},
 	situation : null,
 	style : null,
 	allies : [],
 	alliedTrainers : [],
 	opponents : [],
 	opposingTrainers : [],
+	participants : [],
+	levelUppers : [],
 	weather : null,
 	turns : 0,
 	selection : 0,
@@ -21,6 +25,7 @@ Battle = FunctionObject.new({
 	actions : [],
 	recording : [],
 	communication : null,
+	evolving : [],
 	scene : null,
 	rules : [],
 	hazards : {
@@ -96,7 +101,7 @@ Battle = FunctionObject.new({
 						colour : "hsla(0, 0%, 0%, 0.6)"
 					},
 					{
-						text :  poke.health + " / " + poke.stats[Stats.health](),
+						text :  Math.round(poke.health) + " / " + poke.stats[Stats.health](),
 						position : { x : (138 + 90) / 2, y : 22 },
 						align : { x : "center" , y : "bottom" },
 						colour : "white",
@@ -389,18 +394,51 @@ Battle = FunctionObject.new({
 			Battle.allies = [];
 			Battle.opponents = [];
 			foreach(Battle.allTrainers(), function (participant) {
+				foreach(participant.party.pokemon, function (poke) {
+					if (Battle.participants.contains(poke) && Battle.levelUppers.contains(poke)) {
+						var mayEvolve = poke.attemptEvolution();
+						if (mayEvolve) {
+							Battle.evolving.push({
+								from : poke,
+								into : new pokemon(mayEvolve)
+							});
+						}
+					}
+				});
 				participant.battlers = [];
 				foreach(participant.bag, function (item) {
 					item.intentToUse = 0;
 				});
 			});
+			Battle.continueEvolutions();
 			Battle.alliedTrainers = [];
 			Battle.opposingTrainers = [];
+			Battle.participants = [];
+			Battle.levelUppers = [];
 			Battle.queue = [];
 			Battle.rules = [];
 			Battle.escapeAttempts = 0;
 			Battle.turns = 0;
 			communication = null;
+		}
+	},
+	continueEvolutions : function () {
+		if (Battle.evolving.notEmpty()) {
+			var evolver = Battle.evolving.shift();
+			Battle.state = {
+				kind : "evolution",
+				stage : "before",
+				transition: 0,
+				evolving : evolver.from,
+				into : evolver.into
+			};
+			Textbox.state("What? " + evolver.from.name() + " is evolving!", function () {
+				Battle.state.stage = "preparation";
+			});
+		} else {
+			Battle.state = {
+				kind : "inactive"
+			};
 		}
 	},
 	input : function (primary, secondary, tertiary, character, selection) {
@@ -949,6 +987,7 @@ Battle = FunctionObject.new({
 		});
 		Battle.race(Battle.queue);
 		Battle.queue = [];
+		Battle.survey();
 		Battle.endTurn();
 	},
 	startTurn : function () {
@@ -1026,6 +1065,7 @@ Battle = FunctionObject.new({
 					deletion.push(i);
 			}
 		});
+		Battle.survey();
 		var all = Battle.all(true)
 		foreach(all, function (poke) {
 			if (!Battle.active || Battle.finished)
@@ -1412,9 +1452,11 @@ Battle = FunctionObject.new({
 	removeFromBattle : function (poke) {
 		// Stops a Pokémon battling, either because they've fainted, or because they've been caught in a Poké ball
 		if (Battle.kind !== Battles.kind.online) {
-			foreach(poke.battler.opponents, function (gainer) {
-				if (!gainer.fainted())
-					gainer.gainExperience(poke, poke.battler.opponents.length);
+			foreach(poke.battler.opponents, function (gainer) { //? + Exp. share Pokémon (participated will need to be made false in this case)
+				if (!gainer.fainted()) {
+					if (gainer.gainExperience(poke, poke.battler.opponents.length, true)) // If a level was gained
+						Battle.levelUppers.pushIfNotAlreadyContained(gainer);
+				}
 			});
 		}
 		var place;
@@ -1445,6 +1487,7 @@ Battle = FunctionObject.new({
 		Battle.enter(replacement, false, Battle.withdraw(out, forced));
 	},
 	enter : function (poke, startOrEndOfTurn, place, initial) {
+		Battle.participants.pushIfNotAlreadyContained(poke);
 		poke.battler.reset();
 		poke.battler.battling = true;
 		var ally = Battle.alliedTrainers.contains(poke.trainer);
@@ -1706,7 +1749,7 @@ Battle = FunctionObject.new({
 			var context = canvas.getContext("2d"), display = Display.state.current, now = Time.now();
 			context.fillStyle = "black";
 			context.fillRect(0, 0, canvas.width, canvas.height);
-			if (!Battle.active)
+			if (Battle.state.kind === "inactive")
 				return;
 			if (Battle.state.kind === "loading") {
 				context.fillStyle = "hsl(0, 0%, 20%)";
@@ -1730,6 +1773,75 @@ Battle = FunctionObject.new({
 						context.fillText(failed, canvas.width / 2, canvas.height / 2 + 20 + 6 + 16 * (i + 1));
 					});
 				}
+			} else if (Battle.state.kind === "evolution") {
+				//? Fade in and fade out evolution screen
+				var strips = 8, pan = (now / 500 % 1), distortion = 4;
+				for (var i = - distortion * 4, j; i < (strips + distortion * 4 + 1); ++ i) {
+					j = i - pan;
+					context.fillStyle = "hsl(" + Math.min(50, ((j / (strips)) * 50)) + ", 100%, " + (35 + (j / (strips)) * (60 - 35)) + "%)";
+					context.beginPath();
+					context.moveTo(0, canvas.height);
+					context.lineTo(0, Math.round((canvas.height / strips) * j));
+					context.quadraticCurveTo(canvas.width / 2, Math.round((canvas.height / strips) * j) - (j - strips / 2) * 10 * distortion, canvas.width, Math.round((canvas.height / strips) * j));
+					context.lineTo(canvas.width, canvas.height);
+					context.fill();
+				}
+				context.textAlign = "center";
+				context.textBaseline = "middle";
+				if (Battle.state.stage === "before" || Battle.state.stage === "preparation")
+					Sprite.draw(canvas, Battle.state.evolving.paths.sprite("front"), canvas.width / 2, canvas.height / 2, true, null, null, now);
+				if (Battle.state.stage === "finishing" || Battle.state.stage === "after")
+					Sprite.draw(canvas, Battle.state.into.paths.sprite("front"), canvas.width / 2, canvas.height / 2, true, null, null, now);
+				if (Battle.state.stage === "preparation")
+					Battle.state.transition += 0.05;
+				if (Battle.state.stage === "evolving")
+					Battle.state.transition += 0.0025;
+				if (Battle.state.stage === "finishing")
+					Battle.state.transition -= 0.05;
+				if (Battle.state.stage === "preparation" && Battle.state.transition >= 2) {
+					Battle.state.stage = "evolving";
+					Battle.state.transition = 0;
+				}
+				if (Battle.state.stage === "evolving" && Battle.state.transition >= 1) {
+					Battle.state.stage = "finishing";
+					Battle.state.transition = 4;
+				}
+				if (Battle.state.stage === "finishing" && Battle.state.transition <= 0) {
+					Battle.state.stage = "after";
+					Battle.state.evolving.evolve(Battle.state.into._("species"));
+					Textbox.effect(function () {
+						Battle.continueEvolutions();
+					});
+				}
+				var transformationRate = Math.PI * Math.pow(2, Battle.state.transition * 7);
+				if (Battle.state.stage !== "after") {
+					var scale = 1, fade = 0;
+					if (Battle.state.stage === "preparation")
+						fade = Battle.state.transition;
+					if (Battle.state.stage === "evolving") {
+						fade = Math.sin(Battle.state.transition * (transformationRate / 2) + Math.PI * 0.25) >= 0 ? 1 : 0;
+						scale = 1 + Math.sin(Battle.state.transition * transformationRate) * 0.5;
+					}
+					Sprite.draw(canvas, Battle.state.evolving.paths.sprite("front"), canvas.width / 2, canvas.height / 2, true, [{ type : "fill", colour : "white" }, { type : "opacity", value : fade }], (new Matrix()).scale(scale).matrix, now);
+				}
+				if (Battle.state.stage !== "before" && Battle.state.stage !== "preparation") {
+					var scale = 1, fade = 0;
+					if (Battle.state.stage === "finishing")
+						fade = Battle.state.transition;
+					if (Battle.state.stage === "evolving") {
+						fade = Math.sin(Battle.state.transition * (transformationRate / 2) + Math.PI * 1.25) > 0 ? 1 : 0;
+						scale = 1 + Math.sin(Battle.state.transition * transformationRate) * 0.5;
+					}
+					Sprite.draw(canvas, Battle.state.into.paths.sprite("front"), canvas.width / 2, canvas.height / 2, true, [{ type : "fill", colour : "white" }, { type : "opacity", value : fade }], (new Matrix()).scale(scale).matrix, now);
+				}
+				if (Battle.state.stage !== "before" && Battle.state.stage !== "after") {
+					context.fillStyle = "black";
+					var enclose = 1;
+					if (Battle.state.stage === "preparation" || Battle.state.stage === "finishing")
+						enclose = Math.clamp(0, Battle.state.transition, 1);
+					context.fillRect(0, 0, canvas.width, canvas.height / 6 * enclose);
+					context.fillRect(0, canvas.height, canvas.width, - canvas.height / 6 * enclose);
+				}
 			} else {
 				Sprite.draw(canvas, "scenes/" + Battle.scene, 0, 0);
 				context.textAlign = "center";
@@ -1741,8 +1853,8 @@ Battle = FunctionObject.new({
 				var all = [].concat(sortDisplay.allies, sortDisplay.opponents.reverse()).filter(onlyPokemon).sort(function (a, b) {
 					return Battle.drawing.position(Display.pokemonInState(b)).z - Battle.drawing.position(Display.pokemonInState(a)).z;
 				});
-				foreach(all, function (poke) {
-					poke = Display.pokemonInState(poke);
+				foreach(all, function (_poke) {
+					poke = Display.pokemonInState(_poke);
 					side = (poke.battler.side === Battles.side.near ? "back" : "front");
 					position = Battle.drawing.position(poke);
 					context.lineWidth = position.scale * 2;

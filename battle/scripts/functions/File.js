@@ -1,11 +1,13 @@
 File = {
-	loadFileOfType : function (store, object, loadEvent, dataForFile, directory, filetype, paths, uponLoad, uponError, redirectedPaths) {
+	all : {},
+	loadFileOfType : function (_store, object, loadEvent, dataForFile, directory, filetype, _paths, uponLoad, uponError, _redirectedPaths) {
+		var store = _store;
 		if (!Files.hasOwnProperty(store))
 			Files[store] = {};
 		var substore = store;
 		store = Files[store];
-		paths = wrapArray(paths);
-		redirectedPaths = redirectedPaths || [];
+		var paths = wrapArray(_paths);
+		var redirectedPaths = _redirectedPaths || [];
 		var path = paths.shift();
 		if (/(.*)\.(\w+)/.test(path))
 			path = path.match(/(.*)\.(\w+)/)[1];
@@ -16,13 +18,15 @@ File = {
 			if (uponLoad)
 				uponLoad(data);
 		};
-		if (store.hasOwnProperty(path) && store[path] !== null) {
-			successful(store[path]);
-			return store[path];
+		if (store.hasOwnProperty(path)) {
+			if (store[path] !== null) {
+				successful(store[path]);
+				return store[path];
+			} else { // A file is already scheduled to be loaded, but hasn't finished loading yet
+				//return null;
+			}
 		}
 		var file = new object();
-		file.src = (!(path.substr(0, 5) === "data:" || path.substr(0, 5) === "http:" || path.substr(0, 6) === "https:") ? directory + "/" + path + "." + filetype : path);
-		store[path] = null;
 		file.addEventListener(loadEvent, function (event) {
 			successful(dataForFile(event, file, store, path));
 		});
@@ -35,10 +39,26 @@ File = {
 			} else
 				return uponError ? uponError(redirectedPaths, message) : false;
 		});
+		var timee = Time.now() % 100;
+		if (object === Audio) {
+			console.log("registered", timee, store[path]);
+			foreach(["abort", "canplay", "canplaythrough", "durationchange", "emptied", "ended", "error", "interruptbegin", "interruptend", "loadeddata", "loadedmetadata", "loadstart", "mozaudioavailable", "pause", "play", "playing", "progress", "ratechange", "seeked", "seeking", "stalled", "suspend", "timeupdate", "volumechange", "waiting"], function (blah, paa) {
+				return function (ev) {
+					file.addEventListener(ev, function (eee) {
+						console.log(ev, blah, path);
+					});
+				};
+			}(timee, 6));
+		}
+		file.src = (!(path.substr(0, 5) === "data:" || path.substr(0, 5) === "http:" || path.substr(0, 6) === "https:") ? directory + "/" + path + "." + filetype : path);
+		if (!File.all.hasOwnProperty(file.src))
+			File.all[file.src] = {}
+		File.all[file.src][timee] = file;
+		store[path] = null;
 		return null;
 	},
-	load : function (paths, uponLoad, uponError) {
-		paths = wrapArray(paths);
+	load : function (_paths, uponLoad, uponError) {
+		var paths = wrapArray(_paths);
 		var filetype = paths[0].match(/.*\.(\w+)/);
 		if (filetype === null) {
 			uponError(paths, "The supplied file (" + paths[0] + ") had no filtype.");
@@ -81,10 +101,10 @@ Sprite = FunctionObject.new({
 	draw : function (canvas, path, x, y, aligned, filters, transformation, time) {
 		var sprite = Sprite.load(path);
 		if (sprite) {
-			var image = sprite.image, positionModification = {
+			var context = canvas.getContext("2d"), image = sprite.image, xModified = x, yModified = y, positionModification = {
 				x : 0,
 				y : 0
-			}, progress = (sprite.animated ? (arguments.length < 7 ? Time.now() : time) % sum(sprite.durations) : 0), frame = 0;
+			}, progress = (sprite.animated ? (arguments.length < 8 ? Time.now() : time) % sum(sprite.durations) : 0), frame = 0;
 			if (sprite.animated) {
 				while (progress > sprite.durations[frame])
 					progress -= sprite.durations[frame ++];
@@ -95,7 +115,7 @@ Sprite = FunctionObject.new({
 					return false;
 			}
 			if (aligned) {
-				switch (canvas.getContext("2d").textAlign) {
+				switch (context.textAlign) {
 					case "center":
 						positionModification.x = - sprite.width / 2;
 						break;
@@ -103,7 +123,7 @@ Sprite = FunctionObject.new({
 						positionModification.x = - sprite.width;
 						break;
 				}
-				switch (canvas.getContext("2d").textBaseline) {
+				switch (context.textBaseline) {
 					case "middle":
 						positionModification.y = - sprite.height / 2;
 						break;
@@ -130,8 +150,7 @@ Sprite = FunctionObject.new({
 			}
 			image = Sprite.canvases[2];
 			if (filters) {
-				filters = wrapArray(filters);
-				foreach(filters, function (filter, number) {
+				foreach(wrapArray(filters), function (filter, number) {
 					foreach(Sprite.canvases, function (temporaryCanvas, i) {
 						if (i === 2)
 							return;
@@ -198,15 +217,15 @@ Sprite = FunctionObject.new({
 				if (transformation[3])
 					positionModification.y *= Math.abs(transformation[3]);
 				if (transformation[1] && aligned) {
-					if (canvas.getContext("2d").textAlign === "right" && transformation[0] >= 0 || canvas.getContext("2d").textAlign === "left" && transformation[0] < 0)
+					if (context.textAlign === "right" && transformation[0] >= 0 || context.textAlign === "left" && transformation[0] < 0)
 						positionModification.y -= sprite.width * transformation[1];
-					if (canvas.getContext("2d").textAlign === "center")
+					if (context.textAlign === "center")
 						positionModification.y -= sprite.width * transformation[1] * 0.5;
 				}
 				if (transformation[2] && aligned) {
-					if (canvas.getContext("2d").textBaseline === "bottom" && transformation[3] >= 0 || canvas.getContext("2d").textBaseline === "top" && transformation[3] < 0)
+					if (context.textBaseline === "bottom" && transformation[3] >= 0 || context.textBaseline === "top" && transformation[3] < 0)
 						positionModification.x -= sprite.height * transformation[2];
-					if (canvas.getContext("2d").textBaseline === "middle")
+					if (context.textBaseline === "middle")
 						positionModification.x -= sprite.height * transformation[2] * 0.5;
 				}
 				if (transformation[0] < 0)
@@ -214,19 +233,19 @@ Sprite = FunctionObject.new({
 				if (transformation[3] < 0)
 					positionModification.y = sprite.height * Math.abs(transformation[3]) - positionModification.y;
 			}
-			x += positionModification.x;
-			y += positionModification.y;
-			x = Math.round(x);
-			y = Math.round(y);
+			xModified += positionModification.x;
+			yModified += positionModification.y;
+			xModified = Math.round(xModified);
+			yModified = Math.round(yModified);
 			if (transformation) {
-				canvas.getContext("2d").save();
-				canvas.getContext("2d").translate(x, y);
-				canvas.getContext("2d").transform(transformation[0], transformation[1], transformation[2], transformation[3], transformation[4], transformation[5]);
-				x = y = 0;
+				context.save();
+				context.translate(xModified, yModified);
+				context.transform(transformation[0], transformation[1], transformation[2], transformation[3], transformation[4], transformation[5]);
+				xModified = yModified = 0;
 			}
-			canvas.getContext("2d").drawImage(image, x, y);
+			context.drawImage(image, xModified, yModified);
 			if (transformation) {
-				canvas.getContext("2d").restore();
+				context.restore();
 			}
 			return true;
 		}
@@ -257,11 +276,10 @@ Sound = {
 	},
 	play : function (paths, uponError) {
 		if (Settings._("sound effects")) {
-			var sound;
-			if (sound = Sound.load(paths, uponLoad, uponError, true)) {
-				sound.sound.currentTime = 0;
-				sound.sound.play();
-			}
+			Sound.load(paths, function (soundObject) {
+				soundObject.sound.currentTime = 0;
+				soundObject.sound.play();
+			}, uponError, true);
 		}
 	}
 };

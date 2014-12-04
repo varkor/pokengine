@@ -1,12 +1,22 @@
 Debugger = FunctionObject.new({
 	previousFrame : Time.now(),
 	fps : {
+		statistics : function () {
+			var past = Time.framerate, mean = 0, variance = 0; // Analyse the past so many frames
+			for (var i = Debugger.fps.timeline.length - 1; i >= 0 && i >= Debugger.fps.timeline.length - past; -- i) {
+				mean += Debugger.fps.timeline[i];
+				variance += Math.pow(Debugger.fps.timeline[i], 2);
+			}
+			mean /= past;
+			variance = (variance / past) - Math.pow(mean, 2);
+			return {
+				mean : mean,
+				variance : variance,
+				standardDeviation : Math.sqrt(variance)
+			};
+		},
 		framerate : function () {
-			var past = Time.framerate, average = 0; // Analyse the past so many frames
-			for (var i = Debugger.fps.timeline.length - 1; i >= 0 && i >= Debugger.fps.timeline.length - past; -- i)
-				average += Debugger.fps.timeline[i];
-			average /= past;
-			return average;
+			return Debugger.fps.statistics().mean;
 		},
 		timeline: [],
 		canvas : null,
@@ -36,7 +46,7 @@ Debugger = FunctionObject.new({
 			context.textBaseline = "middle";
 			context.fillStyle = "hsla(0, 0%, 0%, 1)";
 			context.fillRect(0, 0, canvas.width, canvas.height);
-			var fps = Debugger.fps.framerate();
+			var fps = Debugger.fps.framerate(), sd = Debugger.fps.statistics().standardDeviation;
 			context.beginPath();
 			context.moveTo(0, (fps / Time.framerate) * canvas.height);
 			context.lineTo(canvas.width, (fps / Time.framerate) * canvas.height);

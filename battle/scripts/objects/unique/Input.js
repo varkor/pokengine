@@ -45,6 +45,7 @@ Input = FunctionObject.new({
 		forevery(Keys.held, function (duration, key) {
 			Keys.held[key] = duration + 1;
 		});
+		++ Cursor.lastMoved;
 	}
 });
 
@@ -209,6 +210,7 @@ window.addEventListener("keyup", function (event) {
 Cursor = {
 	x : null,
 	y : null,
+	lastMoved : 0,
 	inArea : function (element, x, y, width, height) {
 		var boundingRect = element.getBoundingClientRect(), cursorX = Cursor.x - boundingRect.left, cursorY = Cursor.y - boundingRect.top;
 		return (cursorX >= x && cursorX < x + width && cursorY >= y && cursorY < y + height);
@@ -224,6 +226,7 @@ Cursor = {
 window.addEventListener("mousemove", function (event) {
 	Cursor.x = event.clientX;
 	Cursor.y = event.clientY;
+	Cursor.lastMoved = 0;
 });
 window.addEventListener("mousedown", function (event) {
 	if (event.button === 0)

@@ -1,7 +1,15 @@
 function pokemon (data) {
 	var self = this;
 
-	_method(self);
+	self.battler = new battler(self);
+
+	self._ = function (path) {
+		if (/^ ?-> ?battler ?~> ?transform ?=> ?/) {
+			if (self.battler.transform.transformed)
+				return _(self.battler.transform, path.replace(/^ ?-> ?battler ?~> ?transform ?=> ?/, ""));
+		}
+		return _(self, path);
+	};
 
 	if (arguments.length < 1)
 		data = {};
@@ -78,8 +86,6 @@ function pokemon (data) {
 	}
 
 	setProperty("health", self.stats[Stats.health]());
-
-	self.battler = new battler(self);
 
 	self.paths = {
 		sprite : function (which, includeFiletype) {
@@ -176,15 +182,18 @@ function pokemon (data) {
 		return sum(self.EVs);
 	};
 
-	self.gainExperience = function (defeated, sharedBetween) {
+	self.gainExperience = function (defeated, sharedBetween, participated) {
 		if (self.trainer === null || self.trainer.isAnNPC())
 			return;
 		sharedBetween = sharedBetween || 1;
-		var participated = true, eventModifiers = product(Battle.triggerEvent(Events.experience, {}, defeated, self));
+		var eventModifiers = product(Battle.triggerEvent(Events.experience, {}, defeated, self));
 		var gain = Math.ceil((((Battle.situation === Battles.situation.trainer ? 1.5 : 1) * _(Pokemon, defeated.species).yield.experience * defeated.level) / (5 * (participated ? 1 : 2)) * Math.pow((2 * defeated.level + 10) / (defeated.level + self.level + 10), 2.5) + 1) * (self.caught && self.trainer.unique === self.caught.trainer ? 1 : self.trainer.nationality === self.nationality ? 1.5 : 1.7) * eventModifiers / sharedBetween);
+		gain *= 100; //? Temporary
 		if (Battle.active)
 			Textbox.state(self.name() + " gained " + gain + " experience!");
+		var levelledUp = false;
 		while (self.level < 100 && self.experience + gain >= self.experienceFromLevelToNextLevel()) {
+			levelledUp = true;
 			gain -= self.experienceFromLevelToNextLevel() - self.experience;
 			self.experience = self.experienceFromLevelToNextLevel();
 			var display = Display.state.save();
@@ -200,22 +209,6 @@ function pokemon (data) {
 					self.learn(move);
 				});
 			}
-			// Cycle through all the available evolutions
-			/*
-			foreach(Pokemon._(self.species).evolution, function (evo) {
-				// Cycle through all the conditions for evolutions, e.g. levelling up and/while having a high friendship
-				if (!foreach(evo.method, function (method) {
-					switch (method) {
-						case Evolution.level:
-							return (self.level < (evo.hasOwnProperty("level") ? evo.level : self.level));
-						case Evolution.friendship:
-							return (self.friendship < (evo.hasOwnProperty("friendship") ? evo.friendship : 220));
-					}
-				})) {
-					self.evolve(evo);
-					return true;
-				}
-			});*/
 		}
 		if (self.level < 100)
 			self.experience = gain;
@@ -230,6 +223,32 @@ function pokemon (data) {
 			var display = Display.state.save();
 			Textbox.effect(function () { return Display.state.transition(display); });
 		}
+		return levelledUp;
+	};
+
+	self.attemptEvolution = function (withTheAidOfItem) {
+		// Returns the species the Pokémon is going to attempt to evolve into, or null if it cannot evolve at the moment
+		if (self.trainer === null || self.trainer.isAnNPC())
+			return null;
+
+		var evolution = null;
+		// Cycle through all the available evolutions
+		foreach(Pokemon._(self.species).evolution, function (evo) {
+			// Cycle through all the conditions for evolutions, e.g. levelling up and/while having a high friendship
+			// The Pokémon must satisfy *every one* of the methods
+			if (!foreach(evo.method, function (method) {
+				switch (method) {
+					case Evolution.level:
+						return (self.level < (evo.hasOwnProperty("level") ? evo.level : self.level));
+					case Evolution.friendship:
+						return (self.friendship < (evo.hasOwnProperty("friendship") ? evo.friendship : 220));
+				}
+			})) {
+				evolution = evo;
+				return true;
+			}
+		});
+		return evolution;
 	};
 
 	self.raiseLevel = function () {
@@ -241,8 +260,11 @@ function pokemon (data) {
 	};
 
 	self.evolve = function (evolution) {
-		Textbox.state(self.name() + " evolved from " + article(self.species) + " " + self.species + " into " + article(evolution.species) + " " + evolution.species + "!");
-		self.species = evolution.species;
+		if (self.name() !== self.species)
+			Textbox.state("Congratulations! " + self.name() + " evolved from " + article(self.species) + " " + self.species + " into " + article(evolution) + " " + evolution + "!");
+		else
+			Textbox.state("Congratulations! " + self.name() + " evolved into " + evolution + "!");
+		self.species = evolution;
 		if (Pokemon._(self.species).moveset.hasOwnProperty(self.level)) {
 			foreach(Pokemon._(self.species).moveset[self.level], function (move) {
 				self.learn(move);
@@ -387,6 +409,9 @@ function pokemon (data) {
 		return true;
 	};
 
+	/*
+		Used when the Pokémon attempts to use a move primarily—whether through the trainer's choice, or disobediance. Takes into acoount status effects, etc.
+	*/
 	self.attemptMove = function (move, target) {
 		if (self.notHinderedByAilments()) {
 			self.battler.previousTarget = target;
@@ -394,6 +419,9 @@ function pokemon (data) {
 		}
 	};
 
+	/*
+		Actually use a particular move, or Struggle. Makes sure the correct move stage is used.
+	*/
 	self.use = function (move, target) {
 		var moveNumber = null;
 		if (typeof move === "number") {
@@ -417,19 +445,17 @@ function pokemon (data) {
 				used = Move.use(move, self.battler.moveStage, self, target);
 			else
 				used = Move.use(move, self.battler.moveStage, self);
-			if (used)  {
+			if (!used.hasOwnProperty("modifiedMove") || !used.modifiedMove) {
 				self.battler.previousMoves.push({
 					move : move,
-					failed : false
+					failed : used.succeeded
 				});
+			}
+			if (used.succeeded)  {
 				++ self.battler.moveStage;
 				if (self.battler.moveStage >= _(Moves, self.battler.previousMoves.last().move).effect.use.length)
 					self.battler.moveStage = 0;
 			} else {
-				self.battler.previousMoves.push({
-					move : move,
-					failed : true
-				});
 				self.battler.moveStage = 0;
 			}
 		}

@@ -60,7 +60,8 @@ Move = {
 			statedFailureReason = false,
 			finalStage = (stage === move.effect.use.length - 1),
 			animationEffect = null,
-			stateEffect = null;
+			stateEffect = null,
+			modifiedMove = false;
 		// If the move won't hit anything, try aiming for a different target
 		if (stage === 0 && affected.empty()) {
 			var newTarget = Battle.targetsForMove(mover, move, true);
@@ -115,8 +116,12 @@ Move = {
 								statedFailureReason = true;
 							} else {
 								var response = move.effect.use[stage](mover, targeted, constant);
-								if (response && response.hasOwnProperty("failed") && response.failed)
-									failed = true;
+								if (response) {
+									if (response.hasOwnProperty("failed") && response.failed)
+										failed = true;
+									if (response.hasOwnProperty("modifiedMove") && response.modifiedMove)
+										modifiedMove = true;
+								}
 							}
 						} else {
 							if (accuracy <= evasion)
@@ -132,7 +137,9 @@ Move = {
 					if (failed) {
 						if (move.effect.hasOwnProperty("fail"))
 							move.effect.fail(mover, targeted);
-						return false;
+						return {
+							succeeded : false
+						};
 					} else
 						completelyFailed = false;
 				});
@@ -157,7 +164,10 @@ Move = {
 		} else {
 			Battle.survey();
 		}
-		return !completelyFailed;
+		return {
+			succeeded : !completelyFailed,
+			modifiedMove : modifiedMove
+		};
 	},
 	renderAnimation : function (mover, move, stage, target, constant, track, last) {
 		if (move.animation.length - 1 < stage || move.animation[stage].length === 0)
