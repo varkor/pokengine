@@ -194,13 +194,17 @@ exports.BattleServer = {
 							break;
 						case "flatten: 50":
 							trainer.party.forEach(function (poke) {
+								var obj = new pokemon(poke);
 								poke.level = 50;
+								poke.health = obj.maximumHealth();
 								poke.experience = 0;
 							});
 							break;
 						case "flatten: 100":
 							trainer.party.forEach(function (poke) {
+								var obj = new pokemon(poke);
 								poke.level = 100;
+								poke.health = obj.maximumHealth();
 								poke.experience = 0;
 							});
 							break;

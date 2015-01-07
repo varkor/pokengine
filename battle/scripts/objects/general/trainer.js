@@ -14,13 +14,19 @@ function trainer (data) {
 
 	setProperty("name", "Someone");
 	setProperty("unique", Game.unique());
-	setProperty("gender", Genders.male);
+	setProperty("gender", "male");
 	setProperty("party", []);
-	setProperty("money", 0);
-	setProperty("nationality", Nationalities.British);
+	setProperty("nationality", "British");
 	setProperty("bag", []);
 	setProperty("badges", []);
-	setProperty("location", "nowhere");
+	// Player properties
+	setProperty("money", 0);
+	// NPC properties
+	setProperty("game", "B2W2"); // The game the trainer appears in (used for sprites)
+	setProperty("class", "Ace Trainer"); // The trainer class of the NPC
+	setProperty("individual", false); // Whether this particular trainer is a unique example of this class (for example a Rocket Admin) and requires specific data, e.g. sprite, that is not generic to the entire trainer class
+	setProperty("pressure speech", null); // Dialogue spoken when the trainer sends out their final Pokémon (usually only used for gym leaders / E4 members)
+	setProperty("defeat speech", ":("); // Dialogue spoken after the trainer has been defeated in battle
 
 	self.party = new party(self.party);
 	foreach(self.party.pokemon, function (poke) {
@@ -34,23 +40,51 @@ function trainer (data) {
 	self.store = function () {
 		// Returns an object that contains all the data for the trainer, without any methods
 		var store = {};
-		foreach(["name", "unique", "gender", "money", "nationality", "badges", "location"], function (property) {
+		foreach(["name", "unique", "gender", "money", "nationality", "badges", "game", "class", "individual", "pressure speech", "defeat speech"], function (property) {
 			store[property] = JSONCopy(self._(property));
 		});
 		store.party = self.party.store();
-		store.bag = self.bag.items;
+		store.bag = self.bag.store();
 		return JSONCopy(store);
 	};
 
+	self.resetDisplay = function () {
+		self.display = {
+			visible : false,
+			position : {
+				x : 0,
+				y : 0,
+				z : 0
+			}
+		};
+	};
+	self.resetDisplay();
+
+	self.fullname = function (trueName) {
+		// trueName will use the default name (e.g. "Red") for a player character
+		return self.class + " " + (trueName && self.class === "Pokémon Trainer" ? Games[self.game].player[(self.gender === "male" ? "male" : "female")] : self.name);
+	};
+
+	self.paths = {
+		sprite : function (which, includeFiletype) {
+			// which should be left as null for the front sprite, as this is much more likely than the back sprite.
+			return "characters/" + self.game + "/" + (self.individual ? (self.fullname(true)) : self.class + (self.gender === "male" ? "~male" : self.gender === "female" ? "~female" : "")) + (which ? "~" + which : "") + (includeFiletype ? ".png" : "");
+		}
+	};
+
 	self.pronoun = function (capitalised) {
-		return (self === Game.player ? (capitalised ? "You" : "you") : self.name);
+		return (self === Game.player ? (capitalised ? "You" : "you") : self.fullname());
 	};
 	self.genderPronoun = function (capitalised) {
-		var word = (self === Game.player ? "you" : (self.gender === Genders.male ? "he" : self.gender === Genders.female ? "her" : "it"));
+		var word = (self === Game.player ? "you" : (self.gender === "male" ? "he" : self.gender === "female" ? "her" : "it"));
 		return (capitalised ? capitalise(word) : word);
 	};
 	self.possessivePronoun = function (capitalised) {
-		return (self === Game.player ? (capitalised ? "Your" : "your") : self.name + "'s");
+		return (self === Game.player ? (capitalised ? "Your" : "your") : self.fullname() + "'s");
+	};
+	self.possessiveGenderPronoun = function (capitalised) {
+		var word = (self === Game.player ? "your" : (self.gender === "male" ? "his" : self.gender === "female" ? "her" : "its"));
+		return (capitalised ? capitalise(word) : word);
 	};
 	
 	self.give = function (poke) {
@@ -59,7 +93,7 @@ function trainer (data) {
 		*/
 		poke.belong(self);
 		if (self === Game.player) {
-			Pokedex.capture(poke.species);
+			Dex.capture(poke.species);
 		}
 		if (self.party.pokemon.length < self.party.space)
 			self.party.add(poke);
@@ -96,7 +130,7 @@ function trainer (data) {
 		var pokes = [];
 		excluding = wrapArray(excluding);
 		foreach(self.party.pokemon, function (poke) {
-			if (poke.conscious() && (!thatAreNotBattling || !poke.battler.battling) && !excluding.contains(poke))
+			if (poke.conscious() && (!thatAreNotBattling || (!poke.battler.battling && !poke.battler.reserved)) && !excluding.contains(poke))
 				pokes.push(poke);
 		});
 		return pokes;

@@ -2,18 +2,18 @@ Lighting = {
 	shadows : {
 		opacity : function () {
 			switch (Weather.weather) {
-				case Weathers.clear:
-				case Weathers.diamondDust:
+				case "clear":
+				case "diamondDust":
 					return 0.3;
-				case Weathers.intenseSunlight:
+				case "intenseSunlight":
 					return 0.5;
-				case Weathers.rain:
-				case Weathers.hail:
-				case Weathers.sandstorm:
+				case "rain":
+				case "hail":
+				case "sandstorm":
 					return 0.15;
-				case Weathers.fog:
+				case "fog":
 					return 0.1;
-				case Weathers.shadowyAura:
+				case "shadowyAura":
 					return 0.4;
 			};
 		}
@@ -21,7 +21,7 @@ Lighting = {
 };
 
 Weather = {
-	weather : Weathers.clear,
+	weather : "clear",
 	time : 1,
 	skyHeight : 64,
 	particles : {
@@ -46,13 +46,13 @@ Weather = {
 				}
 			};
 			switch (particle.type) {
-				case Weathers.rain:
+				case "rain":
 					particle.size = particle.velocity.speed * 4;
 					break;
-				case Weathers.hail:
+				case "hail":
 					particle.size = random(1, 2);
 					break;
-				case Weathers.sandstorm:
+				case "sandstorm":
 					particle.size = random(1, 2);
 					particle.velocity = {
 						speed : random(10, 16),
@@ -60,7 +60,7 @@ Weather = {
 					}
 					appearFromTop = false;
 					break;
-				case Weathers.diamondDust:
+				case "diamondDust":
 					particle.size = random(4, 8);
 					particle.velocity.speed = random(1, 2);
 					break;
@@ -105,9 +105,9 @@ Weather = {
 							return true;
 						}
 					}) : false);
-					if (particle.type !== Weathers.sandstorm && particle.position.y >= Weather.skyHeight && !overPokemon && chance(Time.framerate / 4)) {
+					if (particle.type !== "sandstorm" && particle.position.y >= Weather.skyHeight && !overPokemon && chance(Time.framerate / 4)) {
 						particle.landed = particle.position.y;
-						if (particle.type === Weathers.hail) {
+						if (particle.type === "hail") {
 							particle.velocity.direction = (3 / 2) * Math.PI;
 							particle.velocity.speed *= 0.8;
 						} else {
@@ -123,7 +123,7 @@ Weather = {
 		draw : function (context) {
 			foreach(Weather.particles.all, function (particle) {
 				switch (particle.type) {
-					case Weathers.rain:
+					case "rain":
 						context.beginPath();
 						context.strokeStyle = "hsla(225, 55%, 95%, 0.4)";
 						context.lineWidth = 1;
@@ -131,15 +131,15 @@ Weather = {
 						context.lineTo(particle.position.x + particle.calc.cos * particle.size, particle.position.y + particle.calc.sin * particle.size);
 						context.stroke();
 						break;
-					case Weathers.hail:
+					case "hail":
 						context.fillStyle = "hsla(225, 55%, 95%, 0.8)";
 						context.fillCircle(particle.position.x, particle.position.y, particle.size);
 						break;
-					case Weathers.sandstorm:
+					case "sandstorm":
 						context.fillStyle = "hsla(" + randomInt(30, 50) + ", " + randomInt(20, 50) + "%, " + randomInt(35, 50) + "%, " + random(0.6, 1) + ")";
 						context.fillCircle(particle.position.x, particle.position.y, particle.size);
 						break;
-					case Weathers.diamondDust:
+					case "diamondDust":
 						context.beginPath();
 						context.moveTo(particle.position.x, particle.position.y);
 						var points = 4, size = particle.size / 2 + (Math.sin(particle.position.y / 3) + 1) / 2 * particle.size / 2;
@@ -155,7 +155,7 @@ Weather = {
 	draw : function (context, weather) {
 		if (arguments.length < 2)
 			weather = Weather.weather;
-		if ([Weathers.rain, Weathers.hail, Weathers.sandstorm, Weathers.diamondDust].contains(Weather.weather)) {
+		if (["rain", "hail", "sandstorm", "diamondDust"].contains(Weather.weather)) {
 			while (Weather.particles.all.length < Weather.particles.maximum && (1 / Weather.time < random()))
 				Weather.particles.add();
 		}
@@ -163,26 +163,26 @@ Weather = {
 		Weather.particles.update();
 		var overlay;
 		switch (weather) {
-			case Weathers.intenseSunlight:
+			case "intenseSunlight":
 				overlay = "hsla(55, 100%, 60%, 0.15)";
 				break;
-			case Weathers.rain:
-			case Weathers.hail:
+			case "rain":
+			case "hail":
 				overlay = "hsla(215, 35%, 45%, 0.4)";
 				break;
-			case Weathers.sandstorm:
+			case "sandstorm":
 				overlay = "hsla(45, 60%, 50%, 0.4)";
 				break;
-			case Weathers.diamondDust:
+			case "diamondDust":
 				overlay = "hsla(215, 0%, 100%, 0.5)";
 				break;
-			case Weathers.fog:
+			case "fog":
 				var gradient = context.createLinearGradient(0, 0, 0, Battle.canvas.height);
 				gradient.addColorStop(0, "hsla(215, 5%, 100%, 0.6)");
 				gradient.addColorStop(1, "hsla(215, 5%, 60%, 0.8)");
 				overlay = gradient;
 				break;
-			case Weathers.shadowyAura:
+			case "shadowyAura":
 				var gradient = context.createRadialGradient(Battle.canvas.width / 2, Battle.canvas.height / 4, 0, Battle.canvas.width / 2, Battle.canvas.height / 4, Math.min(Battle.canvas.width, Battle.canvas.height) * 0.65);
 				gradient.addColorStop(0, "hsla(280, 60%, 30%, 0.4)");
 				gradient.addColorStop(1, "hsla(280, 0%, 0%, 0.80)");

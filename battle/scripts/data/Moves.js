@@ -1,6 +1,6 @@
 Moves = {
 	_Confused : {
-		type : Types.typeless,
+		type : "Typeless",
 		category : Move.category.physical,
 		classification : ["_", "special"],
 		power : 40,
@@ -16,9 +16,9 @@ Moves = {
 		}
 	},
 	"Struggle" : {
-		status : Development.incomplete,
+		status : "incomplete",
 		description : "",
-		type : Types.normal,
+		type : "Normal",
 		category : Move.category.physical,
 		classification : ["_", "special"],
 		PP : 1,
@@ -29,16 +29,16 @@ Moves = {
 		effect : {
 			use : [
 				function (self, target) {
-					Battle.damage(target, Move.damage(self, target, "Struggle"), null, Types.typeless);
-					self.recoil("Struggle", self.stats[Stats.health]() / 4);
+					Battle.damage(target, Move.damage(self, target, "Struggle"), null, "Typeless");
+					self.recoil("Struggle", self.stats.health() / 4);
 				}
 			]
 		}
 	},
 	"Tackle" : {
-		status : Development.incomplete,
+		status : "incomplete",
 		description : "A physical attack in which the user charges and slams into the target with its whole body.",
-		type : Types.normal,
+		type : "Normal",
 		category : Move.category.physical,
 		PP : 35,
 		power : 50,
@@ -149,9 +149,9 @@ Moves = {
 		]]
 	},
 	"Roar" : {
-		status : Development.incomplete,
+		status : "incomplete",
 		description : "",
-		type : Types.normal,
+		type : "Normal",
 		category : Move.category.status,
 		snatchable : true,
 		classification : ["Sound"],
@@ -189,9 +189,9 @@ Moves = {
 								};
 						}
 					} else {
-						Textbox.state(target.name() + " is trapped in place and can't be blown away!");
 						return {
-							failed : true
+							failed : true,
+							reason : target.name() + " is trapped in place and can't be blown away!"
 						};
 					}
 				}
@@ -199,9 +199,9 @@ Moves = {
 		}
 	},
 	"Wrap" : {
-		status : Development.incomplete,
+		status : "incomplete",
 		description : "",
-		type : Types.normal,
+		type : "Normal",
 		category : Move.category.physical,
 		PP : 20,
 		power : 15,
@@ -218,13 +218,19 @@ Moves = {
 					if (!Battle.moveHasEffect("Wrap", target)) {
 						var turns = srandom.int(2, 5);
 						for (var i = 0; i < turns; ++ i)
-							Battle.moveHaveEffect("Wrap", i + 0.5, target, {freed : false});
-						Battle.moveHaveEffect("Wrap", turns + 0.5, target, {freed : true});
+							Battle.moveHaveEffect("Wrap", i + 0.5, target, {
+								user : self,
+								freed : false
+							});
+						Battle.moveHaveEffect("Wrap", turns + 0.5, target, {
+							user : self,
+							freed : true
+						});
 					}
 				}
 			],
 			effect : function (target, data) {
-				if (!data.freed) {
+				if (data.user.battler.battling && !data.freed) {
 					Textbox.state(target.name() + " is hurt by " + target.possessivePronoun() + " Wrap.");
 					Battle.damage(target, Move.percentageDamage(target, 1 / 16));
 				} else {
@@ -235,9 +241,9 @@ Moves = {
 		},
 	},
 	"Disable" : {
-		status : Development.incomplete,
+		status : "incomplete",
 		description : "",
-		type : Types.normal,
+		type : "Normal",
 		category : Move.category.status,
 		snatchable : true,
 		PP : 20,
@@ -253,12 +259,16 @@ Moves = {
 							failed : true
 						};
 					} else {
-						var which = null;
+						var which = null, alreadyDisabledAMove = false;
 						foreach(target.currentMoves(), function (move) {
+							if (move.disabled) {
+								alreadyDisabledAMove = true;
+								return true;
+							}
 							if (move.move === target.battler.previousMoves.last().move)
 								which = move.number;
 						});
-						if (which !== null) {
+						if (!alreadyDisabledAMove && which !== null && !target.currentMoves()[which].disabled) {
 							Textbox.state(self.name() + " disabled " + target.name() + "'s " + target.currentMoves()[which].move + ".");
 							target.currentMoves()[which].disabled = 4;
 						} else {
@@ -272,9 +282,9 @@ Moves = {
 		}
 	},
 	"Counter" : {
-		status : Development.incomplete,
+		status : "incomplete",
 		description : "",
-		type : Types.fighting,
+		type : "Fighting",
 		category : Move.category.physical,
 		PP : 20,
 		accuracy : 1,
@@ -296,9 +306,9 @@ Moves = {
 		}
 	},
 	"Feint" : {
-		status : Development.incomplete,
+		status : "incomplete",
 		description : "",
-		type : Types.normal,
+		type : "Normal",
 		category : Move.category.physical,
 		PP : 10,
 		power : 30,
@@ -318,9 +328,9 @@ Moves = {
 		}
 	},
 	"Pursuit" : {
-		status : Development.incomplete,
+		status : "incomplete",
 		description : "",
-		type : Types.dark,
+		type : "Dark",
 		category : Move.category.physical,
 		PP : 20,
 		power : 40,
@@ -339,9 +349,9 @@ Moves = {
 		}
 	},
 	"Magnitude" : {
-		status : Development.incomplete,
+		status : "incomplete",
 		description : "",
-		type : Types.ground,
+		type : "Ground",
 		category : Move.category.physical,
 		PP : 30,
 		accuracy : 1,
@@ -374,9 +384,9 @@ Moves = {
 		]]
 	},
 	"Synthesis" : {
-		status : Development.incomplete,
+		status : "incomplete",
 		description : "",
-		type : Types.grass,
+		type : "Grass",
 		category : Move.category.status,
 		snatchable : true,
 		PP : 5,
@@ -385,15 +395,15 @@ Moves = {
 		effect : {
 			use : [
 				function (self) {
-					Battle.healPercentage(self, (Battle.weather === Weathers.clear ? 0.5 : Battle.weather === Weathers.intenseSunlight ? 2 / 3 : 0.25), self);
+					Battle.healPercentage(self, (Battle.weather === "clear" ? 0.5 : Battle.weather === "intenseSunlight" ? 2 / 3 : 0.25), self);
 				}
 			]
 		}
 	},
 	"Protect" : {
-		status : Development.incomplete,
+		status : "incomplete",
 		description : "",
-		type : Types.normal,
+		type : "Normal",
 		category : Move.category.status,
 		snatchable : true,
 		PP : 10,
@@ -422,9 +432,9 @@ Moves = {
 		}
 	},
 	"Substitute" : {
-		status : Development.incomplete,
+		status : "incomplete",
 		description : "",
-		type : Types.normal,
+		type : "Normal",
 		category : Move.category.status,
 		snatchable : true,
 		PP : 10,
@@ -435,7 +445,7 @@ Moves = {
 			use : [
 				function (self) {
 					if (!self.battler.substitute) {
-						var sacrificed = Math.floor(self.stats[Stats.health]() / 4);
+						var sacrificed = Math.floor(self.stats.health() / 4);
 						if (self.health <= sacrificed) {
 							return {
 								failed : true
@@ -454,9 +464,9 @@ Moves = {
 		}
 	},
 	"Transform" : {
-		status : Development.incomplete,
+		status : "incomplete",
 		description : "",
-		type : Types.normal,
+		type : "Normal",
 		category : Move.category.status,
 		snatchable : true,
 		classification : ["special"],
@@ -479,24 +489,24 @@ Moves = {
 						moves : target.moves.deepCopy(),
 						shiny : target.shiny,
 						ability : target.ability,
-						form : target.form,
+						"form(e)" : target["form(e)"],
 						gender : target.gender
 					};
 					self.battler.statLevel = target.battler.statLevel.clone();
 					foreach(self.battler.transform.moves, function (move) {
 						move.PP = 5;
-						move.PPups = 0;
+						move.PPUps = 0;
 					});
-					var display = Display.state.save();
-					Textbox.state(self.name() + " transformed itself into " + target.species + ".", /*transform animation, has finishing transforming, */function () { Display.state.load(display); });
+					var display = Display.state.save(), speciesName = target.currentSpecies().replace(/ \(\w+\)$/, "");
+					Textbox.state(self.name() + " transformed itself into " + article(speciesName) + " " + speciesName + ".", /*transform animation, has finishing transforming, */function () { Display.state.load(display); });
 				}
 			]
 		}
 	},
 	"Sketch" : {
-		status : Development.incomplete,
+		status : "incomplete",
 		description : "",
-		type : Types.normal,
+		type : "Normal",
 		category : Move.category.status,
 		snatchable : true,
 		classification : ["special"],
@@ -527,9 +537,9 @@ Moves = {
 		}
 	},
 	"Heal Block" : {
-		status : Development.incomplete,
+		status : "incomplete",
 		description : "",
-		type : Types.grass,
+		type : "Grass",
 		category : Move.category.status,
 		snatchable : true,
 		PP : 15,
@@ -554,7 +564,7 @@ Moves = {
 			]
 		},
 		effects : {
-			event : Events.health,
+			event : Triggers.health,
 			oneself : true,
 			action : function (data, target) {
 				if (data.change > 0) {
@@ -565,9 +575,9 @@ Moves = {
 		}
 	},
 	"Absorb" : {
-		status : Development.incomplete,
+		status : "incomplete",
 		description : "",
-		type : Types.grass,
+		type : "Grass",
 		category : Move.category.special,
 		PP : 25,
 		power : 20,
@@ -586,9 +596,9 @@ Moves = {
 		}
 	},
 	"Guillotine" : {
-		status : Development.incomplete,
+		status : "incomplete",
 		description : "",
-		type : Types.normal,
+		type : "Normal",
 		category : Move.category.physical,
 		PP : 5,
 		contact: true,
@@ -609,9 +619,9 @@ Moves = {
 		}
 	},
 	"Dragon Rage" : {
-		status : Development.incomplete,
+		status : "incomplete",
 		description : "",
-		type : Types.dragon,
+		type : "Dragon",
 		category : Move.category.special,
 		PP : 10,
 		accuracy : 1,
@@ -627,14 +637,17 @@ Moves = {
 		}
 	},
 	"Perish Song" : {
-		status : Development.incomplete,
+		status : "incomplete",
 		description : "",
-		type : Types.normal,
+		type : "Normal",
 		category : Move.category.status,
 		snatchable : true,
 		classification : ["Sound"],
 		PP : 5,
 		contact: false,
+		piercing : true,
+		infiltrating : true,
+		despite : ["Dig", "Dive", "Fly"],
 		affects : Move.targets.everyone,
 		targets : Move.targets.everyone,
 		effect : {
@@ -662,9 +675,9 @@ Moves = {
 		}
 	},
 	"Take Down" : {
-		status : Development.incomplete,
+		status : "incomplete",
 		description : "",
-		type : Types.normal,
+		type : "Normal",
 		category : Move.category.physical,
 		PP : 20,
 		power : 90,
@@ -683,9 +696,9 @@ Moves = {
 		}
 	},
 	"Yawn" : {
-		status : Development.incomplete,
+		status : "incomplete",
 		description : "",
-		type : Types.normal,
+		type : "Normal",
 		category : Move.category.status,
 		snatchable : true,
 		PP : 10,
@@ -699,23 +712,24 @@ Moves = {
 				}
 			],
 			effect : function (target) {
-				if (target.status === Statuses.none) {
+				if (target.status === "none") {
 					Textbox.state(target.name() + " yawned and fell asleep.");
-					Battle.inflict(target, Statuses.asleep);
+					Battle.inflict(target, "asleep");
 				}
 			}
 		}
 	},
 	"Future Sight" : {
-		status : Development.incomplete,
+		status : "incomplete",
 		description : "",
-		type : Types.psychic,
+		type : "Psychic",
 		category : Move.category.special,
 		PP : 10,
 		power : 120,
 		accuracy : 1,
 		contact: false,
 		piercing : true,
+		despite : ["Dig", "Dive", "Fly"],
 		affects : Move.targets.directTarget,
 		targets : Move.targets.adjacentToUser,
 		effect : {
@@ -737,9 +751,9 @@ Moves = {
 		}
 	},
 	"Jump Kick" : {
-		status : Development.incomplete,
+		status : "incomplete",
 		description : "",
-		type : Types.fighting,
+		type : "Fighting",
 		category : Move.category.physical,
 		PP : 10,
 		power : 100,
@@ -754,14 +768,14 @@ Moves = {
 				}
 			],
 			miss : function (self, target) {
-				self.crash(self.stats[Stats.health]() / 2);
+				self.crash(self.stats.health() / 2);
 			}
 		}
 	},
 	"Hyper Voice" : {
-		status : Development.incomplete,
+		status : "incomplete",
 		description : "",
-		type : Types.normal,
+		type : "Normal",
 		category : Move.category.special,
 		classification : ["Sound"],
 		PP : 10,
@@ -779,9 +793,9 @@ Moves = {
 		}
 	},
 	"Hyper Beam" : {
-		status : Development.incomplete,
+		status : "incomplete",
 		description : "",
-		type : Types.normal,
+		type : "Normal",
 		category : Move.category.special,
 		PP : 5,
 		power : 150,
@@ -799,9 +813,9 @@ Moves = {
 		}
 	},
 	"Solar Beam" : {
-		status : Development.incomplete,
+		status : "incomplete",
 		description : "",
-		type : Types.grass,
+		type : "Grass",
 		category : Move.category.special,
 		PP : 10,
 		power : 120,
@@ -812,7 +826,7 @@ Moves = {
 		effect : {
 			use : [
 				function (self, target) {
-					if (Battle.weather === Weathers.intenseSunlight) {
+					if (Battle.weather === "intenseSunlight") {
 						Move.use("Solar Beam", ++ self.battler.moveStage, self, target, true);
 						return;
 					}
@@ -825,9 +839,9 @@ Moves = {
 		}
 	},
 	"Fly" : {
-		status : Development.incomplete,
+		status : "incomplete",
 		description : "",
-		type : Types.flying,
+		type : "Flying",
 		category : Move.category.physical,
 		PP : 15,
 		power : 90,
@@ -909,9 +923,9 @@ Moves = {
 		]
 	},
 	"Dive" : {
-		status : Development.incomplete,
+		status : "incomplete",
 		description : "",
-		type : Types.water,
+		type : "Water",
 		category : Move.category.physical,
 		PP : 10,
 		power : 80,
@@ -956,9 +970,9 @@ Moves = {
 		]
 	},
 	"Dig" : {
-		status : Development.incomplete,
+		status : "incomplete",
 		description : "",
-		type : Types.ground,
+		type : "Ground",
 		category : Move.category.physical,
 		PP : 10,
 		power : 90,
@@ -1003,9 +1017,9 @@ Moves = {
 		]
 	},
 	"Pin Missile" : {
-		status : Development.incomplete,
+		status : "incomplete",
 		description : "",
-		type : Types.bug,
+		type : "Bug",
 		category : Move.category.physical,
 		PP : 20,
 		power : 25,
@@ -1022,15 +1036,15 @@ Moves = {
 					Battle.damage(target, Move.damage(self, target, "Pin Missile"), repetitions === 1);
 					if (target !== NoPokemon && !target.fainted() && (repetitions < 2 || (repetitions <= 3 && srandom.chance(3)) || (repetitions <= 5 && srandom.chance(6)))) {
 						Moves._("Pin Missile").effect.use[0](self, target, constant, ++ repetitions); // Not the standard Move.use() form, so that it can take advantage of repetitions
-					} else Textbox.state("Hit " + target.name() + " " + repetitions + " time" + (repetitions !== 1 ? "s" : "") + "!");
+					} else Textbox.state("Hit " + target.name() + " " + quantityWord(repetitions) + "!");
 				}
 			]
 		}
 	},
 	"Supersonic" : {
-		status : Development.incomplete,
+		status : "incomplete",
 		description : "",
-		type : Types.normal,
+		type : "Normal",
 		category : Move.category.status,
 		snatchable : true,
 		classification : ["Sound"],
@@ -1048,35 +1062,40 @@ Moves = {
 		}
 	},
 	"Spikes" : {
-		status : Development.incomplete,
+		status : "incomplete",
 		description : "",
-		type : Types.ground,
+		type : "Ground",
 		category : Move.category.status,
 		snatchable : true,
 		classification : ["hazard"],
 		PP : 20,
 		contact : false,
-		affects : /*Move.targets.opposingSide*/Move.targets.directTarget,
-		targets : /*Move.targets.opposingSide*/Move.targets.directOpponent,
+		affects : Move.targets.opposingSide,
+		targets : Move.targets.opposingSide,
 		effect : {
 			use : [
 				function (self, target) {
 					Textbox.state(self.name() + " scattered sharp spikes around the far side.");
-					Battle.placeHazard("Spikes", 3, target.battler.side);
+					if (!Battle.placeHazard("Spikes", 3, target)) {
+						Textbox.state("But they were already layered so deep that it didn't make a difference!");
+						return {
+							failed : true
+						};
+					}
 				}
 			],
 			hazard : function (target, stack) {
-				if (target.effectiveness(Moves._("Spikes").type) > 0) {
+				if (target.effectiveness(Moves._("Spikes").type, Moves._("Spikes").classification) > 0) {
 					Textbox.state("The sharp spikes hurt " + target.name() + "!");
-					Battle.damage(target, {damage : Math.floor(target.stats[Stats.health]() / (8 - 2 * (stack - 1)))});
+					Battle.damage(target, { damage : Math.floor(target.stats.health() / (8 - 2 * (stack - 1))) });
 				}
 			}
 		}
 	},
 	"Ingrain" : {
-		status : Development.incomplete,
+		status : "incomplete",
 		description : "",
-		type : Types.grass,
+		type : "Grass",
 		category : Move.category.status,
 		snatchable : true,
 		classification : ["hazard"],
@@ -1104,9 +1123,9 @@ Moves = {
 		}
 	},
 	"Curse" : {
-		status : Development.incomplete,
+		status : "incomplete",
 		description : "",
-		type : Types.ghost,
+		type : "Ghost",
 		category : Move.category.status,
 		snatchable : true,
 		PP : 10,
@@ -1116,19 +1135,19 @@ Moves = {
 		effect : {
 			use : [
 				function (self, target) {
-					if (self.ofType(Types.ghost)) {
+					if (self.ofType("Ghost")) {
 						if (!Battle.moveHasEffect("Curse", self)) {
 							Textbox.state(target.name() + " was put under an evil Curse!");
-							Battle.damage(self, Move.exactDamage(self, self, "Curse", Math.floor(self.stats[Stats.health]() / 2)));
+							Battle.damage(self, Move.exactDamage(self, self, "Curse", Math.floor(self.stats.health() / 2)));
 							Battle.moveHaveRepeatingEffect("Curse", Battles.when.endOfThisTurn, target);
 						} else
 							return {
 								failed : true
 							};
 					} else {
-						Battle.stat(self, Stats.speed, -1, self);
-						Battle.stat(self, Stats.attack, 1, self);
-						Battle.stat(self, Stats.defence, 1, self);
+						Battle.stat(self, "speed", -1, self);
+						Battle.stat(self, "attack", 1, self);
+						Battle.stat(self, "defence", 1, self);
 					}
 				}
 			],
@@ -1139,9 +1158,9 @@ Moves = {
 		}
 	},
 	"Metronome" : {
-		status : Development.incomplete,
+		status : "incomplete",
 		description : "",
-		type : Types.normal,
+		type : "Normal",
 		category : Move.category.status,
 		snatchable : true,
 		classification : ["special"],
@@ -1164,8 +1183,8 @@ Moves = {
 					});
 					if (targets.notEmpty()) {
 						self.battler.moveStage = 0;
-						self.battler.previousTarget = targets[0].poke;
-						var used = Move.use(choice, self.battler.moveStage, self, targets[0].place, true); // Pick the closest target (this shouldn't be an ally unless it's a friendly move)
+						self.battler.previousTarget = targets.first().poke;
+						var used = Move.use(choice, self.battler.moveStage, self, targets.first().place, true); // Pick the closest target (this shouldn't be an ally unless it's a friendly move)
 						self.battler.previousMoves.push({
 							move : choice,
 							failed : used.succeeded
@@ -1224,7 +1243,7 @@ forevery(Moves, function (move) {
 			});
 		});
 	}
-	move.classification.push(Type.string(move.type));
+	move.classification.push(move.type);
 });
 Move.Struggle.move = "Struggle";
 _method(Moves);

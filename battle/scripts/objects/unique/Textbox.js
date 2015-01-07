@@ -165,7 +165,8 @@ Textbox = FunctionObject.new({
 			progress : How long to wait after displaying all the text before continuing ("manual" will require input from the user),
 			trigger : A function to execute before continuing,
 			pause : A condition to wait upon before finishing,
-			after : A function to execute after pausing
+			after : A function to execute after pause has been satisfied
+			delayPreparation : Used to make sure the style of the textbox is the correct one at any correct time
 		*/
 		var message = {}, styling = {}, entities = [], wrappedText = text;
 		forevery(Textbox.commands.formatting, function (settings, command) {
@@ -250,6 +251,18 @@ Textbox = FunctionObject.new({
 			Textbox.prepareNextMessage();
 		return message.id;
 	},
+	speech : function (texts, progress, trigger, pause, after, delayPreparation) {
+		// Textbox.say() that accepts arrays of text
+		foreach(wrapArray(texts), function (text) {
+			Textbox.say(text, progress, trigger, pause, after, delayPreparation);
+		});
+	},
+	spiel : function (texts, trigger, pause, after, delayPreparation) {
+		// Textbox.state() that accepts arrays of text
+		foreach(wrapArray(texts), function (text) {
+			Textbox.state(text, trigger, pause, after, delayPreparation);
+		});
+	},
 	insertAfter : function (id, position) {
 		var message = Textbox.messageWithId(id), position = Textbox.messageIndexForId(position);
 		if (position !== null) {
@@ -279,8 +292,9 @@ Textbox = FunctionObject.new({
 		});
 		return found;
 	},
-	state : function (text, trigger, pause, after) {
-		return Textbox.say(text, Textbox.standardInterval, trigger, pause, after);
+	state : function (text, trigger, pause, after, delayPreparation) {
+		// Automatically progresses text. Useful for in battles.
+		return Textbox.say(text, Textbox.standardInterval, trigger, pause, after, delayPreparation);
 	},
 	stateUntil : function (text, until) {
 		return Textbox.say(text, until);
@@ -628,9 +642,9 @@ Textbox = FunctionObject.new({
 				Textbox.requestRedraw = true;
 			// Null text means no text is going to be displayed, and the Textbox is just being used to initiate an event
 			if ((nullMessage || Textbox.displayed.length === Textbox.dialogue.first().text.length || Textbox.dialogue.first().text.split("\n").length - 1 === Textbox.lowestVisibleLine) && Textbox.finished === null) {
-				Textbox.finished = Time.now();
+				Textbox.finished = performance.now();
 			}
-			if (((nullMessage && Time.now() >= Textbox.finished) || (Textbox.dialogue.first().progress !== "manual" && typeof Textbox.dialogue.first().progress === "number" && Time.now() >= Textbox.finished + Textbox.dialogue.first().progress)) && Textbox.finished !== null) {
+			if (((nullMessage && performance.now() >= Textbox.finished) || (Textbox.dialogue.first().progress !== "manual" && typeof Textbox.dialogue.first().progress === "number" && performance.now() >= Textbox.finished + Textbox.dialogue.first().progress)) && Textbox.finished !== null) {
 				Textbox.progress(true);
 				Textbox.finished = null;
 			} else if (Textbox.dialogue.first().progress !== "manual" && typeof Textbox.dialogue.first().progress === "function" && Textbox.dialogue.first().progress() && Textbox.finished !== null) {

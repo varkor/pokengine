@@ -1,5 +1,4 @@
 File = {
-	all : {},
 	loadFileOfType : function (_store, object, loadEvent, dataForFile, directory, filetype, _paths, uponLoad, uponError, _redirectedPaths) {
 		var store = _store;
 		if (!Files.hasOwnProperty(store))
@@ -11,26 +10,29 @@ File = {
 		var path = paths.shift();
 		if (/(.*)\.(\w+)/.test(path))
 			path = path.match(/(.*)\.(\w+)/)[1];
-		var successful = function (data) {
+		var successful = function (data, uponLoadObject) {
 			foreach(redirectedPaths.concat(path), function (redirect) {
 				store[redirect] = data;
 			});
-			if (uponLoad)
-				uponLoad(data);
+			if (uponLoadObject)
+				uponLoadObject.uponLoad(data);
 		};
 		if (store.hasOwnProperty(path)) {
-			if (store[path] !== null) {
+			if (!store[path].hasOwnProperty("uponLoad")) {
 				successful(store[path]);
 				return store[path];
 			} else { // A file is already scheduled to be loaded, but hasn't finished loading yet
-				//return null;
+				store[path].uponLoad = function (oldUponLoad) { return function (data) {
+					if (oldUponLoad)
+						oldUponLoad(data);
+					if (uponLoad)
+						uponLoad(data);
+				}; }(store[path].uponLoad);
+				return null;
 			}
 		}
-		var file = new object();
-		file.addEventListener(loadEvent, function (event) {
-			successful(dataForFile(event, file, store, path));
-		});
-		file.addEventListener("error", function (message, url, line) {
+		var errorResponse = function (message, url, line) {
+			Files.nonexistent.pushIfNotAlreadyContained(path);
 			delete store[path];
 			redirectedPaths.push(path);
 			if (paths.notEmpty()) {
@@ -38,23 +40,20 @@ File = {
 				return true;
 			} else
 				return uponError ? uponError(redirectedPaths, message) : false;
-		});
-		var timee = Time.now() % 100;
-		if (object === Audio) {
-			console.log("registered", timee, store[path]);
-			foreach(["abort", "canplay", "canplaythrough", "durationchange", "emptied", "ended", "error", "interruptbegin", "interruptend", "loadeddata", "loadedmetadata", "loadstart", "mozaudioavailable", "pause", "play", "playing", "progress", "ratechange", "seeked", "seeking", "stalled", "suspend", "timeupdate", "volumechange", "waiting"], function (blah, paa) {
-				return function (ev) {
-					file.addEventListener(ev, function (eee) {
-						console.log(ev, blah, path);
-					});
-				};
-			}(timee, 6));
+		};
+		if (Files.nonexistent.contains(path)) {
+			errorResponse("Nonexistent file-path: " + path);
+		} else {
+			var file = new object(), uponLoadObject = {
+				uponLoad : uponLoad
+			};
+			file.addEventListener(loadEvent, function (event) {
+				successful(dataForFile(event, file, store, path), uponLoadObject);
+			});
+			file.addEventListener("error", errorResponse);
+			file.src = (!(path.substr(0, 5) === "data:" || path.substr(0, 5) === "http:" || path.substr(0, 6) === "https:") ? directory + "/" + path + "." + filetype : path);
+			store[path] = uponLoadObject;
 		}
-		file.src = (!(path.substr(0, 5) === "data:" || path.substr(0, 5) === "http:" || path.substr(0, 6) === "https:") ? directory + "/" + path + "." + filetype : path);
-		if (!File.all.hasOwnProperty(file.src))
-			File.all[file.src] = {}
-		File.all[file.src][timee] = file;
-		store[path] = null;
 		return null;
 	},
 	load : function (_paths, uponLoad, uponError) {
@@ -75,19 +74,25 @@ File = {
 		}
 	}
 };
-Files = {};
+Files = {
+	nonexistent : []
+};
 
 Sprite = FunctionObject.new({
 	canvases : [],
-	load : function (paths, uponLoad, uponError) {
+	load : function (_paths, uponLoad, uponError) {
+		var paths = [];
+		foreach(wrapArray(_paths), function (path) {
+			paths.push((Settings._("animated sprites") && FileData.images.hasOwnProperty(path.replace(/~.*/, "")) ? "animated" : "static") + "/" + path);
+		});
 		return File.loadFileOfType("sprites", Image, "load", function (event, image, store, path) {
 			var data = {
 				animated : false,
 				frames : 1
 			};
-			var fileData;
-			if ((fileData = FileData.images).hasOwnProperty(path.replace(/~.*/, ""))) {
-				data = JSONCopy(fileData[path.replace(/~.*/, "")]);
+			var fileData, genericPath = path.replace(/^(animated|static)\//, "").replace(/~.*/, "");
+			if (Settings._("animated sprites") && (fileData = FileData.images).hasOwnProperty(genericPath)) {
+				data = JSONCopy(fileData[genericPath]);
 				if (data.hasOwnProperty("durations"))
 					data.frames = data.durations.length;
 			}
@@ -104,7 +109,7 @@ Sprite = FunctionObject.new({
 			var context = canvas.getContext("2d"), image = sprite.image, xModified = x, yModified = y, positionModification = {
 				x : 0,
 				y : 0
-			}, progress = (sprite.animated ? (arguments.length < 8 ? Time.now() : time) % sum(sprite.durations) : 0), frame = 0;
+			}, progress = (sprite.animated ? (arguments.length < 8 ? performance.now() : time) % sum(sprite.durations) : 0), frame = 0;
 			if (sprite.animated) {
 				while (progress > sprite.durations[frame])
 					progress -= sprite.durations[frame ++];
@@ -112,8 +117,13 @@ Sprite = FunctionObject.new({
 				if (time >= 0 && time < sprite.frames)
 					frame = time;
 				else
-					return false;
+					frame = 0;
+					//return false;
 			}
+			var contexts = [];
+			foreach(Sprite.canvases, function (temp) {
+				contexts.push(temp.getContext("2d"));
+			});
 			if (aligned) {
 				switch (context.textAlign) {
 					case "center":
@@ -138,9 +148,9 @@ Sprite = FunctionObject.new({
 			Sprite.canvases[2].width = sprite.width;
 			Sprite.canvases[2].height = sprite.height;
 			if (sprite.animated && sprite.cache.hasOwnProperty(frame)) {
-				Sprite.canvases[2].getContext("2d").drawImage(sprite.cache[frame], 0, 0);
+				contexts[2].drawImage(sprite.cache[frame], 0, 0);
 			} else {
-				Sprite.canvases[2].getContext("2d").drawImage(image, frame * sprite.width, 0, sprite.width, sprite.height, 0, 0, sprite.width, sprite.height);
+				contexts[2].drawImage(image, frame * sprite.width, 0, sprite.width, sprite.height, 0, 0, sprite.width, sprite.height);
 				if (sprite.animated) {
 					sprite.cache[frame] = document.createElement("canvas");
 					sprite.cache[frame].width = sprite.width;
@@ -158,8 +168,8 @@ Sprite = FunctionObject.new({
 						temporaryCanvas.height = sprite.height;
 					});
 					if (!filter.hasOwnProperty("type")) {
-						Sprite.canvases[0].getContext("2d").drawImage(image, 0, 0);
-						var imageData = Sprite.canvases[0].getContext("2d").getImageData(0, 0, Sprite.canvases[0].width, Sprite.canvases[0].height), pixels = imageData.data;
+						contexts[0].drawImage(image, 0, 0);
+						var imageData = contexts[0].getImageData(0, 0, Sprite.canvases[0].width, Sprite.canvases[0].height), pixels = imageData.data;
 						for (var i = 0, newPixel, excludeBlankPixels = true; i < pixels.length; i += 4) {
 							if (pixels[i + 3] === 0 && excludeBlankPixels)
 								continue;
@@ -169,21 +179,21 @@ Sprite = FunctionObject.new({
 							pixels[i + 2] = Math.floor(newPixel[2]);
 							pixels[i + 3] = Math.floor(newPixel[3]);
 						}
-						Sprite.canvases[0].getContext("2d").clearRect(0, 0, Sprite.canvases[0].width, Sprite.canvases[0].height);
-						Sprite.canvases[0].getContext("2d").putImageData(imageData, 0, 0);
+						contexts[0].clearRect(0, 0, Sprite.canvases[0].width, Sprite.canvases[0].height);
+						contexts[0].putImageData(imageData, 0, 0);
 					} else {
 						switch (filter.type) {
 							case "fill":
-								Sprite.canvases[0].getContext("2d").fillStyle = filter.colour;
-								Sprite.canvases[0].getContext("2d").fillRect(0, 0, Sprite.canvases[0].width, Sprite.canvases[0].height);
-								Sprite.canvases[1].getContext("2d").fillStyle = "black";
-								Sprite.canvases[1].getContext("2d").fillRect(0, 0, Sprite.canvases[1].width, Sprite.canvases[1].height);
-								Sprite.canvases[1].getContext("2d").globalCompositeOperation = "destination-out";
-								Sprite.canvases[1].getContext("2d").drawImage(image, 0, 0);
-								Sprite.canvases[0].getContext("2d").globalCompositeOperation = "destination-out";
-								Sprite.canvases[0].getContext("2d").drawImage(Sprite.canvases[1], 0, 0);
-								Sprite.canvases[0].getContext("2d").globalCompositeOperation = "source-over";
-								Sprite.canvases[1].getContext("2d").globalCompositeOperation = "source-over";
+								contexts[0].fillStyle = filter.colour;
+								contexts[0].fillRect(0, 0, Sprite.canvases[0].width, Sprite.canvases[0].height);
+								contexts[1].fillStyle = "black";
+								contexts[1].fillRect(0, 0, Sprite.canvases[1].width, Sprite.canvases[1].height);
+								contexts[1].globalCompositeOperation = "destination-out";
+								contexts[1].drawImage(image, 0, 0);
+								contexts[0].globalCompositeOperation = "destination-out";
+								contexts[0].drawImage(Sprite.canvases[1], 0, 0);
+								contexts[0].globalCompositeOperation = "source-over";
+								contexts[1].globalCompositeOperation = "source-over";
 								break;
 							case "crop":
 								var width = Sprite.canvases[0].width, height = Sprite.canvases[0].height;
@@ -196,18 +206,18 @@ Sprite = FunctionObject.new({
 								else if (filter.hasOwnProperty("heightRatio"))
 									height *= filter.heightRatio;
 								if (width > 0 && height > 0)
-									Sprite.canvases[0].getContext("2d").drawImage(image, 0, 0, width, height, 0, 0, width, height);
+									contexts[0].drawImage(image, 0, 0, width, height, 0, 0, width, height);
 								positionModification.y += Sprite.canvases[0].height - height;
 								break;
 							case "opacity":
-								Sprite.canvases[0].getContext("2d").globalAlpha = filter.value;
-								Sprite.canvases[0].getContext("2d").drawImage(image, 0, 0);
-								Sprite.canvases[0].getContext("2d").globalAlpha = 1;
+								contexts[0].globalAlpha = filter.value;
+								contexts[0].drawImage(image, 0, 0);
+								contexts[0].globalAlpha = 1;
 								break;
 						}
 					}
-					Sprite.canvases[2].getContext("2d").clearRect(0, 0, Sprite.canvases[2].width, Sprite.canvases[2].height);
-					Sprite.canvases[2].getContext("2d").drawImage(Sprite.canvases[0], 0, 0);
+					contexts[2].clearRect(0, 0, Sprite.canvases[2].width, Sprite.canvases[2].height);
+					contexts[2].drawImage(Sprite.canvases[0], 0, 0);
 					image = Sprite.canvases[2];
 				});
 			}

@@ -8,6 +8,8 @@ Badges = {
 		obediance : 30
 	}
 };
+_method(Badges);
 
 Ribbons = {
 };
+_method(Ribbons);

@@ -2,6 +2,6 @@ TMs = [
 ];
 
 HMs = [
-	Moves.Flash,
-	Moves.Cut
+	"Flash",
+	"Cut"
 ];

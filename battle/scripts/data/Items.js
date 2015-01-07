@@ -11,7 +11,7 @@ Items = {
 			},
 			effects : [
 				{
-					event : Events.experience,
+					event : Triggers.experience,
 					action : function (data) {
 						return true;
 					}
@@ -27,6 +27,7 @@ Items = {
 			onetime : true,
 			direct : true,
 			useMessage : false,
+			"catch rate" : 1,
 			effect : function (self, poke, trainer) {
 				if (Battle.situation === Battles.situation.wild) {
 					Textbox.state(trainer.pronoun(true) + " threw a " + self.fullname + " at " + poke.name() + "!");
@@ -37,16 +38,14 @@ Items = {
 			}
 		},
 		"Poké" : {
-			catchRate : 1
 		},
 		"Luxury" : {
-			catchRate : 1
 		},
 		"Master" : {
-			catchRate : 255
+			"catch rate" : 255
 		},
 		"Clone" : {
-			catchRate : 255,
+			"catch rate" : 255,
 			effect : function (self, poke, trainer) {
 				var thrownByPlayer = (poke.trainer !== Battle.alliedTrainers[0]);
 				Textbox.state((thrownByPlayer ? Battle.alliedTrainers[0] : Battle.opposingTrainers[0]).pronoun(true) + " threw a " + self.fullname + " at " + poke.name() + "!");
@@ -71,7 +70,7 @@ Items = {
 			},
 			effects : [
 				{
-					event : Events.health,
+					event : Triggers.health,
 					action : function (data, self, other) {
 						if (data.change < 0 && self.health <= self.maximumHealth() / 2)
 							return true;

@@ -149,10 +149,11 @@ Client = {
 						user.parentElement.removeChild(user);
 					}
 				});
-				if (Client.battle !== null && Client.Battle.other.ip === message.who.ip && Client.Battle.other.user === message.who.user) {
+				if (Client.battle !== null && Client.battle.other.ip === message.who.ip && Client.battle.other.user === message.who.user) {
 					console.log("%cThe other player disconnected from the server!", "color : hsl(0, 100%, 40%)");
 					Battle.end(true);
 				}
+				break;
 			case "actions":
 				Battle.receiveActions(message.actions);
 				break;
@@ -161,7 +162,7 @@ Client = {
 	send : function (message) {
 		if (Client.connected) {
 			if (!message.hasOwnProperty("reference"))
-				message.reference = Time.now();
+				message.reference = performance.now();
 			Client.socket.send(JSON.stringify([56, message]).slice(1, -1));
 			return message.reference;
 		} else {
@@ -174,7 +175,7 @@ Client = {
 			Client.socket = new WebSocket("ws://pokengine.org:9008/");
 			console.log("%cConnecting to the server...", "color : hsl(50, 100%, 40%)");
 			Client.socket.addEventListener("open", function () {
-				console.log("%cConnected with the server.", "color : hsl(110, 100%, 40%)");
+				console.log("%cConnected to the server.", "color : hsl(110, 100%, 40%)");
 				Client.connected = true;
 				Client.connecting = false;
 				Interface.connectionStatusChange();

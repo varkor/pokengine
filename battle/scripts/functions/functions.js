@@ -236,10 +236,12 @@ Array.prototype.removeDuplicates = function () {
 };
 
 Array.prototype.remove = function (index, number) {
-	var numberOfElements = number;
-	if (arguments.length < 2)
-		numberOfElements = 1;
-	this.splice(index, numberOfElements);
+	if (index >= 0 && index < this.length) {
+		var numberOfElements = number;
+		if (arguments.length < 2)
+			numberOfElements = 1;
+		this.splice(index, numberOfElements);
+	}
 };
 
 Array.prototype.removeElementsOfValue = function (element) {
@@ -335,14 +337,15 @@ Array.prototype.pushIfNotAlreadyContained = function (element) {
 	return false;
 };
 
-CanvasRenderingContext2D.prototype.fillCircle = function (x, y, radius) {
+CanvasRenderingContext2D.prototype.fillCircle = function (x, y, radius, _arcAngle) {
+	var arcAngle = (arguments.length < 4 ? 2 * Math.PI : _arcAngle);
 	this.beginPath();
-	this.arc(x, y, radius, 0, 2 * Math.PI, false);
+	this.arc(x, y, radius, 0, arcAngle, false);
 	this.fill();
 };
 
 function article (word) {
-	return (["a", "e", "i", "o", "u"].indexOf(word.charAt(0).toLowerCase()) > -1 ? "an" : "a");
+	return (["a", "e", "i", "o", "u"].contains(word.charAt(0).toLowerCase()) ? "an" : "a");
 }
 
 function numberword (number) {
@@ -368,6 +371,20 @@ function numberword (number) {
 		case 9:
 			return "nine";
 	}
+	// Otherwise
+	return "" + number;
+}
+
+function quantityWord (times) {
+	switch (times) {
+		case 1:
+			return "once";
+		case 2:
+			return "twice";
+		case 3:
+			return "thrice";
+	}
+	return numberword(times) + " times";
 }
 
 Matrix = function (matrix) {

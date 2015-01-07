@@ -27,6 +27,10 @@
 					</select></div></td>
 				</tr>
 				<tr class="hidden-">
+					<td>inverse</td>
+					<td><label><input id="inverse" type="checkbox"></td>
+				</tr>
+				<tr class="hidden-">
 					<td>weather</td>
 					<td><div class="select"><select id="weather">
 						<option value="clear">clear skies</option>
@@ -53,8 +57,8 @@
 				<tr>
 					<td>levels</td>
 					<td><div class="select"><select id="rule-levels">
-						<option value="any">any</option>
-						<option value="flatten: 50" selected>flatten to level 50</option>
+						<option value="any" selected>any</option>
+						<option value="flatten: 50">flatten to level 50</option>
 						<option value="flatten: 100">flatten to level 100</option>
 					</select></div></td>
 				</tr>
@@ -173,23 +177,57 @@
 					issue.style.top = (buttonRect.top + buttonRect.height / 2 - issue.getBoundingClientRect().height / 2 + window.scrollY) + "px";
 				};
 
+				Interface.clearIssues = function () {
+					foreach(document.querySelectorAll(".issue"), function (issue) {
+						issue.parentElement.removeChild(issue);
+					});
+				};
+
 				document.querySelector("#local").addEventListener("mousedown", function (event) {
 					if (event.button !== 0)
 						return;
+					Interface.clearIssues();
 					event.stopPropagation();
 					Interface.popup(document.querySelector("#local"), function (event) {
 						document.querySelector("#local").disabled = true;
 						Game.takePossessionOf(new trainer({
-							name : document.querySelector("#name").value,
-							party : Interface.buildParty()
+							"name" : document.querySelector("#name").value,
+							"class" : "Pokémon Trainer",
+							"individual" : true,
+							"game" : "B2W2",
+							"party" : Interface.buildParty(),
+							"money" : 10000
 						}));
-						Battle.beginWildBattle(Game.player, [new pokemon({
-							species : "Bulbasaur",
+						/*Battle.beginWildBattle(Game.player, [new pokemon({
+							species : "Bulbasaur (Nintendo)",
 							level : 20
 						}), new pokemon({
-							species : "Ivysaur",
+							species : "Ivysaur (Nintendo)",
 							level : 50
-						})], Interface.buildSettings());
+						})], Interface.buildSettings());*/
+						Battle.beginTrainerBattle(Game.player, new trainer({
+							"name" : "Roger",
+							"class" : "Ace Trainer",
+							"game" : "B2W2",
+							"pressure speech" : "You should never have gotten your hopes up!",
+							"defeat speech" : "So... this is what defeat tastes like...",
+							"party" : [
+								new pokemon({
+									species : "Bulbasaur (Nintendo)",
+									level : 20,
+									moves : [{
+										move : "Tackle"
+									}]
+								}), new pokemon({
+									species : "Ivysaur (Nintendo)",
+									level : 5
+								}),
+								new pokemon({
+									species : "Blastoise (Nintendo)",
+									level : 5
+								})
+							]
+						}), Interface.buildSettings());
 					}, true);
 				});
 
@@ -247,11 +285,11 @@
 					});
 				}, addPokemon = function () {
 					var li = document.createElement("li"), select = document.createElement("select"), option;
-					forevery(Pokemon, function (poke, name) {
-						if (name === "Missingno.")
+					forevery(Pokedex, function (poke, name) {
+						if (name === "Missingno. (Nintendo)")
 							return;
 						option = document.createElement("option");
-						option.innerHTML = name;
+						option.innerHTML = name.replace(/ \(\w+\)$/, "");
 						option.value = name;
 						select.appendChild(option);
 					});
@@ -302,8 +340,7 @@
 							moves.push({
 								move : move,
 								PP : Moves[move].PP,
-								PPups : 0,
-								number : i
+								PPUps : 0
 							});
 						});
 						pokes.add(new pokemon({
@@ -317,8 +354,9 @@
 
 				Interface.buildSettings = function () {
 					var settings = {
-						style : (document.querySelector("#style").value === "double" ? Battles.style.double : Battles.style.normal),
-						weather : (Weathers.hasOwnProperty(document.querySelector("#weather").value) ? Weathers[document.querySelector("#weather").value] : Weathers.clear),
+						style : (document.querySelector("#style").value === "double" ? "double" : "normal"),
+						flags : document.querySelector("#inverse").checked ? ["inverse"] : [],
+						weather : (Weathers.hasOwnProperty(document.querySelector("#weather").value) ? Weathers[document.querySelector("#weather").value] : "clear"),
 						scene : (Scenes._(document.querySelector("#scene").value + "?") ? document.querySelector("#scene").value : "Field Clearing"),
 						rules : {
 							levels : document.querySelector("#rule-levels").value,
@@ -340,9 +378,7 @@
 						if (!classList.contains("hidden")) {
 							Interface.clearSettings();
 						}
-						foreach(document.querySelectorAll(".issue"), function (issue) {
-							issue.parentElement.removeChild(issue);
-						});
+						Interface.clearIssues();
 					});
 			}
 		};

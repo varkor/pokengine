@@ -11,6 +11,7 @@ Battle = FunctionObject.new({
 	},
 	situation : null,
 	style : null,
+	flags : [],
 	allies : [],
 	alliedTrainers : [],
 	opponents : [],
@@ -24,7 +25,8 @@ Battle = FunctionObject.new({
 	queue : [],
 	actions : [],
 	recording : [],
-	communication : null,
+	inputs : [],
+	communication : [],
 	evolving : [],
 	scene : null,
 	rules : [],
@@ -42,8 +44,85 @@ Battle = FunctionObject.new({
 	},
 	cache : null,
 	drawing : {
+		positions : {
+			sideNear : {
+				x : 90,
+				y : 220,
+				z : 0
+			},
+			sideFar : {
+				x : 230,
+				y : 220,
+				z : 115
+			}
+		},
+		transition : function (object, property, to, duration) {
+			var from = object[property];
+			return function () {
+				if (duration !== 0) {
+					var clamp = from < to ? Math.min : Math.max;
+					object[property] = clamp(object[property] + (to - from) / duration, to);
+				} else {
+					object[property] = to;
+				}
+				return object[property] === to;
+			};
+		},
+		complexShape : function (shapes, right, y, shift) {
+			var context = Battle.canvas.getContext("2d"), current = { x : 0, y : 0 }, width = 0;
+			foreach(shapes, function (shape) {
+				if (shape.hasOwnProperty("points")) {
+					foreach(shape.points, function (point) {
+						if (point.x > width)
+							width = point.x;
+					});
+				}
+			});
+			foreach(shapes, function (shape) {
+				context.fillStyle = shape.colour;
+				if (shape.hasOwnProperty("points")) {
+					context.beginPath();
+					foreach(shape.points, function (point) {
+						if (point.hasOwnProperty("x"))
+							current.x = point.x;
+						if (point.hasOwnProperty("y"))
+							current.y = point.y;
+						context.lineTo(Battle.canvas.width * (right ? 1 : 0) + (current.x - (width * (1 - shift))) * (right ? -1 : 1), y + current.y);
+					});
+					context.fill();
+				}
+				if (shape.hasOwnProperty("text")) {
+					context.font = shape.font;
+					context.textAlign = shape.align.x;
+					context.textBaseline = shape.align.y;
+					context.fillText(shape.text, Battle.canvas.width * (right ? 1 : 0) + (shape.position.x - (width * (1 - shift))) * (right ? -1 : 1), y + shape.position.y);
+				}
+			});
+		},
+		partyBar : function (trainer, right, y) {
+			var context = Battle.canvas.getContext("2d");
+			var shapes = [
+				{
+					points : [{ x : 0, y : -8 }, { x : 102 }, { x : 118, y : 8 }, { x : 0 }],
+					colour : "hsla(0, 0%, 0%, 0.6)"
+				}
+			];
+			var transition = 1 - trainer.display.position.x / -200;
+			Battle.drawing.complexShape(shapes, right, y, transition);
+			for (var i = 0, pos; i < trainer.party.pokemon.length; ++ i) {
+				pos = (!right ? 0 : Battle.canvas.width) + (12 + i * 16 - 118 * (1 - transition)) * (!right ? 1 : -1);
+				context.fillStyle = "red";
+				context.fillCircle(pos, y, 4);
+				context.fillStyle = "white";
+				context.fillCircle(pos, y, 4, Math.PI);
+				if (trainer.party.pokemon[i].fainted()) {
+					context.fillStyle = "hsla(0, 0%, 0%, 0.3)";
+					context.fillCircle(pos, y, 4);
+				}
+			}
+		},
 		bar : function (poke, right, y, detailed) {
-			var context = Battle.canvas.getContext("2d"), pixelWidth = 14, percentageHealth = poke.health / poke.stats[Stats.health](), percentageExperience = poke.experience / poke.experienceFromLevelToNextLevel();
+			var context = Battle.canvas.getContext("2d"), pixelWidth = 14, percentageHealth = poke.health / poke.maximumHealth(), percentageExperience = poke.experience / poke.experienceFromLevelToNextLevel();
 			do {
 				context.font = pixelWidth + "px " + Settings._("font")
 				pixelWidth -= 2;
@@ -78,19 +157,19 @@ Battle = FunctionObject.new({
 					colour : "white",
 					font : Font.load(10)
 				},
-			], width = 0, current = { x : 0, y : 0 };
+			];
 			var gender = poke._("-> battler ~> transform => gender");
-			if (gender !== Genders.neuter)
+			if (gender !== "neuter")
 				shapes = shapes.concat([
 					{
 						points : [{ x : 82, y : -16 }, { x : 106 }, { x : 122, y : 0 }, { x : 98 }],
-						colour : (gender === Genders.male ? "hsl(195, 100%, 45%)" : "hsl(325, 100%, 80%)")
+						colour : (gender === "male" ? "hsl(195, 100%, 45%)" : "hsl(325, 100%, 80%)")
 					},
 					{
-						text :  (gender === Genders.male ? "♂" : "♀"),
+						text :  (gender === "male" ? "♂" : "♀"),
 						position : { x : (82 + 122) / 2, y : (-16 + 0) / 2 },
 						align : { x : "center", y : "middle" },
-						colour : (gender === Genders.male ? "hsl(195, 100%, 5%)" : "hsl(325, 100%, 40%)"),
+						colour : (gender === "male" ? "hsl(195, 100%, 5%)" : "hsl(325, 100%, 40%)"),
 						font : Font.load(12)
 					}
 				]);
@@ -101,7 +180,7 @@ Battle = FunctionObject.new({
 						colour : "hsla(0, 0%, 0%, 0.6)"
 					},
 					{
-						text :  Math.round(poke.health) + " / " + poke.stats[Stats.health](),
+						text :  Math.round(poke.health) + " / " + poke.maximumHealth(),
 						position : { x : (138 + 90) / 2, y : 22 },
 						align : { x : "center" , y : "bottom" },
 						colour : "white",
@@ -121,54 +200,48 @@ Battle = FunctionObject.new({
 					}
 				}
 			}
-			foreach(shapes, function (shape) {
-				if (shape.hasOwnProperty("points")) {
-					foreach(shape.points, function (point) {
-						if (point.x > width)
-							width = point.x;
-					});
-				}
-			});
-			foreach(shapes, function (shape) {
-				context.fillStyle = shape.colour;
-				if (shape.hasOwnProperty("points")) {
-					context.beginPath();
-					foreach(shape.points, function (point) {
-						if (point.hasOwnProperty("x"))
-							current.x = point.x;
-						if (point.hasOwnProperty("y"))
-							current.y = point.y;
-						context.lineTo(Battle.canvas.width * (right ? 1 : 0) + (current.x - (width * (1 - poke.battler.display.transition)) + (poke.battler.display.outlined ? 0 : 0)) * (right ? -1 : 1), y + current.y);
-					});
-					context.fill();
-				}
-				if (shape.hasOwnProperty("text")) {
-					context.font = shape.font;
-					context.textAlign = shape.align.x;
-					context.textBaseline = shape.align.y;
-					context.fillText(shape.text, Battle.canvas.width * (right ? 1 : 0) + (shape.position.x - (width * (1 - poke.battler.display.transition)) + (poke.battler.display.outlined ? 0 : 0)) * (right ? -1 : 1), y + shape.position.y);
-				}
-			});
+			Battle.drawing.complexShape(shapes, right, y, poke.battler.display.transition);
 		},
-		position : function (poke, display) {
-			display = display || Display.state.current;
-			var ally = display.allies.contains(poke), position, place, count = Battle.pokemonPerSide();
-			if (ally) {
-				place = display.allies.indexOf(poke);
-				position = {
-					x : 90 + poke.battler.display.position.x + place * 100 - (count - 1) * 40,
-					y : 220 - poke.battler.display.position.y,
-					z : poke.battler.display.position.z
-				};
+		position : function (entity, display) {
+			var position;
+			if (entity instanceof pokemon) {
+				var poke = entity;
+				display = display || Display.state.current;
+				var ally = display.allies.contains(entity), place, count = Battle.pokemonPerSide();
+				if (ally) {
+					place = display.allies.indexOf(poke);
+					position = {
+						x : Battle.drawing.positions.sideNear.x + poke.battler.display.position.x + place * 100 - (count - 1) * 40,
+						y : Battle.drawing.positions.sideNear.y - poke.battler.display.position.y,
+						z : Battle.drawing.positions.sideNear.z + poke.battler.display.position.z
+					};
+				} else {
+					place = display.opponents.indexOf(poke);
+					position = {
+						x : Battle.drawing.positions.sideFar.x - poke.battler.display.position.x - place * 80 + (count - 1) * 40,
+						y : Battle.drawing.positions.sideFar.y - poke.battler.display.position.y,
+						z : Battle.drawing.positions.sideFar.z - poke.battler.display.position.z
+					};
+				}
+				position.scale = 2 / Math.pow(2, position.z / (Battle.drawing.positions.sideFar.z - Battle.drawing.positions.sideNear.z));
 			} else {
-				place = display.opponents.indexOf(poke);
-				position = {
-					x : 230 - poke.battler.display.position.x - place * 80 + (count - 1) * 40,
-					y : 220 - poke.battler.display.position.y,
-					z : 115 - poke.battler.display.position.z
-				};
+				var trainer = entity;
+				position = Battle.drawing.positions;
+				if (Battle.alliedTrainers.contains(trainer)) {
+					position = {
+						x : Battle.drawing.positions.sideNear.x + trainer.display.position.x,
+						y : Battle.drawing.positions.sideNear.y - trainer.display.position.y,
+						z : Battle.drawing.positions.sideNear.z + trainer.display.position.z
+					};
+				} else {
+					position = {
+						x : Battle.drawing.positions.sideFar.x - trainer.display.position.x,
+						y : Battle.drawing.positions.sideFar.y - trainer.display.position.y,
+						z : Battle.drawing.positions.sideFar.z - trainer.display.position.z
+					};
+				}
+				position.scale = 1;
 			}
-			position.scale = 2 / Math.pow(2, position.z / 115);
 			return position;
 		}
 	},
@@ -204,6 +277,8 @@ Battle = FunctionObject.new({
 		};
 		var resources = ["scenes/" + settings.scene + ".png"], loaded = 0;
 		foreach([].concat(alliedTrainers, opposingTrainers), function (trainer) {
+			if (opposingTrainers.contains(trainer))
+				resources.push(trainer.paths.sprite(alliedTrainers.contains(trainer) ? "back" : null, true));
 			foreach(trainer.party.pokemon, function (poke) {
 				resources.push(poke.paths.sprite("front", true), poke.paths.sprite("back", true), poke.paths.cry(true));
 			});
@@ -240,7 +315,7 @@ Battle = FunctionObject.new({
 		recording.teamB = opposingTrainers;
 		Battle.recording = recording;
 		srandom.seed = Battle.recording.seed;
-		Battle.initiate(Battle.recording.teamA, Battle.recording.teamB, Battle.recording.style, Battle.recording.weather, Battle.recording.scene, Battles.kind.recording);
+		Battle.initiate(Battle.recording.teamA, Battle.recording.teamB, Battle.recording.settings, Battles.kind.recording);
 	},
 	beginOnline : function (seed, alliedTrainers, opposingTrainers, settings) {
 		srandom.seed = seed;
@@ -265,9 +340,9 @@ Battle = FunctionObject.new({
 			if (!settings.hasOwnProperty("scene"))
 				settings.scene = "Field Clearing";
 			if (!settings.hasOwnProperty("style"))
-				settings.style = Battles.style.normal;
+				settings.style = "normal";
 			if (!settings.hasOwnProperty("weather"))
-				settings.weather = Weathers.clear;
+				settings.weather = "clear";
 			Battle.finished = false;
 			if (arguments.length >= 4)
 				Battle.kind = kind;
@@ -277,28 +352,33 @@ Battle = FunctionObject.new({
 			Battle.scene = settings.scene;
 			Battle.situation = Battles.situation.wild;
 			Battle.style = settings.style;
+			Battle.flags = settings.flags;
 			Battle.changeWeather(settings.weather);
-			if (!(alliedTrainers instanceof Array))
-				alliedTrainers = [alliedTrainers];
-			if (!(opposingTrainers instanceof Array))
-				opposingTrainers = [opposingTrainers];
+			alliedTrainers = wrapArray(alliedTrainers);
+			opposingTrainers = wrapArray(opposingTrainers);
 			Battle.alliedTrainers = alliedTrainers;
 			Battle.opposingTrainers = opposingTrainers;
 			if (!Battle.opposingTrainers.contains(TheWild))
 				Battle.situation = Battles.situation.trainer;
 			if (Battle.kind !== Battles.kind.recording) {
+				var teamA = [], teamB = [];
+				foreach(Battle.alliedTrainers, function (trainer) {
+					teamA.push(trainer.store());
+				});
+				foreach(Battle.opposingTrainers, function (trainer) {
+					teamB.push(trainer.store());
+				});
 				Battle.recording = {
 					seed : srandom.seed,
-					style : Battle.style,
-					weather : Battle.weather,
-					scene : Battle.scene,
-					teamA : Battle.alliedTrainers,
-					teamB : Battle.opposingTrainers,
+					settings : settings,
+					teamA : teamA,
+					teamB : teamB,
 					actions : []
 				};
 			}
 			foreach(Battle.alliedTrainers, function (participant) {
-				for (var i = 0, newPoke; i < Math.min((Battle.style === Battles.style.normal ? 1 : 2) / Battle.alliedTrainers.length, participant.healthyPokemon().length); ++ i) {
+				participant.display.visible = true;
+				for (var i = 0, newPoke; i < Math.min((Battle.style === "normal" ? 1 : 2) / Battle.alliedTrainers.length, participant.healthyPokemon().length); ++ i) {
 					newPoke = participant.healthyPokemon()[i];
 					Battle.queue.push({
 						poke : newPoke,
@@ -310,32 +390,28 @@ Battle = FunctionObject.new({
 					});
 				}
 			});
-			foreach(Battle.opposingTrainers, function (participant) {
-				if (participant instanceof trainer) {
-					if (!participant.hasHealthyPokemon()) {
-						Textbox.state(participant.name + " doesn't have any Pokémon! The battle must be stopped!", function () { Battle.end(); });
-						Battle.finish();
-						return;
-					} else {
-						for (var i = 0, newPoke; i < Math.min((Battle.style === Battles.style.normal ? 1 : 2) / Battle.opposingTrainers.length, participant.healthyPokemon().length); ++ i) {
-							newPoke = participant.healthyPokemon()[i];
-							if (newPoke.trainer === TheWild)
-								Battle.enter(newPoke, true, null, true);
-							else Battle.queue.push({
-								poke : newPoke,
-								doesNotRequirePokemonToBeBattling : true,
-								priority : (1 - (1 / (Battle.opposingTrainers.length + 3)) * (i + 1)) / 10,
-								action : function (which) {return function () {
-									Battle.enter(which, true, null, true);
-								}; }(newPoke)});
-						}
-					}
+			if (foreach(Battle.opposingTrainers, function (participant) {
+				participant.display.visible = true;
+				if (!participant.hasHealthyPokemon()) {
+					Textbox.state(participant.name + " doesn't have any Pokémon! The battle must be stopped!", function () { Battle.end(); });
+					Battle.finish();
+					return true;
 				} else {
-					participant.battler.reset();
-					participant.battler.side = Battles.side.far;
-					Battle.opponents.push(participant);
+					for (var i = 0, newPoke; i < Math.min((Battle.style === "normal" ? 1 : 2) / Battle.opposingTrainers.length, participant.healthyPokemon().length); ++ i) {
+						newPoke = participant.healthyPokemon()[i];
+						if (newPoke.trainer === TheWild)
+							Battle.enter(newPoke, true, null, true);
+						else Battle.queue.push({
+							poke : newPoke,
+							doesNotRequirePokemonToBeBattling : true,
+							priority : (1 - (1 / (Battle.opposingTrainers.length + 3)) * (i + 1)) / 10,
+							action : function (which) {return function () {
+								Battle.enter(which, true, null, true);
+							}; }(newPoke)});
+					}
 				}
-			});
+			}))
+				return;
 			Display.state.load(Display.state.save());
 			Battle.load(alliedTrainers, opposingTrainers, settings);
 		} else
@@ -351,7 +427,7 @@ Battle = FunctionObject.new({
 			case Battles.situation.wild:
 				var wildPokemon = TheWild.healthyPokemon();
 				if (wildPokemon.length === 1)
-					Textbox.state("A wild " + wildPokemon[0].name() + " appeared!");
+					Textbox.state("A wild " + wildPokemon.first().name() + " appeared!");
 				else {
 					foreach(wildPokemon, function (poke) {
 						names.push(poke.name());
@@ -362,13 +438,14 @@ Battle = FunctionObject.new({
 				break;
 			case Battles.situation.trainer:
 				foreach(Battle.opposingTrainers, function (trainer) {
-					names.push(trainer.name);
+					trainer.display.visible = true;
+					names.push(trainer.fullname());
 					++ number;
 				});
 				if (names.length === 1)
-					Textbox.state(names[0] + " is challenging " + Battle.alliedTrainers[0].pronoun() + " to a battle. " + (Battle.opposingTrainers[0].gender === Genders.male ? "He" : "She") + " has " + numberword(Battle.opposingTrainers[0].pokemon()) + " Pokémon.");
+					Textbox.state(names.first() + " is challenging " + Battle.alliedTrainers.first().pronoun() + " to a battle!");
 				if (names.length > 1)
-					Textbox.state(commaSeparatedList(names) + " are challenging " + Battle.alliedTrainers[0].pronoun() + " to a battle. They have " + number + " Pokémon between them.");
+					Textbox.state(commaSeparatedList(names) + " are challenging " + Battle.alliedTrainers.first().pronoun() + " to a battle!");
 				break;
 		}
 		Battle.race(Battle.queue);
@@ -387,8 +464,8 @@ Battle = FunctionObject.new({
 			Battle.draw();
 			Battle.situation = null;
 			foreach(Battle.all(true), function (poke) {
-				if (poke.status === Statuses.badlyPoisoned)
-					poke.status = Statuses.poisoned;
+				if (poke.status === "badly poisoned")
+					poke.status = "poisoned";
 				poke.battler.reset();
 			});
 			Battle.allies = [];
@@ -396,7 +473,7 @@ Battle = FunctionObject.new({
 			foreach(Battle.allTrainers(), function (participant) {
 				foreach(participant.party.pokemon, function (poke) {
 					if (Battle.participants.contains(poke) && Battle.levelUppers.contains(poke)) {
-						var mayEvolve = poke.attemptEvolution();
+						var mayEvolve = poke.attemptEvolution("level");
 						if (mayEvolve) {
 							Battle.evolving.push({
 								from : poke,
@@ -405,21 +482,37 @@ Battle = FunctionObject.new({
 						}
 					}
 				});
+				participant.resetDisplay();
 				participant.battlers = [];
 				foreach(participant.bag, function (item) {
 					item.intentToUse = 0;
 				});
 			});
+			Battle.handler = Keys.addHandler(function (key, pressed) {
+				if (pressed && Battle.state.kind === "evolution" && !["stopped", "finishing", "after"].contains(Battle.state.stage) && Textbox.dialogue.empty()) {
+					Battle.state = {
+						kind : "evolution",
+						stage : "stopped",
+						transition: 0,
+						evolving : Battle.state.evolving,
+						into : Battle.state.into
+					};
+					Textbox.state("...what? " + Battle.state.evolving.name() + " has stopped evolving!", function () {
+						Battle.continueEvolutions();
+					});
+				}
+			}, Settings._("keys => secondary"));
 			Battle.continueEvolutions();
 			Battle.alliedTrainers = [];
 			Battle.opposingTrainers = [];
 			Battle.participants = [];
 			Battle.levelUppers = [];
 			Battle.queue = [];
+			Battle.inputs = [];
 			Battle.rules = [];
 			Battle.escapeAttempts = 0;
 			Battle.turns = 0;
-			communication = null;
+			Battle.communication = [];
 		}
 	},
 	continueEvolutions : function () {
@@ -436,6 +529,8 @@ Battle = FunctionObject.new({
 				Battle.state.stage = "preparation";
 			});
 		} else {
+			Keys.removeHandler(Battle.handler);
+			delete Battle.handler;
 			Battle.state = {
 				kind : "inactive"
 			};
@@ -457,70 +552,76 @@ Battle = FunctionObject.new({
 			case "Fight":
 				var chosenMove = currentBattler.usableMoves()[secondary], chosenActualMove = Moves._(chosenMove.move);
 				var who = null;
-				if (typeof tertiary !== "undefined" && tertiary !== null)
+				if (typeof tertiary !== "undefined" && tertiary !== null) {
 					who = tertiary;
-				else {
-					var targets = [], targetNames = [], place, affected, partOfTarget, names, all = Battle.all(true);
-					foreach(all, function (poke) {
-						place = Battle.placeOfPokemon(poke);
-						if (Battle.pokemonInRangeOfMove(currentBattler, poke, chosenActualMove)) {
-							affected = chosenActualMove.affects;
-							partOfTarget = [];
-							if (affected.contains(Move.target.directTarget)) {
-								partOfTarget.push(place);
-							}
-							foreach(Battle.alliesTo(currentBattler).filter(onlyPokemon), function (adjacent) {
-								var distance = Math.floor(Battle.distanceBetween(currentBattler, adjacent));
-								if (((affected.contains(Move.target.self) && distance === 0) || (affected.contains(Move.target.adjacentAlly) && distance === 1) || ((affected.contains(Move.target.farAlly) && distance === 2))))
-									partOfTarget.push(Battle.placeOfPokemon(adjacent));
-							});
-							foreach(Battle.opponentsTo(currentBattler).filter(onlyPokemon), function (adjacent) {
-								var distance = Math.floor(Battle.distanceBetween(currentBattler, adjacent));
-								if (((affected.contains(Move.target.directOpponent) && distance === 0) || (affected.contains(Move.target.adjacentOpponent) && distance === 1) || ((affected.contains(Move.target.farOpponent) && distance === 2))))
-									partOfTarget.push(Battle.placeOfPokemon(adjacent));
-							});
-							names = [];
-							foreach(partOfTarget, function (part) {
-								names.push(Battle.pokemonInPlace(part).name());
-							});
-							partOfTarget = partOfTarget.removeDuplicates();
-							if (!foreach(targets, function (who) {
-								if (who.affects.isSimilarTo(partOfTarget))
-									return true;
-							})) {
-								targetNames.push(commaSeparatedList(names, true));
-								targets.push({
-									target : place,
-									affects : partOfTarget
+				} else {
+					if (chosenActualMove.targets !== Move.targets.opposingSide && chosenActualMove.targets !== Move.targets.alliedSide) {
+						var targets = [], targetNames = [], place, affected, partOfTarget, names, all = Battle.all(true);
+						foreach(all, function (poke) {
+							place = Battle.placeOfPokemon(poke);
+							if (Battle.pokemonInRangeOfMove(currentBattler, poke, chosenActualMove)) {
+								affected = chosenActualMove.affects;
+								partOfTarget = [];
+								if (affected.contains(Move.target.directTarget)) {
+									partOfTarget.push(place);
+								}
+								foreach(Battle.alliesTo(currentBattler).filter(onlyPokemon), function (adjacent) {
+									var distance = Math.floor(Battle.distanceBetween(currentBattler, adjacent));
+									if (((affected.contains(Move.target.self) && distance === 0) || (affected.contains(Move.target.adjacentAlly) && distance === 1) || ((affected.contains(Move.target.farAlly) && distance === 2))))
+										partOfTarget.push(Battle.placeOfPokemon(adjacent));
 								});
-							}
-						}
-					});
-					if (Battle.style !== Battles.style.normal || targets.length > 1) {
-						targets.reverse();
-						targetNames.reverse();
-						var displayAll = [].concat(Display.state.current.allies, Display.state.current.opponents), hotkeys = {};
-						hotkeys[Settings._("keys => secondary")] = "Cancel";
-						Textbox.ask("Whom do you want " + currentBattler.name() + " to attack?", targetNames, function (response, i, major) {
-							if (response !== "Cancel")
-								Battle.input("Fight", secondary, targets[i].target);
-							else
-								Battle.prompt();
-						}, ["Cancel"], null, hotkeys, "Target: " + currentBattler.unique, function (i, major) {
-							foreach(displayAll.filter(onlyPokemon), function (poke) {
-								poke.battler.display.outlined = false;
-							});
-							if (major) {
-								foreach(targets[i].affects, function (affected) {
-									Display.pokemonInState(Battle.pokemonInPlace(affected)).battler.display.outlined = true;
+								foreach(Battle.opponentsTo(currentBattler).filter(onlyPokemon), function (adjacent) {
+									var distance = Math.floor(Battle.distanceBetween(currentBattler, adjacent));
+									if (((affected.contains(Move.target.directOpponent) && distance === 0) || (affected.contains(Move.target.adjacentOpponent) && distance === 1) || ((affected.contains(Move.target.farOpponent) && distance === 2))))
+										partOfTarget.push(Battle.placeOfPokemon(adjacent));
 								});
+								names = [];
+								foreach(partOfTarget, function (part) {
+									names.push(Battle.pokemonInPlace(part).name());
+								});
+								partOfTarget = partOfTarget.removeDuplicates();
+								if (!foreach(targets, function (who) {
+									if (who.affects.isSimilarTo(partOfTarget))
+										return true;
+								})) {
+									targetNames.push(commaSeparatedList(names, true));
+									targets.push({
+										target : place,
+										affects : partOfTarget
+									});
+								}
 							}
 						});
+						if (Battle.style !== "normal" || targets.length > 1) {
+							targets.reverse();
+							targetNames.reverse();
+							var displayAll = [].concat(Display.state.current.allies, Display.state.current.opponents), hotkeys = {};
+							hotkeys[Settings._("keys => secondary")] = "Cancel";
+							Textbox.ask("Whom do you want " + currentBattler.name() + " to attack?", targetNames, function (response, i, major) {
+								if (response !== "Cancel")
+									Battle.input("Fight", secondary, targets[i].target);
+								else
+									Battle.prompt();
+							}, ["Cancel"], null, hotkeys, "Target: " + currentBattler.unique, function (i, major) {
+								foreach(displayAll.filter(onlyPokemon), function (poke) {
+									poke.battler.display.outlined = false;
+								});
+								if (major) {
+									foreach(targets[i].affects, function (affected) {
+										Display.pokemonInState(Battle.pokemonInPlace(affected)).battler.display.outlined = true;
+									});
+								}
+							});
+						} else {
+							if (targets.notEmpty())
+								who = targets[0].target;
+							else
+								who = NoPokemon;
+						}
 					} else {
-						if (targets.notEmpty())
-							who = targets[0].target;
-						else
-							who = NoPokemon;
+						// The move targets an entire side
+						var ally = Battle.allies.contains(currentBattler);
+						who = Battles.side[(chosenActualMove.targets === Move.targets.opposingSide && ally) || (chosenActualMove.targets === Move.targets.alliedSide && !ally) ? "far" : "near"];
 					}
 				}
 				if (who !== null) {
@@ -679,7 +780,7 @@ Battle = FunctionObject.new({
 				var previous = Battle.actions.pop();
 				if (previous.hasOwnProperty("undo"))
 					previous.undo();
-				Battle.recording.actions[Battle.turns].pop();
+				Battle.inputs.pop();
 				-- Battle.selection;
 				advance = false;
 				break;
@@ -687,16 +788,33 @@ Battle = FunctionObject.new({
 		if (Battle.kind !== Battles.kind.online || character === Game.player) {
 			if (advance) {
 				if (Battle.kind !== Battles.kind.recording) {
-					Battle.recording.actions[Battle.turns].push({
-						primary : primary,
-						secondary : secondary,
-						tertiary : tertiary
-					});
+					var action = {
+						action : "command",
+						primary : primary
+					};
+					if (typeof secondary !== "undefined")
+						action.secondary = secondary;
+					if (typeof tertiary !== "undefined")
+						action.tertiary = tertiary;
+					Battle.inputs.push(action);
 				}
 				Battle.advance();
 			} else if (reprompt)
 				Battle.prompt();
 		}
+	},
+	flushInputs : function () {
+		// Sends any inputs the player has made since the inputs were last flushed, to the server
+		// This is done after every set of inputs has been made at the start of the turn, and whenever extra input is required, such as when a Pokémon faints and the player has to decide which one to send out next
+		if (Battle.kind === Battles.kind.online) {
+			if (Battle.inputs.notEmpty())
+				Client.send({
+					action : "actions",
+					seed : srandom.seed,
+					actions : Battle.inputs
+				});
+		}
+		Battle.inputs = [];
 	},
 	advance : function () {
 		if (++ Battle.selection === Game.player.battlers().length) {
@@ -704,23 +822,33 @@ Battle = FunctionObject.new({
 			Battle.actions = [];
 			var display = Display.state.save();
 			Textbox.effect(function () { Display.state.load(display); });
-			if (Battle.kind === Battles.kind.online) {
-				Client.send({
-					action : "actions",
-					seed : srandom.seed,
-					actions : Battle.recording.actions[Battle.turns]
-				});
-			}
-			if (Battle.kind !== Battles.kind.online || Battle.communication !== null)
-				Battle.giveTrainersActions();
-			else {
-				Battle.state = {
-					kind : "waiting"
-				};
-				Textbox.stateUntil("Waiting for the other player to make a decision...", function () { return Battle.state.kind !== "waiting"; });
-			}
+			Battle.flushInputs();
+			Textbox.effect(function () {
+				if (Battle.kind !== Battles.kind.online || Battle.communication.length >= Battle.trainersRequiringActions())
+					Battle.giveTrainersActions();
+				else {
+					Battle.state = {
+						"kind" : "waiting",
+						"for" : "command"
+					};
+					Textbox.stateUntil("Waiting for the other player to make a decision...", function () { return Battle.state.kind !== "waiting"; });
+				}
+			});
 		} else
 			Battle.prompt();
+	},
+	trainersRequiringActions : function () {
+		var requiredActions = 0;
+		foreach(Battle.allTrainers(), function (trainer) {
+			if (trainer.type === Trainers.type.online) {
+				for (var i = 0; i < trainer.battlers().length; ++ i) {
+					if (!Battle.pokemonForcedIntoAction(trainer.battlers()[i], true)) {
+						++ requiredActions;
+					}
+				}
+			}
+		});
+		return requiredActions;
 	},
 	giveTrainersActions : function () {
 		foreach(Battle.allTrainers(), function (trainer) {
@@ -735,7 +863,6 @@ Battle = FunctionObject.new({
 				}
 			}
 		});
-		Battle.communication = null;
 		Battle.queue = Battle.queue.concat(Battle.actions);
 		Battle.actions = [];
 		if (Battle.state.kind === "waiting") {
@@ -748,9 +875,15 @@ Battle = FunctionObject.new({
 	},
 	receiveActions : function (actions) {
 		// Receive the opponent's actions, in an online battle
-		Battle.communication = actions;
-		if (Battle.state.kind === "waiting")
-			Battle.giveTrainersActions();
+		if (actions.notEmpty()) {
+			Battle.communication = Battle.communication.concat(actions);
+			if (Battle.state.kind === "waiting") {
+				if (Battle.state.for === "command" && Battle.communication.length >= Battle.trainersRequiringActions())
+					Battle.giveTrainersActions();
+				else if (Battle.state.for === "send" && Battle.communication.length >= Battle.opponents.filter(onlyNoPokemon).length)
+					Battle.continueToNextTurn(true);
+			}
+		}
 	},
 	changeWeather : function (weather) {
 		Battle.weather = weather;
@@ -785,19 +918,27 @@ Battle = FunctionObject.new({
 	},
 	targetsForMove : function (user, move, excludeAlliesIfPossible) {
 		// Returns an array of all the Pokémon that the user could target with the move
-		var inRange = {
-			allies : [],
-			opponents : []
-		}, all = Battle.all(true);
-		foreach(all, function (poke) {
-			if (Battle.pokemonInRangeOfMove(user, poke, move)) {
-				(Battle.pokemonOnSameSide(user, poke) ? inRange.allies : inRange.opponents).push({
-					poke : poke,
-					place : Battle.placeOfPokemon(poke)
-				});
-			}
-		});
-		return (excludeAlliesIfPossible ? (inRange.opponents.length > 0 ? inRange.opponents : inRange.allies) : [].concat(inRange.opponents, inRange.allies));
+		if (move.targets !== Move.targets.opposingSide && move.targets !== Move.targets.alliedSide) {
+			var inRange = {
+				allies : [],
+				opponents : []
+			}, all = Battle.all(true);
+			foreach(all, function (poke) {
+				if (Battle.pokemonInRangeOfMove(user, poke, move)) {
+					(Battle.pokemonOnSameSide(user, poke) ? inRange.allies : inRange.opponents).push({
+						poke : poke,
+						place : Battle.placeOfPokemon(poke)
+					});
+				}
+			});
+			return (excludeAlliesIfPossible ? (inRange.opponents.length > 0 ? inRange.opponents : inRange.allies) : [].concat(inRange.opponents, inRange.allies));
+		} else {
+			var ally = Battle.allies.contains(user);
+			return [{
+				poke : NoPokemon,
+				place : (move.targets === Move.targets.opposingSide && ally) || (move.targets === Move.targets.alliedSide && !ally) ? Battles.side.far : Battles.side.near
+			}];
+		}
 	},
 	affectedByMove : function (user, target, move) {
 		// Returns an array of the Pokémon who will be affected by the user's move if they target a certain Pokémon
@@ -826,11 +967,11 @@ Battle = FunctionObject.new({
 	},
 	pokemonPerSide : function () {
 		switch (Battle.style) {
-			case Battles.style.normal:
+			case "normal":
 			case Battles.style.inverse:
 			case Battles.style.sky:
 				return 1;
-			case Battles.style.double:
+			case "double":
 				return 2;
 			case Battles.style.triple:
 				return 3;
@@ -854,7 +995,7 @@ Battle = FunctionObject.new({
 			};
 	},
 	pokemonInPlace : function (place) {
-		return (place.hasOwnProperty("side") ? (place.team === Game.player.team ? Battle.allies : Battle.opponents)[place.position] : Battle.trainerOfTeam(place.team).party.pokemon[place.position]); //? Will not work for replays?
+		return (place.hasOwnProperty("side") ? (place.team === Game.player.team ? Battle.allies : Battle.opponents)[place.position] : Battle.trainerOfTeam(place.team).party.pokemon[place.position]);
 	},
 	trainerOfTeam : function (team) {
 		var trainerOfTeam = null, all = Battle.allTrainers();
@@ -897,26 +1038,28 @@ Battle = FunctionObject.new({
 			});
 		}
 	},
-	pokemonForcedIntoAction : function (poke) {
+	pokemonForcedIntoAction : function (poke, doNotQueue) {
 		// Check if this Pokémon is forced into making a certain move, because they need to recharge, etc.
 		if (poke.battler.recharging) {
-			Battle.queue.push({
-				poke : poke,
-				priority : 0,
-				action : function (poke) {
-					Textbox.state(poke.name() + " must recharge!");
-				}
-			});
+			if (!doNotQueue)
+				Battle.queue.push({
+					poke : poke,
+					priority : 0,
+					action : function (poke) {
+						Textbox.state(poke.name() + " must recharge!");
+					}
+				});
 			return true;
 		}
 		if (poke.battler.moveStage > 0) {
-			Battle.queue.push({
-				poke : poke,
-				priority : poke.battler.previousMoves.last().move.priority,
-				action : function (poke) {
-					poke.use(poke.battler.previousMoves.last().move, poke.battler.previousTarget);
-				}
-			});
+			if (!doNotQueue)
+				Battle.queue.push({
+					poke : poke,
+					priority : poke.battler.previousMoves.last().move.priority,
+					action : function (poke) {
+						poke.use(poke.battler.previousMoves.last().move, poke.battler.previousTarget);
+					}
+				});
 			return true;
 		}
 	},
@@ -934,7 +1077,7 @@ Battle = FunctionObject.new({
 			Battle.advance();
 			return;
 		}
-		if (Battle.style !== Battles.style.normal) {
+		if (Battle.style !== "normal") {
 			currentBattler.battler.display.outlined = true;
 			var display = Display.state.save();
 			Textbox.effect(function () { Display.state.load(display); });
@@ -951,7 +1094,7 @@ Battle = FunctionObject.new({
 			foreach(currentBattler.usableMoves(), function (move) {
 				moves.push(move.move);
 			});
-			if (Battle.style === Battles.style.double && Battle.selection > 0)
+			if (Battle.style === "double" && Battle.selection > 0)
 				actions.insert(0, "Back");
 			Textbox.ask("What do you want " + currentBattler.name() + " to do?", moves, function (response, i, major) {
 				if (major) {
@@ -960,7 +1103,7 @@ Battle = FunctionObject.new({
 					Battle.input(response);
 			}, actions, null, hotkeys, "Action: " + currentBattler.unique, null, true);
 		} else {
-			var action = Battle.recording.actions[Battle.turns][Battle.selection];
+			var action = Battle.recording.actions.shift()[Battle.selection];
 			Battle.input(action.primary, action.secondary, action.tertiary);
 		}
 	},
@@ -985,15 +1128,14 @@ Battle = FunctionObject.new({
 					poke.battler.recharging = 0;
 			}
 		});
+		// Execute all the actions in the queue
+		// By the time race() gets to fainted Pokémon, they will be recorded as fainted, so their actions will not execute
 		Battle.race(Battle.queue);
 		Battle.queue = [];
 		Battle.survey();
 		Battle.endTurn();
 	},
 	startTurn : function () {
-		if (Battle.kind !== Battles.kind.recording) {
-			Battle.recording.actions.push([]);
-		}
 		Battle.queue = [];
 		var all = Battle.all(true);
 		foreach(all, function (poke) {
@@ -1009,7 +1151,7 @@ Battle = FunctionObject.new({
 				poke : poke,
 				priority : 0,
 				action : function (poke) {
-					Battle.triggerEvent(Events.entrance, {}, poke);
+					Battle.triggerEvent(Triggers.entrance, {}, poke);
 				}
 			});
 		});
@@ -1071,25 +1213,25 @@ Battle = FunctionObject.new({
 			if (!Battle.active || Battle.finished)
 				return true;
 			++ poke.battler.battlingForDuration;
-			if (poke.status !== Statuses.frozen && poke.status !== Statuses.sleep && !poke.flinching && !poke.battler.recharging) {
+			if (poke.status !== "frozen" && poke.status !== Statuses.sleep && !poke.flinching && !poke.battler.recharging) {
 				foreach(poke.currentMoves(), function (move) {
 					if (move.disabled)
 						-- move.disabled;
 				});
 			}
 			switch (poke.status) {
-				case Statuses.asleep:
+				case "asleep":
 					++ poke.sleep;
 					break;
 				case Statuses.burn:
 					Textbox.state(poke.name() + " is hurt by " + poke.possessivePronoun() + " burn!");
 					Battle.damage(poke, Move.percentageDamage(target, 1 / 8));
 					break;
-				case Statuses.poisoned:
+				case "poisoned":
 					Textbox.state(poke.name() + " is hurt by the poison!");
 					Battle.damage(poke, Move.percentageDamage(target, 1 / 8));
 					break;
-				case Statuses.badlyPoisoned:
+				case "badly poisoned":
 					Textbox.state(poke.name() + " is hurt by the toxic poison!");
 					Battle.damage(poke, Move.percentageDamage(target, poke.poison / 16));
 					++ poke.poison;
@@ -1107,36 +1249,41 @@ Battle = FunctionObject.new({
 		Textbox.effect(function () { Display.state.load(displayWeather); });
 		var all = Battle.all(true);
 		switch (Battle.weather) {
-			case Weathers.intenseSunlight:
+			case "intenseSunlight":
 				if (!Settings._("visual weather effects"))
 					Textbox.state("The sun is blazing fiercely in the sky!");
 				break;
-			case Weathers.rain:
+			case "rain":
 				if (!Settings._("visual weather effects"))
 					Textbox.state("The rain is pouring down in torrents!");
 				break;
-			case Weathers.sandstorm:
+			case "sandstorm":
 				if (!Settings._("visual weather effects"))
 					Textbox.state("The sandstorm is raging all around!");
-				
 				foreach(all, function (poke) {
 					if (!Battle.active || Battle.finished)
 						return true;
-					if (!poke.ofType(Types.steel, Types.rock, Types.ground)) {
+					if (!poke.ofType("Steel", "Rock", "Ground")) {
 						Textbox.state(poke.name() + " was damaged by the sandstorm!");
-						Battle.damage(poke, {damage : Math.ceil(poke.stats[Stats.health]() / 16)});
+						Battle.damage(poke, {
+							damage : Math.ceil(poke.maximumHealth() / 16),
+							infiltrates : true
+						});
 					}
 				});
 				break;
-			case Weathers.hail:
+			case "hail":
 				if (!Settings._("visual weather effects"))
 					Textbox.state("The hail is falling heavily!");
 				foreach(all, function (poke) {
 					if (!Battle.active || Battle.finished)
 						return true;
-					if (!poke.ofType(Types.ice)) {
+					if (!poke.ofType("Ice")) {
 						Textbox.state(poke.name() + " was damaged by the hail!");
-						Battle.damage(poke, {damage : Math.ceil(poke.stats[Stats.health]() / 16)});
+						Battle.damage(poke, {
+							damage : Math.ceil(poke.maximumHealth() / 16),
+							infiltrates : true
+						});
 					}
 				});
 				break;
@@ -1144,125 +1291,187 @@ Battle = FunctionObject.new({
 		Battle.display.weather = false;
 		displayAfterWeather = Display.state.save();
 		Textbox.effect(function () { Display.state.load(displayAfterWeather); });
+		Battle.fillEmptyPlaces(true); // Fill the player's empty places
+	},
+	fillEmptyPlaces : function (player) {
 		var emptyPlaces = [];
-		foreach(Battle.opponents, function (poke, i) {
+		foreach(player ? Battle.allies : Battle.opponents, function (poke, i) {
 			if (poke === NoPokemon)
 				emptyPlaces.push(i);
 		});
-		//? Are these priorities correct?
-		var anyQueries = false, continueToNextTurn = function () {
-			Battle.race(Battle.queue);
-			Battle.queue = [];
-			++ Battle.turns;
-			Battle.fillEmptyPlaces();
-		};
-		//? This whole system should not occur for replays
-		if (emptyPlaces.notEmpty()) {
-			foreach(Battle.opposingTrainers, function (trainer) {
-				if (!emptyPlaces.length)
-					return true;
-				var sendingOut = 0;
-				while (trainer.battlers().length + sendingOut < Math.min((Battle.style === Battles.style.normal ? 1 : 2) / Battle.opposingTrainers.length) && trainer.hasHealthyPokemon(true) && emptyPlaces.length) {
-					var poke = trainer.healthyPokemon(true).first(), immediatelyAfter;
-					if (Battle.kind !== Battles.kind.online && Settings._("switching chance")) {
-						var character = Game.player; //? Will not work for replays, also multiplayer?
-						if (character.healthyPokemon(true).notEmpty()) {
-							if (poke.trainer !== TheWild)
-								Textbox.state(trainer.name + " is about to send out " + poke.name() + ".");
-							else
-								Textbox.state("A wild " + poke.name() + " is about to appear!");
-							anyQueries = true;
-							immediatelyAfter = Textbox.confirm("Do you want to switch a different Pokémon in?", function (yes) {
-								if (yes) {
-									var names = [], positions = [];
-									foreach(character.healthyPokemon(true), function (poke, i) {
-										names.push(poke.name());
-										positions.push(character.party.pokemon.indexOf(poke));
-									});
-									var hotkeys = {}, appendAfter;
-									hotkeys[Settings._("keys => secondary")] = "Cancel";
-									Textbox.insertAfter(appendAfter = Textbox.ask("Which Pokémon do you want to switch in?", names, function (response, i) {
-										if (response !== "Cancel") {
-											if (character.battlers().length > 1) {
-												names = [];
-												foreach(character.battlers(), function (replace) {
-													names.push(replace.name());
-												});
-												Textbox.insertAfter(Textbox.ask("Which Pokémon do you want to switch out for " + character.party.pokemon[positions[i]].name() + "?", names, function (response, j) {
-													if (response !== "Cancel") {
+		if (player) {
+			var trainer = Game.player, progress = false;
+			if (emptyPlaces.notEmpty()) {
+				var healthyPokemon = trainer.healthyPokemon(true);
+				if (healthyPokemon.length > emptyPlaces.length) {
+					var names = [], positions = [];
+					foreach(trainer.healthyPokemon(true), function (poke, i) {
+						names.push(poke.name());
+						positions.push(i);
+					});
+					if (names.empty()) {
+						progress = true;
+					} else {
+						Textbox.ask("Which Pokémon do you want to send out?", names, function (response, i) {
+							Battle.inputs.push({
+								action : "send",
+								which : i
+							});
+							Battle.enter(trainer.healthyPokemon(true)[i], true, emptyPlaces.first());
+							Battle.fillEmptyPlaces(true);
+						}, null, null, null, null, null, true);
+					}
+				} else {
+					foreach(healthyPokemon, function (poke) {
+						Battle.enter(poke, true, emptyPlaces.shift());
+					});
+					progress = true;
+				}
+			} else
+				progress = true;
+			if (progress) {
+				Battle.flushInputs();
+				Battle.fillEmptyPlaces(false); // Fill the opponent's empty places
+			}
+		} else {
+			var anyQueries = false;
+			// Queueing here is necessary so that the player can switch out their Pokémon before the opponent if the "switching chance" setting is on
+			if (emptyPlaces.notEmpty()) {
+				if (Battle.kind !== Battles.kind.online) {
+					foreach(Battle.opposingTrainers, function (trainer) {
+						if (!emptyPlaces.length)
+							return true;
+						var sendingOut = 0;
+						while (trainer.battlers().length + sendingOut < Math.min((Battle.style === "normal" ? 1 : 2) / Battle.opposingTrainers.length) && trainer.hasHealthyPokemon(true) && emptyPlaces.length) {
+							var poke = trainer.healthyPokemon(true).first(), immediatelyAfter;
+							if (Battle.kind !== Battles.kind.online && Settings._("switching chance")) {
+								var character = Game.player;
+								if (character.healthyPokemon(true).notEmpty()) {
+									if (poke.trainer !== TheWild)
+										Textbox.state(trainer.name + " is about to send out " + poke.name() + ".");
+									else
+										Textbox.state("A wild " + poke.name() + " is about to appear!");
+									anyQueries = true;
+									immediatelyAfter = Textbox.confirm("Do you want to switch a different Pokémon in?", function (yes) {
+										if (yes) {
+											var names = [], positions = [];
+											foreach(character.healthyPokemon(true), function (poke, i) {
+												names.push(poke.name());
+												positions.push(character.party.pokemon.indexOf(poke));
+											});
+											var hotkeys = {}, appendAfter;
+											hotkeys[Settings._("keys => secondary")] = "Cancel";
+											Textbox.insertAfter(appendAfter = Textbox.ask("Which Pokémon do you want to switch in?", names, function (response, i) {
+												if (response !== "Cancel") {
+													if (character.battlers().length > 1) {
+														names = [];
+														foreach(character.battlers(), function (replace) {
+															names.push(replace.name());
+														});
+														Textbox.insertAfter(Textbox.ask("Which Pokémon do you want to switch out for " + character.party.pokemon[positions[i]].name() + "?", names, function (response, j) {
+															if (response !== "Cancel") {
+																Battle.queue.push({
+																	poke : poke,
+																	doesNotRequirePokemonToBeBattling : true,
+																	priority : 2,
+																	action : function (which, withWhat) {return function () {
+																		Battle.swap(character.battlers()[which], character.party.pokemon[positions[withWhat]]);
+																	}; }(j, i)
+																});
+																Battle.continueToNextTurn(false);
+															} else Battle.continueToNextTurn(false);
+														}, ["Cancel"], null, hotkeys, null, null, true), appendAfter);
+													} else {
 														Battle.queue.push({
 															poke : poke,
 															doesNotRequirePokemonToBeBattling : true,
 															priority : 2,
-															action : function (which, withWhat) {return function () {
-																Battle.swap(character.battlers()[which], character.party.pokemon[positions[withWhat]]);
-															}; }(j, i)
+															action : function (which) {return function () {
+																Battle.swap(character.battlers().first(), character.party.pokemon[positions[which]]);
+															}; }(i)
 														});
-														continueToNextTurn();
-													} else continueToNextTurn();
-												}, ["Cancel"], null, hotkeys, null, null, true), appendAfter);
-											} else {
-												Battle.queue.push({
-													poke : poke,
-													doesNotRequirePokemonToBeBattling : true,
-													priority : 2,
-													action : function (which) {return function () {
-														Battle.swap(character.battlers().first(), character.party.pokemon[positions[which]]); //? Or in empty slot, if one exists?
-													}; }(i)
-												});
-												continueToNextTurn();
-											}
-										} else continueToNextTurn();
-									}, ["Cancel"], null, hotkeys, null, null, true), immediatelyAfter);
-								} else continueToNextTurn();
-							}, null, null, null, true);
+														Battle.continueToNextTurn(false);
+													}
+												} else Battle.continueToNextTurn(false);
+											}, ["Cancel"], null, hotkeys, null, null, true), immediatelyAfter);
+										} else Battle.continueToNextTurn(false);
+									}, null, null, null, true);
+								}
+							}
+							var pressureSpeech = (trainer.healthyPokemon().length === 1 && trainer._("pressure speech?"));
+							Battle.queue.push({
+								poke : poke,
+								doesNotRequirePokemonToBeBattling : true,
+								priority : 1,
+								action : function (which) {return function () {
+									Battle.enter(which, true, emptyPlaces.shift());
+									if (pressureSpeech) {
+										Textbox.effect(function () {
+											trainer.display.visible = true;
+										}, Battle.drawing.transition(poke.trainer.display.position, "x", -(Battle.style === "double" ? 80 : 40), Settings._("switch transition duration") * Time.framerate));
+										Textbox.spiel(trainer._("pressure speech"), null, Battle.drawing.transition(poke.trainer.display.position, "x", -200, Settings._("switch transition duration") * Time.framerate), function () {
+											trainer.display.visible = false;
+										});
+										Textbox.say("", 0); // Little hack to make sure the right textbox displays, not the next (menu) one
+									}
+								}; }(poke)
+							});
+							poke.battler.reserved = true;
+							++ sendingOut;
 						}
-					}
-					Battle.queue.push({
-						poke : poke,
-						doesNotRequirePokemonToBeBattling : true,
-						priority : 1,
-						action : function (which) {return function () {
-							Battle.enter(which, true, emptyPlaces.shift());
-						}; }(poke)
 					});
-					++ sendingOut;
+				} else {
+					var healthyPokemon = Battle.opposingTrainers.first().healthyPokemon(true);
+					if (healthyPokemon.length > emptyPlaces.length) {
+						Textbox.effect(function () {
+							if (Battle.communication.length >= emptyPlaces.length) {
+								Battle.continueToNextTurn(true);
+							} else {
+								Battle.state = {
+									"kind" : "waiting",
+									"for" : "send"
+								};
+								Textbox.stateUntil("Waiting for the other player to make a decision...", function () { return Battle.state.kind !== "waiting"; });
+							}
+						});
+						anyQueries = true;
+					} else {
+						foreach(healthyPokemon, function (poke, which) {
+							Battle.enter(poke, true, emptyPlaces.shift());
+						});
+					}
 				}
+			}
+			if (!anyQueries)
+				Battle.continueToNextTurn();
+		}
+	},
+	continueToNextTurn : function (sendOutOpponentPokemon) {
+		if (sendOutOpponentPokemon) {
+			var emptyPlaces = [];
+			foreach(Battle.opponents, function (poke, i) {
+				if (poke === NoPokemon)
+					emptyPlaces.push(i);
+			});
+			var healthyPokemon = Battle.opposingTrainers.first().healthyPokemon(true);
+			foreach(emptyPlaces, function (place) {
+				Battle.enter(healthyPokemon[Battle.communication.shift().which], true, place);
 			});
 		}
-		if (!anyQueries)
-			continueToNextTurn();
-	},
-	fillEmptyPlaces : function (initial) {
-		// Fills the player's empty places with Pokémon of their choosing
-		var trainer = Game.player, empty = null, progress = false;
-		foreach(Battle.allies, function (poke, i) {
-			if (poke === NoPokemon) {
-				empty = i;
-				return true;
-			}
-		});
-		if (empty !== null) {
-			var names = [], positions = [];
-			foreach(trainer.healthyPokemon(true), function (poke, i) {
-				names.push(poke.name());
-				positions.push(i);
-			});
-			if (names.length === 0)
-				progress = true;
-			else if (names.length === 1) {
-				Battle.enter(trainer.healthyPokemon(true)[0], true, empty);
-				progress = true;
-			} else {
-				Textbox.ask("Which Pokémon do you want to send out?", names, function (response, i) {
-					Battle.enter(trainer.healthyPokemon(true)[i], true, empty);
-					Battle.fillEmptyPlaces();
-				}, null, null, null, null, null, true);
-			}
-		} else
-			progress = true;
-		if (progress)
+		Battle.race(Battle.queue);
+		Battle.queue = [];
+		if (Battle.state.kind === "waiting") {
+			Battle.state = {
+				kind : "running"
+			};
+			Textbox.update();
+		}
+		if (Battle.survey()) {
+			Battle.fillEmptyPlaces(true);
+		} else {
+			++ Battle.turns;
 			Battle.startTurn();
+		}
 	},
 	damage : function (poke, damage, displayMessages) {
 		var amount = damage.damage;
@@ -1308,7 +1517,7 @@ Battle = FunctionObject.new({
 		var display = Display.state.save();
 		Textbox.effect(function () { return Display.state.transition(display); });
 		if (!poke.fainted()) {
-			Battle.triggerEvent(Events.health, {
+			Battle.triggerEvent(Triggers.health, {
 				change : -amount
 			}, damage.cause, poke);
 		}
@@ -1319,27 +1528,29 @@ Battle = FunctionObject.new({
 			This means that fainting happens when all Pokémon have been damaged, rather than after each individual effect of damage
 			has been dealt out.
 		*/
+		var cleanedUp = false;
 		foreach(Battle.all(true), function (poke) {
 			if (poke.fainted()) {
 				poke.battler.display.transition = 0;
 				poke.battler.display.height = 0;
 				var displayFaint = Display.state.save();
 				Textbox.state(poke.name() + " fainted!", function () { return Display.state.transition(displayFaint); });
-				if (poke.friendship > 0)
-					-- poke.friendship;
+				poke.alterFriendship(-1);
 				Battle.removeFromBattle(poke);
+				cleanedUp = true;
 			}
 		});
+		return cleanedUp;
 	},
 	heal : function (poke, amount, cause) {
 		if (amount < 0)
 			return;
 		amount = Math.ceil(amount);
-		if (Battle.triggerEvent(Events.health, {
+		if (Battle.triggerEvent(Triggers.health, {
 			change : amount
 		}, cause, poke).contains(true))
 			return;
-		poke.health = Math.min(poke.stats[Stats.health](), poke.health + amount);
+		poke.health = Math.min(poke.maximumHealth(), poke.health + amount);
 		var message = "Some of " + poke.name() + "'s health was restored.";
 		if (poke.battler.battling) {
 			var display = Display.state.save();
@@ -1348,7 +1559,7 @@ Battle = FunctionObject.new({
 			Textbox.state(message);
 	},
 	healPercentage : function (poke, percentage, cause) {
-		Battle.heal(poke, poke.stats[Stats.health]() * percentage, cause);
+		Battle.heal(poke, poke.maximumHealth() * percentage, cause);
 	},
 	escapeAttempts : 0,
 	escape : function (currentBattler) {
@@ -1365,10 +1576,10 @@ Battle = FunctionObject.new({
 		} else {
 			var maxSpeed = 0;
 			foreach(Battle.opponents.filter(onlyPokemon), function (poke) {
-				if (poke.stats[Stats.speed](true) > maxSpeed)
-					maxSpeed = poke.stats[Stats.speed](true);
+				if (poke.stats.speed(true) > maxSpeed)
+					maxSpeed = poke.stats.speed(true);
 			});
-			var escapeChance = (currentBattler.stats[Stats.speed](true) * 32) / ((maxSpeed / 4) % 256) + 30 * (Battle.escapeAttempts ++);
+			var escapeChance = (currentBattler.stats.speed(true) * 32) / ((maxSpeed / 4) % 256) + 30 * (Battle.escapeAttempts ++);
 			if (escapeChance > 255 || randomInt(255) < escapeChance) {
 				Battle.queue.push({priority : 6, action : function () {
 					Textbox.state(Battle.alliedTrainers[0].pronoun(true) + " escaped successfully!", function () { Battle.end(); }); Battle.finish(); }
@@ -1384,32 +1595,32 @@ Battle = FunctionObject.new({
 			trainer = Game.player;
 		var modifiers = {
 			status : 1,
-			species : Pokemon._(poke.species).catchRate,
-			ball : (typeof ball.catchRate === "number" ? ball.catchRate : ball.catchRate())
+			species : Pokedex._(poke.species)["catch rate"],
+			ball : (typeof ball["catch rate"] === "number" ? ball["catch rate"] : ball["catch rate"]())
 		};
 		switch (poke.status) {
-			case Statuses.asleep:
-			case Statuses.frozen:
+			case "asleep":
+			case "frozen":
 				modifiers.status = 2.5;
 				break;
-			case Statuses.paralysed:
-			case Statuses.poisoned:
-			case Statuses.badlyPoisoned:
-			case Statuses.burned:
+			case "paralysed":
+			case "poisoned":
+			case "badly poisoned":
+			case "burned":
 				modifiers.status = 1.5;
 				break;
 		}
 		var modifiedCatchRate = (((3 * poke.maximumHealth() - 2 * poke.health) * modifiers.species * modifiers.ball) / (3 * poke.maximumHealth())) * modifiers.status, shakeProbability = 65536 / Math.pow(255 / modifiedCatchRate, 1 / 4), caught = true;
 		var criticalCaptureChance = modifiedCatchRate, criticalCapture = false;
-		if (Pokedex.caught.length > 600)
+		if (Dex.caught.length > 600)
 			criticalCaptureChance *= 2.5;
-		else if (Pokedex.caught.length > 450)
+		else if (Dex.caught.length > 450)
 			criticalCaptureChance *= 2;
-		else if (Pokedex.caught.length > 300)
+		else if (Dex.caught.length > 300)
 			criticalCaptureChance *= 1.5;
-		else if (Pokedex.caught.length > 150)
+		else if (Dex.caught.length > 150)
 			criticalCaptureChance *= 1;
-		else if (Pokedex.caught.length > 30)
+		else if (Dex.caught.length > 30)
 			criticalCaptureChance *= 0.5;
 		else
 			criticalCaptureChance *= 0;
@@ -1444,15 +1655,15 @@ Battle = FunctionObject.new({
 			var display = Display.state.save();
 			Textbox.state((trainer === Game.player ? "Gotcha! " : "") + poke.name() + " was caught!", function () { return Display.state.transition(display); });
 			Battle.removeFromBattle(poke);
-			poke.pokeball = ball;
 			trainer.give(poke);
+			poke.caught.ball = ball;
 		}
 		return caught;
 	},
 	removeFromBattle : function (poke) {
 		// Stops a Pokémon battling, either because they've fainted, or because they've been caught in a Poké ball
 		if (Battle.kind !== Battles.kind.online) {
-			foreach(poke.battler.opponents, function (gainer) { //? + Exp. share Pokémon (participated will need to be made false in this case)
+			foreach(poke.battler.opponents, function (gainer) {
 				if (!gainer.fainted()) {
 					if (gainer.gainExperience(poke, poke.battler.opponents.length, true)) // If a level was gained
 						Battle.levelUppers.pushIfNotAlreadyContained(gainer);
@@ -1468,15 +1679,69 @@ Battle = FunctionObject.new({
 			Battle.opponents[place] = NoPokemon;
 		}
 		poke.battler.reset();
-		if (!poke.trainer.hasHealthyPokemon(true, poke) && !poke.trainer.hasHealthyPokemon(false, poke)) {
-			var defeatedMessage = Battle.alliedTrainers[0].pronoun(true) + " " + (poke.trainer === Game.player ? "has" : "have") + " ";
-			if (poke.trainer === Game.player)
-				defeatedMessage += "been defeated!";
-			else if (Battle.situation === Battles.situation.trainer)
-				defeatedMessage += "defeated " + poke.trainer.name + "!";
-			else
-				defeatedMessage += "defeated the wild Pokémon!";
-			Textbox.state(defeatedMessage, function () {
+		if (!poke.trainer.hasHealthyPokemon(false)) {
+			var playerHasBeenDefeated = (poke.trainer === Battle.alliedTrainers.first()), trainerBattle = (Battle.situation === Battles.situation.trainer), playerName = Battle.alliedTrainers.first().pronoun(true);
+			if (trainerBattle) {
+				var opponents = [];
+				foreach(Battle.opposingTrainers, function (opposer) {
+					opponents.push(opposer.fullname());
+				});
+			}
+			if (playerHasBeenDefeated) {
+				Textbox.state(opponents + " " + (opponents.length !== 1 ? "have" : "has") + " defeated you!");
+				if (Battle.kind !== Battles.kind.online) {
+					var highestLevel = 0;
+					foreach(poke.trainer.party.pokemon, function (pkmn) {
+						if (pkmn.level > highestLevel)
+							highestLevel = pkmn.level;
+					});
+					var basePayout;
+					switch (Math.min(8, poke.trainer.badges.length)) { // May have greater than 8 badges due to multiple regions
+						case 0: basePayout = 8; break;
+						case 1: basePayout = 16; break;
+						case 2: basePayout = 24; break;
+						case 3: basePayout = 36; break;
+						case 4: basePayout = 48; break;
+						case 5: basePayout = 64; break;
+						case 6: basePayout = 80; break;
+						case 7: basePayout = 100; break;
+						case 8: basePayout = 120; break;
+					}
+					var priceOfDefeat = highestLevel * basePayout;
+					if (poke.trainer.money > 0) {
+						priceOfDefeat = Math.min(priceOfDefeat, poke.trainer.money);
+						Textbox.state(playerName + " " + (trainerBattle ? "paid out" : "dropped") + " $" + priceOfDefeat + " " + (trainerBattle ? "to " + commaSeparatedList(opponents) : "in " + poke.trainer.possessiveGenderPronoun() + " panic to get away") + ".");
+						Battle.alliedTrainers.first().money -= priceOfDefeat;
+					} else if (trainerBattle) {
+						Textbox.state(playerName + " didn't have any money to pay " + opponents + "!");
+					}
+					Textbox.state(playerName + " blacked out!");
+				}
+			} else {
+				Textbox.state(playerName + " " + (Battle.alliedTrainers.first() !== Game.player ? "has" : "have") + " defeated " + (trainerBattle ? opponents : "the wild Pokémon") + "!");
+				if (Battle.kind !== Battles.kind.online) {
+					foreach(Battle.opposingTrainers, function (opposer, i) {
+						Textbox.effect(function () {
+							poke.trainer.display.visible = true;
+						}, Battle.drawing.transition(poke.trainer.display.position, "x", 0, Settings._("switch transition duration") * Time.framerate));
+						Textbox.spiel(opposer._("defeat speech"));
+						if (i !== Battle.opposingTrainers.length - 1) {
+							Textbox.effect(null, Battle.drawing.transition(poke.trainer.display.position, "x", -200, Settings._("switch transition duration") * Time.framerate), function () {
+								poke.trainer.display.visible = false;
+							});
+						}
+					});
+					if (trainerBattle) {
+						var prizeMoney = 0;
+						foreach(Battle.opposingTrainers, function (opposer) {
+							prizeMoney += opposer.party.pokemon.last().level * Classes[opposer.class].payout;
+						});
+						Textbox.state(opponents + " paid " + Battle.alliedTrainers.first().pronoun(false) + " $" + prizeMoney + " as a reward.");
+						Battle.alliedTrainers.first().money += prizeMoney;
+					}
+				}
+			}
+			Textbox.effect(function () {
 				Battle.end();
 			});
 			Battle.finish();
@@ -1493,26 +1758,41 @@ Battle = FunctionObject.new({
 		var ally = Battle.alliedTrainers.contains(poke.trainer);
 		poke.battler.side = (ally ? Battles.side.near : Battles.side.far);
 		if (arguments.length < 3 || place === null) {
-			if (ally)
-				Battle.allies.push(poke);
-			else
-				Battle.opponents.push(poke);
+			if (ally) {
+				if (Battle.allies.indexOf(NoPokemon) !== -1)
+					Battle.allies[Battle.allies.indexOf(NoPokemon)] = poke;
+				else
+					Battle.allies.push(poke);
+			} else {
+				if (Battle.opponents.indexOf(NoPokemon) !== -1)
+					Battle.opponents[Battle.opponents.indexOf(NoPokemon)] = poke;
+				else
+					Battle.opponents.push(poke);
+			}
 		} else {
 			if (ally)
 				Battle.allies[place] = poke;
 			else
 				Battle.opponents[place] = poke;
 		}
+		// The start of the battle
 		if (poke.trainer !== TheWild) {
 			poke.battler.display.transition = 0;
 			var displayInitial = Display.state.save();
 			poke.battler.display.transition = 1;
 			var display = Display.state.save();
-			Textbox.state(poke.trainer.pronoun(true) + " sent out " + poke.name() + "!", function () { Display.state.load(displayInitial); return Display.state.transition(display); });
+			Textbox.state(poke.trainer.pronoun(true) + " sent out " + poke.name() + "!");
 		} else if (!initial) {
 			var displayInitial = Display.state.save();
 			Textbox.state("A wild " + poke.name() + " was right behind!", function () { Display.state.load(displayInitial); });
 		}
+		if (initial) {
+			Textbox.effect(null, Battle.drawing.transition(poke.trainer.display.position, "x", -200, Settings._("switch transition duration") * Time.framerate), function () {
+				poke.trainer.display.visible = false;
+			});
+		}
+		if (poke.trainer !== TheWild)
+			Textbox.effect(function () { Display.state.load(displayInitial); return Display.state.transition(display); });
 		Textbox.effect(function () {
 			poke.cry();
 		});
@@ -1524,7 +1804,7 @@ Battle = FunctionObject.new({
 			hazard.type.effect.hazard(poke, hazard.stack);
 		});
 		if (!startOrEndOfTurn)
-			Battle.triggerEvent(Events.entrance, {}, poke);
+			Battle.triggerEvent(Triggers.entrance, {}, poke);
 		Battle.recoverFromStatus(poke);
 	},
 	withdraw : function (poke, forced) {
@@ -1564,7 +1844,7 @@ Battle = FunctionObject.new({
 				return b.priority - a.priority;
 			else {
 				if (a.hasOwnProperty("poke") && b.hasOwnProperty("poke"))
-					return (Math.floor(b.poke.stats[Stats.speed](true) * (b.poke.status === Statuses.paralysed ? 0.25 : 1)) + b.poke.battler.speed) - (Math.floor(a.poke.stats[Stats.speed](true) * (a.poke.status === Statuses.paralysed ? 0.25 : 1)) + a.poke.battler.speed);
+					return (Math.floor(b.poke.stats.speed(true) * (b.poke.status === "paralysed" ? 0.25 : 1)) + b.poke.battler.speed) - (Math.floor(a.poke.stats.speed(true) * (a.poke.status === "paralysed" ? 0.25 : 1)) + a.poke.battler.speed);
 				else
 					return 0;
 			}
@@ -1578,6 +1858,7 @@ Battle = FunctionObject.new({
 				action(racer.poke);
 			else
 				racer.action(racer.poke);
+			Battle.survey();
 		});
 	},
 	triggerEvent : function (event, data, cause, subjects) {
@@ -1602,22 +1883,22 @@ Battle = FunctionObject.new({
 			Textbox.state(poke.name() + "'s Substitute isn't affected by the stat change.");
 			return;
 		}
-		if (Battle.triggerEvent(Events.stat, {
+		if (Battle.triggerEvent(Triggers.stat, {
 			stat : stat,
 			change : change
 		}, cause, poke).contains(true))
 			return true;
 		if (change !== 0) {
 			if (Math.abs(poke.battler.statLevel[stat]) === 6 && Math.sign(change) === Math.sign(poke.battler.statLevel[stat])) {
-				Textbox.state(poke.name() + "'s " + Stats.string(stat) + " can't go any " + (change > 0 ? "higher" : "lower") + "!");
+				Textbox.state(poke.name() + "'s " + stat + " can't go any " + (change > 0 ? "higher" : "lower") + "!");
 				return;
 			}
 			poke.battler.statLevel[stat] += change;
 			poke.battler.statLevel[stat] = Math.clamp(-6, poke.battler.statLevel[stat], 6);
-			Textbox.state(poke.name() + "'s " + Stats.string(stat) + " was " + (Math.abs(change) > 1 ? "sharply " : "") + (change > 0 ? "raised" : "lowered") + ".");
+			Textbox.state(poke.name() + "'s " + stat + " was " + (Math.abs(change) > 1 ? "sharply " : "") + (change > 0 ? "raised" : "lowered") + ".");
 		} else {
 			poke.battler.statLevel[stat] = 0;
-			Textbox.state(poke.name() + "'s " + Stats.string(stat) + " was reset.");
+			Textbox.state(poke.name() + "'s " + stat + " was reset.");
 		}
 	},
 	teammates : function (pokeA, pokeB) {
@@ -1641,12 +1922,26 @@ Battle = FunctionObject.new({
 			}, srandom.int(1, 4), poke);
 		}
 	},
+	infatuate : function (poke) {
+		if (poke.battler.infatuated) {
+			Textbox.state(poke.name() + " is already infatuated!");
+		} else {
+			Textbox.state(poke.name() + " has become infatuated!");
+			poke.battler.infatuated = true;
+			Battle.haveEffect(function (target) {
+				Textbox.state(target.name() + " broke out of " + target.possessivePronoun() + " infatuation!");
+				target.battler.infatuated = false;
+			}, srandom.int(1, 4), poke);
+		}
+	},
 	placeHazard : function (hazard, maximum, side) {
-		var hazardSide = (side === Battles.side.near ? Battle.hazards.near : Battle.hazards.far);
+		var hazardSide = (side === Battles.side.near ? Battle.hazards.near : Battle.hazards.far), maxedOut = false;
 		if (!foreach(hazardSide, function (which) {
-			if (which.type === hazard) {
-				++ which.stack;
-				which.stack = Math.min(which.stack, maximum);
+			if (which.type ===  Moves._(hazard)) {
+				if (which.stack < maximum)
+					++ which.stack;
+				else
+					maxedOut = true;
 				return true;
 			}
 		}))
@@ -1654,6 +1949,7 @@ Battle = FunctionObject.new({
 				type : Moves._(hazard),
 				stack : 1
 			});
+		return !maxedOut;
 	},
 	bringIntoEffect : function (effect, duration, side) {
 		var effectSide = (side === Battles.side.near ? Battle.effects.near : Battle.effects.far);
@@ -1712,27 +2008,30 @@ Battle = FunctionObject.new({
 		});
 	},
 	inflict : function (poke, status) {
-		poke.status = status;
-		Battle.recoverFromStatus(poke);
+		var types = Pokedex._(poke.species).types;
+		if ((status !== "burned" || !types.contains("Fire")) && (status !== "paralysed" || !types.contains("Electric")) && status !== "frozen" || !types.contains("Ice") && ((status !== "poisoned" && status !== "badly poisoned") || (!types.contains("Poison") && !types.contains("Steel")))) {
+			poke.status = status;
+			Battle.recoverFromStatus(poke);
+		}
 	},
 	recoverFromStatus : function (poke) {
-		if (poke.status === Statuses.asleep) {
+		if (poke.status === "asleep") {
 			Battle.haveEffect(function (target) {
 				Textbox.state(target.name() + " woke up!");
-				target.status = Statuses.none;
+				target.status = "none";
 			}, srandom.int(1, 5), poke);
 		}
-		if (poke.status === Statuses.frozen) {
+		if (poke.status === "frozen") {
 			Battle.haveEffect(function (target) {
 				Textbox.state(target.name() + " thawed!");
-				target.status = Statuses.none;
+				target.status = "none";
 			}, srandom.int(1, 5), poke);
 		}
 	}
 }, {
 	update : function () {
 		if (Battle.active && Battle.state.kind === "opening") {
-			Battle.state.transition += 1 / (Time.framerate * 0.1);
+			Battle.state.transition += 1 / (Time.framerate * Settings._("segue transition duration"));
 			Battle.state.transition = Math.clamp(0, Battle.state.transition, 1);
 			if (Battle.state.transition === 1)
 				Battle.begin();
@@ -1746,7 +2045,7 @@ Battle = FunctionObject.new({
 			smoothing : false
 		},
 		draw : function (canvas) {
-			var context = canvas.getContext("2d"), display = Display.state.current, now = Time.now();
+			var context = canvas.getContext("2d"), display = Display.state.current, now = performance.now();
 			context.fillStyle = "black";
 			context.fillRect(0, 0, canvas.width, canvas.height);
 			if (Battle.state.kind === "inactive")
@@ -1774,7 +2073,6 @@ Battle = FunctionObject.new({
 					});
 				}
 			} else if (Battle.state.kind === "evolution") {
-				//? Fade in and fade out evolution screen
 				var strips = 8, pan = (now / 500 % 1), distortion = 4;
 				for (var i = - distortion * 4, j; i < (strips + distortion * 4 + 1); ++ i) {
 					j = i - pan;
@@ -1788,7 +2086,7 @@ Battle = FunctionObject.new({
 				}
 				context.textAlign = "center";
 				context.textBaseline = "middle";
-				if (Battle.state.stage === "before" || Battle.state.stage === "preparation")
+				if (Battle.state.stage === "before" || Battle.state.stage === "preparation" || Battle.state.stage === "stopped")
 					Sprite.draw(canvas, Battle.state.evolving.paths.sprite("front"), canvas.width / 2, canvas.height / 2, true, null, null, now);
 				if (Battle.state.stage === "finishing" || Battle.state.stage === "after")
 					Sprite.draw(canvas, Battle.state.into.paths.sprite("front"), canvas.width / 2, canvas.height / 2, true, null, null, now);
@@ -1834,7 +2132,7 @@ Battle = FunctionObject.new({
 					}
 					Sprite.draw(canvas, Battle.state.into.paths.sprite("front"), canvas.width / 2, canvas.height / 2, true, [{ type : "fill", colour : "white" }, { type : "opacity", value : fade }], (new Matrix()).scale(scale).matrix, now);
 				}
-				if (Battle.state.stage !== "before" && Battle.state.stage !== "after") {
+				if (Battle.state.stage !== "before" && Battle.state.stage !== "after" && Battle.state.stage !== "stopped") {
 					context.fillStyle = "black";
 					var enclose = 1;
 					if (Battle.state.stage === "preparation" || Battle.state.stage === "finishing")
@@ -1853,6 +2151,7 @@ Battle = FunctionObject.new({
 				var all = [].concat(sortDisplay.allies, sortDisplay.opponents.reverse()).filter(onlyPokemon).sort(function (a, b) {
 					return Battle.drawing.position(Display.pokemonInState(b)).z - Battle.drawing.position(Display.pokemonInState(a)).z;
 				});
+				// Pokémon
 				foreach(all, function (_poke) {
 					poke = Display.pokemonInState(_poke);
 					side = (poke.battler.side === Battles.side.near ? "back" : "front");
@@ -1876,8 +2175,31 @@ Battle = FunctionObject.new({
 					if (transition > 0 && transition < 1)
 						Sprite.draw(canvas, poke.paths.sprite(side), position.x, position.y - position.z, true, [{ type : "fill", colour : "white" }, { type : "opacity", value : Math.pow(1 - transition, 0.4) }, { type : "crop", heightRatio : poke.battler.display.height }], matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix, now);
 				});
+				// Trainers
+				foreach(Battle.allTrainers(), function (trainer) {
+					if (trainer.display.visible) {
+						position = Battle.drawing.position(trainer);
+						side = (Battle.alliedTrainers.contains(trainer) ? "back" : null);
+						// Shadow
+						Sprite.draw(canvas, trainer.paths.sprite(side), position.x, position.y - position.z + trainer.display.position.y, true, { type : "fill", colour : "hsla(0, 0%, 0%, " + shadowOpacity + ")" }, shadowMatrix.scale(position.scale).scale(Math.pow(2, -trainer.display.position.y / 100)).matrix, now);
+						// Trainer
+						Sprite.draw(canvas, trainer.paths.sprite(side), position.x, position.y - position.z, true, null, matrix.scale(position.scale).matrix, now);
+						// Lighting
+						if (Scenes._(Battle.scene).hasOwnProperty("lighting"))
+							Sprite.draw(canvas, trainer.paths.sprite(side), position.x, position.y - position.z, true, { type : "fill", colour : Scenes._(Battle.scene).lighting }, matrix.scale(position.scale).matrix, now);
+					}
+				});
+				if (sortDisplay.allies.length === 0 || sortDisplay.opponents.length === 0) {
+					foreach(Battle.allTrainers(), function (trainer) {
+						if (trainer.display.visible) {
+							Battle.drawing.partyBar(trainer, Battle.alliedTrainers.contains(trainer), Battle.alliedTrainers.contains(trainer) ? 120 : 30);
+						}
+					});
+				}
+				// Weather effects
 				if (Settings._("visual weather effects") || display.flags.weather)
 					Weather.draw(context);
+				// Status bars
 				foreach(display.opponents, function (poke, place) {
 					if (poke !== NoPokemon)
 						Battle.drawing.bar(poke, false, 30 + 34 * place);

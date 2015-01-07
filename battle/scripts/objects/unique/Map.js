@@ -1,6 +1,0 @@
-Map = {
-	locations : {
-		"nowhere" : {
-		}
-	}
-};

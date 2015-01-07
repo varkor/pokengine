@@ -11,6 +11,7 @@ battler.resetDisplay = function (self) {
 		outlined : false
 	};
 };
+
 function battler (pokemon) {
 	var self = this;
 	self.pokemon = pokemon;
@@ -19,14 +20,10 @@ function battler (pokemon) {
 		self.battling = false; // Whether the Pokémon is in the battle right now
 		self.side = null;
 		self.statLevel = [];
-		self.statLevel[Stats.attack] = 0;
-		self.statLevel[Stats.defence] = 0;
-		self.statLevel[Stats.specialAttack] = 0;
-		self.statLevel[Stats.specialDefence] = 0;
-		self.statLevel[Stats.speed] = 0;
-		self.statLevel[Stats.accuracy] = 0;
-		self.statLevel[Stats.evasion] = 0;
-		self.statLevel[Stats.critical] = 0;
+		self.statLevel = {};
+		foreach(Stats, function (stat) {
+			self.statLevel[stat] = 0;
+		});
 		self.opponents = []; // Which Pokémon have been battling whilst this Pokémon also has (used to work out which Pokémon gain experience from this one's defeat)
 		self.poison = 1;
 		self.speed = 0; // A small modifer used to determinate randomly which Pokémon goes first if they both have exactly the same speed.
@@ -48,10 +45,15 @@ function battler (pokemon) {
 		self.damaged = [];
 		self.damaged[Move.category.physical] = 0;
 		self.damaged[Move.category.special] = 0;
+		self.reserved = false; // Whether the Pokémon is going to be sent out next time, so can't be a second time (in a double battle, for instance)
 		battler.resetDisplay(self);
 		self.transform = {
 			transformed : false
 		};
+		if (self.pokemon.currentMoves)
+			foreach(self.pokemon.currentMoves(), function (move) {
+				delete move.disabled;
+			});
 		foreach(Battle.effects.specific, function (effect) {
 			if (effect.target === self)
 				effect.expired = true;
@@ -60,6 +62,6 @@ function battler (pokemon) {
 	self.reset();
 
 	self.isTrapped = function () {
-		return self.trapped.notEmpty() && !self.pokemon.ofType(Types.Ghost);
+		return self.trapped.notEmpty() && !self.pokemon.ofType("Ghost");
 	};
 }

@@ -29,8 +29,14 @@ srandom = {
 		else if (arguments.length === 2)
 			return Math.round(srandom.number(x, y));
 	},
-	chance : function (x) {
-		return srandom.int(x - 1) === 0;
+	chance : function (x, y) {
+		if (arguments.length === 1)
+			return srandom.int(x - 1) === 0;
+		else
+			return srandom.int(y - 1) <= x - 1;
+	},
+	percentage : function (x) {
+		return srandom.int(0, 100) <= x;
 	},
 	choose : function () {
 		return arguments[srandom.int(arguments.length - 1)];

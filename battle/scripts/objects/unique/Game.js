@@ -7,6 +7,7 @@ Game = {
 		return Game.increment ++;
 	},
 	player : null,
+	location : "Route 1 (Kanto)",
 	takePossessionOf : function (entity) {
 		Game.player = entity;
 		entity.type = Trainers.type.local;

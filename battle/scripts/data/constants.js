@@ -1,113 +1,39 @@
 var q;
 
-Types = {
-	"unknown" : q = 0,
-	"typeless" : q,
-	"normal" : ++ q,
-	"fighting" : ++ q,
-	"flying" : ++ q,
-	"poison" : ++ q,
-	"ground" : ++ q,
-	"rock" : ++ q,
-	"bug" : ++ q,
-	"ghost" : ++ q,
-	"steel" : ++ q,
-	"fire" : ++ q,
-	"water" : ++ q,
-	"grass" : ++ q,
-	"electric" : ++ q,
-	"psychic" : ++ q,
-	"ice" : ++ q,
-	"dragon" : ++ q,
-	"dark" : ++ q,
-	"fairy" : ++ q,
-	"bird" : ++ q
-};
+Stats = ["health", "attack", "defence", "special attack", "special defence", "speed", "accuracy", "evasion", "critical"];
 
-Stats = {
-	health : q = 0,
-	attack : ++ q,
-	defence : ++ q,
-	specialAttack : ++ q,
-	specialDefence : ++q,
-	speed : ++ q,
-	accuracy : ++ q,
-	evasion : ++ q,
-	critical : ++ q,
-	string : function (stat) {
-		switch (stat) {
-			case Stats.health:
-				return "health";
-			case Stats.attack:
-				return "attack";
-			case Stats.defence:
-				return "defence";
-			case Stats.specialAttack:
-				return "special attack";
-			case Stats.specialDefence:
-				return "special defence";
-			case Stats.speed:
-				return "speed";
-			case Stats.accuracy:
-				return "accuracy";
-			case Stats.evasion:
-				return "evasion";
-		}
-	}
-};
-
-Experiences = {
-	erratic : q = 0,
-	fast : ++ q,
-	mediumFast : ++ q,
-	mediumSlow : ++ q,
-	slow : ++ q,
-	fluctuating : ++ q
-};
+Experiences = ["erratic", "fast", "medium fast", "medium fast", "medium slow", "slow", "fluctuating"];
 
 Evolution = {
-	level : q = 0, // [Without property] The Pokémon levels up (useful in conjunction with other conditions), [With proprty] The Pokémon reaches or exceeds the specified level
-	friendship : ++ q // [Without property] The Pokémon reaches or exceeds a friendship of 220, [With property] The Pokémon reaches or exceeds the specified friendship
+	// Ways to trigger an evolution
+	methods : [
+		"level", // Triggered when the Pokémon levels up (often used in conjunction with other properties)
+		"item", // Triggered when an item is used on a Pokémon
+		"trade" // Triggered when a Pokémon is traded
+	],
+	// Requirements for evolving upon triggering
+	requirements : [
+		"level", // The minimum level required to evolve (no default)
+		"friendship", // The minimum friendship required to evolve (default: 220)
+		"item" // The required held item (no default)
+	]
 };
 
 Natures = {
-	Hardy : {
+	"Hardy" : {
 	},
-	Lonely : {
-		increased : Stats.attack,
-		decreased : Stats.defence
+	"Lonely" : {
+		"increased" : "attack",
+		"decreased" : "defence"
 	}
 };
 
-Weathers = {
-	clear : q = 0,
-	intenseSunlight : ++ q,
-	rain : ++ q,
-	sandstorm : ++ q,
-	hail : ++ q,
-	diamondDust : ++ q,
-	shadowyAura : ++ q,
-	fog : ++ q
-};
+Weathers = ["clear", "intenseSunlight", "rain", "sandstorm", "hail", "diamondDust", "shadowyAura", "fog"];
 
-Development = {
-	complete : q = 0,
-	incomplete : ++ q,
-	unstarted : ++ q
-};
+Development = ["complete", "incomplete", "unstarted"];
 
-Statuses = {
-	none : q = 0,
-	burned : ++ q,
-	frozen : ++ q,
-	paralysed : ++ q,
-	poisoned : ++ q,
-	badlyPoisoned : ++ q,
-	asleep : ++ q,
-	Volatile : {
-		confused : q = 0
-	}
-};
+Statuses = ["none", "burned", "frozen", "paralysed", "poisoned", "badly poisoned", "asleep"];
+Statuses.Volatile = ["confused", "infatuated"];
 
 /*
 	action (data{}, self, other) for Abilities and items
@@ -116,7 +42,7 @@ Statuses = {
 		data:
 			oneself : Whether the Pokémon that triggered the event is itself
 */
-Events = {
+Triggers = {
 	/*
 		Triggered when the Pokémon is sent out.
 	*/
@@ -178,14 +104,9 @@ Events = {
 	experience : ++ q
 };
 
-Genders = {
-	male : q = 0,
-	female : ++ q,
-	neuter : ++ q
-};
+Genders = ["male", "female", "neuter"];
 
 Time = {
-	now : Date.now,
 	framerate : Settings._("framerate"),
 	millisecond : 1,
 	milliseconds : 1,
@@ -194,9 +115,7 @@ Time = {
 };
 Time.refresh = Time.second / Time.framerate;
 
-Nationalities = {
-	British : q = 0
-};
+Nationalities = ["British"];
 
 Item = {
 	use : {
@@ -217,23 +136,15 @@ Battles = {
 		wild : q = 0,
 		trainer : ++ q
 	},
-	style : {
-		normal : q = 0,
-		double : ++ q,
-		triple : ++ q,
-		rotation : ++ q,
-		sky : ++ q,
-		inverse : ++ q,
-		horde : ++ q
-	},
+	style : ["normal", "double"],
 	kind : {
 		local : q = 0,
 		online : ++ q,
 		recording : ++ q
 	},
 	side : {
-		near : q = 0,
-		far : ++ q
+		near : {},
+		far : {}
 	},
 	when : {
 		startOfTurn : 0, // The start of every turn
@@ -272,8 +183,43 @@ Scenes.addData({
 	"Forest Trail" : {}
 });
 
+Creators = {
+	"Nintendo" : {
+		"games" : ["RSE"]
+	}
+};
+
+Games = {
+	"RSE" : {
+		"constituents" : ["Ruby", "Sapphire", "Emerald"],
+		"region" : "Hoenn",
+		"Pokedex" : ["Treeko"],
+		"player" : {
+			"male" : "Brendan",
+			"female" : "May"
+		}
+	},
+	"B2W2" : {
+		"constituents" : ["Black 2", "White 2"],
+		"region" : "Unova",
+		"Pokedex" : [],
+		"player" : {
+			"male" : "Nate",
+			"female" : "Rosa"
+		}
+	}
+};
+
+Regions = ["Hoenn", "Kanto"];
+
+Pokerus = ["uninfected", "infected", "immune"];
+
 NoPokemon = {};
 
 onlyPokemon = function (poke) {
 	return poke !== NoPokemon;
+};
+
+onlyNoPokemon = function (poke) {
+	return poke === NoPokemon;
 };

@@ -1,5 +1,5 @@
 Debugger = FunctionObject.new({
-	previousFrame : Time.now(),
+	previousFrame : performance.now(),
 	fps : {
 		statistics : function () {
 			var past = Time.framerate, mean = 0, variance = 0; // Analyse the past so many frames
@@ -29,7 +29,7 @@ Debugger = FunctionObject.new({
 	}
 }, {
 	update : function () {
-		var thisFrame = Time.now();
+		var thisFrame = performance.now();
 		if (thisFrame !== Debugger.previousFrame) { // Occasionally the timestep is so small it's called in the same millisecond as the previous call, so we just want to ignore those
 			Debugger.fps.timeline.push(Time.second / (thisFrame - Debugger.previousFrame));
 			Debugger.previousFrame = thisFrame;

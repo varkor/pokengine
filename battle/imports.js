@@ -8,21 +8,23 @@ var paths = [
 	"scripts/objects/unique/FileData.js",
 	"scripts/data/constants.js",
 	"scripts/objects/unique/Input.js",
-	"scripts/objects/unique/Type.js",
+	"scripts/objects/unique/Types.js",
 	"scripts/objects/unique/Move.js",
-	"scripts/objects/unique/Map.js",
+	"scripts/objects/unique/Maps.js",
 	"scripts/data/Moves.js",
-	"scripts/data/Pokemon.js",
+	"scripts/data/Pokedex.js",
+	"scripts/data/Classes.js",
 	"scripts/data/Abilities.js",
 	"scripts/data/Items.js",
 	"scripts/data/machines.js",
 	"scripts/data/accessories.js",
+	"scripts/data/Events.js",
 	"scripts/objects/unique/Widgets.js",
 	"scripts/objects/unique/Textbox.js",
 	"scripts/objects/unique/Display.js",
 	"scripts/objects/unique/View.js",
 	"scripts/objects/unique/Game.js",
-	"scripts/objects/unique/Pokedex.js",
+	"scripts/objects/unique/Dex.js",
 	"scripts/objects/unique/visuals.js",
 	"scripts/objects/general/bag.js",
 	"scripts/objects/general/party.js",
@@ -36,7 +38,7 @@ var paths = [
 ];
 var loadScript = function () {
 	if (paths.notEmpty()) {
-		script = document.createElement("script");
+		var script = document.createElement("script");
 		script.addEventListener("load", function () {
 			loadScript();
 		});

@@ -1,10 +1,24 @@
 function bag (items) {
 	var self = this;
 
-	if (arguments.length >= 1)
+	if (arguments.length >= 1) {
 		self.items = items;
-	else
+		foreach(self.items, function (item) {
+			item.intentToUse = 0;
+		});
+	} else
 		self.items = [];
+
+	self.store = function () {
+		var store = [];
+		foreach(self.items, function (item) {
+			store.push({
+				item : item.item,
+				quantity : item.quantity
+			});
+		});
+		return store;
+	};
 
 	self.usableItems = function () {
 		return self.items.filter(function (item) {

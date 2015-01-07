@@ -161,10 +161,15 @@ Keys = {
 		return Keys.isHeld(key) && Keys.held[key].duration === 1;
 	},
 	addHandler : function (handler, forWhichKeys) {
-		Keys.handlers.push({
+		var data = {
 			handler : handler,
 			keys : wrapArray(forWhichKeys)
-		});
+		};
+		Keys.handlers.push(data);
+		return data;
+	},
+	removeHandler : function (handler) {
+		Keys.handlers.remove(Keys.handlers.indexOf(handler));
 	},
 	press : function (key) {
 		if (!Keys.held.hasOwnProperty(key))
