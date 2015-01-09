@@ -563,7 +563,7 @@ function pokemon (data, validate) {
 		if (!self.caught) {
 			self.caught = {
 				ball : null,
-				location : who.location,
+				location : Game.location,
 				level : self.level,
 				trainer : who.unique
 			};
@@ -646,12 +646,12 @@ function pokemon (data, validate) {
 			if (!used.hasOwnProperty("modifiedMove") || !used.modifiedMove) {
 				self.battler.previousMoves.push({
 					move : move,
-					failed : used.succeeded
+					failed : !used.succeeded
 				});
 			}
 			if (used.succeeded)  {
 				++ self.battler.moveStage;
-				if (self.battler.moveStage >= _(Moves, self.battler.previousMoves.last().move).effect.use.length)
+				if (self.battler.moveStage >= _(Moves, self.battler.previousMoves.last().move).effects.use.length)
 					self.battler.moveStage = 0;
 			} else {
 				self.battler.moveStage = 0;

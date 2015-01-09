@@ -122,10 +122,10 @@ Battle = FunctionObject.new({
 			}
 		},
 		bar : function (poke, right, y, detailed) {
-			var context = Battle.canvas.getContext("2d"), pixelWidth = 14, percentageHealth = poke.health / poke.maximumHealth(), percentageExperience = poke.experience / poke.experienceFromLevelToNextLevel();
+			var context = Battle.canvas.getContext("2d"), pixelWidth = 16, percentageHealth = poke.health / poke.maximumHealth(), percentageExperience = poke.experience / poke.experienceFromLevelToNextLevel();
 			do {
-				context.font = pixelWidth + "px " + Settings._("font")
-				pixelWidth -= 2;
+				context.font = pixelWidth + "px " + Settings._("font").typeface
+				pixelWidth -= 1;
 			} while (context.measureText(poke.name()).width > 60);
 			var shapes = [
 				{
@@ -134,7 +134,7 @@ Battle = FunctionObject.new({
 				},
 				{
 					text :  poke.name(),
-					position : { x : (78 + 20) / 2, y : (-16 + 4) / 2 },
+					position : { x : (78 + 20) / 2, y : (-16 + 6) / 2 },
 					align : { x : "center" , y : "middle" },
 					colour : "white",
 					font : Font.load(pixelWidth, null, "")
@@ -284,15 +284,17 @@ Battle = FunctionObject.new({
 			});
 		});
 		var timeout = 3 * Time.seconds, unloadedResources = resources.slice(0);
-		var progress = function (resource) {
+		var finish = function () {
+			Textbox.stateUntil("", function () { return Battle.state.kind !== "opening"; });
+			Battle.state = {
+				kind : "opening",
+				transition : 0
+			};
+		}, progress = function (resource) {
 			unloadedResources.remove(unloadedResources.indexOf(resource));
 			Battle.state.progress = ++ loaded / resources.length;
 			if (loaded === resources.length) {
-				Textbox.stateUntil("", function () { return Battle.state.kind !== "opening"; });
-				Battle.state = {
-					kind : "opening",
-					transition : 0
-				};
+				finish();
 			}
 		};
 		foreach(resources, function (resource) {
@@ -306,8 +308,11 @@ Battle = FunctionObject.new({
 			});
 		});
 		setTimeout(function () {
-			if (unloadedResources.notEmpty())
+			if (unloadedResources.notEmpty() && Battle.state.kind === "loading") {
 				Battle.state.failed = Battle.state.failed.concat(unloadedResources);
+				if (Settings._("ignore missing files"))
+					finish();
+			}
 		}, timeout);
 	},
 	playRecording : function (recording, alliedTrainers, opposingTrainers) {
@@ -482,7 +487,7 @@ Battle = FunctionObject.new({
 						}
 					}
 				});
-				participant.resetDisplay();
+				participant.resetDisplay(); // Reset the trainer's display
 				participant.battlers = [];
 				foreach(participant.bag, function (item) {
 					item.intentToUse = 0;
@@ -1055,7 +1060,7 @@ Battle = FunctionObject.new({
 			if (!doNotQueue)
 				Battle.queue.push({
 					poke : poke,
-					priority : poke.battler.previousMoves.last().move.priority,
+					priority : Moves._(poke.battler.previousMoves.last().move).priority,
 					action : function (poke) {
 						poke.use(poke.battler.previousMoves.last().move, poke.battler.previousTarget);
 					}
@@ -1213,10 +1218,12 @@ Battle = FunctionObject.new({
 			if (!Battle.active || Battle.finished)
 				return true;
 			++ poke.battler.battlingForDuration;
-			if (poke.status !== "frozen" && poke.status !== Statuses.sleep && !poke.flinching && !poke.battler.recharging) {
+			if (poke.status !== "frozen" && poke.status !== "asleep" && !poke.flinching && !poke.battler.recharging) {
 				foreach(poke.currentMoves(), function (move) {
-					if (move.disabled)
-						-- move.disabled;
+					if (move.disabled) {
+						if (-- move.disabled === 0)
+							Textbox.state(poke.name() + "'s " + move.move + " was re-enabled!");
+					}
 				});
 			}
 			switch (poke.status) {
@@ -1398,7 +1405,7 @@ Battle = FunctionObject.new({
 									}, null, null, null, true);
 								}
 							}
-							var pressureSpeech = (trainer.healthyPokemon().length === 1 && trainer._("pressure speech?"));
+							var pressureSpeech = (Battle.situation === Battles.situation.trainer && trainer.healthyPokemon().length === 1 && trainer._("pressure speech?"));
 							Battle.queue.push({
 								poke : poke,
 								doesNotRequirePokemonToBeBattling : true,
@@ -1688,7 +1695,10 @@ Battle = FunctionObject.new({
 				});
 			}
 			if (playerHasBeenDefeated) {
-				Textbox.state(opponents + " " + (opponents.length !== 1 ? "have" : "has") + " defeated you!");
+				if (trainerBattle)
+					Textbox.state(opponents + " " + (opponents.length !== 1 ? "have" : "has") + " defeated " + playerName + "!");
+				else
+					Textbox.state(playerName + " " + (poke.trainer === Game.player ? "have" : "has") + " been defeated by the wild Pokémon!");
 				if (Battle.kind !== Battles.kind.online) {
 					var highestLevel = 0;
 					foreach(poke.trainer.party.pokemon, function (pkmn) {
@@ -1720,18 +1730,18 @@ Battle = FunctionObject.new({
 			} else {
 				Textbox.state(playerName + " " + (Battle.alliedTrainers.first() !== Game.player ? "has" : "have") + " defeated " + (trainerBattle ? opponents : "the wild Pokémon") + "!");
 				if (Battle.kind !== Battles.kind.online) {
-					foreach(Battle.opposingTrainers, function (opposer, i) {
-						Textbox.effect(function () {
-							poke.trainer.display.visible = true;
-						}, Battle.drawing.transition(poke.trainer.display.position, "x", 0, Settings._("switch transition duration") * Time.framerate));
-						Textbox.spiel(opposer._("defeat speech"));
-						if (i !== Battle.opposingTrainers.length - 1) {
-							Textbox.effect(null, Battle.drawing.transition(poke.trainer.display.position, "x", -200, Settings._("switch transition duration") * Time.framerate), function () {
-								poke.trainer.display.visible = false;
-							});
-						}
-					});
 					if (trainerBattle) {
+						foreach(Battle.opposingTrainers, function (opposer, i) {
+							Textbox.effect(function () {
+								poke.trainer.display.visible = true;
+							}, Battle.drawing.transition(poke.trainer.display.position, "x", 0, Settings._("switch transition duration") * Time.framerate));
+							Textbox.spiel(opposer._("defeat speech"));
+							if (i !== Battle.opposingTrainers.length - 1) {
+								Textbox.effect(null, Battle.drawing.transition(poke.trainer.display.position, "x", -200, Settings._("switch transition duration") * Time.framerate), function () {
+									poke.trainer.display.visible = false;
+								});
+							}
+						});
 						var prizeMoney = 0;
 						foreach(Battle.opposingTrainers, function (opposer) {
 							prizeMoney += opposer.party.pokemon.last().level * Classes[opposer.class].payout;
@@ -1801,7 +1811,7 @@ Battle = FunctionObject.new({
 			opponent.battler.opponents.pushIfNotAlreadyContained(poke);
 		});
 		foreach((poke.battler.side === Battles.side.near ? Battle.hazards.near : Battle.hazards.far), function (hazard) {
-			hazard.type.effect.hazard(poke, hazard.stack);
+			hazard.type.effects.hazard(poke, hazard.stack);
 		});
 		if (!startOrEndOfTurn)
 			Battle.triggerEvent(Triggers.entrance, {}, poke);
@@ -1870,9 +1880,9 @@ Battle = FunctionObject.new({
 			responses = responses.concat(poke.respondToEvent(event, data, cause));
 			data.oneself = (cause === poke);
 			foreach((poke.battler.side === Battles.side.near ? Battle.effects.near : Battle.effects.far), function (effect) {
-				if (effect.type.effects.event === event)
-					if (!effect.type.effects.hasOwnProperty("oneself") || effect.type.effects.oneself === data.oneself)
-						responses.push(effect.type.effects.action(data, poke));
+				if (effect.type.uponTrigger.event === event)
+					if (!effect.type.uponTrigger.hasOwnProperty("oneself") || effect.type.uponTrigger.oneself === data.oneself)
+						responses.push(effect.type.uponTrigger.action(data, poke));
 			});
 		});
 		return responses;
@@ -1969,7 +1979,7 @@ Battle = FunctionObject.new({
 			repeating = false;
 		if (data)
 			Battle.effects.specific.push({
-				type : Moves._(move).effect.effect,
+				type : Moves._(move).effects.effect,
 				due : (!repeating ? Battle.turns : 0) + when,
 				target : target,
 				data : data,
@@ -1978,7 +1988,7 @@ Battle = FunctionObject.new({
 			});
 		else
 			Battle.effects.specific.push({
-				type : Moves._(move).effect.effect,
+				type : Moves._(move).effects.effect,
 				due : (!repeating ? Battle.turns : 0) + when,
 				target : target,
 				expired : false,
@@ -1989,7 +1999,7 @@ Battle = FunctionObject.new({
 		Battle.moveHaveEffect(move, when, target, data, true);
 	},
 	moveHasEffect : function (move, target) {
-		return Battle.hasEffect(Moves._(move).effect.effect, target);
+		return Battle.hasEffect(Moves._(move).effects.effect, target);
 	},
 	haveEffect : function (effect, when, target) {
 		Battle.effects.specific.push({type : effect, due : Battle.turns + when, target : target, expired : false});
@@ -2041,6 +2051,7 @@ Battle = FunctionObject.new({
 		canvas : {
 			width : Settings._("screen dimensions => width"),
 			height : Settings._("screen dimensions => height"),
+			id : "game-battle",
 			className : "centre",
 			smoothing : false
 		},
@@ -2177,7 +2188,7 @@ Battle = FunctionObject.new({
 				});
 				// Trainers
 				foreach(Battle.allTrainers(), function (trainer) {
-					if (trainer.display.visible) {
+					if (trainer !== TheWild && trainer.display.visible) {
 						position = Battle.drawing.position(trainer);
 						side = (Battle.alliedTrainers.contains(trainer) ? "back" : null);
 						// Shadow

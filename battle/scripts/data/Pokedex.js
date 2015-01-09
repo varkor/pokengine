@@ -55,7 +55,7 @@ Pokedex = {
 		"catch rate" : 45,
 		"gender ratio" : 0.875, // Chance of being male
 		abilities : {
-			normal : ["Intimidate"],
+			normal : ["Overgrow"],
 			hidden : "Chlorophyll"
 		}
 	},
@@ -76,13 +76,6 @@ Pokedex = {
 				requirements : {
 					level : 2
 				}
-			},
-			{
-				species : "Blastoise (Nintendo)",
-				method : "level",
-				requirements : {
-					level : 3
-				}
 			}
 		],
 		friendship : 70,
@@ -101,15 +94,7 @@ Pokedex = {
 			experience : 50
 		},
 		moveset : {},
-		evolutions : [
-			{
-				species : "Blastoise (Nintendo)",
-				method : "level",
-				requirements : {
-					level : 51
-				}
-			}
-		],
+		evolutions : [],
 		friendship : 70,
 		"catch rate" : 45,
 		"gender ratio" : 0.875,

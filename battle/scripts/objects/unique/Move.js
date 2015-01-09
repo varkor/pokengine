@@ -62,7 +62,7 @@ Move = {
 			affected = (targetPokemon !== NoPokemon ? Battle.affectedByMove(mover, targetPokemon, move).filter(onlyPokemon) : []),
 			completelyFailed = true,
 			statedFailureReason = false,
-			finalStage = (stage === move.effect.use.length - 1),
+			finalStage = (stage === move.effects.use.length - 1),
 			animationEffect = null,
 			stateEffect = null,
 			modifiedMove = false;
@@ -88,8 +88,8 @@ Move = {
 			var displayRendered = Display.state.save();
 			stateEffect = Textbox.effect(function () { Display.state.load(displayRendered); });
 		}
-		if (move.effect.hasOwnProperty("constant") && (targetPokemon !== NoPokemon || affectsEntireSide)) {
-			var constantData = move.effect.constant(mover, targetPokemon !== NoPokemon ? targetPokemon : target);
+		if (move.effects.hasOwnProperty("constant") && (targetPokemon !== NoPokemon || affectsEntireSide)) {
+			var constantData = move.effects.constant(mover, targetPokemon !== NoPokemon ? targetPokemon : target);
 			if (typeof constantData === "object")
 				constant = constantData;
 		}
@@ -114,19 +114,19 @@ Move = {
 						}
 						var hit = (!finalStage || (move.hasOwnProperty("accuracy") ? move.accuracy * (accuracy / evasion) >= srandom.point() : true));
 						if (hit) {
-							if (targeted.battler.protected && !move.piercing) {
+							if (move.effects.use[stage].targets && targeted.battler.protected && !move.piercing) {
 								Textbox.state(targeted.name() + " protected " + targeted.selfPronoun() + ".");
 								failed = true;
 								statedFailureReason = true;
 								missEffect = true;
-							} else if (targeted.invulnerable && !move.despite.contains(targeted.invulnerable)) { // Dig, Fly, etc.
+							} else if (move.effects.use[stage].targets && targeted.invulnerable && !move.despite.contains(targeted.invulnerable)) { // Dig, Fly, etc.
 								Textbox.state(targeted.name() + " cannot be found!");
 								failed = true;
 								statedFailureReason = true;
 								missEffect = true;
 							} else {
 								// Actually use the move
-								var response = move.effect.use[stage](mover, targeted, constant);
+								var response = move.effects.use[stage].effect(mover, targeted, constant);
 								if (response) {
 									if (response.hasOwnProperty("failed") && response.failed)
 										failed = true;
@@ -148,11 +148,11 @@ Move = {
 							missEffect = true;
 						}
 					}
-					if (missEffect && move.effect.hasOwnProperty("miss"))
-						move.effect.miss(mover, targeted);
+					if (missEffect && move.effects.hasOwnProperty("miss"))
+						move.effects.miss(mover, targeted);
 					if (failed) {
-						if (move.effect.hasOwnProperty("fail"))
-							move.effect.fail(mover, targeted);
+						if (move.effects.hasOwnProperty("fail"))
+							move.effects.fail(mover, targeted);
 						return {
 							succeeded : false
 						};
@@ -160,7 +160,7 @@ Move = {
 						completelyFailed = false;
 				});
 			} else if (affectsEntireSide) {
-				var response = move.effect.use[stage](mover, target, constant), failed = false;
+				var response = move.effects.use[stage].effect(mover, target, constant), failed = false;
 				if (response) {
 					if (response.hasOwnProperty("failed") && response.failed)
 						failed = true;
@@ -168,8 +168,8 @@ Move = {
 						modifiedMove = true;
 				}
 				if (failed) {
-					if (move.effect.hasOwnProperty("fail"))
-						move.effect.fail(mover, targeted);
+					if (move.effects.hasOwnProperty("fail"))
+						move.effects.fail(mover, targeted);
 					return {
 						succeeded : false
 					};
@@ -185,10 +185,10 @@ Move = {
 			if (animationEffect !== null)
 				Textbox.removeEffects(animationEffect);
 			if (stateEffect !== null) {
-				Textbox.remove(stateEffect);
-				battler.resetDisplay(mover);
+				Textbox.remove(mover);
+				battler.resetDisplay(mover.battler);
 				foreach(affected, function (targeted) {
-					battler.resetDisplay(targeted);
+					battler.resetDisplay(targeted.battler);
 				});
 				displayRendered = Display.state.save();
 				Textbox.effect(function () { Display.state.load(displayRendered); });

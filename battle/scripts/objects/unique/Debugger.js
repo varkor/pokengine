@@ -38,7 +38,8 @@ Debugger = FunctionObject.new({
 	drawing : {
 		canvas : {
 			width : 96,
-			height : 32
+			height : 32,
+			className : "fps"
 		},
 		draw : function (canvas) {
 			var context = canvas.getContext("2d");

@@ -198,14 +198,15 @@
 							"party" : Interface.buildParty(),
 							"money" : 10000
 						}));
-						/*Battle.beginWildBattle(Game.player, [new pokemon({
+						Battle.beginWildBattle(Game.player, [new pokemon({
 							species : "Bulbasaur (Nintendo)",
-							level : 20
+							level : 20,
+							moves : [{ move : "Tackle" }]
 						}), new pokemon({
 							species : "Ivysaur (Nintendo)",
 							level : 50
-						})], Interface.buildSettings());*/
-						Battle.beginTrainerBattle(Game.player, new trainer({
+						})], Interface.buildSettings());
+						/*Battle.beginTrainerBattle(Game.player, new trainer({
 							"name" : "Roger",
 							"class" : "Ace Trainer",
 							"game" : "B2W2",
@@ -214,20 +215,17 @@
 							"party" : [
 								new pokemon({
 									species : "Bulbasaur (Nintendo)",
-									level : 20,
+									level : 70,
 									moves : [{
-										move : "Tackle"
-									}]
+										move : "Disable"
+									}],
+									shiny : true
 								}), new pokemon({
 									species : "Ivysaur (Nintendo)",
 									level : 5
-								}),
-								new pokemon({
-									species : "Blastoise (Nintendo)",
-									level : 5
 								})
 							]
-						}), Interface.buildSettings());
+						}), Interface.buildSettings());*/
 					}, true);
 				});
 
@@ -356,7 +354,7 @@
 					var settings = {
 						style : (document.querySelector("#style").value === "double" ? "double" : "normal"),
 						flags : document.querySelector("#inverse").checked ? ["inverse"] : [],
-						weather : (Weathers.hasOwnProperty(document.querySelector("#weather").value) ? Weathers[document.querySelector("#weather").value] : "clear"),
+						weather : (Weathers.contains(document.querySelector("#weather").value) ? document.querySelector("#weather").value : "clear"),
 						scene : (Scenes._(document.querySelector("#scene").value + "?") ? document.querySelector("#scene").value : "Field Clearing"),
 						rules : {
 							levels : document.querySelector("#rule-levels").value,
