@@ -2051,7 +2051,7 @@ Battle = FunctionObject.new({
 		canvas : {
 			width : Settings._("screen dimensions => width"),
 			height : Settings._("screen dimensions => height"),
-			id : "game-battle",
+			selector : "#game-battle",
 			className : "centre",
 			smoothing : false
 		},
