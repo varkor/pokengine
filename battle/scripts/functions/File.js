@@ -19,7 +19,10 @@ File = {
 		};
 		if (store.hasOwnProperty(path)) {
 			if (!store[path].hasOwnProperty("uponLoad")) {
-				successful(store[path]);
+				var uponLoadObject = null;
+				if (uponLoad)
+					uponLoadObject = { uponLoad : uponLoad };
+				successful(store[path], uponLoadObject);
 				return store[path];
 			} else { // A file is already scheduled to be loaded, but hasn't finished loading yet
 				store[path].uponLoad = function (oldUponLoad) { return function (data) {

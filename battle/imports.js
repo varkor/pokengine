@@ -1,6 +1,3 @@
-Settings = DataObject.new();
-Scenes = DataObject.new();
-
 var paths = [
 	"scripts/functions/random.js",
 	"scripts/objects/unique/Settings.js",
