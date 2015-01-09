@@ -33,7 +33,6 @@ function trainer (data) {
 		poke.belong(self);
 	});
 	self.bag = new bag(self.bag);
-	self.battlers = [];
 	self.type = Trainers.type.NPC;
 	self.team = Game.unique();
 

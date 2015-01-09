@@ -488,7 +488,6 @@ Battle = FunctionObject.new({
 					}
 				});
 				participant.resetDisplay(); // Reset the trainer's display
-				participant.battlers = [];
 				foreach(participant.bag, function (item) {
 					item.intentToUse = 0;
 				});
