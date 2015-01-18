@@ -109,7 +109,7 @@ function pokemon (data, validate) {
 	};
 	
 	self.stats.health = function () {
-		return Math.floor(((self.IVs.health + 2 * Pokedex._(self.currentSpecies()).stats.health + self.EVs.health / 4 + 100) * self.level) / 100 + 10);
+		return Math.floor(((self.IVs.health + 2 * Pokedex._(self.species).stats.health + self.EVs.health / 4 + 100) * self.level) / 100 + 10);
 	};
 
 	self.maximumHealth = function () {

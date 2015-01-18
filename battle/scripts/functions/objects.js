@@ -64,7 +64,7 @@ FunctionObject = {
 						if (document.body.childNodes.length > 0)
 							document.body.insertBefore(canvas, document.body.childNodes[0]);
 						else
-							document.body.append(canvas);
+							document.body.appendChild(canvas);
 					}
 					if (details.drawing.canvas.hasOwnProperty("className"))
 						canvas.className = details.drawing.canvas.className;

@@ -1,4 +1,4 @@
-Pokedex = {
+﻿Pokedex = {
 	"Missingno. (Nintendo)" : {
 		"types" : ["Bird", "Normal"],
 		"experience" : "fast",
@@ -31,6 +31,7 @@ Pokedex = {
 		yield : {
 			experience : 50
 		},
+		stats : {"health" : 45, "attack" : 49, "defence" : 49, "special attack" : 65, "special defence" : 65, "speed" : 45 },
 		moveset : {
 			2 : ["Hyper Beam"]
 		},
@@ -55,7 +56,7 @@ Pokedex = {
 		"catch rate" : 45,
 		"gender ratio" : 0.875, // Chance of being male
 		abilities : {
-			normal : ["Overgrow"],
+			normal : ["Intimidate"],
 			hidden : "Chlorophyll"
 		}
 	},
@@ -66,6 +67,7 @@ Pokedex = {
 		yield : {
 			experience : 50
 		},
+		stats : {"health" : 60, "attack" : 62, "defence" : 63, "special attack" : 80, "special defence" : 80, "speed" : 60 },
 		moveset : {
 			3 : ["Metronome"]
 		},
@@ -75,6 +77,13 @@ Pokedex = {
 				method : "level",
 				requirements : {
 					level : 2
+				}
+			},
+			{
+				species : "Blastoise (Nintendo)",
+				method : "level",
+				requirements : {
+					level : 3
 				}
 			}
 		],
@@ -93,8 +102,17 @@ Pokedex = {
 		yield : {
 			experience : 50
 		},
+		stats : {"health" : 78, "attack" : 84, "defence" : 78, "special attack" : 109, "special defence" : 85, "speed" : 100 },
 		moveset : {},
-		evolutions : [],
+		evolutions : [
+			{
+				species : "Blastoise (Nintendo)",
+				method : "level",
+				requirements : {
+					level : 51
+				}
+			}
+		],
 		friendship : 70,
 		"catch rate" : 45,
 		"gender ratio" : 0.875,
@@ -110,6 +128,7 @@ Pokedex = {
 		yield : {
 			experience : 50
 		},
+		stats : {"health" : 79, "attack" : 83, "defence" : 100, "special attack" : 85, "special defence" : 105, "speed" : 78 },
 		moveset : {},
 		friendship : 70,
 		"catch rate" : 45,
@@ -118,8 +137,230 @@ Pokedex = {
 			normal : ["Overgrow"],
 			hidden : "Chlorophyll"
 		}
+	},
+	"Bramboom (Atlas)" : {
+		types : ["Grass", "Ground"],
+		experience : "fast",
+		"form(e)s" : null,
+		yield : {
+			experience : 50
+		},
+		stats : {"health" : 78, "attack" : 115, "defence" : 90, "special attack" : 74, "special defence" : 78, "speed" : 95 },
+		moveset : {},
+		friendship : 70,
+		"catch rate" : 45,
+		"gender ratio" : 0.875,
+		abilities : {
+			normal : ["Overgrow"],
+			hidden : "Tough Claws"
+		}
+	},
+	"Damasoar (Atlas)" : {
+		types : ["Water", "Ice"],
+		experience : "fast",
+		"form(e)s" : null,
+		yield : {
+			experience : 50
+		},
+		stats : {"health" : 85, "attack" : 105, "defence" : 73, "special attack" : 80, "special defence" : 77, "speed" : 110 },
+		moveset : {},
+		friendship : 70,
+		"catch rate" : 45,
+		"gender ratio" : 0.875,
+		abilities : {
+			normal : ["Overgrow"],
+			hidden : "Tough Claws"
+		}
+	},
+	"Ekiama (Atlas)" : {
+		types : ["Fire", "Poison"],
+		experience : "fast",
+		"form(e)s" : null,
+		yield : {
+			experience : 50
+		},
+		stats : {"health" : 100, "attack" : 75, "defence" : 98, "special attack" : 100, "special defence" : 98, "speed" : 59 },
+		moveset : {},
+		friendship : 70,
+		"catch rate" : 45,
+		"gender ratio" : 0.875,
+		abilities : {
+			normal : ["Overgrow"],
+			hidden : "Tough Claws"
+		}
+	},
+	"Vermpent (Atlas)" : {
+		types : ["Ground", "Dark"],
+		experience : "fast",
+		"form(e)s" : null,
+		yield : {
+			experience : 50
+		},
+		stats : {"health" : 95, "attack" : 125, "defence" : 100, "special attack" : 60, "special defence" : 81, "speed" : 79 },
+		moveset : {},
+		friendship : 70,
+		"catch rate" : 45,
+		"gender ratio" : 0.5,
+		abilities : {
+			normal : ["Overgrow"],
+			hidden : "Tough Claws"
+		}
+	},
+	"Phantomail (Atlas)" : {
+		types : ["Ghost", "Steel"],
+		experience : "fast",
+		"form(e)s" : null,
+		yield : {
+			experience : 50
+		},
+		stats : {"health" : 60, "attack" : 110, "defence" : 100, "special attack" : 65, "special defence" : 65, "speed" : 89 },
+		moveset : {},
+		friendship : 70,
+		"catch rate" : 45,
+		"gender ratio" : 0.5,
+		abilities : {
+			normal : ["Levitate"],
+			hidden : "Tough Claws"
+		}
+	},
+	"Beanormous (Atlas)" : {
+		types : ["Grass", "Fairy"],
+		experience : "fast",
+		"form(e)s" : null,
+		yield : {
+			experience : 50
+		},
+		stats : {"health" : 90, "attack" : 80, "defence" : 85, "special attack" : 135, "special defence" : 105, "speed" : 55 },
+		moveset : {},
+		friendship : 70,
+		"catch rate" : 45,
+		"gender ratio" : 0.875,
+		abilities : {
+			normal : ["Overgrow"],
+			hidden : "Tough Claws"
+		}
+	},
+	"Stalliot (Atlas)" : {
+		types : ["Normal"],
+		experience : "fast",
+		"form(e)s" : null,
+		yield : {
+			experience : 50
+		},
+		stats : {"health" : 90, "attack" : 105, "defence" : 75, "special attack" : 55, "special defence" : 60, "speed" : 105 },
+		moveset : {},
+		friendship : 70,
+		"catch rate" : 45,
+		"gender ratio" : 1,
+		abilities : {
+			normal : ["Intimidate"],
+			hidden : "Tough Claws"
+		}
+	},
+	"Horrendove (Atlas)" : {
+		types : ["Dark", "Flying"],
+		experience : "fast",
+		"form(e)s" : null,
+		yield : {
+			experience : 50
+		},
+		stats : {"health" : 112, "attack" : 98, "defence" : 73, "special attack" : 50, "special defence" : 70, "speed" : 92 },
+		moveset : {},
+		friendship : 70,
+		"catch rate" : 45,
+		"gender ratio" : 0.5,
+		abilities : {
+			normal : ["Overgrow"],
+			hidden : "Tough Claws"
+		}
+	},
+	"Expertri (Havai)" : {
+		types : ["Grass", "Fighting"],
+		experience : "fast",
+		"form(e)s" : null,
+		yield : {
+			experience : 50
+		},
+		stats : {"health" : 85, "attack" : 120, "defence" : 90, "special attack" : 70, "special defence" : 80, "speed" : 90 },
+		moveset : {},
+		friendship : 70,
+		"catch rate" : 45,
+		"gender ratio" : 0.875,
+		abilities : {
+			normal : ["Overgrow"],
+			hidden : "Tough Claws"
+		}
+	},
+	"Spinda (Nintendo)" : {
+		types : ["Normal"],
+		experience : "fast",
+		"form(e)s" : null,
+		yield : {
+			experience : 50
+		},
+		stats : {"health" : 60, "attack" : 60, "defence" : 60, "special attack" : 60, "special defence" : 60, "speed" : 60 },
+		moveset : {},
+		friendship : 70,
+		"catch rate" : 45,
+		"gender ratio" : 0.5,
+		abilities : {
+			normal : ["Overgrow"],
+			hidden : "Tough Claws"
+		}
+	},
+	"Toxito (Atlas)" : {
+		types : ["Bug", "Poison"],
+		experience : "fast",
+		"form(e)s" : null,
+		yield : {
+			experience : 50
+		},
+		stats : {"health" : 75, "attack" : 85, "defence" : 55, "special attack" : 65, "special defence" : 55, "speed" : 65 },
+		moveset : {},
+		friendship : 70,
+		"catch rate" : 45,
+		"gender ratio" : 0.5,
+		abilities : {
+			normal : ["Overgrow"],
+			hidden : "Tough Claws"
+		}
+	},
+	"Akakira (Atlas)" : {
+		types : ["Electric"],
+		experience : "fast",
+		"form(e)s" : null,
+		yield : {
+			experience : 50
+		},
+		stats : {"health" : 65, "attack" : 50, "defence" : 65, "special attack" : 98, "special defence" : 80, "speed" : 111 },
+		moveset : {},
+		friendship : 70,
+		"catch rate" : 45,
+		"gender ratio" : 0.5,
+		abilities : {
+			normal : ["Overgrow"],
+			hidden : "Tough Claws"
+		}
+	},
+	"Kikiwi (Okeno)" : {
+		types : ["Grass"],
+		experience : "fast",
+		"form(e)s" : null,
+		yield : {
+			experience : 50
+		},
+		stats : {"health" : 75, "attack" : 75, "defence" : 75, "special attack" : 75, "special defence" : 75, "speed" : 75 },
+		moveset : {},
+		friendship : 70,
+		"catch rate" : 45,
+		"gender ratio" : 0.5,
+		abilities : {
+			normal : ["Overgrow"],
+			hidden : "Tough Claws"
+		}
 	}
 };
+
 _method(Pokedex);
 
 forevery(Pokedex, function (poke, name) {

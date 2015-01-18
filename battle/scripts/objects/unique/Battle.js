@@ -68,8 +68,8 @@ Battle = FunctionObject.new({
 				return object[property] === to;
 			};
 		},
-		complexShape : function (shapes, right, y, shift) {
-			var context = Battle.canvas.getContext("2d"), current = { x : 0, y : 0 }, width = 0;
+		complexShape : function (canvas, shapes, right, y, shift) {
+			var context = canvas.getContext("2d"), current = { x : 0, y : 0 }, width = 0;
 			foreach(shapes, function (shape) {
 				if (shape.hasOwnProperty("points")) {
 					foreach(shape.points, function (point) {
@@ -87,7 +87,7 @@ Battle = FunctionObject.new({
 							current.x = point.x;
 						if (point.hasOwnProperty("y"))
 							current.y = point.y;
-						context.lineTo(Battle.canvas.width * (right ? 1 : 0) + (current.x - (width * (1 - shift))) * (right ? -1 : 1), y + current.y);
+						context.lineTo(canvas.width * (right ? 1 : 0) + (current.x * Game.zoom - (width * (1 - shift))) * (right ? -1 : 1), (y + current.y) * Game.zoom);
 					});
 					context.fill();
 				}
@@ -95,12 +95,12 @@ Battle = FunctionObject.new({
 					context.font = shape.font;
 					context.textAlign = shape.align.x;
 					context.textBaseline = shape.align.y;
-					context.fillText(shape.text, Battle.canvas.width * (right ? 1 : 0) + (shape.position.x - (width * (1 - shift))) * (right ? -1 : 1), y + shape.position.y);
+					context.fillText(shape.text, canvas.width * (right ? 1 : 0) + (shape.position.x * Game.zoom - (width * (1 - shift))) * (right ? -1 : 1), (y + shape.position.y) * Game.zoom);
 				}
 			});
 		},
-		partyBar : function (trainer, right, y) {
-			var context = Battle.canvas.getContext("2d");
+		partyBar : function (canvas, trainer, right, y) {
+			var context = canvas.getContext("2d");
 			var shapes = [
 				{
 					points : [{ x : 0, y : -8 }, { x : 102 }, { x : 118, y : 8 }, { x : 0 }],
@@ -108,21 +108,21 @@ Battle = FunctionObject.new({
 				}
 			];
 			var transition = 1 - trainer.display.position.x / -200;
-			Battle.drawing.complexShape(shapes, right, y, transition);
+			Battle.drawing.complexShape(canvas, shapes, right, y, transition);
 			for (var i = 0, pos; i < trainer.party.pokemon.length; ++ i) {
-				pos = (!right ? 0 : Battle.canvas.width) + (12 + i * 16 - 118 * (1 - transition)) * (!right ? 1 : -1);
+				pos = (!right ? 0 : canvas.width) + (12 + i * 16 - 118 * (1 - transition)) * Game.zoom * (!right ? 1 : -1);
 				context.fillStyle = "red";
-				context.fillCircle(pos, y, 4);
+				context.fillCircle(pos, y * Game.zoom, 4 * Game.zoom);
 				context.fillStyle = "white";
-				context.fillCircle(pos, y, 4, Math.PI);
+				context.fillCircle(pos, y * Game.zoom, 4 * Game.zoom, Math.PI);
 				if (trainer.party.pokemon[i].fainted()) {
 					context.fillStyle = "hsla(0, 0%, 0%, 0.3)";
-					context.fillCircle(pos, y, 4);
+					context.fillCircle(pos, y * Game.zoom, 4 * Game.zoom);
 				}
 			}
 		},
-		bar : function (poke, right, y, detailed) {
-			var context = Battle.canvas.getContext("2d"), pixelWidth = 16, percentageHealth = poke.health / poke.maximumHealth(), percentageExperience = poke.experience / poke.experienceFromLevelToNextLevel();
+		bar : function (canvas, poke, right, y, detailed) {
+			var context = canvas.getContext("2d"), pixelWidth = 16, percentageHealth = poke.health / poke.maximumHealth(), percentageExperience = poke.experience / poke.experienceFromLevelToNextLevel();
 			do {
 				context.font = pixelWidth + "px " + Settings._("font").typeface
 				pixelWidth -= 1;
@@ -137,7 +137,7 @@ Battle = FunctionObject.new({
 					position : { x : (78 + 20) / 2, y : (-16 + 6) / 2 },
 					align : { x : "center" , y : "middle" },
 					colour : "white",
-					font : Font.load(pixelWidth, null, "")
+					font : Font.load(pixelWidth * Game.zoom, null, "")
 				},
 				{
 					points : [{ x : 0, y : 6 }, { x : 148 - 148 * (1 - percentageHealth) }, { x : 144 - 148 * (1 - percentageHealth), y : 10 }, { x : 0 }],
@@ -148,14 +148,14 @@ Battle = FunctionObject.new({
 					position : { x : 4, y : -16 },
 					align : { x : (right ? "right" : "left") , y : "top" },
 					colour : "white",
-					font : Font.load(8)
+					font : Font.load(8 * Game.zoom)
 				},
 				{
 					text :  poke.level,
 					position : { x : 4, y : -8 },
 					align : { x : (right ? "right" : "left") , y : "top" },
 					colour : "white",
-					font : Font.load(10)
+					font : Font.load(10 * Game.zoom)
 				},
 			];
 			var gender = poke._("-> battler ~> transform => gender");
@@ -170,7 +170,7 @@ Battle = FunctionObject.new({
 						position : { x : (82 + 122) / 2, y : (-16 + 0) / 2 },
 						align : { x : "center", y : "middle" },
 						colour : (gender === "male" ? "hsl(195, 100%, 5%)" : "hsl(325, 100%, 40%)"),
-						font : Font.load(12)
+						font : Font.load(12 * Game.zoom)
 					}
 				]);
 			if (right) {
@@ -184,7 +184,7 @@ Battle = FunctionObject.new({
 						position : { x : (138 + 90) / 2, y : 22 },
 						align : { x : "center" , y : "bottom" },
 						colour : "white",
-						font : Font.load(8)
+						font : Font.load(8 * Game.zoom)
 					}
 				]);
 				if (Battle.kind !== Battles.kind.online) {
@@ -200,7 +200,7 @@ Battle = FunctionObject.new({
 					}
 				}
 			}
-			Battle.drawing.complexShape(shapes, right, y, poke.battler.display.transition);
+			Battle.drawing.complexShape(canvas, shapes, right, y, poke.battler.display.transition);
 		},
 		position : function (entity, display) {
 			var position;
@@ -2038,6 +2038,12 @@ Battle = FunctionObject.new({
 		}
 	}
 }, {
+	initialise : function () {
+		Battle.sketching = document.createElement("canvas");
+		Battle.sketching.width = Settings._("screen dimensions => width");
+		Battle.sketching.height = Settings._("screen dimensions => height");
+		Battle.sketching.getContext("2d").imageSmoothingEnabled = false;
+	},
 	update : function () {
 		if (Battle.active && Battle.state.kind === "opening") {
 			Battle.state.transition += 1 / (Time.framerate * Settings._("segue transition duration"));
@@ -2048,181 +2054,192 @@ Battle = FunctionObject.new({
 	},
 	drawing : {
 		canvas : {
-			width : Settings._("screen dimensions => width"),
-			height : Settings._("screen dimensions => height"),
+			width : Settings._("screen dimensions => width") * Game.zoom,
+			height : Settings._("screen dimensions => height") * Game.zoom,
 			selector : "#game-battle",
 			className : "centre",
 			smoothing : false
 		},
 		draw : function (canvas) {
-			var context = canvas.getContext("2d"), display = Display.state.current, now = performance.now();
+			var originalCanvas = canvas, drawAfterwards = [];
+			var canvas = Battle.sketching, context = canvas.getContext("2d"), display = Display.state.current, now = performance.now();
 			context.fillStyle = "black";
 			context.fillRect(0, 0, canvas.width, canvas.height);
-			if (Battle.state.kind === "inactive")
-				return;
-			if (Battle.state.kind === "loading") {
-				context.fillStyle = "hsl(0, 0%, 20%)";
-				context.fillRect(40, canvas.height / 2 - 10, canvas.width - 80, 20);
-				context.fillStyle = "hsl(0, 0%, 90%)";
-				context.fillRect(40, canvas.height / 2 - 10, (canvas.width - 80) * Battle.state.progress, 20);
-				context.textAlign = "center";
-				context.textBaseline = "middle";
-				context.font = "12px " + Settings._("font")
-				context.strokeStyle = "hsl(0, 0%, 90%)";
-				context.lineWidth = 5;
-				context.strokeText((Battle.state.progress * 100).toFixed(0) + "%", canvas.width / 2, canvas.height / 2);
-				context.fillStyle = "black";
-				context.fillText((Battle.state.progress * 100).toFixed(0) + "%", canvas.width / 2, canvas.height / 2);
-				if (Battle.state.failed.notEmpty()) {
-					context.textBaseline = "top";
+			if (Battle.state.kind !== "inactive") {
+				if (Battle.state.kind === "loading") {
+					context.fillStyle = "hsl(0, 0%, 20%)";
+					context.fillRect(40, canvas.height / 2 - 10, canvas.width - 80, 20);
 					context.fillStyle = "hsl(0, 0%, 90%)";
-					context.fillText("Failed to load " + Battle.state.failed.length + " file" + (Battle.state.failed.length !== 1 ? "s" : "") + ":", canvas.width / 2, canvas.height / 2 + 20 + 6);
-					context.fillStyle = "hsl(0, 0%, 50%)";
-					foreach(Battle.state.failed, function (failed, i) {
-						context.fillText(failed, canvas.width / 2, canvas.height / 2 + 20 + 6 + 16 * (i + 1));
-					});
-				}
-			} else if (Battle.state.kind === "evolution") {
-				var strips = 8, pan = (now / 500 % 1), distortion = 4;
-				for (var i = - distortion * 4, j; i < (strips + distortion * 4 + 1); ++ i) {
-					j = i - pan;
-					context.fillStyle = "hsl(" + Math.min(50, ((j / (strips)) * 50)) + ", 100%, " + (35 + (j / (strips)) * (60 - 35)) + "%)";
-					context.beginPath();
-					context.moveTo(0, canvas.height);
-					context.lineTo(0, Math.round((canvas.height / strips) * j));
-					context.quadraticCurveTo(canvas.width / 2, Math.round((canvas.height / strips) * j) - (j - strips / 2) * 10 * distortion, canvas.width, Math.round((canvas.height / strips) * j));
-					context.lineTo(canvas.width, canvas.height);
-					context.fill();
-				}
-				context.textAlign = "center";
-				context.textBaseline = "middle";
-				if (Battle.state.stage === "before" || Battle.state.stage === "preparation" || Battle.state.stage === "stopped")
-					Sprite.draw(canvas, Battle.state.evolving.paths.sprite("front"), canvas.width / 2, canvas.height / 2, true, null, null, now);
-				if (Battle.state.stage === "finishing" || Battle.state.stage === "after")
-					Sprite.draw(canvas, Battle.state.into.paths.sprite("front"), canvas.width / 2, canvas.height / 2, true, null, null, now);
-				if (Battle.state.stage === "preparation")
-					Battle.state.transition += 0.05;
-				if (Battle.state.stage === "evolving")
-					Battle.state.transition += 0.0025;
-				if (Battle.state.stage === "finishing")
-					Battle.state.transition -= 0.05;
-				if (Battle.state.stage === "preparation" && Battle.state.transition >= 2) {
-					Battle.state.stage = "evolving";
-					Battle.state.transition = 0;
-				}
-				if (Battle.state.stage === "evolving" && Battle.state.transition >= 1) {
-					Battle.state.stage = "finishing";
-					Battle.state.transition = 4;
-				}
-				if (Battle.state.stage === "finishing" && Battle.state.transition <= 0) {
-					Battle.state.stage = "after";
-					Battle.state.evolving.evolve(Battle.state.into._("species"));
-					Textbox.effect(function () {
-						Battle.continueEvolutions();
-					});
-				}
-				var transformationRate = Math.PI * Math.pow(2, Battle.state.transition * 7);
-				if (Battle.state.stage !== "after") {
-					var scale = 1, fade = 0;
-					if (Battle.state.stage === "preparation")
-						fade = Battle.state.transition;
-					if (Battle.state.stage === "evolving") {
-						fade = Math.sin(Battle.state.transition * (transformationRate / 2) + Math.PI * 0.25) >= 0 ? 1 : 0;
-						scale = 1 + Math.sin(Battle.state.transition * transformationRate) * 0.5;
-					}
-					Sprite.draw(canvas, Battle.state.evolving.paths.sprite("front"), canvas.width / 2, canvas.height / 2, true, [{ type : "fill", colour : "white" }, { type : "opacity", value : fade }], (new Matrix()).scale(scale).matrix, now);
-				}
-				if (Battle.state.stage !== "before" && Battle.state.stage !== "preparation") {
-					var scale = 1, fade = 0;
-					if (Battle.state.stage === "finishing")
-						fade = Battle.state.transition;
-					if (Battle.state.stage === "evolving") {
-						fade = Math.sin(Battle.state.transition * (transformationRate / 2) + Math.PI * 1.25) > 0 ? 1 : 0;
-						scale = 1 + Math.sin(Battle.state.transition * transformationRate) * 0.5;
-					}
-					Sprite.draw(canvas, Battle.state.into.paths.sprite("front"), canvas.width / 2, canvas.height / 2, true, [{ type : "fill", colour : "white" }, { type : "opacity", value : fade }], (new Matrix()).scale(scale).matrix, now);
-				}
-				if (Battle.state.stage !== "before" && Battle.state.stage !== "after" && Battle.state.stage !== "stopped") {
+					context.fillRect(40, canvas.height / 2 - 10, (canvas.width - 80) * Battle.state.progress, 20);
+					context.textAlign = "center";
+					context.textBaseline = "middle";
+					context.font = "12px " + Settings._("font")
+					context.strokeStyle = "hsl(0, 0%, 90%)";
+					context.lineWidth = 5;
+					context.strokeText((Battle.state.progress * 100).toFixed(0) + "%", canvas.width / 2, canvas.height / 2);
 					context.fillStyle = "black";
-					var enclose = 1;
-					if (Battle.state.stage === "preparation" || Battle.state.stage === "finishing")
-						enclose = Math.clamp(0, Battle.state.transition, 1);
-					context.fillRect(0, 0, canvas.width, canvas.height / 6 * enclose);
-					context.fillRect(0, canvas.height, canvas.width, - canvas.height / 6 * enclose);
-				}
-			} else {
-				Sprite.draw(canvas, "scenes/" + Battle.scene, 0, 0);
-				context.textAlign = "center";
-				context.textBaseline = "bottom";
-				context.lineWidth = 2;
-				context.strokeStyle = "white";
-				var shadowOpacity = Lighting.shadows.opacity(), shadowMatrix = new Matrix ([1, 0.1, -0.6, 0.4, 0, 0]), matrix = new Matrix(), position, transition, side;
-				var sortDisplay = Battle.cache || (Battle.cache = Display.states[Display.state.save(Display.state.current)]), poke;
-				var all = [].concat(sortDisplay.allies, sortDisplay.opponents.reverse()).filter(onlyPokemon).sort(function (a, b) {
-					return Battle.drawing.position(Display.pokemonInState(b)).z - Battle.drawing.position(Display.pokemonInState(a)).z;
-				});
-				// Pokémon
-				foreach(all, function (_poke) {
-					poke = Display.pokemonInState(_poke);
-					side = (poke.battler.side === Battles.side.near ? "back" : "front");
-					position = Battle.drawing.position(poke);
-					context.lineWidth = position.scale * 2;
-					transition = (poke.fainted() ? 1 : poke.battler.display.transition);
-					// Shadow
-					Sprite.draw(canvas, poke.paths.sprite(side), position.x, position.y - position.z + poke.battler.display.position.y, true, [{ type : "fill", colour : "hsla(0, 0%, 0%, " + shadowOpacity + ")" }, { type : "crop", heightRatio : poke.battler.display.height }], shadowMatrix.scale(position.scale * transition).scale(Math.pow(2, -poke.battler.display.position.y / 100)).matrix, now);
-					// Outline
-					if (poke.battler.display.outlined) {
-						for (var angle = 0; angle < Math.PI * 2; angle += Math.PI / 2) {
-							Sprite.draw(canvas, poke.paths.sprite(side), position.x + Math.cos(angle) * context.lineWidth, position.y - position.z + Math.sin(angle) * context.lineWidth, true, [{ type : "fill", colour : context.strokeStyle }, { type : "crop", heightRatio : poke.battler.display.height }], matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix, now);
-						}
+					context.fillText((Battle.state.progress * 100).toFixed(0) + "%", canvas.width / 2, canvas.height / 2);
+					if (Battle.state.failed.notEmpty()) {
+						context.textBaseline = "top";
+						context.fillStyle = "hsl(0, 0%, 90%)";
+						context.fillText("Failed to load " + Battle.state.failed.length + " file" + (Battle.state.failed.length !== 1 ? "s" : "") + ":", canvas.width / 2, canvas.height / 2 + 20 + 6);
+						context.fillStyle = "hsl(0, 0%, 50%)";
+						foreach(Battle.state.failed, function (failed, i) {
+							context.fillText(failed, canvas.width / 2, canvas.height / 2 + 20 + 6 + 16 * (i + 1));
+						});
 					}
+				} else if (Battle.state.kind === "evolution") {
+					var strips = 8, pan = (now / 500 % 1), distortion = 4;
+					for (var i = - distortion * 4, j; i < (strips + distortion * 4 + 1); ++ i) {
+						j = i - pan;
+						context.fillStyle = "hsl(" + Math.min(50, ((j / (strips)) * 50)) + ", 100%, " + (35 + (j / (strips)) * (60 - 35)) + "%)";
+						context.beginPath();
+						context.moveTo(0, canvas.height);
+						context.lineTo(0, Math.round((canvas.height / strips) * j));
+						context.quadraticCurveTo(canvas.width / 2, Math.round((canvas.height / strips) * j) - (j - strips / 2) * 10 * distortion, canvas.width, Math.round((canvas.height / strips) * j));
+						context.lineTo(canvas.width, canvas.height);
+						context.fill();
+					}
+					context.textAlign = "center";
+					context.textBaseline = "middle";
+					if (Battle.state.stage === "before" || Battle.state.stage === "preparation" || Battle.state.stage === "stopped")
+						Sprite.draw(canvas, Battle.state.evolving.paths.sprite("front"), canvas.width / 2, canvas.height / 2, true, null, null, now);
+					if (Battle.state.stage === "finishing" || Battle.state.stage === "after")
+						Sprite.draw(canvas, Battle.state.into.paths.sprite("front"), canvas.width / 2, canvas.height / 2, true, null, null, now);
+					if (Battle.state.stage === "preparation")
+						Battle.state.transition += 0.05;
+					if (Battle.state.stage === "evolving")
+						Battle.state.transition += 0.0025;
+					if (Battle.state.stage === "finishing")
+						Battle.state.transition -= 0.05;
+					if (Battle.state.stage === "preparation" && Battle.state.transition >= 2) {
+						Battle.state.stage = "evolving";
+						Battle.state.transition = 0;
+					}
+					if (Battle.state.stage === "evolving" && Battle.state.transition >= 1) {
+						Battle.state.stage = "finishing";
+						Battle.state.transition = 4;
+					}
+					if (Battle.state.stage === "finishing" && Battle.state.transition <= 0) {
+						Battle.state.stage = "after";
+						Battle.state.evolving.evolve(Battle.state.into._("species"));
+						Textbox.effect(function () {
+							Battle.continueEvolutions();
+						});
+					}
+					var transformationRate = Math.PI * Math.pow(2, Battle.state.transition * 7);
+					if (Battle.state.stage !== "after") {
+						var scale = 1, fade = 0;
+						if (Battle.state.stage === "preparation")
+							fade = Battle.state.transition;
+						if (Battle.state.stage === "evolving") {
+							fade = Math.sin(Battle.state.transition * (transformationRate / 2) + Math.PI * 0.25) >= 0 ? 1 : 0;
+							scale = 1 + Math.sin(Battle.state.transition * transformationRate) * 0.5;
+						}
+						Sprite.draw(canvas, Battle.state.evolving.paths.sprite("front"), canvas.width / 2, canvas.height / 2, true, [{ type : "fill", colour : "white" }, { type : "opacity", value : fade }], (new Matrix()).scale(scale).matrix, now);
+					}
+					if (Battle.state.stage !== "before" && Battle.state.stage !== "preparation") {
+						var scale = 1, fade = 0;
+						if (Battle.state.stage === "finishing")
+							fade = Battle.state.transition;
+						if (Battle.state.stage === "evolving") {
+							fade = Math.sin(Battle.state.transition * (transformationRate / 2) + Math.PI * 1.25) > 0 ? 1 : 0;
+							scale = 1 + Math.sin(Battle.state.transition * transformationRate) * 0.5;
+						}
+						Sprite.draw(canvas, Battle.state.into.paths.sprite("front"), canvas.width / 2, canvas.height / 2, true, [{ type : "fill", colour : "white" }, { type : "opacity", value : fade }], (new Matrix()).scale(scale).matrix, now);
+					}
+					if (Battle.state.stage !== "before" && Battle.state.stage !== "after" && Battle.state.stage !== "stopped") {
+						context.fillStyle = "black";
+						var enclose = 1;
+						if (Battle.state.stage === "preparation" || Battle.state.stage === "finishing")
+							enclose = Math.clamp(0, Battle.state.transition, 1);
+						context.fillRect(0, 0, canvas.width, canvas.height / 6 * enclose);
+						context.fillRect(0, canvas.height, canvas.width, - canvas.height / 6 * enclose);
+					}
+				} else {
+					Sprite.draw(canvas, "scenes/" + Battle.scene, 0, 0);
+					context.textAlign = "center";
+					context.textBaseline = "bottom";
+					context.lineWidth = 2;
+					context.strokeStyle = "white";
+					var shadowOpacity = Lighting.shadows.opacity(), shadowMatrix = new Matrix ([1, 0.1, -0.6, 0.4, 0, 0]), matrix = new Matrix(), position, transition, side;
+					var sortDisplay = Battle.cache || (Battle.cache = Display.states[Display.state.save(Display.state.current)]), poke;
+					var all = [].concat(sortDisplay.allies, sortDisplay.opponents.reverse()).filter(onlyPokemon).sort(function (a, b) {
+						return Battle.drawing.position(Display.pokemonInState(b)).z - Battle.drawing.position(Display.pokemonInState(a)).z;
+					});
 					// Pokémon
-					Sprite.draw(canvas, poke.paths.sprite(side), position.x, position.y - position.z, true, { type : "crop", heightRatio : poke.battler.display.height }, matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix, now);
-					// Lighting
-					if (Scenes._(Battle.scene).hasOwnProperty("lighting"))
-						Sprite.draw(canvas, poke.paths.sprite(side), position.x, position.y - position.z, true, [{ type : "fill", colour : Scenes._(Battle.scene).lighting }, { type : "crop", heightRatio : poke.battler.display.height }], matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix, now);
-					// Glow / Fade
-					if (transition > 0 && transition < 1)
-						Sprite.draw(canvas, poke.paths.sprite(side), position.x, position.y - position.z, true, [{ type : "fill", colour : "white" }, { type : "opacity", value : Math.pow(1 - transition, 0.4) }, { type : "crop", heightRatio : poke.battler.display.height }], matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix, now);
-				});
-				// Trainers
-				foreach(Battle.allTrainers(), function (trainer) {
-					if (trainer !== TheWild && trainer.display.visible) {
-						position = Battle.drawing.position(trainer);
-						side = (Battle.alliedTrainers.contains(trainer) ? "back" : null);
+					foreach(all, function (_poke) {
+						poke = Display.pokemonInState(_poke);
+						side = (poke.battler.side === Battles.side.near ? "back" : "front");
+						position = Battle.drawing.position(poke);
+						context.lineWidth = position.scale * 2;
+						transition = (poke.fainted() ? 1 : poke.battler.display.transition);
 						// Shadow
-						Sprite.draw(canvas, trainer.paths.sprite(side), position.x, position.y - position.z + trainer.display.position.y, true, { type : "fill", colour : "hsla(0, 0%, 0%, " + shadowOpacity + ")" }, shadowMatrix.scale(position.scale).scale(Math.pow(2, -trainer.display.position.y / 100)).matrix, now);
-						// Trainer
-						Sprite.draw(canvas, trainer.paths.sprite(side), position.x, position.y - position.z, true, null, matrix.scale(position.scale).matrix, now);
+						Sprite.draw(canvas, poke.paths.sprite(side), position.x, position.y - position.z + poke.battler.display.position.y, true, [{ type : "fill", colour : "hsla(0, 0%, 0%, " + shadowOpacity + ")" }, { type : "crop", heightRatio : poke.battler.display.height }], shadowMatrix.scale(position.scale * transition).scale(Math.pow(2, -poke.battler.display.position.y / 100)).matrix, now);
+						// Outline
+						if (poke.battler.display.outlined) {
+							for (var angle = 0; angle < Math.PI * 2; angle += Math.PI / 2) {
+								Sprite.draw(canvas, poke.paths.sprite(side), position.x + Math.cos(angle) * context.lineWidth, position.y - position.z + Math.sin(angle) * context.lineWidth, true, [{ type : "fill", colour : context.strokeStyle }, { type : "crop", heightRatio : poke.battler.display.height }], matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix, now);
+							}
+						}
+						// Pokémon
+						Sprite.draw(canvas, poke.paths.sprite(side), position.x, position.y - position.z, true, { type : "crop", heightRatio : poke.battler.display.height }, matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix, now);
 						// Lighting
 						if (Scenes._(Battle.scene).hasOwnProperty("lighting"))
-							Sprite.draw(canvas, trainer.paths.sprite(side), position.x, position.y - position.z, true, { type : "fill", colour : Scenes._(Battle.scene).lighting }, matrix.scale(position.scale).matrix, now);
-					}
-				});
-				if (sortDisplay.allies.length === 0 || sortDisplay.opponents.length === 0) {
+							Sprite.draw(canvas, poke.paths.sprite(side), position.x, position.y - position.z, true, [{ type : "fill", colour : Scenes._(Battle.scene).lighting }, { type : "crop", heightRatio : poke.battler.display.height }], matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix, now);
+						// Glow / Fade
+						if (transition > 0 && transition < 1)
+							Sprite.draw(canvas, poke.paths.sprite(side), position.x, position.y - position.z, true, [{ type : "fill", colour : "white" }, { type : "opacity", value : Math.pow(1 - transition, 0.4) }, { type : "crop", heightRatio : poke.battler.display.height }], matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix, now);
+					});
+					// Trainers
 					foreach(Battle.allTrainers(), function (trainer) {
-						if (trainer.display.visible) {
-							Battle.drawing.partyBar(trainer, Battle.alliedTrainers.contains(trainer), Battle.alliedTrainers.contains(trainer) ? 120 : 30);
+						if (trainer !== TheWild && trainer.display.visible) {
+							position = Battle.drawing.position(trainer);
+							side = (Battle.alliedTrainers.contains(trainer) ? "back" : null);
+							// Shadow
+							Sprite.draw(canvas, trainer.paths.sprite(side), position.x, position.y - position.z + trainer.display.position.y, true, { type : "fill", colour : "hsla(0, 0%, 0%, " + shadowOpacity + ")" }, shadowMatrix.scale(position.scale).scale(Math.pow(2, -trainer.display.position.y / 100)).matrix, now);
+							// Trainer
+							Sprite.draw(canvas, trainer.paths.sprite(side), position.x, position.y - position.z, true, null, matrix.scale(position.scale).matrix, now);
+							// Lighting
+							if (Scenes._(Battle.scene).hasOwnProperty("lighting"))
+								Sprite.draw(canvas, trainer.paths.sprite(side), position.x, position.y - position.z, true, { type : "fill", colour : Scenes._(Battle.scene).lighting }, matrix.scale(position.scale).matrix, now);
 						}
 					});
-				}
-				// Weather effects
-				if (Settings._("visual weather effects") || display.flags.weather)
-					Weather.draw(context);
-				// Status bars
-				foreach(display.opponents, function (poke, place) {
-					if (poke !== NoPokemon)
-						Battle.drawing.bar(poke, false, 30 + 34 * place);
-				});
-				foreach(display.allies, function (poke, place) {
-					if (poke !== NoPokemon)
-						Battle.drawing.bar(poke, true, 120 + 42 * place, true);
-				});
-				if (Battle.state.kind === "opening") {
-					context.fillStyle = "hsla(0, 0%, 0%, " + (1 - Math.clamp(0, Battle.state.transition, 1)).toFixed(3) + ")";
-					context.fillRect(0, 0, canvas.width, canvas.height);
+					if (sortDisplay.allies.length === 0 || sortDisplay.opponents.length === 0) {
+						foreach(Battle.allTrainers(), function (trainer) {
+							if (trainer !== TheWild && trainer.display.visible) {
+								drawAfterwards.push(function (canvas) {
+									Battle.drawing.partyBar(canvas, trainer, Battle.alliedTrainers.contains(trainer), Battle.alliedTrainers.contains(trainer) ? 120 : 30);
+								});
+							}
+						});
+					}
+					// Weather effects
+					if (Settings._("visual weather effects") || display.flags.weather)
+						Weather.draw(context);
+					// Status bars
+					foreach(display.opponents, function (poke, place) {
+						if (poke !== NoPokemon)
+							drawAfterwards.push(function (canvas) {
+								Battle.drawing.bar(canvas, poke, false, 30 + 34 * place);
+							});
+					});
+					foreach(display.allies, function (poke, place) {
+						if (poke !== NoPokemon)
+							drawAfterwards.push(function (canvas) {
+								Battle.drawing.bar(canvas, poke, true, 120 + 42 * place, true);
+							});
+					});
+					if (Battle.state.kind === "opening") {
+						context.fillStyle = "hsla(0, 0%, 0%, " + (1 - Math.clamp(0, Battle.state.transition, 1)).toFixed(3) + ")";
+						context.fillRect(0, 0, canvas.width, canvas.height);
+					}
 				}
 			}
+			originalCanvas.getContext("2d").drawImage(Battle.sketching, 0, 0, originalCanvas.width, originalCanvas.height);
+			foreach(drawAfterwards, function (drawing) {
+				drawing(originalCanvas);
+			});
 		}
 	}
 });

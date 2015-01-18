@@ -303,7 +303,7 @@ Font = {
 			size += "px";
 		return (style || "") + " " + (weight || Settings._("font").weight) + " " + size + " " + (typeface || Settings._("font").typeface);
 	},
-	loadFromStyle : function (style) {
-		return Font.load(style.size, style.weight, style.style);
+	loadFromStyle : function (style, zoom) {
+		return Font.load(style.size * (arguments.length >= 2 ? zoom : 1), style.weight, style.style);
 	}
 };
