@@ -187,9 +187,10 @@ Move = {
 			if (stateEffect !== null) {
 				Textbox.remove(mover);
 				battler.resetDisplay(mover.battler);
-				foreach(affected, function (targeted) {
-					battler.resetDisplay(targeted.battler);
-				});
+				// Currently commented out because it resets Dive / Dig / etc.
+				// foreach(affected, function (targeted) {
+				// 	battler.resetDisplay(targeted.battler);
+				// });
 				displayRendered = Display.state.save();
 				Textbox.effect(function () { Display.state.load(displayRendered); });
 			}

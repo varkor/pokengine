@@ -1201,14 +1201,16 @@ Battle = FunctionObject.new({
 			if (!effect.target.battler.battling) {
 				deletion.push(i);
 			} else if ((effect.repeating && effect.due === Battles.when.endOfTurn) || (!effect.repeating && Battle.turns >= Math.floor(effect.due))) {
-				if (!effect.expired) {
-					if (effect.hasOwnProperty("data"))
-						effect.type(effect.target, effect.data);
-					else
-						effect.type(effect.target);
+				if (!effect.target.fainted()) {
+					if (!effect.expired) {
+						if (effect.hasOwnProperty("data"))
+							effect.type(effect.target, effect.data);
+						else
+							effect.type(effect.target);
+					}
+					if (!effect.repeating)
+						deletion.push(i);
 				}
-				if (!effect.repeating)
-					deletion.push(i);
 			}
 		});
 		Battle.survey();
@@ -1250,6 +1252,7 @@ Battle = FunctionObject.new({
 			poke.battler.damaged[Move.category.physical] = 0;
 			poke.battler.damaged[Move.category.special] = 0;
 		});
+		Battle.survey();
 		Battle.display.weather = true;
 		var displayWeather = Display.state.save(), displayAfterWeather;
 		Textbox.effect(function () { Display.state.load(displayWeather); });
@@ -1297,6 +1300,7 @@ Battle = FunctionObject.new({
 		Battle.display.weather = false;
 		displayAfterWeather = Display.state.save();
 		Textbox.effect(function () { Display.state.load(displayAfterWeather); });
+		Battle.survey();
 		Battle.fillEmptyPlaces(true); // Fill the player's empty places
 	},
 	fillEmptyPlaces : function (player) {
@@ -1534,19 +1538,35 @@ Battle = FunctionObject.new({
 			This means that fainting happens when all Pokémon have been damaged, rather than after each individual effect of damage
 			has been dealt out.
 		*/
-		var cleanedUp = false;
-		foreach(Battle.all(true), function (poke) {
-			if (poke.fainted()) {
-				poke.battler.display.transition = 0;
-				poke.battler.display.height = 0;
-				var displayFaint = Display.state.save();
-				Textbox.state(poke.name() + " fainted!", function () { return Display.state.transition(displayFaint); });
-				poke.alterFriendship(-1);
-				Battle.removeFromBattle(poke);
-				cleanedUp = true;
+		if (!Battle.finished) {
+			var cleanedUp = false, drawnBattle = !Battle.alliedTrainers.first().hasHealthyPokemon() && !Battle.opposingTrainers.first().hasHealthyPokemon();
+			foreach(Battle.all(true), function (poke) {
+				if (poke.fainted()) {
+					poke.battler.display.transition = 0;
+					poke.battler.display.height = 0;
+					var displayFaint = Display.state.save();
+					Textbox.state(poke.name() + " fainted!", function () { return Display.state.transition(displayFaint); });
+					poke.alterFriendship(-1);
+					Battle.removeFromBattle(poke, drawnBattle);
+					cleanedUp = true;
+				}
+			});
+			if (drawnBattle) {
+				if (Battle.opposingTrainers.contains(TheWild)) {
+					Textbox.state(Battle.alliedTrainers[0].pronoun(true) + " defeated the wild Pokémon, but at heavy costs...");
+				} else {
+					Textbox.state("What?! There aren't any Pokémon left to fight!");
+					Textbox.state("The battle is a complete draw!");
+				}
+				Textbox.effect(function () {
+					Battle.end();
+				});
+				Battle.finish();
 			}
-		});
-		return cleanedUp;
+			return cleanedUp;
+		} else {
+			return false;
+		}
 	},
 	heal : function (poke, amount, cause) {
 		if (amount < 0)
@@ -1666,7 +1686,7 @@ Battle = FunctionObject.new({
 		}
 		return caught;
 	},
-	removeFromBattle : function (poke) {
+	removeFromBattle : function (poke, drawnBattle) {
 		// Stops a Pokémon battling, either because they've fainted, or because they've been caught in a Poké ball
 		if (Battle.kind !== Battles.kind.online) {
 			foreach(poke.battler.opponents, function (gainer) {
@@ -1693,68 +1713,70 @@ Battle = FunctionObject.new({
 					opponents.push(opposer.fullname());
 				});
 			}
-			if (playerHasBeenDefeated) {
-				if (trainerBattle)
-					Textbox.state(opponents + " " + (opponents.length !== 1 ? "have" : "has") + " defeated " + playerName + "!");
-				else
-					Textbox.state(playerName + " " + (poke.trainer === Game.player ? "have" : "has") + " been defeated by the wild Pokémon!");
-				if (Battle.kind !== Battles.kind.online) {
-					var highestLevel = 0;
-					foreach(poke.trainer.party.pokemon, function (pkmn) {
-						if (pkmn.level > highestLevel)
-							highestLevel = pkmn.level;
-					});
-					var basePayout;
-					switch (Math.min(8, poke.trainer.badges.length)) { // May have greater than 8 badges due to multiple regions
-						case 0: basePayout = 8; break;
-						case 1: basePayout = 16; break;
-						case 2: basePayout = 24; break;
-						case 3: basePayout = 36; break;
-						case 4: basePayout = 48; break;
-						case 5: basePayout = 64; break;
-						case 6: basePayout = 80; break;
-						case 7: basePayout = 100; break;
-						case 8: basePayout = 120; break;
-					}
-					var priceOfDefeat = highestLevel * basePayout;
-					if (poke.trainer.money > 0) {
-						priceOfDefeat = Math.min(priceOfDefeat, poke.trainer.money);
-						Textbox.state(playerName + " " + (trainerBattle ? "paid out" : "dropped") + " $" + priceOfDefeat + " " + (trainerBattle ? "to " + commaSeparatedList(opponents) : "in " + poke.trainer.possessiveGenderPronoun() + " panic to get away") + ".");
-						Battle.alliedTrainers.first().money -= priceOfDefeat;
-					} else if (trainerBattle) {
-						Textbox.state(playerName + " didn't have any money to pay " + opponents + "!");
-					}
-					Textbox.state(playerName + " blacked out!");
-				}
-			} else {
-				Textbox.state(playerName + " " + (Battle.alliedTrainers.first() !== Game.player ? "has" : "have") + " defeated " + (trainerBattle ? opponents : "the wild Pokémon") + "!");
-				if (Battle.kind !== Battles.kind.online) {
-					if (trainerBattle) {
-						foreach(Battle.opposingTrainers, function (opposer, i) {
-							Textbox.effect(function () {
-								poke.trainer.display.visible = true;
-							}, Battle.drawing.transition(poke.trainer.display.position, "x", 0, Settings._("switch transition duration") * Time.framerate));
-							Textbox.spiel(opposer._("defeat speech"));
-							if (i !== Battle.opposingTrainers.length - 1) {
-								Textbox.effect(null, Battle.drawing.transition(poke.trainer.display.position, "x", -200, Settings._("switch transition duration") * Time.framerate), function () {
-									poke.trainer.display.visible = false;
-								});
-							}
+			if (!drawnBattle) {
+				if (playerHasBeenDefeated) {
+					if (trainerBattle)
+						Textbox.state(opponents + " " + (opponents.length !== 1 ? "have" : "has") + " defeated " + playerName + "!");
+					else
+						Textbox.state(playerName + " " + (poke.trainer === Game.player ? "have" : "has") + " been defeated by the wild Pokémon!");
+					if (Battle.kind !== Battles.kind.online) {
+						var highestLevel = 0;
+						foreach(poke.trainer.party.pokemon, function (pkmn) {
+							if (pkmn.level > highestLevel)
+								highestLevel = pkmn.level;
 						});
-						var prizeMoney = 0;
-						foreach(Battle.opposingTrainers, function (opposer) {
-							prizeMoney += opposer.party.pokemon.last().level * Classes[opposer.class].payout;
-						});
-						Textbox.state(opponents + " paid " + Battle.alliedTrainers.first().pronoun(false) + " $" + prizeMoney + " as a reward.");
-						Battle.alliedTrainers.first().money += prizeMoney;
+						var basePayout;
+						switch (Math.min(8, poke.trainer.badges.length)) { // May have greater than 8 badges due to multiple regions
+							case 0: basePayout = 8; break;
+							case 1: basePayout = 16; break;
+							case 2: basePayout = 24; break;
+							case 3: basePayout = 36; break;
+							case 4: basePayout = 48; break;
+							case 5: basePayout = 64; break;
+							case 6: basePayout = 80; break;
+							case 7: basePayout = 100; break;
+							case 8: basePayout = 120; break;
+						}
+						var priceOfDefeat = highestLevel * basePayout;
+						if (poke.trainer.money > 0) {
+							priceOfDefeat = Math.min(priceOfDefeat, poke.trainer.money);
+							Textbox.state(playerName + " " + (trainerBattle ? "paid out" : "dropped") + " $" + priceOfDefeat + " " + (trainerBattle ? "to " + commaSeparatedList(opponents) : "in " + poke.trainer.possessiveGenderPronoun() + " panic to get away") + ".");
+							Battle.alliedTrainers.first().money -= priceOfDefeat;
+						} else if (trainerBattle) {
+							Textbox.state(playerName + " didn't have any money to pay " + opponents + "!");
+						}
+						Textbox.state(playerName + " blacked out!");
+					}
+				} else {
+					Textbox.state(playerName + " " + (Battle.alliedTrainers.first() !== Game.player ? "has" : "have") + " defeated " + (trainerBattle ? opponents : "the wild Pokémon") + "!");
+					if (Battle.kind !== Battles.kind.online) {
+						if (trainerBattle) {
+							foreach(Battle.opposingTrainers, function (opposer, i) {
+								Textbox.effect(function () {
+									poke.trainer.display.visible = true;
+								}, Battle.drawing.transition(poke.trainer.display.position, "x", 0, Settings._("switch transition duration") * Time.framerate));
+								Textbox.spiel(opposer._("defeat speech"));
+								if (i !== Battle.opposingTrainers.length - 1) {
+									Textbox.effect(null, Battle.drawing.transition(poke.trainer.display.position, "x", -200, Settings._("switch transition duration") * Time.framerate), function () {
+										poke.trainer.display.visible = false;
+									});
+								}
+							});
+							var prizeMoney = 0;
+							foreach(Battle.opposingTrainers, function (opposer) {
+								prizeMoney += opposer.party.pokemon.last().level * Classes[opposer.class].payout;
+							});
+							Textbox.state(opponents + " paid " + Battle.alliedTrainers.first().pronoun(false) + " $" + prizeMoney + " as a reward.");
+							Battle.alliedTrainers.first().money += prizeMoney;
+						}
 					}
 				}
+				Textbox.effect(function () {
+					Battle.end();
+				});
+				Battle.finish();
+				return;
 			}
-			Textbox.effect(function () {
-				Battle.end();
-			});
-			Battle.finish();
-			return;
 		}
 	},
 	swap : function (out, replacement, forced) {
@@ -2231,8 +2253,10 @@ Battle = FunctionObject.new({
 							});
 					});
 					if (Battle.state.kind === "opening") {
-						context.fillStyle = "hsla(0, 0%, 0%, " + (1 - Math.clamp(0, Battle.state.transition, 1)).toFixed(3) + ")";
-						context.fillRect(0, 0, canvas.width, canvas.height);
+						drawAfterwards.push(function (canvas) {
+							context.fillStyle = "hsla(0, 0%, 0%, " + (1 - Math.clamp(0, Battle.state.transition, 1)).toFixed(3) + ")";
+							context.fillRect(0, 0, canvas.width, canvas.height);
+						});
 					}
 				}
 			}

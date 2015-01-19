@@ -199,15 +199,15 @@
 							"party" : Interface.buildParty(),
 							"money" : 10000
 						}));
-						Battle.beginWildBattle(Game.player, [new pokemon({
+						/*Battle.beginWildBattle(Game.player, [new pokemon({
 							species : "Bulbasaur (Nintendo)",
 							level : 20,
 							moves : [{ move : "Tackle" }]
 						}), new pokemon({
 							species : "Ivysaur (Nintendo)",
 							level : 50
-						})], Interface.buildSettings());
-						/*Battle.beginTrainerBattle(Game.player, new trainer({
+						})], Interface.buildSettings());*/
+						Battle.beginTrainerBattle(Game.player, new trainer({
 							"name" : "Roger",
 							"class" : "Ace Trainer",
 							"game" : "B2W2",
@@ -226,7 +226,7 @@
 									level : 5
 								})
 							]
-						}), Interface.buildSettings());*/
+						}), Interface.buildSettings());
 					}, true);
 				});
 
