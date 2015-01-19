@@ -172,7 +172,7 @@ Client = {
 	connect : function (as) {
 		if (!Client.connected && !Client.connecting) {
 			Client.connecting = true;
-			Client.socket = new WebSocket("ws://pokengine.org:9008/");
+			Client.socket = new WebSocket("ws://pokengine.org:9876/");
 			console.log("%cConnecting to the server...", "color : hsl(50, 100%, 40%)");
 			Client.socket.addEventListener("open", function () {
 				console.log("%cConnected to the server.", "color : hsl(110, 100%, 40%)");

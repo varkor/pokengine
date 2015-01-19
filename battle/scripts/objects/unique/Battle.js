@@ -87,7 +87,7 @@ Battle = FunctionObject.new({
 							current.x = point.x;
 						if (point.hasOwnProperty("y"))
 							current.y = point.y;
-						context.lineTo(canvas.width * (right ? 1 : 0) + (current.x * Game.zoom - (width * (1 - shift))) * (right ? -1 : 1), (y + current.y) * Game.zoom);
+						context.lineTo(canvas.width * (right ? 1 : 0) + ((current.x - (width * (1 - shift))) * Game.zoom) * (right ? -1 : 1), (y + current.y) * Game.zoom);
 					});
 					context.fill();
 				}
@@ -95,7 +95,7 @@ Battle = FunctionObject.new({
 					context.font = shape.font;
 					context.textAlign = shape.align.x;
 					context.textBaseline = shape.align.y;
-					context.fillText(shape.text, canvas.width * (right ? 1 : 0) + (shape.position.x * Game.zoom - (width * (1 - shift))) * (right ? -1 : 1), (y + shape.position.y) * Game.zoom);
+					context.fillText(shape.text, canvas.width * (right ? 1 : 0) + ((shape.position.x - (width * (1 - shift))) * Game.zoom) * (right ? -1 : 1), (y + shape.position.y) * Game.zoom);
 				}
 			});
 		},

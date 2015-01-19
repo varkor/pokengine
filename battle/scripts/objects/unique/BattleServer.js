@@ -147,17 +147,17 @@ exports.BattleServer = {
 				break;
 			case "actions":
 				exports.BattleServer.battles.forEach(function (battle) {
-					if (Battle.clientA.client === from) {
+					if (battle.clientA.client === from) {
 						exports.BattleServer.send({
 							action : "actions",
 							actions : message.actions
-						}, Battle.clientB.client);
+						}, battle.clientB.client);
 						return;
-					} else if (Battle.clientB.client === from) {
+					} else if (battle.clientB.client === from) {
 						exports.BattleServer.send({
 							action : "actions",
 							actions : message.actions
-						}, Battle.clientA.client);
+						}, battle.clientA.client);
 						return;
 					}
 				});
