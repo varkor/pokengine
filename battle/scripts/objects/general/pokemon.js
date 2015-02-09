@@ -252,11 +252,26 @@ function pokemon (data, validate) {
 	}
 
 	self.paths = {
+		convert : function (contracted, includeFiletype, which) {
+			var region = self.currentSpecies().match(/ \(\w+\)$/).first().match(/\w+/).first(), name = self.currentSpecies().replace(/ \(\w+\)$/, "");
+			contracted = contracted.replace("{region}", region);
+			contracted = contracted.replace("{species}", name);
+			contracted = contracted.replace("{which}", (which ? "~" + which : ""));
+			contracted = contracted.replace(/\{filetype=[a-z0-9]+\}/, (includeFiletype ? "." + contracted.match(/\{filetype=([a-z0-9]+)\}/)[1] : ""));
+			if (typeof Dex !== "undefined") {
+				// Compatibility with pokéngine
+				var IDs = Dex.getPokemonByName(name + "," + region);
+				contracted = contracted.replace("{region-id}", IDs.dex);
+				contracted = contracted.replace("{species-id}", IDs.id);
+			}
+			contracted = contracted.replace("{side}", which ? "back" : "front");
+			return contracted;
+		},
 		sprite : function (which, includeFiletype) {
-			return "pokemon/" + self.currentSpecies().match(/ \(\w+\)$/).first().match(/\w+/).first() + "/" + self.currentSpecies().replace(/ \(\w+\)$/, "") + (which ? "~" + which : "") + (includeFiletype ? ".png" : "");
+			return self.paths.convert(Settings._("paths => Pokemon => image"), includeFiletype, which);
 		},
 		cry : function (includeFiletype) {
-			return "pokemon/" + self.currentSpecies().match(/ \(\w+\)$/).first().match(/\w+/).first() + "/" + self.currentSpecies().replace(/ \(\w+\)$/, "") + (includeFiletype ? ".mp3" : "");
+			return self.paths.convert(Settings._("paths => Pokemon => sound"), includeFiletype);
 		}
 	};
 

@@ -18,6 +18,7 @@ function trainer (data) {
 	setProperty("party", []);
 	setProperty("nationality", "British");
 	setProperty("bag", []);
+	setProperty("dex", (new dex()).store());
 	setProperty("badges", []);
 	// Player properties
 	setProperty("money", 0);
@@ -32,6 +33,7 @@ function trainer (data) {
 	foreach(self.party.pokemon, function (poke) {
 		poke.belong(self);
 	});
+	self.dex = new dex(self.dex);
 	self.bag = new bag(self.bag);
 	self.type = Trainers.type.NPC;
 	self.team = Game.unique();
@@ -91,9 +93,7 @@ function trainer (data) {
 			Gives the player a Pokémon, ensuring it now has the correct trainer details.
 		*/
 		poke.belong(self);
-		if (self === Game.player) {
-			Dex.capture(poke.species);
-		}
+		self.dex.capture(poke.species);
 		if (self.party.pokemon.length < self.party.space)
 			self.party.add(poke);
 		else if (self === Game.player) {

@@ -163,7 +163,7 @@ Math.clamp = function (lowest, value, highest) {
 };
 
 Math.mod = function (x, y) {
-	return x >= 0 ? x % y : y + (x % y);
+	return ((x % y) + y) % y;
 };
 
 function commaSeparatedList (list, ampersand) {

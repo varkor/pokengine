@@ -1638,15 +1638,15 @@ Battle = FunctionObject.new({
 		}
 		var modifiedCatchRate = (((3 * poke.maximumHealth() - 2 * poke.health) * modifiers.species * modifiers.ball) / (3 * poke.maximumHealth())) * modifiers.status, shakeProbability = 65536 / Math.pow(255 / modifiedCatchRate, 1 / 4), caught = true;
 		var criticalCaptureChance = modifiedCatchRate, criticalCapture = false;
-		if (Dex.caught.length > 600)
+		if (trainer.dex.caught.length > 600)
 			criticalCaptureChance *= 2.5;
-		else if (Dex.caught.length > 450)
+		else if (trainer.dex.caught.length > 450)
 			criticalCaptureChance *= 2;
-		else if (Dex.caught.length > 300)
+		else if (trainer.dex.caught.length > 300)
 			criticalCaptureChance *= 1.5;
-		else if (Dex.caught.length > 150)
+		else if (trainer.dex.caught.length > 150)
 			criticalCaptureChance *= 1;
-		else if (Dex.caught.length > 30)
+		else if (trainer.dex.caught.length > 30)
 			criticalCaptureChance *= 0.5;
 		else
 			criticalCaptureChance *= 0;

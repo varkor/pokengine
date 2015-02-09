@@ -15,7 +15,13 @@ Settings.addData({
 		"pokedex" : "Pokédex",
 		"pokeball" : "Poké Ball"
 	},
-	"filter" : [] // Words that are not allowed in Pokémon nicknames
+	"filter" : [], // Words that are not allowed in Pokémon nicknames
+	"paths" : {
+		"Pokemon" : {
+			"image" : "pokemon/{region}/{species}{which}{filetype=png}",
+			"sound" : "pokemon/{region}/{species}{filetype=mp3}"
+		}
+	}
 }, true);
 Settings.addData({
 	"keys" : {
