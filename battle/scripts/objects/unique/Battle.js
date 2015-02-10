@@ -20,6 +20,7 @@ Battle = FunctionObject.new({
 	levelUppers : [],
 	weather : null,
 	turns : 0,
+	callback : null,
 	selection : 0,
 	delayForInput : false, // Delay asking the player what they'd like to do until a potentially breaking change has been made (such as learning a new move, which needs to wait, so that the new move will show up in the Pokémon's move list)
 	queue : [],
@@ -314,29 +315,29 @@ Battle = FunctionObject.new({
 			}
 		}, timeout);
 	},
-	playRecording : function (recording, alliedTrainers, opposingTrainers) {
+	playRecording : function (recording, alliedTrainers, opposingTrainers, callback) {
 		recording.teamA = alliedTrainers;
 		recording.teamB = opposingTrainers;
 		Battle.recording = recording;
 		srandom.seed = Battle.recording.seed;
-		Battle.initiate(Battle.recording.teamA, Battle.recording.teamB, Battle.recording.settings, Battles.kind.recording);
+		Battle.initiate(Battle.recording.teamA, Battle.recording.teamB, Battle.recording.settings, Battles.kind.recording, callback);
 	},
-	beginOnline : function (seed, alliedTrainers, opposingTrainers, settings) {
+	beginOnline : function (seed, alliedTrainers, opposingTrainers, settings, callback) {
 		srandom.seed = seed;
-		Battle.initiate(alliedTrainers, opposingTrainers, settings, Battles.kind.online);
+		Battle.initiate(alliedTrainers, opposingTrainers, settings, Battles.kind.online, callback);
 	},
-	beginWildBattle : function (alliedTrainers, pokes, settings) {
+	beginWildBattle : function (alliedTrainers, pokes, settings, callback) {
 		pokes = wrapArray(pokes);
 		TheWild.party.empty();
 		foreach(pokes, function (poke) {
 			TheWild.give(poke);
 		});
-		Battle.initiate(alliedTrainers, TheWild, settings);
+		Battle.initiate(alliedTrainers, TheWild, settings, Battles.kind.local, callback);
 	},
-	beginTrainerBattle : function (alliedTrainers, opposingTrainers, settings) {
-		Battle.initiate(alliedTrainers, opposingTrainers, settings);
+	beginTrainerBattle : function (alliedTrainers, opposingTrainers, settings, callback) {
+		Battle.initiate(alliedTrainers, opposingTrainers, settings, Battles.kind.local, callback);
 	},
-	initiate : function (alliedTrainers, opposingTrainers, settings, kind) {
+	initiate : function (alliedTrainers, opposingTrainers, settings, kind, callback) {
 		if (!Battle.active) {
 			Textbox.setStyle("battle");
 			if (arguments.length < 3 || typeof settings === "undefined" || settings === null)
@@ -352,6 +353,10 @@ Battle = FunctionObject.new({
 				Battle.kind = kind;
 			else
 				Battle.kind = Battles.kind.local;
+			if (arguments.length >= 5)
+				Battle.callback = callback;
+			else
+				Battle.callback = null;
 			Battle.rules = settings.rules;
 			Battle.scene = settings.scene;
 			Battle.situation = Battles.situation.wild;
@@ -397,7 +402,11 @@ Battle = FunctionObject.new({
 			if (foreach(Battle.opposingTrainers, function (participant) {
 				participant.display.visible = true;
 				if (!participant.hasHealthyPokemon()) {
-					Textbox.state(participant.name + " doesn't have any Pokémon! The battle must be stopped!", function () { Battle.end(); });
+					Textbox.state(participant.name + " doesn't have any Pokémon! The battle must be stopped!", function () {
+						Battle.end(false, {
+							"outcome" : "illegal battle"
+						});
+					});
 					Battle.finish();
 					return true;
 				} else {
@@ -459,7 +468,7 @@ Battle = FunctionObject.new({
 	finish : function () {
 		Battle.finished = true;
 	},
-	end : function (forcefully) {
+	end : function (forcefully, flags) {
 		if (Battle.active) {
 			Battle.active = false;
 			if (forcefully)
@@ -516,6 +525,19 @@ Battle = FunctionObject.new({
 			Battle.escapeAttempts = 0;
 			Battle.turns = 0;
 			Battle.communication = [];
+			if (Battle.callback) {
+				/*
+				Possible values for the "outcome" flag:
+					"termination" [forceful terminal of the battle by an outside event]
+					"allied victory" [the allied side won the battle]
+					"opposing victory" [the opposing side won the battle]
+					"draw" [it was a complete draw]
+					"escape" [the allies escaped from a wild battle]
+				*/
+				Battle.callback(arguments.length >= 2 ? flags : {
+					"outcome" : "termination"
+				});
+			}
 		}
 	},
 	continueEvolutions : function () {
@@ -1536,7 +1558,7 @@ Battle = FunctionObject.new({
 			Battle.survey() looks at all the Pokémon after a move has been used to check whether any of the Pokémon should faint.
 			This means that fainting happens when all Pokémon have been damaged, rather than after each individual effect of damage
 			has been dealt out.
-		*/
+		
 		if (!Battle.finished) {
 			var cleanedUp = false, drawnBattle = !Battle.alliedTrainers.first().hasHealthyPokemon() && !Battle.opposingTrainers.first().hasHealthyPokemon();
 			foreach(Battle.all(true), function (poke) {
@@ -1558,7 +1580,9 @@ Battle = FunctionObject.new({
 					Textbox.state("The battle is a complete draw!");
 				}
 				Textbox.effect(function () {
-					Battle.end();
+					Battle.end(false, {
+						"outcome" : "draw"
+					});
 				});
 				Battle.finish();
 			}
@@ -1607,7 +1631,11 @@ Battle = FunctionObject.new({
 			var escapeChance = (currentBattler.stats.speed(true) * 32) / ((maxSpeed / 4) % 256) + 30 * (Battle.escapeAttempts ++);
 			if (escapeChance > 255 || randomInt(255) < escapeChance) {
 				Battle.queue.push({priority : 6, action : function () {
-					Textbox.state(Battle.alliedTrainers[0].pronoun(true) + " escaped successfully!", function () { Battle.end(); }); Battle.finish(); }
+					Textbox.state(Battle.alliedTrainers[0].pronoun(true) + " escaped successfully!", function () {
+						Battle.end(false, {
+							"outcome" : "escape"
+						});
+					}); Battle.finish(); }
 				});
 			} else
 				Battle.queue.push({priority : 6, action : function () {
@@ -1705,7 +1733,7 @@ Battle = FunctionObject.new({
 		}
 		poke.battler.reset();
 		if (!poke.trainer.hasHealthyPokemon(false)) {
-			var playerHasBeenDefeated = (poke.trainer === Battle.alliedTrainers.first()), trainerBattle = (Battle.situation === Battles.situation.trainer), playerName = Battle.alliedTrainers.first().pronoun(true);
+			var playerHasBeenDefeated = (poke.trainer === Battle.alliedTrainers.first()), trainerBattle = (Battle.situation === Battles.situation.trainer), playerName = Battle.alliedTrainers.first().pronoun(true), endBattleFlags;
 			if (trainerBattle) {
 				var opponents = [];
 				foreach(Battle.opposingTrainers, function (opposer) {
@@ -1746,6 +1774,9 @@ Battle = FunctionObject.new({
 						}
 						Textbox.state(playerName + " blacked out!");
 					}
+					endBattleFlags = {
+						"outcome" : "opposing victory"
+					};
 				} else {
 					Textbox.state(playerName + " " + (Battle.alliedTrainers.first() !== Game.player ? "has" : "have") + " defeated " + (trainerBattle ? opponents : "the wild Pokémon") + "!");
 					if (Battle.kind !== Battles.kind.online) {
@@ -1769,9 +1800,12 @@ Battle = FunctionObject.new({
 							Battle.alliedTrainers.first().money += prizeMoney;
 						}
 					}
+					endBattleFlags = {
+						"outcome" : "allied victory"
+					};
 				}
 				Textbox.effect(function () {
-					Battle.end();
+					Battle.end(false, endBattleFlags);
 				});
 				Battle.finish();
 				return;

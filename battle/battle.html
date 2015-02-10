@@ -216,17 +216,19 @@
 							"party" : [
 								new pokemon({
 									species : "Blastoise (Nintendo)",
-									level : 30,
+									level : 10,
 									moves : [{
 										move : "Disable"
 									}],
 									shiny : true
-								}), new pokemon({
+								})/*, new pokemon({
 									species : "Charizard (Nintendo)",
 									level : 5
-								})
+								})*/
 							]
-						}), Interface.buildSettings());
+						}), Interface.buildSettings(), function (flags) {
+							document.querySelector("#local").disabled = false;
+						});
 					}, true);
 				});
 
