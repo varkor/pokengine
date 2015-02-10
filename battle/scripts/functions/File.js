@@ -160,8 +160,6 @@ Sprite = FunctionObject.new({
 						break;
 				}
 			}
-			positionModification.x -= View.position.x;
-			positionModification.y -= View.position.y;
 			Sprite.canvases[2].width = sprite.width;
 			Sprite.canvases[2].height = sprite.height;
 			if (sprite.animated && sprite.cache.hasOwnProperty(frame)) {

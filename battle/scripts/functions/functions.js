@@ -381,6 +381,9 @@ Matrix = function (matrix) {
 		var c = Math.cos(radians), s = Math.sin(radians);
 		return self.multiply([c, s, - s, c, 0, 0]);
 	};
+	self.applyToContext = function (context) {
+		context.transform(self.matrix[0], self.matrix[1], self.matrix[2], self.matrix[3], self.matrix[4], self.matrix[5]);
+	}
 };
 Matrix.identity = function () {
 	return [1, 0, 0, 1, 0, 0];

@@ -2095,7 +2095,7 @@ Battle = FunctionObject.new({
 }, {
 	initialise : function () {
 		Battle.sketching = [];
-		for (var i = 0; i < 2; ++ i) {
+		for (var i = 0; i < 3; ++ i) {
 			Battle.sketching[i] = document.createElement("canvas");
 			Battle.sketching[i].width = Settings._("screen dimensions => width");
 			Battle.sketching[i].height = Settings._("screen dimensions => height");
@@ -2124,10 +2124,10 @@ Battle = FunctionObject.new({
 			var shadowCanvas = Battle.sketching[1], shadowContext = shadowCanvas.getContext("2d");
 			shadowContext.textAlign = "center";
 			shadowContext.textBaseline = "bottom";
-			shadowContext.clearRect(0, 0, canvas.width, canvas.height);
+			for (var i = 0; i < Battle.sketching.length; ++ i)
+				Battle.sketching[i].getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
 			originalContext.fillStyle = context.fillStyle = "black";
 			originalContext.fillRect(0, 0, canvas.width, canvas.height);
-			context.clearRect(0, 0, canvas.width, canvas.height);
 			if (Battle.state.kind !== "inactive") {
 				if (Battle.state.kind === "loading") {
 					context.fillStyle = "hsl(0, 0%, 20%)";
@@ -2220,7 +2220,7 @@ Battle = FunctionObject.new({
 						context.fillRect(0, canvas.height, canvas.width, - canvas.height / 6 * enclose);
 					}
 				} else {
-					Sprite.draw(originalCanvas, Scenes._(Battle.scene).paths.sprite(), 0, 0);
+					Sprite.draw(Battle.sketching[2], Scenes._(Battle.scene).paths.sprite(), 0, 0);
 					context.textAlign = "center";
 					context.textBaseline = "bottom";
 					context.lineWidth = 2;
@@ -2304,10 +2304,19 @@ Battle = FunctionObject.new({
 					}
 				}
 			}
+			originalContext.save();
+			originalContext.translate(canvas.width / 2, canvas.height / 2);
+			var transformation = new Matrix().rotate(View.angle);
+			transformation.applyToContext(originalContext);
+			var drawSketchingCanvas = function (i) {
+				originalContext.drawImage(Battle.sketching[i], - (View.position.x + canvas.width * (View.zoom - 1) / 2) - canvas.width / 2, - (View.position.y + canvas.height * (View.zoom - 1) / 2) - canvas.height / 2, canvas.width * View.zoom, canvas.height * View.zoom);
+			};
+			drawSketchingCanvas(2);
 			originalContext.globalAlpha = shadowOpacity;
-			originalContext.drawImage(shadowCanvas, 0, 0);
+			drawSketchingCanvas(1)
 			originalContext.globalAlpha = 1;
-			originalContext.drawImage(Battle.sketching[0], 0, 0, originalCanvas.width, originalCanvas.height);
+			drawSketchingCanvas(0);
+			originalContext.restore();
 			foreach(drawAfterwards, function (drawing) {
 				drawing(originalCanvas);
 			});
