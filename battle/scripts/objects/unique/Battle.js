@@ -275,10 +275,9 @@ Battle = FunctionObject.new({
 			progress : 0,
 			failed : []
 		};
-		var resources = [Settings._("paths => scenes => image").replace("{name}", settings.scene).replace(/\{filetype=[a-z0-9]+\}/, "." + Settings._("paths => scenes => image").match(/\{filetype=([a-z0-9]+)\}/)[1])], loaded = 0;
+		var resources = [Scenes._(settings.scene).paths.sprite(true)], loaded = 0;
 		foreach([].concat(alliedTrainers, opposingTrainers), function (trainer) {
-			if (opposingTrainers.contains(trainer))
-				resources.push(trainer.paths.sprite(alliedTrainers.contains(trainer) ? "back" : null, true));
+			resources.push(trainer.paths.sprite(alliedTrainers.contains(trainer) ? "back" : null, true));
 			foreach(trainer.party.pokemon, function (poke) {
 				resources.push(poke.paths.sprite("front", true), poke.paths.sprite("back", true), poke.paths.cry(true));
 			});
@@ -304,7 +303,7 @@ Battle = FunctionObject.new({
 				Battle.state.failed.push(resource);
 				if (Settings._("ignore missing files"))
 					progress();
-				Debugger.error("There was an error loading one of the files:", message);
+				Debugger.error("There was an error loading one of the files", resource);
 			});
 		});
 		setTimeout(function () {
@@ -2179,7 +2178,7 @@ Battle = FunctionObject.new({
 						context.fillRect(0, canvas.height, canvas.width, - canvas.height / 6 * enclose);
 					}
 				} else {
-					Sprite.draw(canvas, Settings._("paths => scenes => image").replace("{name}", Battle.scene).replace(/\{filetype=[a-z0-9]+\}/, ""), 0, 0);
+					Sprite.draw(canvas, Scenes._(Battle.scene).paths.sprite(), 0, 0);
 					context.textAlign = "center";
 					context.textBaseline = "bottom";
 					context.lineWidth = 2;
@@ -2205,7 +2204,10 @@ Battle = FunctionObject.new({
 							}
 						}
 						// Pokémon
-						Sprite.draw(canvas, poke.paths.sprite(side), position.x, position.y - position.z, true, { type : "crop", heightRatio : poke.battler.display.height }, matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix, now);
+						var filters = [{ type : "crop", heightRatio : poke.battler.display.height }];
+						if (poke.shiny)
+							filters.push({ type : "filter", kind : "shiny", pokemon : poke });
+						Sprite.draw(canvas, poke.paths.sprite(side), position.x, position.y - position.z, true, filters, matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix, now);
 						// Lighting
 						if (Scenes._(Battle.scene).hasOwnProperty("lighting"))
 							Sprite.draw(canvas, poke.paths.sprite(side), position.x, position.y - position.z, true, [{ type : "fill", colour : Scenes._(Battle.scene).lighting }, { type : "crop", heightRatio : poke.battler.display.height }], matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix, now);

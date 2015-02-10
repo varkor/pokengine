@@ -182,6 +182,16 @@ Scenes.addData({
 	},
 	"Forest Trail" : {}
 });
+Scenes.__(function (scene, name) {
+	scene.paths = {
+		sprite : function (includeFiletype) {
+			var contracted = Settings._("paths => scenes => image");
+			contracted = contracted.replace("{name}", name);
+			contracted = contracted.replace(/\{filetype=[a-z0-9]+\}/, (includeFiletype ? "." + contracted.match(/\{filetype=([a-z0-9]+)\}/)[1] : ""));
+			return contracted;
+		}
+	}
+});
 
 Creators = {
 	"Nintendo" : {

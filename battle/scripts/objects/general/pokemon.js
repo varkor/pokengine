@@ -264,7 +264,7 @@ function pokemon (data, validate) {
 				contracted = contracted.replace("{region-id}", IDs.dex);
 				contracted = contracted.replace("{species-id}", IDs.id);
 			}
-			contracted = contracted.replace("{side}", which ? "back" : "front");
+			contracted = contracted.replace("{side}", which ? which : "front");
 			return contracted;
 		},
 		sprite : function (which, includeFiletype) {

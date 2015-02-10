@@ -113,7 +113,8 @@
 				}
 			}
 		],
-		friendship : 70,
+		"shiny" : "E64110D55210F6A410E6B410FFD510E6E610833118313941EEB45ABDBDACCD52415A5A6AEE8329837B94084152831029207394BD2041EEDE7BDEDEAC",
+		"friendship" : 70,
 		"catch rate" : 45,
 		"gender ratio" : 0.875,
 		abilities : {
@@ -391,6 +392,20 @@ forevery(Pokedex, function (poke, name) {
 		poke.stats.defence = 100;
 		poke.stats["special defence"] = 100;
 		poke.stats.speed = 100;
+	}
+	if (poke.hasOwnProperty("shiny")) {
+		var pairs = poke.shiny.toLowerCase().match(/.{12}/g).map(function (pair) {
+			return pair.match(/.{6}/g);
+		}), map = {};
+		var convertToRGB = function (hex) {
+			return [parseInt(hex.slice(0, 2), 16), parseInt(hex.slice(2, 4), 16), parseInt(hex.slice(4, 6), 16)];
+		};
+		foreach(pairs, function (pair) {
+			map[convertToRGB(pair[0])] = convertToRGB(pair[1]);
+		});
+		poke.shiny = map;
+	} else {
+		poke.shiny = {};
 	}
 	if (!poke.yield.hasOwnProperty("EVs")) {
 		poke.yield.EVs = {};
