@@ -275,7 +275,7 @@ Battle = FunctionObject.new({
 			progress : 0,
 			failed : []
 		};
-		var resources = ["scenes/" + settings.scene + ".png"], loaded = 0;
+		var resources = [Settings._("paths => scenes => image").replace("{name}", settings.scene).replace(/\{filetype=[a-z0-9]+\}/, "." + Settings._("paths => scenes => image").match(/\{filetype=([a-z0-9]+)\}/)[1])], loaded = 0;
 		foreach([].concat(alliedTrainers, opposingTrainers), function (trainer) {
 			if (opposingTrainers.contains(trainer))
 				resources.push(trainer.paths.sprite(alliedTrainers.contains(trainer) ? "back" : null, true));
@@ -2179,7 +2179,7 @@ Battle = FunctionObject.new({
 						context.fillRect(0, canvas.height, canvas.width, - canvas.height / 6 * enclose);
 					}
 				} else {
-					Sprite.draw(canvas, "scenes/" + Battle.scene, 0, 0);
+					Sprite.draw(canvas, Settings._("paths => scenes => image").replace("{name}", Battle.scene).replace(/\{filetype=[a-z0-9]+\}/, ""), 0, 0);
 					context.textAlign = "center";
 					context.textBaseline = "bottom";
 					context.lineWidth = 2;

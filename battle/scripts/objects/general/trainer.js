@@ -69,7 +69,11 @@ function trainer (data) {
 	self.paths = {
 		sprite : function (which, includeFiletype) {
 			// which should be left as null for the front sprite, as this is much more likely than the back sprite.
-			return "characters/" + self.game + "/" + (self.individual ? (self.fullname(true)) : self.class + (self.gender === "male" ? "~male" : self.gender === "female" ? "~female" : "")) + (which ? "~" + which : "") + (includeFiletype ? ".png" : "");
+			var contracted = Settings._("paths => characters => image");
+			contracted = contracted.replace("{game}", self.game);
+			contracted = contracted.replace("{who}", (self.individual ? (self.fullname(true)) : self.class + (self.gender === "male" ? "~male" : self.gender === "female" ? "~female" : "")) + (which ? "~" + which : ""));
+			contracted = contracted.replace(/\{filetype=[a-z0-9]+\}/, (includeFiletype ? "." + contracted.match(/\{filetype=([a-z0-9]+)\}/)[1] : ""));
+			return contracted;
 		}
 	};
 

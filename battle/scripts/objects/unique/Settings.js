@@ -22,6 +22,12 @@ Settings.addData({
 		"Pokemon" : {
 			"image" : "pokemon/{region}/{species}{which}{filetype=png}",
 			"sound" : "pokemon/{region}/{species}{filetype=mp3}"
+		},
+		"characters" : {
+			"image" : "characters/{game}/{who}{filetype=png}"
+		},
+		"scenes" : {
+			"image" : "scenes/{name}{filetype=png}"
 		}
 	}
 }, true);
