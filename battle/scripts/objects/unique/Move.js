@@ -205,7 +205,7 @@ Move = {
 	renderAnimation : function (mover, move, stage, target, constant, track, last) {
 		if (move.animation.length - 1 < stage || move.animation[stage].length === 0)
 			return;
-		var events = move.animation[stage].deepCopy(), from = Display.state.save();
+		var events = JSONCopy(move.animation[stage], true), from = Display.state.save();
 		var affectsEntireSide = (target === Battles.side.far || target === Battles.side.near);
 		foreach(events.sort(function (a, b) {
 			if (a.hasOwnProperty("time"))

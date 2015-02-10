@@ -403,7 +403,7 @@ function pokemon (data, validate) {
 			}
 		}
 		if (self.level < 100)
-			self.experience = gain;
+			self.experience += gain;
 		var maximumEVgain = 510 - self.totalEVs(), maximumEVgainForStat;
 		forevery(Pokedex._(defeated.species).yield.EVs, function (stat) {
 			maximumEVgainForStat = Math.min(maximumEVgain, Pokedex._(defeated.species).yield.EVs[stat] * (self.Pokerus === "infected" ? 2 : 1));

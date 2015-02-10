@@ -2090,6 +2090,7 @@ Battle = FunctionObject.new({
 			var shadowCanvas = Battle.sketching[1], shadowContext = shadowCanvas.getContext("2d");
 			shadowContext.textAlign = "center";
 			shadowContext.textBaseline = "bottom";
+			shadowContext.clearRect(0, 0, canvas.width, canvas.height);
 			context.fillStyle = "black";
 			context.clearRect(0, 0, canvas.width, canvas.height);
 			if (Battle.state.kind !== "inactive") {
@@ -2268,6 +2269,8 @@ Battle = FunctionObject.new({
 						});
 					}
 				}
+			} else {
+				context.fillRect(0, 0, canvas.width, canvas.height);
 			}
 			var originalContext = originalCanvas.getContext("2d");
 			originalContext.globalAlpha = shadowOpacity;

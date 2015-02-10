@@ -281,66 +281,27 @@ Array.prototype.last = function () {
 	return this[this.length - 1];
 };
 
-function JSONCopy (object) {
-	return JSON.parse(JSON.stringify(object));
+function JSONCopy (object, copyFunctionsToo) {
+	var data = JSON.parse(JSON.stringify(object));
+	if (copyFunctionsToo) {
+		function dig (obj, datum) {
+			forevery(obj, function (value, key) {
+				if (typeof value === "function")
+					datum[key] = value;
+				else if (typeof value === "object")
+					dig(value, data[key]);
+			});
+		}
+		dig(object, data);
+	}
+	return data;
 }
 
-deepCopy = function (source, list, initial) { // If an object contains a variable referencing itself (like self), that variable references the old object, not the new one. Needs to be fixed
-	var destination = initial;
-	if (arguments.length < 2)
-		destination = {};
-	if (arguments.length < 2)
-		list = {};
-	forevery(source, function (value, property) {
-		if (typeof value === "object") {
-			if (value instanceof Array) {
-				destination[property] = value.clone(); // Should use deepcopy().
-			} else {
-				if (list && list.hasOwnProperty(hashObject(value)))
-					destination[property] = list[hashObject(value)];
-				else {
-					var startWith = {};
-					list[hashObject(value)] = startWith;
-					var depth = deepCopy(value, list, startWith);
-					destination[property] = depth.value;
-					forevery(depth.list, function (item, prop) {
-						list[prop] = item;
-					});
-				}
-			}
-		} else {
-			destination[property] = value;
-		}
-	});
-	if (arguments.length > 1)
-		return {value : destination, list : list};
-	else
-		return destination;
-};
 
-hashObject = function (object) {
-	var hash = "";
-	forevery(object, function (value, property) {
-		hash += "[" + property + ":" + value + "]";
-	});
-	return hash;
-};
-
-Array.prototype.clone = function () {
-	var array = [];
-	for (var i = 0; i < this.length; ++ i)
-		array[i] = (Array.isArray(this[i]) ? this[i].clone() : this[i]);
-	return array;
-};
-Array.prototype.deepCopy = function () {
-	var array = [];
-	for (var i = 0; i < this.length; ++ i)
-		array[i] = (Array.isArray(this[i]) ? this[i].clone() : (typeof this[i] === "object" ? deepCopy(this[i]) : this[i]));
-	return array;
-};
 Array.prototype.contains = function (element) {
 	return this.indexOf(element) > -1;
 };
+
 Array.prototype.pushIfNotAlreadyContained = function (element) {
 	if (!this.contains(element)) {
 		this.push(element);

@@ -6,8 +6,7 @@
 		"yield" : {
 			"experience" : 50
 		},
-		moveset : {
-		},
+		moveset : {},
 		evolutions : [],
 		friendship : 70,
 		"catch rate" : 29,
@@ -103,7 +102,9 @@
 			experience : 50
 		},
 		stats : {"health" : 78, "attack" : 84, "defence" : 78, "special attack" : 109, "special defence" : 85, "speed" : 100 },
-		moveset : {},
+		moveset : {
+			1 : ["Tackle"]
+		},
 		evolutions : [
 			{
 				species : "Blastoise (Nintendo)",

@@ -527,7 +527,7 @@ Moves = {
 							transformed : true,
 							species : target.species,
 							IVs : JSONCopy(target.IVs),
-							moves : target.moves.deepCopy(),
+							moves : JSONCopy(target.moves),
 							shiny : target.shiny,
 							ability : target.ability,
 							"form(e)" : target["form(e)"],

@@ -9,7 +9,7 @@ Display = {
 		else
 			newPoke.original = poke;
 		newPoke.battler.side = poke.battler.side;
-		newPoke.battler.display = deepCopy(poke.battler.display);
+		newPoke.battler.display = JSONCopy(poke.battler.display);
 		newPoke.battler.transform = poke.battler.transform;
 		return newPoke;
 	},
