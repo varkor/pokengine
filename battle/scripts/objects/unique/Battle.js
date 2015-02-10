@@ -2060,10 +2060,13 @@ Battle = FunctionObject.new({
 	}
 }, {
 	initialise : function () {
-		Battle.sketching = document.createElement("canvas");
-		Battle.sketching.width = Settings._("screen dimensions => width");
-		Battle.sketching.height = Settings._("screen dimensions => height");
-		Battle.sketching.getContext("2d").imageSmoothingEnabled = false;
+		Battle.sketching = [];
+		for (var i = 0; i < 2; ++ i) {
+			Battle.sketching[i] = document.createElement("canvas");
+			Battle.sketching[i].width = Settings._("screen dimensions => width");
+			Battle.sketching[i].height = Settings._("screen dimensions => height");
+			Battle.sketching[i].getContext("2d").imageSmoothingEnabled = false;
+		}
 	},
 	update : function () {
 		if (Battle.active && Battle.state.kind === "opening") {
@@ -2081,13 +2084,17 @@ Battle = FunctionObject.new({
 			className : "centre",
 			smoothing : false
 		},
-		draw : function (canvas) {
-			var originalCanvas = canvas, drawAfterwards = [];
-			var canvas = Battle.sketching, context = canvas.getContext("2d"), display = Display.state.current, now = performance.now();
+		draw : function (_canvas) {
+			var originalCanvas = _canvas, drawAfterwards = [];
+			var canvas = Battle.sketching[0], context = canvas.getContext("2d"), display = Display.state.current, now = performance.now();
+			var shadowCanvas = Battle.sketching[1], shadowContext = shadowCanvas.getContext("2d");
+			shadowContext.textAlign = "center";
+			shadowContext.textBaseline = "bottom";
 			context.fillStyle = "black";
-			context.fillRect(0, 0, canvas.width, canvas.height);
+			context.clearRect(0, 0, canvas.width, canvas.height);
 			if (Battle.state.kind !== "inactive") {
 				if (Battle.state.kind === "loading") {
+					context.fillRect(0, 0, canvas.width, canvas.height);
 					context.fillStyle = "hsl(0, 0%, 20%)";
 					context.fillRect(40, canvas.height / 2 - 10, canvas.width - 80, 20);
 					context.fillStyle = "hsl(0, 0%, 90%)";
@@ -2178,7 +2185,7 @@ Battle = FunctionObject.new({
 						context.fillRect(0, canvas.height, canvas.width, - canvas.height / 6 * enclose);
 					}
 				} else {
-					Sprite.draw(canvas, Scenes._(Battle.scene).paths.sprite(), 0, 0);
+					Sprite.draw(originalCanvas, Scenes._(Battle.scene).paths.sprite(), 0, 0);
 					context.textAlign = "center";
 					context.textBaseline = "bottom";
 					context.lineWidth = 2;
@@ -2196,7 +2203,7 @@ Battle = FunctionObject.new({
 						context.lineWidth = position.scale * 2;
 						transition = (poke.fainted() ? 1 : poke.battler.display.transition);
 						// Shadow
-						Sprite.draw(canvas, poke.paths.sprite(side), position.x, position.y - position.z + poke.battler.display.position.y, true, [{ type : "fill", colour : "hsla(0, 0%, 0%, " + shadowOpacity + ")" }, { type : "crop", heightRatio : poke.battler.display.height }], shadowMatrix.scale(position.scale * transition).scale(Math.pow(2, -poke.battler.display.position.y / 100)).matrix, now);
+						Sprite.draw(shadowCanvas, poke.paths.sprite(side), position.x, position.y - position.z + poke.battler.display.position.y, true, [{ type : "fill", colour : "black" }, { type : "crop", heightRatio : poke.battler.display.height }], shadowMatrix.scale(position.scale * transition).scale(Math.pow(2, -poke.battler.display.position.y / 100)).matrix, now);
 						// Outline
 						if (poke.battler.display.outlined) {
 							for (var angle = 0; angle < Math.PI * 2; angle += Math.PI / 2) {
@@ -2221,7 +2228,7 @@ Battle = FunctionObject.new({
 							position = Battle.drawing.position(trainer);
 							side = (Battle.alliedTrainers.contains(trainer) ? "back" : null);
 							// Shadow
-							Sprite.draw(canvas, trainer.paths.sprite(side), position.x, position.y - position.z + trainer.display.position.y, true, { type : "fill", colour : "hsla(0, 0%, 0%, " + shadowOpacity + ")" }, shadowMatrix.scale(position.scale).scale(Math.pow(2, -trainer.display.position.y / 100)).matrix, now);
+							Sprite.draw(shadowCanvas, trainer.paths.sprite(side), position.x, position.y - position.z + trainer.display.position.y, true, { type : "fill", colour : "black" }, shadowMatrix.scale(position.scale).scale(Math.pow(2, -trainer.display.position.y / 100)).matrix, now);
 							// Trainer
 							Sprite.draw(canvas, trainer.paths.sprite(side), position.x, position.y - position.z, true, null, matrix.scale(position.scale).matrix, now);
 							// Lighting
@@ -2262,7 +2269,11 @@ Battle = FunctionObject.new({
 					}
 				}
 			}
-			originalCanvas.getContext("2d").drawImage(Battle.sketching, 0, 0, originalCanvas.width, originalCanvas.height);
+			var originalContext = originalCanvas.getContext("2d");
+			originalContext.globalAlpha = shadowOpacity;
+			originalContext.drawImage(shadowCanvas, 0, 0);
+			originalContext.globalAlpha = 1;
+			originalContext.drawImage(Battle.sketching[0], 0, 0, originalCanvas.width, originalCanvas.height);
 			foreach(drawAfterwards, function (drawing) {
 				drawing(originalCanvas);
 			});
