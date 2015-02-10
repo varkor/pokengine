@@ -1558,7 +1558,7 @@ Battle = FunctionObject.new({
 			Battle.survey() looks at all the Pokémon after a move has been used to check whether any of the Pokémon should faint.
 			This means that fainting happens when all Pokémon have been damaged, rather than after each individual effect of damage
 			has been dealt out.
-		
+		*/
 		if (!Battle.finished) {
 			var cleanedUp = false, drawnBattle = !Battle.alliedTrainers.first().hasHealthyPokemon() && !Battle.opposingTrainers.first().hasHealthyPokemon();
 			foreach(Battle.all(true), function (poke) {
@@ -2119,17 +2119,17 @@ Battle = FunctionObject.new({
 			smoothing : false
 		},
 		draw : function (_canvas) {
-			var originalCanvas = _canvas, drawAfterwards = [];
+			var originalCanvas = _canvas, originalContext = originalCanvas.getContext("2d"), drawAfterwards = [];
 			var canvas = Battle.sketching[0], context = canvas.getContext("2d"), display = Display.state.current, now = performance.now();
 			var shadowCanvas = Battle.sketching[1], shadowContext = shadowCanvas.getContext("2d");
 			shadowContext.textAlign = "center";
 			shadowContext.textBaseline = "bottom";
 			shadowContext.clearRect(0, 0, canvas.width, canvas.height);
-			context.fillStyle = "black";
+			originalContext.fillStyle = context.fillStyle = "black";
+			originalContext.fillRect(0, 0, canvas.width, canvas.height);
 			context.clearRect(0, 0, canvas.width, canvas.height);
 			if (Battle.state.kind !== "inactive") {
 				if (Battle.state.kind === "loading") {
-					context.fillRect(0, 0, canvas.width, canvas.height);
 					context.fillStyle = "hsl(0, 0%, 20%)";
 					context.fillRect(40, canvas.height / 2 - 10, canvas.width - 80, 20);
 					context.fillStyle = "hsl(0, 0%, 90%)";
@@ -2303,10 +2303,7 @@ Battle = FunctionObject.new({
 						});
 					}
 				}
-			} else {
-				context.fillRect(0, 0, canvas.width, canvas.height);
 			}
-			var originalContext = originalCanvas.getContext("2d");
 			originalContext.globalAlpha = shadowOpacity;
 			originalContext.drawImage(shadowCanvas, 0, 0);
 			originalContext.globalAlpha = 1;
