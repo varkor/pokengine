@@ -37,13 +37,25 @@ function _ (_object, _path) {
 	// Special cases to speed up trivial path traversals
 	var checkForProperty = path.slice(-1) === "?", specialCase = path.split(/ ?[~\-=]> ?/g);
 	if (specialCase.length === 2) {
-		return checkForProperty ? object.object.hasOwnProperty(specialCase[1].slice(0, -1)) : object.object[specialCase[1]];
+		if (checkForProperty) {
+			return object.object.hasOwnProperty(specialCase[1].slice(0, -1));
+		} else {
+			if (object.object.hasOwnProperty(specialCase[1]))
+				return object.object[specialCase[1]];
+			else throw "That object has no property with the path: " + path;
+		}
 	}
 	var oSpecialCase = path.split(/ ?[~\-]> ?/g);
 	if (oSpecialCase.length === 1) {
 		var property = object.object;
 		while ((specialCase = specialCase.slice(1)).notEmpty()) {
-			property = (checkForProperty && specialCase.length === 1 ? property.hasOwnProperty(specialCase.first().slice(0, -1)) : property[specialCase.first()]);
+			if (checkForProperty && specialCase.length === 1) {
+				property = property.hasOwnProperty(specialCase.first().slice(0, -1));
+			} else {
+				if (property.hasOwnProperty(specialCase.first()))
+					property = property[specialCase.first()];
+				else throw "That object has no property with the path: " + path;
+			}
 		}
 		return property;
 	}
@@ -79,7 +91,7 @@ function _ (_object, _path) {
 				else if (value.hasOwnProperty(key = key.replace(/ ?\(.*\)/, "")))
 					value = value[key];
 				else {
-					error.message = "That object has no property with the path:" + path;
+					error.message = "That object has no property with the path: " + path;
 					return error;
 				}
 			} else
@@ -93,7 +105,7 @@ function _ (_object, _path) {
 			return returned;
 		}
 	}
-	throw "That object has no property with the path:" + path;
+	throw "That object has no property with the path: " + path;
 }
 
 function _method (object) {

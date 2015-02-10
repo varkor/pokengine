@@ -17,6 +17,8 @@ Settings.addData({
 	},
 	"filter" : [], // Words that are not allowed in Pokémon nicknames
 	"paths" : {
+		"images" : "images/{animation}",
+		"sounds" : "sounds",
 		"Pokemon" : {
 			"image" : "pokemon/{region}/{species}{which}{filetype=png}",
 			"sound" : "pokemon/{region}/{species}{filetype=mp3}"

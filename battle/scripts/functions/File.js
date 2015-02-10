@@ -54,7 +54,7 @@ File = {
 				successful(dataForFile(event, file, store, path), uponLoadObject);
 			});
 			file.addEventListener("error", errorResponse);
-			file.src = (!(path.substr(0, 5) === "data:" || path.substr(0, 5) === "http:" || path.substr(0, 6) === "https:") ? directory + "/" + path + "." + filetype : path);
+			file.src = (!(path.substr(0, 5) === "data:" || path.substr(0, 5) === "http:" || path.substr(0, 6) === "https:") ? (directory ? directory + "/" : "") + path + "." + filetype : path);
 			store[path] = uponLoadObject;
 		}
 		return null;
@@ -68,9 +68,10 @@ File = {
 		}
 		switch (filetype[1]) {
 			case "png":
-				return Sprite.load(paths, uponLoad, uponError);
+				return Sprite.load(paths, uponLoad, uponError, filetype[1]);
 			case "mp3":
-				return Sound.load(paths, uponLoad, uponError);
+			case "ogg":
+				return Sound.load(paths, uponLoad, uponError, filetype[1]);
 			default:
 				uponError(paths, "The supplied file (" + paths[0] + ") had an unsupported filtype.");
 				break;
@@ -83,11 +84,8 @@ Files = {
 
 Sprite = FunctionObject.new({
 	canvases : [],
-	load : function (_paths, uponLoad, uponError) {
-		var paths = [];
-		foreach(wrapArray(_paths), function (path) {
-			paths.push((Settings._("animated sprites") && FileData.images.hasOwnProperty(path.replace(/~.*/, "")) ? "animated" : "static") + "/" + path);
-		});
+	load : function (_paths, uponLoad, uponError, filetype) {
+		var paths = wrapArray(_paths);
 		return File.loadFileOfType("sprites", Image, "load", function (event, image, store, path) {
 			var data = {
 				animated : false,
@@ -104,7 +102,7 @@ Sprite = FunctionObject.new({
 			data.width = image.width / data.frames;
 			data.height = image.height;
 			return data;
-		}, "images", "png", paths, uponLoad, uponError);
+		}, Settings._("paths => images").replace("{animation}", Settings._("animated sprites") && FileData.images.hasOwnProperty(path.replace(/~.*/, "")) ? "animated" : "static"), arguments.length >= 4 && typeof filetype !== "undefined" ? filetype : "png", paths, uponLoad, uponError);
 	},
 	draw : function (canvas, path, x, y, aligned, filters, transformation, time) {
 		var sprite = Sprite.load(path);
@@ -277,7 +275,7 @@ Sprite = FunctionObject.new({
 });
 
 Sound = {
-	load : function (paths, uponLoad, uponError, playImmediately) {
+	load : function (paths, uponLoad, uponError, filetype, playImmediately) {
 		return File.loadFileOfType("sounds", Audio, "canplaythrough", function (event, sound, store, path) {
 			var data = {
 				sound : sound
@@ -285,14 +283,14 @@ Sound = {
 			if (playImmediately && Settings._("sound effects"))
 				sound.play();
 			return store[path] = data;
-		}, "sounds", "mp3", paths, uponLoad, uponError);
+		}, Settings._("paths => sounds"), arguments.length >= 4 && typeof filetype !== "undefined" ? filetype : "mp3", paths, uponLoad, uponError);
 	},
-	play : function (paths, uponError) {
+	play : function (paths, uponError, filetype) {
 		if (Settings._("sound effects")) {
 			Sound.load(paths, function (soundObject) {
 				soundObject.sound.currentTime = 0;
 				soundObject.sound.play();
-			}, uponError, true);
+			}, uponError, filetype, true);
 		}
 	}
 };
