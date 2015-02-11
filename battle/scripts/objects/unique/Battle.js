@@ -2095,7 +2095,7 @@ Battle = FunctionObject.new({
 }, {
 	initialise : function () {
 		Battle.sketching = [];
-		for (var i = 0; i < 3; ++ i) {
+		for (var i = 0; i < 4; ++ i) {
 			Battle.sketching[i] = document.createElement("canvas");
 			Battle.sketching[i].width = Settings._("screen dimensions => width");
 			Battle.sketching[i].height = Settings._("screen dimensions => height");
@@ -2304,19 +2304,21 @@ Battle = FunctionObject.new({
 					}
 				}
 			}
-			originalContext.save();
-			originalContext.translate(canvas.width / 2, canvas.height / 2);
+			var smallContext = Battle.sketching[3].getContext("2d");
+			smallContext.save();
+			smallContext.translate(canvas.width / 2, canvas.height / 2);
 			var transformation = new Matrix().rotate(View.angle);
-			transformation.applyToContext(originalContext);
+			transformation.applyToContext(smallContext);
 			var drawSketchingCanvas = function (i) {
-				originalContext.drawImage(Battle.sketching[i], - (View.position.x + canvas.width * (View.zoom - 1) / 2) - canvas.width / 2, - (View.position.y + canvas.height * (View.zoom - 1) / 2) - canvas.height / 2, canvas.width * View.zoom, canvas.height * View.zoom);
+				smallContext.drawImage(Battle.sketching[i], - (View.position.x + canvas.width * (View.zoom - 1) / 2) - canvas.width / 2, - (View.position.y + canvas.height * (View.zoom - 1) / 2) - canvas.height / 2, canvas.width * View.zoom, canvas.height * View.zoom);
 			};
 			drawSketchingCanvas(2);
-			originalContext.globalAlpha = shadowOpacity;
+			smallContext.globalAlpha = shadowOpacity;
 			drawSketchingCanvas(1)
-			originalContext.globalAlpha = 1;
+			smallContext.globalAlpha = 1;
 			drawSketchingCanvas(0);
-			originalContext.restore();
+			smallContext.restore();
+			originalContext.drawImage(Battle.sketching[3], 0, 0, canvas.width * Game.zoom, canvas.height * Game.zoom);
 			foreach(drawAfterwards, function (drawing) {
 				drawing(originalCanvas);
 			});
