@@ -2,7 +2,7 @@ var q;
 
 Stats = ["health", "attack", "defence", "special attack", "special defence", "speed", "accuracy", "evasion", "critical"];
 
-Experiences = ["erratic", "fast", "medium fast", "medium fast", "medium slow", "slow", "fluctuating"];
+Experiences = ["erratic", "fast", "medium fast", "medium slow", "slow", "fluctuating"];
 
 Evolution = {
 	// Ways to trigger an evolution
