@@ -177,7 +177,8 @@ Textbox = FunctionObject.new({
 			text = "" + text.trim();
 			var replacements = Settings._("text replacements").data;
 			forevery(Settings._("text replacements"), function (replacement, original) {
-				text = text.replace(new RegExp("(^|" + (/^\W*$/.test(original) ? "." : "[^a-zA-Z0-9]") + ")(\\\\)?(" + original + ")(?:\\b)", "g"), function (match, start, escaped, text) {
+				var symbolReplacement = /^\W*$/.test(original);
+				text = text.replace(new RegExp("(^|" + (symbolReplacement ? "." : "[^a-zA-Z0-9]") + ")(\\\\)?(" + original + ")" + (symbolReplacement ? "" : "(?:\\b)"), "g"), function (match, start, escaped, text) {
 					if (escaped)
 						return start + original;
 					else

@@ -276,7 +276,7 @@ Battle = FunctionObject.new({
 			progress : 0,
 			failed : []
 		};
-		var resources = [Scenes._(settings.scene).paths.sprite(true)], loaded = 0;
+		var resources = [Scenes._(settings.scene).paths.sprite(true), "blah"], loaded = 0;
 		foreach([].concat(alliedTrainers, opposingTrainers), function (trainer) {
 			resources.push(trainer.paths.sprite(alliedTrainers.contains(trainer) ? "back" : null, true));
 			foreach(trainer.party.pokemon, function (poke) {
@@ -309,7 +309,9 @@ Battle = FunctionObject.new({
 		});
 		setTimeout(function () {
 			if (unloadedResources.notEmpty() && Battle.state.kind === "loading") {
-				Battle.state.failed = Battle.state.failed.concat(unloadedResources);
+				foreach(unloadedResources, function (file) {
+					Battle.state.failed.pushIfNotAlreadyContained(file);
+				});
 				if (Settings._("ignore missing files"))
 					finish();
 			}
@@ -2127,28 +2129,28 @@ Battle = FunctionObject.new({
 			for (var i = 0; i < Battle.sketching.length; ++ i)
 				Battle.sketching[i].getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
 			originalContext.fillStyle = context.fillStyle = "black";
-			originalContext.fillRect(0, 0, canvas.width, canvas.height);
+			originalContext.fillRect(0, 0, originalCanvas.width, originalCanvas.height);
 			if (Battle.state.kind !== "inactive") {
 				if (Battle.state.kind === "loading") {
-					context.fillStyle = "hsl(0, 0%, 20%)";
-					context.fillRect(40, canvas.height / 2 - 10, canvas.width - 80, 20);
-					context.fillStyle = "hsl(0, 0%, 90%)";
-					context.fillRect(40, canvas.height / 2 - 10, (canvas.width - 80) * Battle.state.progress, 20);
-					context.textAlign = "center";
-					context.textBaseline = "middle";
-					context.font = "12px " + Settings._("font")
-					context.strokeStyle = "hsl(0, 0%, 90%)";
-					context.lineWidth = 5;
-					context.strokeText((Battle.state.progress * 100).toFixed(0) + "%", canvas.width / 2, canvas.height / 2);
-					context.fillStyle = "black";
-					context.fillText((Battle.state.progress * 100).toFixed(0) + "%", canvas.width / 2, canvas.height / 2);
+					originalContext.fillStyle = "hsl(0, 0%, 20%)";
+					originalContext.fillRect(40 * Game.zoom, originalCanvas.height / 2 - 10 * Game.zoom, originalCanvas.width - 80 * Game.zoom, 20 * Game.zoom);
+					originalContext.fillStyle = "hsl(0, 0%, 90%)";
+					originalContext.fillRect(40 * Game.zoom, originalCanvas.height / 2 - 10 * Game.zoom, (originalCanvas.width - 80 * Game.zoom) * Battle.state.progress, 20 * Game.zoom);
+					originalContext.textAlign = "center";
+					originalContext.textBaseline = "middle";
+					originalContext.font = Font.load(12 * Game.zoom);
+					originalContext.strokeStyle = "hsl(0, 0%, 90%)";
+					originalContext.lineWidth = 5;
+					originalContext.strokeText((Battle.state.progress * 100).toFixed(0) + "%", originalCanvas.width / 2, originalCanvas.height / 2);
+					originalContext.fillStyle = "black";
+					originalContext.fillText((Battle.state.progress * 100).toFixed(0) + "%", originalCanvas.width / 2, originalCanvas.height / 2);
 					if (Battle.state.failed.notEmpty()) {
-						context.textBaseline = "top";
-						context.fillStyle = "hsl(0, 0%, 90%)";
-						context.fillText("Failed to load " + Battle.state.failed.length + " file" + (Battle.state.failed.length !== 1 ? "s" : "") + ":", canvas.width / 2, canvas.height / 2 + 20 + 6);
-						context.fillStyle = "hsl(0, 0%, 50%)";
+						originalContext.textBaseline = "top";
+						originalContext.fillStyle = "hsl(0, 0%, 90%)";
+						originalContext.fillText("Failed to load " + Battle.state.failed.length + " file" + (Battle.state.failed.length !== 1 ? "s" : "") + ":", originalCanvas.width / 2, originalCanvas.height / 2 + (20 + 6) * Game.zoom);
+						originalContext.fillStyle = "hsl(0, 0%, 50%)";
 						foreach(Battle.state.failed, function (failed, i) {
-							context.fillText(failed, canvas.width / 2, canvas.height / 2 + 20 + 6 + 16 * (i + 1));
+							originalContext.fillText(failed, originalCanvas.width / 2, originalCanvas.height / 2 + (20 + 6 + 16 * (i + 1)) * Game.zoom);
 						});
 					}
 				} else if (Battle.state.kind === "evolution") {

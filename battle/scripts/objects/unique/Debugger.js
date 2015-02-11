@@ -25,7 +25,7 @@ Debugger = FunctionObject.new({
 		if (arguments.length < 2)
 			console.log("%c" + message, "color : hsl(0, 100%, 40%)");
 		else
-			console.log("%c" + message + ": ", "color : hsl(0, 100%, 40%)", specific);
+			console.log("%c" + message + ":", "color : hsl(0, 100%, 40%)", specific);
 	}
 }, {
 	update : function () {

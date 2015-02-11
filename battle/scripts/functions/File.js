@@ -60,10 +60,12 @@ File = {
 		return null;
 	},
 	load : function (_paths, uponLoad, uponError) {
+		// Uses the first file to check what data it contains
+		// E.g. if the first file is a PNG, then Sprite.load will be used for all the files
 		var paths = wrapArray(_paths);
-		var filetype = paths[0].match(/.*\.(\w+)/);
+		var filetype = paths[0].match(/\.(\w+)$/);
 		if (filetype === null) {
-			uponError(paths, "The supplied file (" + paths[0] + ") had no filtype.");
+			uponError(paths[0], "The supplied file (" + paths[0] + ") had no filtype.");
 			return null;
 		}
 		switch (filetype[1]) {
