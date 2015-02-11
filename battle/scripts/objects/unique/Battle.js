@@ -2318,7 +2318,7 @@ Battle = FunctionObject.new({
 			smallContext.globalAlpha = 1;
 			drawSketchingCanvas(0);
 			smallContext.restore();
-			originalContext.drawImage(Battle.sketching[3], 0, 0, canvas.width * Game.zoom, canvas.height * Game.zoom);
+			originalContext.drawImage(Battle.sketching[3], (originalCanvas.width - canvas.width * Game.zoom) / 2, (originalCanvas.height - canvas.height * Game.zoom) / 2, canvas.width * Game.zoom, canvas.height * Game.zoom);
 			foreach(drawAfterwards, function (drawing) {
 				drawing(originalCanvas);
 			});
