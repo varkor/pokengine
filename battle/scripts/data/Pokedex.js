@@ -95,7 +95,7 @@
 		}
 	},
 	"Charizard (Nintendo)" : {
-		types : ["Fire", "Flying"],
+		types : ["Ghost"],
 		experience : "fast",
 		"form(e)s" : null,
 		yield : {

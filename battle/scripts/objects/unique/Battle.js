@@ -676,6 +676,7 @@ Battle = FunctionObject.new({
 					} else {
 						var usableItems = character.bag.usableItems(), actualItem, items = [], indices = [], hotkeys = {};
 						hotkeys[Settings._("keys => secondary")] = "Cancel";
+						console.log(usableItems);
 						foreach(usableItems, function (item) {
 							actualItem = Items._(item.item);
 							if (actualItem.direct) { // If the item can be used directly, instead of when being held

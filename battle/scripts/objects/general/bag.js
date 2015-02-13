@@ -27,19 +27,24 @@ function bag (items) {
 	};
 
 	self.add = function (item, quantity) {
-		if (arguments.length < 2)
-			quantity = 1;
-		if (!foreach(self.items, function (which) {
-			if (which.item === item) {
-				which.quantity += quantity;
-				return true;
-			}
-		}))
-			self.items.push({
-				item : item,
-				quantity : quantity,
-				intentToUse : 0 // When the player selects "Use item" in their bag, it should count an item as having being used even before it has been
-			});
+		// Returns whether adding the item to the bag was successful. This should be the case as long as the item is one that actually exists.
+		if (Items._(item + "?")) {
+			if (arguments.length < 2)
+				quantity = 1;
+			if (!foreach(self.items, function (which) {
+				if (which.item === item) {
+					which.quantity += quantity;
+					return true;
+				}
+			}))
+				self.items.push({
+					item : item,
+					quantity : quantity,
+					intentToUse : 0 // When the player selects "Use item" in their bag, it should count an item as having being used even before it has been
+				});
+			return true;
+		}
+		return false;
 	};
 
 	self.remove = function (item, quantity) {
