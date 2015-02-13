@@ -178,12 +178,15 @@ Textbox = FunctionObject.new({
 			var replacements = Settings._("text replacements").data;
 			forevery(Settings._("text replacements"), function (replacement, original) {
 				var symbolReplacement = /^\W*$/.test(original);
-				text = text.replace(new RegExp("(^|" + (symbolReplacement ? "." : "[^a-zA-Z0-9]") + ")(\\\\)?(" + original + ")" + (symbolReplacement ? "" : "(?:\\b)"), "g"), function (match, start, escaped, text) {
-					if (escaped)
-						return start + original;
-					else
-						return start + replacement;
-				});
+				if (symbolReplacement) {
+					text = text.replace(new RegExp("(\\\\)?(" + original + ")", "g"), function (match, escaped, text) {
+						return escaped ? original : replacement;
+					});
+				} else {
+					text = text.replace(new RegExp("(^|[^a-zA-Z0-9])(\\\\)?(" + original + ")(?:\\b)", "g"), function (match, start, escaped, text) {
+						return start + (escaped ? original : replacement);
+					});
+				}
 			});
 			var regex, exclusive, position, value = null, previousValue, valueStack = [];
 			forevery(Textbox.commands, function (subcommands, commandType) {

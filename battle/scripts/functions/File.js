@@ -200,6 +200,7 @@ Sprite = FunctionObject.new({
 								return;
 							}
 							if (!isVolatile && sprite.cache.filters.hasOwnProperty(filter.kind) && sprite.cache.filters[filter.kind].hasOwnProperty(frame)) {
+								// Cached filters may not work well with other filters (such as crop), because they will load a version that may not include the other filter. Thus, ordering can be important.
 								contexts[0].drawImage(sprite.cache.filters[filter.kind][frame], 0, 0);
 							} else {
 								contexts[0].drawImage(image, 0, 0);

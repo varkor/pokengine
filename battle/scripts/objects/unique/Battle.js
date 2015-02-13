@@ -276,7 +276,7 @@ Battle = FunctionObject.new({
 			progress : 0,
 			failed : []
 		};
-		var resources = [Scenes._(settings.scene).paths.sprite(true), "blah"], loaded = 0;
+		var resources = [Scenes._(settings.scene).paths.sprite(true)], loaded = 0;
 		foreach([].concat(alliedTrainers, opposingTrainers), function (trainer) {
 			resources.push(trainer.paths.sprite(alliedTrainers.contains(trainer) ? "back" : null, true));
 			foreach(trainer.party.pokemon, function (poke) {
@@ -2248,9 +2248,10 @@ Battle = FunctionObject.new({
 							}
 						}
 						// Pokémon
-						var filters = [{ type : "crop", heightRatio : poke.battler.display.height }];
+						var filters = [];
 						if (poke.shiny)
 							filters.push({ type : "filter", kind : "shiny", pokemon : poke });
+						filters.push({ type : "crop", heightRatio : poke.battler.display.height });
 						Sprite.draw(canvas, poke.paths.sprite(side), position.x, position.y - position.z, true, filters, matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix, now);
 						// Lighting
 						if (Scenes._(Battle.scene).hasOwnProperty("lighting"))
