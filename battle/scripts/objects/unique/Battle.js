@@ -676,7 +676,6 @@ Battle = FunctionObject.new({
 					} else {
 						var usableItems = character.bag.usableItems(), actualItem, items = [], indices = [], hotkeys = {};
 						hotkeys[Settings._("keys => secondary")] = "Cancel";
-						console.log(usableItems);
 						foreach(usableItems, function (item) {
 							actualItem = Items._(item.item);
 							if (actualItem.direct) { // If the item can be used directly, instead of when being held
@@ -1710,9 +1709,9 @@ Battle = FunctionObject.new({
 			poke.battler.display.transition = 0;
 			var display = Display.state.save();
 			Textbox.state((trainer === Game.player ? "Gotcha! " : "") + poke.name() + " was caught!", function () { return Display.state.transition(display); });
-			Battle.removeFromBattle(poke);
-			trainer.give(poke);
+			Battle.removeFromBattle(poke, false);
 			poke.caught.ball = ball;
+			trainer.give(poke);
 		}
 		return caught;
 	},
@@ -1735,7 +1734,7 @@ Battle = FunctionObject.new({
 			Battle.opponents[place] = NoPokemon;
 		}
 		poke.battler.reset();
-		if (!poke.trainer.hasHealthyPokemon(false)) {
+		if (!poke.trainer.hasHealthyPokemon(false, poke)) {
 			var playerHasBeenDefeated = (poke.trainer === Battle.alliedTrainers.first()), trainerBattle = (Battle.situation === Battles.situation.trainer), playerName = Battle.alliedTrainers.first().pronoun(true), endBattleFlags;
 			if (trainerBattle) {
 				var opponents = [];
