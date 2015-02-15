@@ -224,6 +224,8 @@ Regions = ["Hoenn", "Kanto"];
 
 Pokerus = ["uninfected", "infected", "immune"];
 
+Tiles = ["grass", "long grass", "dark grass", "seaweed"];
+
 NoPokemon = {};
 
 onlyPokemon = function (poke) {

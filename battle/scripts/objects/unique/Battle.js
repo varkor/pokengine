@@ -21,6 +21,7 @@ Battle = FunctionObject.new({
 	weather : null,
 	turns : 0,
 	callback : null,
+	encounterTile : null,
 	selection : 0,
 	delayForInput : false, // Delay asking the player what they'd like to do until a potentially breaking change has been made (such as learning a new move, which needs to wait, so that the new move will show up in the Pokémon's move list)
 	queue : [],
@@ -364,6 +365,7 @@ Battle = FunctionObject.new({
 			Battle.situation = Battles.situation.wild;
 			Battle.style = settings.style;
 			Battle.flags = settings.flags;
+			Battle.encounterTile = settings.tile;
 			Battle.changeWeather(settings.weather);
 			alliedTrainers = wrapArray(alliedTrainers);
 			opposingTrainers = wrapArray(opposingTrainers);
@@ -1651,7 +1653,8 @@ Battle = FunctionObject.new({
 		var modifiers = {
 			status : 1,
 			species : Pokedex._(poke.species)["catch rate"],
-			ball : (typeof ball["catch rate"] === "number" ? ball["catch rate"] : ball["catch rate"]())
+			ball : (typeof ball["catch rate"] === "number" ? ball["catch rate"] : ball["catch rate"]()),
+			grass : 1
 		};
 		switch (poke.status) {
 			case "asleep":
@@ -1665,21 +1668,32 @@ Battle = FunctionObject.new({
 				modifiers.status = 1.5;
 				break;
 		}
-		var modifiedCatchRate = (((3 * poke.maximumHealth() - 2 * poke.health) * modifiers.species * modifiers.ball) / (3 * poke.maximumHealth())) * modifiers.status, shakeProbability = 65536 / Math.pow(255 / modifiedCatchRate, 0.1875), caught = true;
-		var criticalCaptureChance = modifiedCatchRate, criticalCapture = false;
-		if (trainer.dex.caught.length > 600)
+		var criticalCaptureChance = 1, criticalCapture = false;
+		if (trainer.dex.caught.length > 600) {
+			modifiers.grass = 1;
 			criticalCaptureChance *= 2.5;
-		else if (trainer.dex.caught.length > 450)
+		} else if (trainer.dex.caught.length > 450) {
 			criticalCaptureChance *= 2;
-		else if (trainer.dex.caught.length > 300)
+			modifiers.grass = 3686/4096;
+		} else if (trainer.dex.caught.length > 300) {
 			criticalCaptureChance *= 1.5;
-		else if (trainer.dex.caught.length > 150)
+			modifiers.grass = 3277/4096;
+		} else if (trainer.dex.caught.length > 150) {
 			criticalCaptureChance *= 1;
-		else if (trainer.dex.caught.length > 30)
+			modifiers.grass = 2867/4096;
+		} else if (trainer.dex.caught.length > 30) {
 			criticalCaptureChance *= 0.5;
-		else
+			modifiers.grass = 2048/4096;
+		} else {
 			criticalCaptureChance *= 0;
-		if (srandom.number(2047) < criticalCapture)
+			modifiers.grass = 1229/4096;
+		}
+		if (Battle.encounterTile !== "dark grass")
+			modifiers.grass = 1;
+		var modifiedCatchRate = (((3 * poke.maximumHealth() - 2 * poke.health) * modifiers.grass * modifiers.species * modifiers.ball) / (3 * poke.maximumHealth())) * modifiers.status, shakeProbability = 65536 / Math.pow(255 / modifiedCatchRate, 0.1875), caught = true;
+		console.log(modifiedCatchRate);
+		criticalCaptureChance *= modifiedCatchRate;
+		if (srandom.number(255) < criticalCapture)
 			criticalCapture = true;
 		if (modifiedCatchRate < 255) {
 			for (var shakes = 0; shakes < (criticalCapture ? 1 : 4); ++ shakes) {
