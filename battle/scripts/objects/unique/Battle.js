@@ -1650,11 +1650,13 @@ Battle = FunctionObject.new({
 	attemptCapture : function (poke, ball, trainer) {
 		if (arguments.length < 3)
 			trainer = Game.player;
+		var OPower = trainer.OPowers["Capture"];
 		var modifiers = {
 			status : 1,
 			species : Pokedex._(poke.species)["catch rate"],
 			ball : (typeof ball["catch rate"] === "number" ? ball["catch rate"] : ball["catch rate"]()),
-			grass : 1
+			grass : 1,
+			OPower : (OPower === 1 ? 1.5 : OPower === 2 ? 2 : OPower === 3 ? 2.5 : 1)
 		};
 		switch (poke.status) {
 			case "asleep":
@@ -1690,7 +1692,7 @@ Battle = FunctionObject.new({
 		}
 		if (Battle.encounterTile !== "dark grass")
 			modifiers.grass = 1;
-		var modifiedCatchRate = (((3 * poke.maximumHealth() - 2 * poke.health) * modifiers.grass * modifiers.species * modifiers.ball) / (3 * poke.maximumHealth())) * modifiers.status, shakeProbability = 65536 / Math.pow(255 / modifiedCatchRate, 0.1875), caught = true;
+		var modifiedCatchRate = (((3 * poke.maximumHealth() - 2 * poke.health) * modifiers.grass * modifiers.species * modifiers.ball) / (3 * poke.maximumHealth())) * modifiers.status * modifiers.OPower, shakeProbability = 65536 / Math.pow(255 / modifiedCatchRate, 0.1875), caught = true;
 		console.log(modifiedCatchRate);
 		criticalCaptureChance *= modifiedCatchRate;
 		if (srandom.number(255) < criticalCapture)
@@ -1780,7 +1782,7 @@ Battle = FunctionObject.new({
 							case 7: basePayout = 100; break;
 							case 8: basePayout = 120; break;
 						}
-						var priceOfDefeat = highestLevel * basePayout;
+						var OPower = Battle.opposingTrainers.first().OPowers["Prize Money"], priceOfDefeat = highestLevel * basePayout * (OPower === 1 ? 1.5 : OPower === 2 ? 2 : OPower === 3 ? 3 : 1);
 						if (poke.trainer.money > 0) {
 							priceOfDefeat = Math.min(priceOfDefeat, poke.trainer.money);
 							Textbox.state(playerName + " " + (trainerBattle ? "paid out" : "dropped") + " $" + priceOfDefeat + " " + (trainerBattle ? "to " + commaSeparatedList(opponents) : "in " + poke.trainer.possessiveGenderPronoun() + " panic to get away") + ".");
@@ -1808,10 +1810,11 @@ Battle = FunctionObject.new({
 									});
 								}
 							});
-							var prizeMoney = 0;
+							var prizeMoney = 0, OPower = Battle.alliedTrainers.first().OPowers["Prize Money"];
 							foreach(Battle.opposingTrainers, function (opposer) {
 								prizeMoney += opposer.party.pokemon.last().level * Classes[opposer.class].payout;
 							});
+							prizeMoney *= (OPower === 1 ? 1.5 : OPower === 2 ? 2 : OPower === 3 ? 3 : 1);
 							Textbox.state(opponents + " paid " + Battle.alliedTrainers.first().pronoun(false) + " $" + prizeMoney + " as a reward.");
 							Battle.alliedTrainers.first().money += prizeMoney;
 						}
@@ -1883,6 +1886,21 @@ Battle = FunctionObject.new({
 		foreach((poke.battler.side === Battles.side.near ? Battle.hazards.near : Battle.hazards.far), function (hazard) {
 			hazard.type.effects.hazard(poke, hazard.stack);
 		});
+		if (initial) {
+			var OPowers = 0, takeEffect = {};
+			foreach(Stats, function (stat) {
+				if (poke.trainer.OPowers[stat] !== 0) {
+					++ OPowers;
+					takeEffect[stat] = poke.trainer.OPowers[stat];
+				}
+			});
+			if (OPowers > 0) {
+				Textbox.state((poke.trainer === Game.player ? "Your" : poke.trainer.fullname() + "'s") + " O-Power" + (OPowers === 1 ? " is" : "s are") + " taking effect!");
+				forevery(takeEffect, function (change, stat) {
+					Battle.stat(poke, stat, change, poke);
+				});
+			}
+		}
 		if (!startOrEndOfTurn)
 			Battle.triggerEvent(Triggers.entrance, {}, poke);
 		Battle.recoverFromStatus(poke);

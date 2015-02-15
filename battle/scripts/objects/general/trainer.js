@@ -37,6 +37,14 @@ function trainer (data) {
 	self.bag = new bag(self.bag);
 	self.type = Trainers.type.NPC;
 	self.team = Game.unique();
+	self.OPowers = {
+		"Exp. Point" : 0,
+		"Prize Money" : 0,
+		"Capture" : 0
+	};
+	foreach(Stats, function (stat) {
+		self.OPowers[stat] = 0;
+	});
 
 	self.store = function () {
 		// Returns an object that contains all the data for the trainer, without any methods
