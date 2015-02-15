@@ -1665,7 +1665,7 @@ Battle = FunctionObject.new({
 				modifiers.status = 1.5;
 				break;
 		}
-		var modifiedCatchRate = (((3 * poke.maximumHealth() - 2 * poke.health) * modifiers.species * modifiers.ball) / (3 * poke.maximumHealth())) * modifiers.status, shakeProbability = 65536 / Math.pow(255 / modifiedCatchRate, 1 / 4), caught = true;
+		var modifiedCatchRate = (((3 * poke.maximumHealth() - 2 * poke.health) * modifiers.species * modifiers.ball) / (3 * poke.maximumHealth())) * modifiers.status, shakeProbability = 65536 / Math.pow(255 / modifiedCatchRate, 0.1875), caught = true;
 		var criticalCaptureChance = modifiedCatchRate, criticalCapture = false;
 		if (trainer.dex.caught.length > 600)
 			criticalCaptureChance *= 2.5;
