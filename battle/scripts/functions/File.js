@@ -123,10 +123,10 @@ Sprite = FunctionObject.new({
 				return components;
 		}
 	},
-	draw : function (canvas, path, x, y, aligned, filters, transformation, time) {
+	draw : function (canvas, path, x, y, aligned, filters, transformation, time, skewOffset) {
 		var sprite = Sprite.load(path);
 		if (sprite) {
-			var context = canvas.getContext("2d"), image = sprite.image, xModified = x, yModified = y, positionModification = {
+			var context = canvas.getContext("2d"), image = sprite.image, positionModification = {
 				x : 0,
 				y : 0
 			}, progress = (sprite.animated ? (arguments.length < 8 ? performance.now() : time) % sum(sprite.durations) : 0), frame = 0;
@@ -268,42 +268,13 @@ Sprite = FunctionObject.new({
 					image = Sprite.canvases[2];
 				});
 			}
-			if (transformation) {
-				if (transformation[0])
-					positionModification.x *= Math.abs(transformation[0]);
-				if (transformation[3])
-					positionModification.y *= Math.abs(transformation[3]);
-				if (transformation[1] && aligned) {
-					if (context.textAlign === "right" && transformation[0] >= 0 || context.textAlign === "left" && transformation[0] < 0)
-						positionModification.y -= sprite.width * transformation[1];
-					if (context.textAlign === "center")
-						positionModification.y -= sprite.width * transformation[1] * 0.5;
-				}
-				if (transformation[2] && aligned) {
-					if (context.textBaseline === "bottom" && transformation[3] >= 0 || context.textBaseline === "top" && transformation[3] < 0)
-						positionModification.x -= sprite.height * transformation[2];
-					if (context.textBaseline === "middle")
-						positionModification.x -= sprite.height * transformation[2] * 0.5;
-				}
-				if (transformation[0] < 0)
-					positionModification.x = sprite.width * Math.abs(transformation[0]) - positionModification.x;
-				if (transformation[3] < 0)
-					positionModification.y = sprite.height * Math.abs(transformation[3]) - positionModification.y;
-			}
-			xModified += positionModification.x;
-			yModified += positionModification.y;
-			xModified = Math.round(xModified);
-			yModified = Math.round(yModified);
-			if (transformation) {
-				context.save();
-				context.translate(xModified, yModified);
-				context.transform(transformation[0], transformation[1], transformation[2], transformation[3], transformation[4], transformation[5]);
-				xModified = yModified = 0;
-			}
-			context.drawImage(image, xModified, yModified);
-			if (transformation) {
-				context.restore();
-			}
+			if (!transformation)
+				transformation = new Matrix();
+			context.save();
+			context.translate(x, y);
+			transformation.applyToContext(context);
+			context.drawImage(image, positionModification.x, positionModification.y);
+			context.restore();
 			return true;
 		}
 		return false;

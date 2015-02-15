@@ -360,17 +360,39 @@ function quantityWord (times) {
 	return numberword(times) + " times";
 }
 
+Vector = function (vector) {
+	var self = this;
+	if (arguments.length)
+		self.vector = vector;
+	else
+		self.vector = [0, 0];
+};
+
 Matrix = function (matrix) {
+	/*
+		Matrices in <canvas> contexts are represented by:
+		[a c e]
+		[b d f]
+		[0 0 1]
+		And are indexed like so:
+		[0 2 4]
+		[1 3 5]
+		[- - -]
+	*/
 	var self = this;
 	if (arguments.length)
 		self.matrix = matrix;
 	else
 		self.matrix = Matrix.identity();
-	self.multiply = function (by) {
-		if (Array.isArray(by))
-			return new Matrix([by[0] * self.matrix[0] + by[2] * self.matrix[1], by[1] * self.matrix[0] + by[3] * self.matrix[1], by[0] * self.matrix[2] + by[2] * self.matrix[3], by[1] * self.matrix[2] + by[3] * self.matrix[3], by[0] * self.matrix[4] + by[2] * self.matrix[5], by[1] * self.matrix[4] + by[3] * self.matrix[5] + by[5]]);
-		else
-			return new Matrix([self.matrix[0] * by, self.matrix[1] * by, self.matrix[2] * by, self.matrix[3] * by, self.matrix[4] * by, self.matrix[5] * by]);
+	self.multiply = function (_by) {
+		var by = _by;
+		if (by instanceof Vector) // Multiplying by a vector
+			return new Vector([by.vector[0] * self.matrix[0] + by.vector[1] * self.matrix[2], by.vector[0] * self.matrix[1] + by.vector[1] * self.matrix[3]]);
+		if (by instanceof Matrix)
+			by = by.matrix;
+		else if (!Array.isArray(by)) // Multiplying by a scalar
+			by = [by, 0, 0, by, 0, 0];
+		return new Matrix([by[0] * self.matrix[0] + by[2] * self.matrix[1], by[1] * self.matrix[0] + by[3] * self.matrix[1], by[0] * self.matrix[2] + by[2] * self.matrix[3], by[1] * self.matrix[2] + by[3] * self.matrix[3], by[0] * self.matrix[4] + by[2] * self.matrix[5], by[1] * self.matrix[4] + by[3] * self.matrix[5] + by[5]]);
 	};
 	self.scale = function (amount) {
 		return self.multiply(amount);
@@ -380,6 +402,9 @@ Matrix = function (matrix) {
 			radians = - radians;
 		var c = Math.cos(radians), s = Math.sin(radians);
 		return self.multiply([c, s, - s, c, 0, 0]);
+	};
+	self.determinant = function () {
+		return self.matrix[0] * self.matrix[3] - self.matrix[2] * self.matrix[1];
 	};
 	self.applyToContext = function (context) {
 		context.transform(self.matrix[0], self.matrix[1], self.matrix[2], self.matrix[3], self.matrix[4], self.matrix[5]);

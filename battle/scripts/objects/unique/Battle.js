@@ -2201,7 +2201,7 @@ Battle = FunctionObject.new({
 							fade = Math.sin(Battle.state.transition * (transformationRate / 2) + Math.PI * 0.25) >= 0 ? 1 : 0;
 							scale = 1 + Math.sin(Battle.state.transition * transformationRate) * 0.5;
 						}
-						Sprite.draw(canvas, Battle.state.evolving.paths.sprite("front"), canvas.width / 2, canvas.height / 2, true, [{ type : "fill", colour : "white" }, { type : "opacity", value : fade }], (new Matrix()).scale(scale).matrix, now);
+						Sprite.draw(canvas, Battle.state.evolving.paths.sprite("front"), canvas.width / 2, canvas.height / 2, true, [{ type : "fill", colour : "white" }, { type : "opacity", value : fade }], new Matrix().scale(scale), now);
 					}
 					if (Battle.state.stage !== "before" && Battle.state.stage !== "preparation") {
 						var scale = 1, fade = 0;
@@ -2211,7 +2211,7 @@ Battle = FunctionObject.new({
 							fade = Math.sin(Battle.state.transition * (transformationRate / 2) + Math.PI * 1.25) > 0 ? 1 : 0;
 							scale = 1 + Math.sin(Battle.state.transition * transformationRate) * 0.5;
 						}
-						Sprite.draw(canvas, Battle.state.into.paths.sprite("front"), canvas.width / 2, canvas.height / 2, true, [{ type : "fill", colour : "white" }, { type : "opacity", value : fade }], (new Matrix()).scale(scale).matrix, now);
+						Sprite.draw(canvas, Battle.state.into.paths.sprite("front"), canvas.width / 2, canvas.height / 2, true, [{ type : "fill", colour : "white" }, { type : "opacity", value : fade }], new Matrix().scale(scale), now);
 					}
 					if (Battle.state.stage !== "before" && Battle.state.stage !== "after" && Battle.state.stage !== "stopped") {
 						context.fillStyle = "black";
@@ -2227,7 +2227,7 @@ Battle = FunctionObject.new({
 					context.textBaseline = "bottom";
 					context.lineWidth = 2;
 					context.strokeStyle = "white";
-					var shadowOpacity = Lighting.shadows.opacity(), shadowMatrix = new Matrix ([1, 0.1, -0.6, 0.4, 0, 0]), matrix = new Matrix(), position, transition, side;
+					var shadowOpacity = Lighting.shadows.opacity(), shadowMatrix = new Matrix ([1, 0.1, -0.6, 0.4, 0, 0]), matrix = new Matrix(), position, transition, side, generalMatrix;
 					var sortDisplay = Battle.cache || (Battle.cache = Display.states[Display.state.save(Display.state.current)]), poke;
 					var all = [].concat(sortDisplay.allies, sortDisplay.opponents.reverse()).filter(onlyPokemon).sort(function (a, b) {
 						return Battle.drawing.position(Display.pokemonInState(b)).z - Battle.drawing.position(Display.pokemonInState(a)).z;
@@ -2239,12 +2239,13 @@ Battle = FunctionObject.new({
 						position = Battle.drawing.position(poke);
 						context.lineWidth = position.scale * 2;
 						transition = (poke.fainted() ? 1 : poke.battler.display.transition);
+						generalMatrix = matrix.scale(position.scale * transition).rotate(poke.battler.display.angle);
 						// Shadow
-						Sprite.draw(shadowCanvas, poke.paths.sprite(side), position.x, position.y - position.z + poke.battler.display.position.y, true, [{ type : "fill", colour : "black" }, { type : "crop", heightRatio : poke.battler.display.height }], shadowMatrix.scale(position.scale * transition).scale(Math.pow(2, -poke.battler.display.position.y / 100)).matrix, now);
+						Sprite.draw(shadowCanvas, poke.paths.sprite(side), position.x, position.y - position.z + poke.battler.display.position.y, true, [{ type : "fill", colour : "black" }, { type : "crop", heightRatio : poke.battler.display.height }], generalMatrix.multiply(shadowMatrix).scale(Math.pow(2, -poke.battler.display.position.y / 100)), now, true);
 						// Outline
 						if (poke.battler.display.outlined) {
 							for (var angle = 0; angle < Math.PI * 2; angle += Math.PI / 2) {
-								Sprite.draw(canvas, poke.paths.sprite(side), position.x + Math.cos(angle) * context.lineWidth, position.y - position.z + Math.sin(angle) * context.lineWidth, true, [{ type : "fill", colour : context.strokeStyle }, { type : "crop", heightRatio : poke.battler.display.height }], matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix, now);
+								Sprite.draw(canvas, poke.paths.sprite(side), position.x + Math.cos(angle) * context.lineWidth, position.y - position.z + Math.sin(angle) * context.lineWidth, true, [{ type : "fill", colour : context.strokeStyle }, { type : "crop", heightRatio : poke.battler.display.height }], generalMatrix, now);
 							}
 						}
 						// Pokémon
@@ -2252,13 +2253,13 @@ Battle = FunctionObject.new({
 						if (poke.shiny)
 							filters.push({ type : "filter", kind : "shiny", pokemon : poke });
 						filters.push({ type : "crop", heightRatio : poke.battler.display.height });
-						Sprite.draw(canvas, poke.paths.sprite(side), position.x, position.y - position.z, true, filters, matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix, now);
+						Sprite.draw(canvas, poke.paths.sprite(side), position.x, position.y - position.z, true, filters, generalMatrix, now);
 						// Lighting
 						if (Scenes._(Battle.scene).hasOwnProperty("lighting"))
-							Sprite.draw(canvas, poke.paths.sprite(side), position.x, position.y - position.z, true, [{ type : "fill", colour : Scenes._(Battle.scene).lighting }, { type : "crop", heightRatio : poke.battler.display.height }], matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix, now);
+							Sprite.draw(canvas, poke.paths.sprite(side), position.x, position.y - position.z, true, [{ type : "fill", colour : Scenes._(Battle.scene).lighting }, { type : "crop", heightRatio : poke.battler.display.height }], generalMatrix, now);
 						// Glow / Fade
 						if (transition > 0 && transition < 1)
-							Sprite.draw(canvas, poke.paths.sprite(side), position.x, position.y - position.z, true, [{ type : "fill", colour : "white" }, { type : "opacity", value : Math.pow(1 - transition, 0.4) }, { type : "crop", heightRatio : poke.battler.display.height }], matrix.scale(position.scale * transition).rotate(poke.battler.display.angle).matrix, now);
+							Sprite.draw(canvas, poke.paths.sprite(side), position.x, position.y - position.z, true, [{ type : "fill", colour : "white" }, { type : "opacity", value : Math.pow(1 - transition, 0.4) }, { type : "crop", heightRatio : poke.battler.display.height }], generalMatrix, now);
 					});
 					// Trainers
 					foreach(Battle.allTrainers(), function (trainer) {
@@ -2266,12 +2267,12 @@ Battle = FunctionObject.new({
 							position = Battle.drawing.position(trainer);
 							side = (Battle.alliedTrainers.contains(trainer) ? "back" : null);
 							// Shadow
-							Sprite.draw(shadowCanvas, trainer.paths.sprite(side), position.x, position.y - position.z + trainer.display.position.y, true, { type : "fill", colour : "black" }, shadowMatrix.scale(position.scale).scale(Math.pow(2, -trainer.display.position.y / 100)).matrix, now);
+							Sprite.draw(shadowCanvas, trainer.paths.sprite(side), position.x, position.y - position.z + trainer.display.position.y, true, { type : "fill", colour : "black" }, shadowMatrix.scale(position.scale).scale(Math.pow(2, -trainer.display.position.y / 100)), now);
 							// Trainer
-							Sprite.draw(canvas, trainer.paths.sprite(side), position.x, position.y - position.z, true, null, matrix.scale(position.scale).matrix, now);
+							Sprite.draw(canvas, trainer.paths.sprite(side), position.x, position.y - position.z, true, null, matrix.scale(position.scale), now);
 							// Lighting
 							if (Scenes._(Battle.scene).hasOwnProperty("lighting"))
-								Sprite.draw(canvas, trainer.paths.sprite(side), position.x, position.y - position.z, true, { type : "fill", colour : Scenes._(Battle.scene).lighting }, matrix.scale(position.scale).matrix, now);
+								Sprite.draw(canvas, trainer.paths.sprite(side), position.x, position.y - position.z, true, { type : "fill", colour : Scenes._(Battle.scene).lighting }, matrix.scale(position.scale), now);
 						}
 					});
 					if (sortDisplay.allies.length === 0 || sortDisplay.opponents.length === 0) {
@@ -2306,6 +2307,8 @@ Battle = FunctionObject.new({
 						});
 					}
 				}
+			} else {
+				return;
 			}
 			var smallContext = Battle.sketching[3].getContext("2d");
 			smallContext.save();
