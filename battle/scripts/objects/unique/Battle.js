@@ -385,33 +385,42 @@ Battle = FunctionObject.new({
 					actions : []
 				};
 			}
-			foreach(Battle.alliedTrainers, function (participant) {
+			if (foreach(Battle.alliedTrainers, function (participant) {
 				participant.display.visible = true;
-				for (var i = 0, newPoke; i < Math.min((Battle.style === "normal" ? 1 : 2) / Battle.alliedTrainers.length, participant.healthyPokemon().length); ++ i) {
-					newPoke = participant.healthyPokemon()[i];
-					Battle.queue.push({
-						poke : newPoke,
-						doesNotRequirePokemonToBeBattling : true,
-						priority : 1 - (1 / (Battle.alliedTrainers.length + 3)) * (i + 1),
-						action : function (which) {return function () {
-							Battle.enter(which, true, null, true);
-						}; }(newPoke)
-					});
-				}
-			});
-			if (foreach(Battle.opposingTrainers, function (participant) {
-				participant.display.visible = true;
-				if (!participant.hasHealthyPokemon()) {
-					Textbox.state(participant.name + " doesn't have any Pokémon! The battle must be stopped!", function () {
-						Battle.end(false, {
-							"outcome" : "illegal battle"
-						});
-					});
+				if (!participant.hasHealthyEligiblePokemon()) {
+					Battle.active = true;
 					Battle.finish();
+					Battle.end(false, {
+						"outcome" : "illegal battle"
+					});
 					return true;
 				} else {
-					for (var i = 0, newPoke; i < Math.min((Battle.style === "normal" ? 1 : 2) / Battle.opposingTrainers.length, participant.healthyPokemon().length); ++ i) {
-						newPoke = participant.healthyPokemon()[i];
+					for (var i = 0, newPoke; i < Math.min(Battle.pokemonPerSide() / Battle.alliedTrainers.length, participant.healthyEligiblePokemon().length); ++ i) {
+						newPoke = participant.healthyEligiblePokemon()[i];
+						Battle.queue.push({
+							poke : newPoke,
+							doesNotRequirePokemonToBeBattling : true,
+							priority : 1 - (1 / (Battle.alliedTrainers.length + 3)) * (i + 1),
+							action : function (which) {return function () {
+								Battle.enter(which, true, null, true);
+							}; }(newPoke)
+						});
+					}
+				}
+			}))
+				return;
+			if (foreach(Battle.opposingTrainers, function (participant) {
+				participant.display.visible = true;
+				if (!participant.hasHealthyEligiblePokemon()) {
+					Battle.active = true;
+					Battle.finish();
+					Battle.end(false, {
+						"outcome" : "illegal battle"
+					});
+					return true;
+				} else {
+					for (var i = 0, newPoke; i < Math.min(Battle.pokemonPerSide() / Battle.opposingTrainers.length, participant.healthyEligiblePokemon().length); ++ i) {
+						newPoke = participant.healthyEligiblePokemon()[i];
 						if (newPoke.trainer === TheWild)
 							Battle.enter(newPoke, true, null, true);
 						else Battle.queue.push({
@@ -438,7 +447,7 @@ Battle = FunctionObject.new({
 		var names = [], number = 0;
 		switch (Battle.situation) {
 			case Battles.situation.wild:
-				var wildPokemon = TheWild.healthyPokemon();
+				var wildPokemon = TheWild.healthyEligiblePokemon();
 				if (wildPokemon.length === 1)
 					Textbox.state("A wild " + wildPokemon.first().name() + " appeared!");
 				else {
@@ -533,6 +542,7 @@ Battle = FunctionObject.new({
 					"opposing victory" [the opposing side won the battle]
 					"draw" [it was a complete draw]
 					"escape" [the allies escaped from a wild battle]
+					"illegal battle" [the trainers did not have Pokémon matching the battle requirements]
 				*/
 				Battle.callback(arguments.length >= 2 ? flags : {
 					"outcome" : "termination"
@@ -617,7 +627,7 @@ Battle = FunctionObject.new({
 								}
 							}
 						});
-						if (Battle.style !== "normal" || targets.length > 1) {
+						if (Battle.pokemonPerSide() > 1 || targets.length > 1) {
 							targets.reverse();
 							targetNames.reverse();
 							var displayAll = [].concat(Display.state.current.allies, Display.state.current.opponents), hotkeys = {};
@@ -749,7 +759,7 @@ Battle = FunctionObject.new({
 				} else if (arguments.length === 1) {
 					names = [];
 					positions = [];
-					foreach(character.healthyPokemon(true), function (poke, i) {
+					foreach(character.healthyEligiblePokemon(true), function (poke, i) {
 						names.push(poke.name());
 						positions.push(character.party.pokemon.indexOf(poke));
 					});
@@ -993,17 +1003,10 @@ Battle = FunctionObject.new({
 	pokemonPerSide : function () {
 		switch (Battle.style) {
 			case "normal":
-			case Battles.style.inverse:
-			case Battles.style.sky:
+			case "sky":
 				return 1;
 			case "double":
 				return 2;
-			case Battles.style.triple:
-				return 3;
-			case Battles.style.rotation: // Only one Pokémon is battling at a time
-				return 1;
-			case Battles.style.horde:
-				return 5;
 		}
 	},
 	placeOfPokemon : function (poke) {
@@ -1102,7 +1105,7 @@ Battle = FunctionObject.new({
 			Battle.advance();
 			return;
 		}
-		if (Battle.style !== "normal") {
+		if (Battle.pokemonPerSide() > 1) {
 			currentBattler.battler.display.outlined = true;
 			var display = Display.state.save();
 			Textbox.effect(function () { Display.state.load(display); });
@@ -1333,10 +1336,10 @@ Battle = FunctionObject.new({
 		if (player) {
 			var trainer = Game.player, progress = false;
 			if (emptyPlaces.notEmpty()) {
-				var healthyPokemon = trainer.healthyPokemon(true);
-				if (healthyPokemon.length > emptyPlaces.length) {
+				var healthyEligiblePokemon = trainer.healthyEligiblePokemon(true);
+				if (healthyEligiblePokemon.length > emptyPlaces.length) {
 					var names = [], positions = [];
-					foreach(trainer.healthyPokemon(true), function (poke, i) {
+					foreach(trainer.healthyEligiblePokemon(true), function (poke, i) {
 						names.push(poke.name());
 						positions.push(i);
 					});
@@ -1348,12 +1351,12 @@ Battle = FunctionObject.new({
 								action : "send",
 								which : i
 							});
-							Battle.enter(trainer.healthyPokemon(true)[i], true, emptyPlaces.first());
+							Battle.enter(trainer.healthyEligiblePokemon(true)[i], true, emptyPlaces.first());
 							Battle.fillEmptyPlaces(true);
 						}, null, null, null, null, null, true);
 					}
 				} else {
-					foreach(healthyPokemon, function (poke) {
+					foreach(healthyEligiblePokemon, function (poke) {
 						Battle.enter(poke, true, emptyPlaces.shift());
 					});
 					progress = true;
@@ -1373,11 +1376,11 @@ Battle = FunctionObject.new({
 						if (!emptyPlaces.length)
 							return true;
 						var sendingOut = 0;
-						while (trainer.battlers().length + sendingOut < Math.min((Battle.style === "normal" ? 1 : 2) / Battle.opposingTrainers.length) && trainer.hasHealthyPokemon(true) && emptyPlaces.length) {
-							var poke = trainer.healthyPokemon(true).first(), immediatelyAfter;
+						while (trainer.battlers().length + sendingOut < Math.min(Battle.pokemonPerSide() / Battle.opposingTrainers.length) && trainer.hasHealthyEligiblePokemon(true) && emptyPlaces.length) {
+							var poke = trainer.healthyEligiblePokemon(true).first(), immediatelyAfter;
 							if (Battle.kind !== Battles.kind.online && Settings._("switching chance")) {
 								var character = Game.player;
-								if (character.healthyPokemon(true).notEmpty()) {
+								if (character.healthyEligiblePokemon(true).notEmpty()) {
 									if (poke.trainer !== TheWild)
 										Textbox.state(trainer.name + " is about to send out " + poke.name() + ".");
 									else
@@ -1386,7 +1389,7 @@ Battle = FunctionObject.new({
 									immediatelyAfter = Textbox.confirm("Do you want to switch a different Pokémon in?", function (yes) {
 										if (yes) {
 											var names = [], positions = [];
-											foreach(character.healthyPokemon(true), function (poke, i) {
+											foreach(character.healthyEligiblePokemon(true), function (poke, i) {
 												names.push(poke.name());
 												positions.push(character.party.pokemon.indexOf(poke));
 											});
@@ -1429,7 +1432,7 @@ Battle = FunctionObject.new({
 									}, null, null, null, true);
 								}
 							}
-							var pressureSpeech = (Battle.situation === Battles.situation.trainer && trainer.healthyPokemon().length === 1 && trainer._("pressure speech?"));
+							var pressureSpeech = (Battle.situation === Battles.situation.trainer && trainer.healthyEligiblePokemon().length === 1 && trainer._("pressure speech?"));
 							Battle.queue.push({
 								poke : poke,
 								doesNotRequirePokemonToBeBattling : true,
@@ -1452,8 +1455,8 @@ Battle = FunctionObject.new({
 						}
 					});
 				} else {
-					var healthyPokemon = Battle.opposingTrainers.first().healthyPokemon(true);
-					if (healthyPokemon.length > emptyPlaces.length) {
+					var healthyEligiblePokemon = Battle.opposingTrainers.first().healthyEligiblePokemon(true);
+					if (healthyEligiblePokemon.length > emptyPlaces.length) {
 						Textbox.effect(function () {
 							if (Battle.communication.length >= emptyPlaces.length) {
 								Battle.continueToNextTurn(true);
@@ -1467,7 +1470,7 @@ Battle = FunctionObject.new({
 						});
 						anyQueries = true;
 					} else {
-						foreach(healthyPokemon, function (poke, which) {
+						foreach(healthyEligiblePokemon, function (poke, which) {
 							Battle.enter(poke, true, emptyPlaces.shift());
 						});
 					}
@@ -1484,9 +1487,9 @@ Battle = FunctionObject.new({
 				if (poke === NoPokemon)
 					emptyPlaces.push(i);
 			});
-			var healthyPokemon = Battle.opposingTrainers.first().healthyPokemon(true);
+			var healthyEligiblePokemon = Battle.opposingTrainers.first().healthyEligiblePokemon(true);
 			foreach(emptyPlaces, function (place) {
-				Battle.enter(healthyPokemon[Battle.communication.shift().which], true, place);
+				Battle.enter(healthyEligiblePokemon[Battle.communication.shift().which], true, place);
 			});
 		}
 		Battle.race(Battle.queue);
@@ -1560,7 +1563,7 @@ Battle = FunctionObject.new({
 			has been dealt out.
 		*/
 		if (!Battle.finished) {
-			var cleanedUp = false, drawnBattle = !Battle.alliedTrainers.first().hasHealthyPokemon() && !Battle.opposingTrainers.first().hasHealthyPokemon();
+			var cleanedUp = false, drawnBattle = !Battle.alliedTrainers.first().hasHealthyEligiblePokemon() && !Battle.opposingTrainers.first().hasHealthyEligiblePokemon();
 			foreach(Battle.all(true), function (poke) {
 				if (poke.fainted()) {
 					poke.battler.display.transition = 0;
@@ -1689,7 +1692,6 @@ Battle = FunctionObject.new({
 		if (Battle.encounterTile !== "dark grass")
 			modifiers.grass = 1;
 		var modifiedCatchRate = (((3 * poke.maximumHealth() - 2 * poke.health) * modifiers.grass * modifiers.species * modifiers.ball) / (3 * poke.maximumHealth())) * modifiers.status * modifiers.OPower, shakeProbability = 65536 / Math.pow(255 / modifiedCatchRate, 0.1875), caught = true;
-		console.log(modifiedCatchRate);
 		criticalCaptureChance *= modifiedCatchRate;
 		if (srandom.number(255) < criticalCapture)
 			criticalCapture = true;
@@ -1746,7 +1748,7 @@ Battle = FunctionObject.new({
 			Battle.opponents[place] = NoPokemon;
 		}
 		poke.battler.reset();
-		if (!poke.trainer.hasHealthyPokemon(false, poke)) {
+		if (!poke.trainer.hasHealthyEligiblePokemon(false, poke)) {
 			var playerHasBeenDefeated = (poke.trainer === Battle.alliedTrainers.first()), trainerBattle = (Battle.situation === Battles.situation.trainer), playerName = Battle.alliedTrainers.first().pronoun(true), endBattleFlags;
 			if (trainerBattle) {
 				var opponents = [];

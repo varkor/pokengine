@@ -135,20 +135,29 @@ function trainer (data) {
 		return self.pokemon() > 0;
 	};
 
-	self.healthyPokemon = function (thatAreNotBattling, excluding) {
+	self.healthyPokemon = function (thatAreNotBattling, _excluding, style) {
 		if (!self.hasPokemon())
 			return [];
-		var pokes = [];
-		excluding = wrapArray(excluding);
+		var pokes = [], excluding = (arguments.length >= 2 && typeof _excluding !== "undefined" && _excluding !== null ? wrapArray(_excluding) : []);
 		foreach(self.party.pokemon, function (poke) {
-			if (poke.conscious() && (!thatAreNotBattling || (!poke.battler.battling && !poke.battler.reserved)) && !excluding.contains(poke))
+			if (poke.conscious() && (!thatAreNotBattling || (!poke.battler.battling && !poke.battler.reserved)) && !excluding.contains(poke) && !(arguments.length >= 3 && typeof style !== "undefined" && style !== null && style === "sky" && !Pokedex._(poke.species).aerial))
 				pokes.push(poke);
 		});
 		return pokes;
 	};
 
-	self.hasHealthyPokemon = function (thatAreNotBattling, excluding) {
-		return self.healthyPokemon(thatAreNotBattling, excluding).length > 0;
+	self.healthyEligiblePokemon = function (thatAreNotBattling, excluding) {
+		// Assumes a battle is in progress
+		return self.healthyPokemon(thatAreNotBattling, excluding, Battle.style);
+	};
+
+	self.hasHealthyPokemon = function (thatAreNotBattling, excluding, style) {
+		return self.healthyPokemon(thatAreNotBattling, excluding, style).length > 0;
+	};
+
+	self.hasHealthyEligiblePokemon = function (thatAreNotBattling, excluding) {
+		// Assumes a battle is in progress
+		return self.healthyEligiblePokemon(thatAreNotBattling, excluding).length > 0;
 	};
 
 	self.isAnNPC = function () {

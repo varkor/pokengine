@@ -25,6 +25,7 @@
 					<td><div class="select"><select id="style">
 						<option value="normal">normal</option>
 						<option value="double">double</option>
+						<option value="sky">sky</option>
 					</select></div></td>
 				</tr>
 				<tr class="hidden-">
@@ -189,6 +190,9 @@
 						return;
 					Interface.clearIssues();
 					event.stopPropagation();
+					var afterwards = function (flags) {
+						document.querySelector("#local").disabled = false;
+					};
 					Interface.popup(document.querySelector("#local"), function (event) {
 						document.querySelector("#local").disabled = true;
 						Game.takePossessionOf(new trainer({
@@ -200,12 +204,12 @@
 							"money" : 10000
 						}));
 						Battle.beginWildBattle(Game.player, [new pokemon({
-							species : "Bulbasaur (Nintendo)",
+							species : "Horrendove (Atlas)",
 							level : 20,
 							moves : [{ move : "Tackle" }]
 						})], Interface.buildSettings(), function (flags) {
 							document.querySelector("#local").disabled = false;
-						});
+						}, afterwards);
 						/*Battle.beginTrainerBattle(Game.player, new trainer({
 							"name" : "Roger",
 							"class" : "Ace Trainer",
@@ -226,9 +230,7 @@
 									level : 5
 								})
 							]
-						}), Interface.buildSettings(), function (flags) {
-							document.querySelector("#local").disabled = false;
-						});*/
+						}), Interface.buildSettings(), afterwards);*/
 					}, true);
 				});
 
@@ -355,7 +357,7 @@
 
 				Interface.buildSettings = function () {
 					var settings = {
-						style : (document.querySelector("#style").value === "double" ? "double" : "normal"),
+						style : (["double", "sky"].contains(document.querySelector("#style").value) ? document.querySelector("#style").value : "normal"),
 						flags : document.querySelector("#inverse").checked ? ["inverse"] : [],
 						weather : (Weathers.contains(document.querySelector("#weather").value) ? document.querySelector("#weather").value : "clear"),
 						scene : (Scenes._(document.querySelector("#scene").value + "?") ? document.querySelector("#scene").value : "Field Clearing"),

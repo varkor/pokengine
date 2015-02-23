@@ -275,6 +275,7 @@
 			normal : ["Overgrow"],
 			hidden : "Tough Claws"
 		},
+		aerial : true,
 		attributes : {
 			"floating" : {
 				height : 40,
@@ -392,6 +393,9 @@ forevery(Pokedex, function (poke, name) {
 			});
 			into.preevolutions.push(details);
 	});
+	if (!poke.hasOwnProperty("aerial")) {
+		poke.aerial = false;
+	}
 	if (!poke.hasOwnProperty("stats")) {
 		poke.stats = {};
 		poke.stats.health = 100;

@@ -136,7 +136,7 @@ Battles = {
 		wild : q = 0,
 		trainer : ++ q
 	},
-	style : ["normal", "double"],
+	style : ["normal", "double", "sky"],
 	kind : {
 		local : q = 0,
 		online : ++ q,

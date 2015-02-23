@@ -186,7 +186,7 @@ Moves = {
 									};
 								}
 							} else {
-								var others = target.trainer.healthyPokemon(true);
+								var others = target.trainer.healthyEligiblePokemon(true);
 								if (others.notEmpty()) {
 									foreach(others, function (poke, i, deletion) {
 										if (poke === target)
