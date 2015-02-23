@@ -80,18 +80,3 @@ Types = {
 		"weak" : ["Poison", "Steel", "Fire"]
 	}
 };
-
-InverseTypes = {};
-forevery(Types, function (effectivenesses, type) {
-	InverseTypes[type] = {};
-	if (effectivenesses.hasOwnProperty("strong")) {
-		InverseTypes[type].weak = effectivenesses.strong;
-	}
-	if (effectivenesses.hasOwnProperty("weak") || effectivenesses.hasOwnProperty("ineffective")) {
-		InverseTypes[type].strong = [];
-		if (effectivenesses.hasOwnProperty("weak"))
-			InverseTypes[type].strong = InverseTypes[type].strong.concat(effectivenesses.weak);
-		if (effectivenesses.hasOwnProperty("ineffective"))
-		InverseTypes[type].strong = InverseTypes[type].strong.concat(effectivenesses.ineffective);
-	}
-});

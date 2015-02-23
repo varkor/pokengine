@@ -80,17 +80,3 @@ Items = {
 		}
 	}
 };
-
-forevery(Items, function (category) {
-	var standard = (category.hasOwnProperty("standard") ? category.standard : {});
-	forevery(category, function (item, name) {
-		if (item === standard)
-			return;
-		forevery(standard, function (value, key) {
-			if (!item.hasOwnProperty(key))
-				item[key] = value;
-		});
-		item.fullname = name + (["Berry", "Ball"].contains(item.category) ? " " + item.category : "");
-	});
-});
-_method(Items);

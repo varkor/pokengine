@@ -371,28 +371,10 @@
 	}
 };
 
-_method(Pokedex);
-
 forevery(Pokedex, function (poke, name) {
 	if (!poke.hasOwnProperty("evolutions"))
 		poke.evolutions = [];
-	if (!poke.hasOwnProperty("preevolutions"))
-		poke.preevolutions = [];
 	poke.evolutions = wrapArray(poke.evolutions);
-	foreach(poke.evolutions, function (evo) {
-			var into = Pokedex._(evo.species);
-			if (!into.hasOwnProperty("preevolutions"))
-				into.preevolutions = [];
-			var details = {
-				species : name
-			};
-			forevery(evo, function (value, key) {
-				if (key !== "species") {
-					details[key] = value;
-				}
-			});
-			into.preevolutions.push(details);
-	});
 	if (!poke.hasOwnProperty("aerial")) {
 		poke.aerial = false;
 	}
@@ -427,30 +409,4 @@ forevery(Pokedex, function (poke, name) {
 		poke.yield.EVs.health = 1;
 		poke.yield.EVs.speed = 2;
 	}
-});
-forevery(Pokedex, function (poke, name) {
-	var tested = [];
-	var lowestLevelFoundAt = function (speciesName, lowerBound) {
-		if (!tested.contains(speciesName)) {
-			var preevolutions = Pokedex._(speciesName).preevolutions;
-			if (preevolutions.notEmpty()) {
-				var upperBound = 100;
-				foreach(preevolutions, function (preevo) {
-					if (preevo.method === "level") {
-						if (preevo.hasOwnProperty("level")) {
-							upperBound = Math.min(upperBound, preevo.level + lowerBound);
-						} else {
-							upperBound = Math.min(upperBound, lowestLevelFoundAt(preevo.species, lowerBound + 1));
-						}
-					} else {
-						upperBound = Math.min(upperBound, lowestLevelFoundAt(preevo.species, lowerBound));
-					}
-				});
-				return upperBound;
-			} else {
-				return lowerBound + 1;
-			}
-		} else return 100; // There is an evolutionary loop, and technically you shouldn't ever be able to get the Pokémon via this path as you need to evolve it from itself first. The only way to get the Pokémon via this path is to capture it in a location first.
-	}
-	poke.lowestPossibleLevel = lowestLevelFoundAt(name, 0);
 });

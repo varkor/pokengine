@@ -1788,7 +1788,8 @@ Battle = FunctionObject.new({
 						} else if (trainerBattle) {
 							Textbox.state(playerName + " didn't have any money to pay " + opponents + "!");
 						}
-						Textbox.state(playerName + " blacked out!");
+						if (!Battle.alliedTrainers.first().hasHealthyPokemon()) // Not necessarily true for Sky Battles
+							Textbox.state(playerName + " blacked out!");
 					}
 					endBattleFlags = {
 						"outcome" : "opposing victory"

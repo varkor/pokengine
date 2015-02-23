@@ -1367,5 +1367,3 @@ forevery(Moves, function (move) {
 	}
 	move.classification.push(move.type);
 });
-Move.Struggle.move = "Struggle";
-_method(Moves);

@@ -1,5 +1,7 @@
 var paths = [
+	"scripts/functions/objects.js",
 	"scripts/functions/random.js",
+	"scripts/processing/initialise.js",
 	"scripts/objects/unique/Settings.js",
 	"scripts/functions/File.js",
 	"scripts/objects/unique/FileData.js",
@@ -31,7 +33,8 @@ var paths = [
 	"scripts/objects/unique/Storage.js",
 	"scripts/objects/unique/Client.js",
 	"scripts/objects/unique/Battle.js",
-	"scripts/objects/unique/Debugger.js"
+	"scripts/objects/unique/Debugger.js",
+	"scripts/processing/process.js"
 ];
 var loadScript = function () {
 	if (paths.notEmpty()) {
