@@ -7,9 +7,11 @@ Storage = {
 			box = Storage.box;
 		box = Math.min(Storage.boxes.length, box);
 		while (box < Storage.boxes.length) {
-			if (foreach(Storage.boxes[box].slots, function (contents, slot) {
+			var slot;
+			if (foreach(Storage.boxes[box].slots, function (contents, attemptedSlot) {
 				if (contents === null) {
-					Storage.boxes[box].slots[slot] = poke;
+					Storage.boxes[box].slots[attemptedSlot] = poke;
+					slot = attemptedSlot;
 					return true;
 				}
 			}))

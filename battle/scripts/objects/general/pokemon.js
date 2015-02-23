@@ -451,7 +451,7 @@ function pokemon (data, validate) {
 	self.alterFriendship = function (boosts) {
 		if (!Array.isArray(boosts))
 			boosts = [boosts, boosts, boosts]; // Gain in 0 – 99 band, 100 – 199 band and 200 – 255 band, respectively
-		var boost = (self.friendship < 100 ? boosts[0] : self.friendship < 200 ? boosts[1] : self.friendship < 256 ? boosst[2] : 0);
+		var boost = (self.friendship < 100 ? boosts[0] : self.friendship < 200 ? boosts[1] : self.friendship < 256 ? boosts[2] : 0);
 		self.friendship += boost
 			+ (boost > 0 && self.caught && self.ball === "Luxury" ? 1 : 0)
 			+ (boost > 0 && self.caught && Game.location === self.caught.location ? 1 : 0);

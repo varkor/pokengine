@@ -274,6 +274,13 @@
 		abilities : {
 			normal : ["Overgrow"],
 			hidden : "Tough Claws"
+		},
+		attributes : {
+			"floating" : {
+				height : 40,
+				variation : 10,
+				period : 5
+			}
 		}
 	},
 	"Expertri (Havai)" : {
@@ -393,6 +400,9 @@ forevery(Pokedex, function (poke, name) {
 		poke.stats.defence = 100;
 		poke.stats["special defence"] = 100;
 		poke.stats.speed = 100;
+	}
+	if (!poke.hasOwnProperty("attributes")) {
+		poke.attributes = {};
 	}
 	if (poke.hasOwnProperty("shiny")) {
 		var pairs = poke.shiny.toLowerCase().match(/.{12}/g).map(function (pair) {

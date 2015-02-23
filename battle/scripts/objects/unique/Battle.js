@@ -204,28 +204,24 @@ Battle = FunctionObject.new({
 			}
 			Battle.drawing.complexShape(canvas, shapes, right, y, poke.battler.display.transition);
 		},
-		position : function (entity, display) {
-			var position;
+		position : function (entity, time) {
+			var position = {};
 			if (entity instanceof pokemon) {
-				var poke = entity;
-				display = display || Display.state.current;
+				var poke = entity, display = Display.state.current, attributes = Pokedex._(poke.species).attributes, floating = (attributes.hasOwnProperty("floating") ? attributes.floating.height + (attributes.floating.hasOwnProperty("variation") && attributes.floating.hasOwnProperty("period") && poke.battler.display.position.y === 0 ? Math.sin(time * (2 * Math.PI) / (attributes.floating.period * Time.second)) * attributes.floating.variation : 0) : 0);
 				var ally = display.allies.contains(entity), place, count = Battle.pokemonPerSide();
 				if (ally) {
 					place = display.allies.indexOf(poke);
-					position = {
-						x : Battle.drawing.positions.sideNear.x + poke.battler.display.position.x + place * 100 - (count - 1) * 40,
-						y : Battle.drawing.positions.sideNear.y - poke.battler.display.position.y,
-						z : Battle.drawing.positions.sideNear.z + poke.battler.display.position.z
-					};
+					position.z = Battle.drawing.positions.sideNear.z + poke.battler.display.position.z;
+					position.scale = 2 / Math.pow(2, position.z / (Battle.drawing.positions.sideFar.z - Battle.drawing.positions.sideNear.z));
+					position.x = Battle.drawing.positions.sideNear.x + poke.battler.display.position.x * position.scale + place * 100 - (count - 1) * 40;
+					position.y = Battle.drawing.positions.sideNear.y - (poke.battler.display.position.y + floating) * position.scale;
 				} else {
 					place = display.opponents.indexOf(poke);
-					position = {
-						x : Battle.drawing.positions.sideFar.x - poke.battler.display.position.x - place * 80 + (count - 1) * 40,
-						y : Battle.drawing.positions.sideFar.y - poke.battler.display.position.y,
-						z : Battle.drawing.positions.sideFar.z - poke.battler.display.position.z
-					};
+					position.z = Battle.drawing.positions.sideFar.z - poke.battler.display.position.z;
+					position.scale = 2 / Math.pow(2, position.z / (Battle.drawing.positions.sideFar.z - Battle.drawing.positions.sideNear.z));
+					position.x = Battle.drawing.positions.sideFar.x - poke.battler.display.position.x * position.scale - place * 80 + (count - 1) * 40;
+					position.y = Battle.drawing.positions.sideFar.y - (poke.battler.display.position.y + floating) * position.scale;
 				}
-				position.scale = 2 / Math.pow(2, position.z / (Battle.drawing.positions.sideFar.z - Battle.drawing.positions.sideNear.z));
 			} else {
 				var trainer = entity;
 				position = Battle.drawing.positions;
@@ -2262,18 +2258,18 @@ Battle = FunctionObject.new({
 					var shadowOpacity = Lighting.shadows.opacity(), shadowMatrix = new Matrix ([1, 0.1, -0.6, 0.4, 0, 0]), matrix = new Matrix(), position, transition, side, generalMatrix;
 					var sortDisplay = Battle.cache || (Battle.cache = Display.states[Display.state.save(Display.state.current)]), poke;
 					var all = [].concat(sortDisplay.allies, sortDisplay.opponents.reverse()).filter(onlyPokemon).sort(function (a, b) {
-						return Battle.drawing.position(Display.pokemonInState(b)).z - Battle.drawing.position(Display.pokemonInState(a)).z;
+						return Battle.drawing.position(Display.pokemonInState(b), now).z - Battle.drawing.position(Display.pokemonInState(a), now).z;
 					});
 					// Pokémon
 					foreach(all, function (_poke) {
 						poke = Display.pokemonInState(_poke);
 						side = (poke.battler.side === Battles.side.near ? "back" : "front");
-						position = Battle.drawing.position(poke);
+						position = Battle.drawing.position(poke, now);
 						context.lineWidth = position.scale * 2;
 						transition = (poke.fainted() ? 1 : poke.battler.display.transition);
 						generalMatrix = matrix.scale(position.scale * transition).rotate(poke.battler.display.angle);
 						// Shadow
-						Sprite.draw(shadowCanvas, poke.paths.sprite(side), position.x, position.y - position.z + poke.battler.display.position.y, true, [{ type : "fill", colour : "black" }, { type : "crop", heightRatio : poke.battler.display.height }], generalMatrix.multiply(shadowMatrix).scale(Math.pow(2, -poke.battler.display.position.y / 100)), now, true);
+						Sprite.draw(shadowCanvas, poke.paths.sprite(side), position.x, Battle.drawing.positions[poke.battler.side === Battles.side.near ? "sideNear" : "sideFar"].y - position.z, true, [{ type : "fill", colour : "black" }, { type : "crop", heightRatio : poke.battler.display.height }], generalMatrix.multiply(shadowMatrix).scale(Math.pow(2, (position.y - Battle.drawing.positions[poke.battler.side === Battles.side.near ? "sideNear" : "sideFar"].y) / 100)), now, true);
 						// Outline
 						if (poke.battler.display.outlined) {
 							for (var angle = 0; angle < Math.PI * 2; angle += Math.PI / 2) {
@@ -2296,7 +2292,7 @@ Battle = FunctionObject.new({
 					// Trainers
 					foreach(Battle.allTrainers(), function (trainer) {
 						if (trainer !== TheWild && trainer.display.visible) {
-							position = Battle.drawing.position(trainer);
+							position = Battle.drawing.position(trainer, now);
 							side = (Battle.alliedTrainers.contains(trainer) ? "back" : null);
 							// Shadow
 							Sprite.draw(shadowCanvas, trainer.paths.sprite(side), position.x, position.y - position.z + trainer.display.position.y, true, { type : "fill", colour : "black" }, shadowMatrix.scale(position.scale).scale(Math.pow(2, -trainer.display.position.y / 100)), now);
