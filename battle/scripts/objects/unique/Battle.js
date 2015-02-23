@@ -1112,11 +1112,12 @@ Battle = FunctionObject.new({
 			currentBattler.battler.display.outlined = false;
 		}
 		if (Battle.kind !== Battles.kind.recording) {
-			var actions = ["Run"], hotkeys = {};
+			var actions = [], hotkeys = {};
 			if (!Widgets.isAvailable("Pokémon"))
 				actions = ["Pokémon"].concat(actions);
 			if (Battle.rules.items === "allowed" && !Widgets.isAvailable("Bag"))
 				actions.push("Bag");
+			actions.push("Run");
 			hotkeys[Settings._("keys => secondary")] = "Run";
 			var moves = [];
 			foreach(currentBattler.usableMoves(), function (move) {
@@ -2149,6 +2150,7 @@ Battle = FunctionObject.new({
 			height : Settings._("screen dimensions => height") * Game.zoom,
 			selector : "#game-battle",
 			className : "centre",
+			focusable : true,
 			smoothing : false
 		},
 		draw : function (_canvas) {

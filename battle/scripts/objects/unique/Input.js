@@ -1,5 +1,6 @@
 Input = FunctionObject.new({
-	controlScheme : "keyboard"
+	controlScheme : "keyboard",
+	priority : "keyboard"
 }, {
 	update : function () {
 		forevery(Keys.held, function (duration, key) {
@@ -37,8 +38,10 @@ Input = FunctionObject.new({
 									break;
 							}
 						}
+					} else {
+						Input.controlScheme = "keyboard";
+						Textbox.requestRedraw = true;
 					}
-					Input.controlScheme = "keyboard";
 				}
 			}
 		});
@@ -174,6 +177,7 @@ Keys = {
 	press : function (key) {
 		if (!Keys.held.hasOwnProperty(key))
 			Keys.held[key] = 1;
+		Input.priority = "keyboard";
 		return false;
 	},
 	release : function (key) {
@@ -201,15 +205,15 @@ window.addEventListener("keydown", function (event) {
 	if (Keys.press(Keys.name(event.keyCode))) {
 		event.stopPropagation();
 	}
-	// if (!(event.metaKey || event.ctrlKey))
-	// 	event.preventDefault();
+	 if (!(event.metaKey || event.ctrlKey) && typeof Battle !== "undefined" && document.activeElement === Battle.canvas)
+	 	event.preventDefault();
 });
 window.addEventListener("keyup", function (event) {
 	if (Keys.release(Keys.name(event.keyCode))) {
 		event.stopPropagation();
 	}
-	// if (!(event.metaKey || event.ctrlKey))
-	// 	event.preventDefault();
+	 if (!(event.metaKey || event.ctrlKey) && typeof Battle !== "undefined" && document.activeElement === Battle.canvas)
+	 	event.preventDefault();
 });
 
 Cursor = {
@@ -232,6 +236,7 @@ window.addEventListener("mousemove", function (event) {
 	Cursor.x = event.clientX;
 	Cursor.y = event.clientY;
 	Cursor.lastMoved = 0;
+	Input.priority = "mouse";
 });
 window.addEventListener("mousedown", function (event) {
 	if (event.button === 0)
