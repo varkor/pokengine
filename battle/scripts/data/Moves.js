@@ -962,7 +962,7 @@ Moves = {
 			duration : 30,
 			transition : function (self, target, progress) {
 				self.display.position.x = self.from.position.x + (30 - self.from.position.y) * progress;
-				self.display.position.y = self.from.position.y + (352 - self.from.position.y) * progress;
+				self.display.position.y = self.from.position.y + ((Battle.canvas.height / Game.zoom / 2) - self.from.position.y) * progress;
 				self.display.position.z = self.from.position.z + (30 - self.from.position.z) * progress;
 			}
 		}
