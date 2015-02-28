@@ -68,6 +68,8 @@ FunctionObject = {
 					}
 					if (details.drawing.canvas.hasOwnProperty("className"))
 						canvas.className = details.drawing.canvas.className;
+					if (details.drawing.canvas.hasOwnProperty("focusable") && details.drawing.canvas.focusable)
+						canvas.tabIndex = 0;
 					canvas.width = details.drawing.canvas.width;
 					canvas.height = details.drawing.canvas.height;
 					if (details.drawing.canvas.hasOwnProperty("smoothing") && !details.drawing.canvas.smoothing)

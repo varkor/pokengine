@@ -88,12 +88,15 @@ Sprite = FunctionObject.new({
 	canvases : [],
 	load : function (_paths, uponLoad, uponError, filetype) {
 		var paths = wrapArray(_paths);
+		foreach(paths, function (path, i) {
+			paths[i] = Settings._("paths => images").replace("{animation}", Settings._("animated sprites") && FileData.images.hasOwnProperty(path.replace(/~.*/, "")) ? "animated" : "static") + "/" + paths[i];
+		});
 		return File.loadFileOfType("sprites", Image, "load", function (event, image, store, path) {
 			var data = {
 				animated : false,
 				frames : 1
 			};
-			var fileData, genericPath = path.replace(/^(animated|static)\//, "").replace(/~.*/, "");
+			var fileData, genericPath = path.replace(new RegExp("^" + Settings._("paths => images").replace("{animation}", "(animated|static)") + "/"), "").replace(/~.*/, "");
 			if (Settings._("animated sprites") && (fileData = FileData.images).hasOwnProperty(genericPath)) {
 				data = JSONCopy(fileData[genericPath]);
 				if (data.hasOwnProperty("durations"))
@@ -106,7 +109,7 @@ Sprite = FunctionObject.new({
 			data.width = image.width / data.frames;
 			data.height = image.height;
 			return data;
-		}, Settings._("paths => images").replace("{animation}", Settings._("animated sprites") && FileData.images.hasOwnProperty(path.replace(/~.*/, "")) ? "animated" : "static"), arguments.length >= 4 && typeof filetype !== "undefined" ? filetype : "png", paths, uponLoad, uponError);
+		}, null, arguments.length >= 4 && typeof filetype !== "undefined" ? filetype : "png", paths, uponLoad, uponError);
 	},
 	filters : {
 		invert : function (i, components) {

@@ -28,8 +28,8 @@ function forevery (dictionary, fn, includePrototype) {
 }
 
 function _ (_object, _path) {
-	object = { object : _object };
-	path = _path.trim();
+	var object = { object : _object };
+	var path = _path.trim();
 	if (/^ ?[~\-=]> ?/.test(path))
 		path = "object " + path;
 	else

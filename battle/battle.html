@@ -11,7 +11,7 @@
 	<body>
 		<button id="connect">Connect</button>
 		<span>with the name</span>
-		<input id="name" type="text" value="Dark Matter">
+		<input id="name" type="text" value="Red">
 		<button id="randomise" class="small">⚄</button>
 		<span>or initiate an</span>
 		<button id="local">offline battle</button>
@@ -202,8 +202,8 @@
 							"money" : 10000
 						}));
 						Battle.beginWildBattle(Game.player, [new pokemon({
-							species : "Horrendove (Atlas)",
-							level : 20,
+							species : "Charizard (Nintendo)",
+							level : 45,
 							moves : [{ move : "Tackle" }]
 						})], Interface.buildSettings(), function (flags) {
 							document.querySelector("#local").disabled = false;
