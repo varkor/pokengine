@@ -96,37 +96,37 @@ Move = {
 		if (!constant.hasOwnProperty("failed") || !constant.failed) {
 			if (affected.notEmpty()) {
 				var missEffect = false;
-				foreach(affected, function (targeted) {
+				foreach(affected, function (targetted) {
 					var failed = false, accuracy, evasion;
 					if (Battle.triggerEvent(Triggers.move, {
 						move : move,
 						affected : true
-					}, mover, targeted).contains(true)) {
+					}, mover, targetted).contains(true)) {
 						failed = true;
 						statedFailureReason = true;
 					} else {
 						if (!move.classification.contains("_")) {
 							accuracy = (mover.battler.statLevel.accuracy === 0 ? 1 : mover.battler.statLevel.accuracy > 0 ? 1 + (1 / 3) * mover.battler.statLevel.accuracy : 3 / (Math.abs(mover.battler.statLevel.accuracy) + 3));
-							evasion = (targeted.battler.statLevel.evasion === 0 ? 1 : targeted.battler.statLevel.evasion > 0 ? 1 + (1 / 3) * targeted.battler.statLevel.evasion : 3 / (Math.abs(targeted.battler.statLevel.evasion) + 3));
+							evasion = (targetted.battler.statLevel.evasion === 0 ? 1 : targetted.battler.statLevel.evasion > 0 ? 1 + (1 / 3) * targetted.battler.statLevel.evasion : 3 / (Math.abs(targetted.battler.statLevel.evasion) + 3));
 						} else {
 							accuracy = 1;
 							evasion = 1;
 						}
 						var hit = (!finalStage || (move.hasOwnProperty("accuracy") ? move.accuracy * (accuracy / evasion) >= srandom.point() : true));
 						if (hit) {
-							if (move.effects.use[stage].targets && targeted.battler.protected && !move.piercing) {
-								Textbox.state(targeted.name() + " protected " + targeted.selfPronoun() + ".");
+							if (move.effects.use[stage].targets && targetted.battler.protected && !move.piercing) {
+								Textbox.state(targetted.name() + " protected " + targetted.selfPronoun() + ".");
 								failed = true;
 								statedFailureReason = true;
 								missEffect = true;
-							} else if (move.effects.use[stage].targets && targeted.invulnerable && !move.despite.contains(targeted.invulnerable)) { // Dig, Fly, etc.
-								Textbox.state(targeted.name() + " cannot be found!");
+							} else if (move.effects.use[stage].targets && targetted.invulnerable && !move.despite.contains(targetted.invulnerable)) { // Dig, Fly, etc.
+								Textbox.state(targetted.name() + " cannot be found!");
 								failed = true;
 								statedFailureReason = true;
 								missEffect = true;
 							} else {
 								// Actually use the move
-								var response = move.effects.use[stage].effect(mover, targeted, constant);
+								var response = move.effects.use[stage].effect(mover, targetted, constant);
 								if (response) {
 									if (response.hasOwnProperty("failed") && response.failed)
 										failed = true;
@@ -140,19 +140,19 @@ Move = {
 							}
 						} else {
 							if (accuracy <= evasion)
-								Textbox.state(mover.name() + " missed " + targeted.name() + "!");
+								Textbox.state(mover.name() + " missed " + targetted.name() + "!");
 							else
-								Textbox.state(targeted.name() + " evaded the attack!");
+								Textbox.state(targetted.name() + " evaded the attack!");
 							failed = true;
 							statedFailureReason = true;
 							missEffect = true;
 						}
 					}
 					if (missEffect && move.effects.hasOwnProperty("miss"))
-						move.effects.miss(mover, targeted);
+						move.effects.miss(mover, targetted);
 					if (failed) {
 						if (move.effects.hasOwnProperty("fail"))
-							move.effects.fail(mover, targeted);
+							move.effects.fail(mover, targetted);
 						return {
 							succeeded : false
 						};
@@ -169,7 +169,7 @@ Move = {
 				}
 				if (failed) {
 					if (move.effects.hasOwnProperty("fail"))
-						move.effects.fail(mover, targeted);
+						move.effects.fail(mover, targetted);
 					return {
 						succeeded : false
 					};
@@ -188,8 +188,8 @@ Move = {
 				Textbox.remove(mover);
 				battler.resetDisplay(mover.battler);
 				// Currently commented out because it resets Dive / Dig / etc.
-				// foreach(affected, function (targeted) {
-				// 	battler.resetDisplay(targeted.battler);
+				// foreach(affected, function (targetted) {
+				// 	battler.resetDisplay(targetted.battler);
 				// });
 				displayRendered = Display.state.save();
 				Textbox.effect(function () { Display.state.load(displayRendered); });
@@ -371,6 +371,7 @@ Move.targets = {
 	directTarget : [Move.target.directTarget],
 	opponentAndAdjacent : [Move.target.directOpponent, Move.target.adjacentOpponent],
 	selfAndAdjacent : [Move.target.self, Move.target.adjacentAlly],
+	adjacentAlly : [Move.target.adjacentAlly],
 	selfAndTarget : [Move.target.self, Move.target.directTarget],
 	noone : [],
 	closeBy : [Move.target.self, Move.target.directOpponent, Move.target.adjacentAlly, Move.target.adjacentOpponent],

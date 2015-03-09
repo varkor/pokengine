@@ -82,3 +82,15 @@ forevery(Items, function (category) {
 		item.fullname = name + (["Berry", "Ball"].contains(item.category) ? " " + item.category : "");
 	});
 });
+
+// Add paths to scenes
+Scenes.__(function (scene, name) {
+	scene.paths = {
+		sprite : function (includeFiletype) {
+			var contracted = Settings._("paths => scenes => image");
+			contracted = contracted.replace("{name}", name);
+			contracted = contracted.replace(/\{filetype=[a-z0-9]+\}/, (includeFiletype ? "." + contracted.match(/\{filetype=([a-z0-9]+)\}/)[1] : ""));
+			return contracted;
+		}
+	}
+});

@@ -385,6 +385,7 @@ Moves = {
 		contact: false,
 		despite : ["Dig"],
 		affects : Move.targets.adjacentToUser,
+		targets : Move.targets.adjacentToUser,
 		effects : {
 			constant : function () {
 				var constant = {
