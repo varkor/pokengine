@@ -223,7 +223,9 @@ Move = {
 					display : mover.battler.display
 				}, !affectsEntireSide ? {
 					display : target.battler.display
-				} : null, constant);
+				} : null, {
+					display : View
+				}, constant);
 			} else {
 				event.transition({
 					display : mover.battler.display,
@@ -231,7 +233,10 @@ Move = {
 				}, !affectsEntireSide ? {
 					display : target.battler.display,
 					from : Display.pokemonInState(target, from).battler.display
-				} : null, 1, constant);
+				} : null, {
+					display : View,
+					from : JSONCopy(View)
+				}, constant, 1);
 			}
 		});
 		View.reset();
@@ -260,7 +265,9 @@ Move = {
 				display : Display.pokemonInState(mover).battler.display
 			}, !affectsEntireSide ? {
 				display : Display.pokemonInState(target).battler.display
-			} : null, constant);
+			} : null, {
+				display : View
+			}, constant);
 		} else {
 			last = Math.max(move.animation[stage][track.progress].to, last);
 			Move.transition(mover, move, stage, target, constant, track.progress, 0, Display.state.save(Display.state.current));
@@ -278,6 +285,7 @@ Move = {
 	},
 	transition : function (mover, move, stage, target, constant, start, progress, from) {
 		var affectsEntireSide = (target === Battles.side.far || target === Battles.side.near);
+		// There are 100 "duration steps" for every second
 		var duration = (move.animation[stage][start].to - move.animation[stage][start].from) / 100, frames = duration * Time.framerate;
 		move.animation[stage][start].transition({
 			display : Display.pokemonInState(mover).battler.display,
@@ -285,7 +293,10 @@ Move = {
 		}, !affectsEntireSide ? {
 			display : Display.pokemonInState(target).battler.display,
 			from : Display.pokemonInState(target, from).battler.display
-		} : null, Math.min(1, progress), constant);
+		} : null, {
+			display : View,
+			from : JSONCopy(View)
+		}, constant, Math.min(1, progress));
 		if (progress < 1)
 			setTimeout(function () { Move.transition(mover, move, stage, target, constant, start, progress + 1 / frames, from); }, Time.refresh)
 		else {

@@ -66,7 +66,7 @@ Moves = {
 			/*{
 				from : 0,
 				to : 30,
-				transition : function (self, target, progress) {
+				transition : function (self, target, view, constant, progress) {
 					// self {display, from}
 					self.display.position.x = self.from.position.x + (-20 - self.from.position.x) * progress;
 				}
@@ -74,28 +74,28 @@ Moves = {
 			{
 				from : 40,
 				to : 50,
-				transition : function (self, target, progress) {
+				transition : function (self, target, view, constant, progress) {
 					self.display.position.x = self.from.position.x + (50 - self.from.position.x) * progress;
 				}
 			},
 			{
 				from : 45,
 				to : 55,
-				transition : function (self, target, progress) {
+				transition : function (self, target, view, constant, progress) {
 					target.display.position.x = target.from.position.x + (-50 - target.from.position.x) * progress;
 				}
 			},
 			{
 				from : 60,
 				to : 90,
-				transition : function (self, target, progress) {
+				transition : function (self, target, view, constant, progress) {
 					self.display.position.x = self.from.position.x + (0 - self.from.position.x) * progress;
 				}
 			},
 			{
 				from : 100,
 				to : 150,
-				transition : function (self, target, progress) {
+				transition : function (self, target, view, constant, progress) {
 					target.display.position.x = target.from.position.x + (0 - target.from.position.x) * progress;
 				}
 			}*/
@@ -111,10 +111,10 @@ Moves = {
 					self.display.position.x = 0;
 				}
 			}*/
-			{
+			/*{
 				start : 0,
 				duration : 30,
-				transition : function (self, target, progress) {
+				transition : function (self, target, view, constant, progress) {
 					self.display.position.x = self.from.position.x + (-20 - self.from.position.x) * progress;
 					self.display.angle = self.from.angle + (-0.3 - self.from.angle) * progress;
 				}
@@ -122,7 +122,7 @@ Moves = {
 			{
 				delay : 10,
 				duration : 10,
-				transition : function (self, target, progress) {
+				transition : function (self, target, view, constant, progress) {
 					self.display.position.x = self.from.position.x + (140 - self.from.position.x) * progress;
 					self.display.position.z = self.from.position.z + (95 - self.from.position.z) * progress;
 					self.display.angle = self.from.angle + (0.5 - self.from.angle) * progress;
@@ -131,7 +131,7 @@ Moves = {
 			{
 				delay : -5,
 				duration : 10,
-				transition : function (self, target, progress) {
+				transition : function (self, target, view, constant, progress) {
 					target.display.position.x = target.from.position.x + (-50 - target.from.position.x) * progress;
 					target.display.position.z = target.from.position.z + (-20 - target.from.position.z) * progress;
 					target.display.angle = target.from.angle + (-0.2 - target.from.angle) * progress;
@@ -140,7 +140,7 @@ Moves = {
 			{
 				delay : 5,
 				duration : 30,
-				transition : function (self, target, progress) {
+				transition : function (self, target, view, constant, progress) {
 					self.display.position.x = self.from.position.x + (0 - self.from.position.x) * progress;
 					self.display.position.z = self.from.position.z + (0 - self.from.position.z) * progress;
 					self.display.angle = self.from.angle + (0 - self.from.angle) * progress;
@@ -149,10 +149,38 @@ Moves = {
 			{
 				delay : 10,
 				duration : 50,
-				transition : function (self, target, progress) {
+				transition : function (self, target, view, constant, progress) {
 					target.display.position.x = target.from.position.x + (0 - target.from.position.x) * progress;
 					target.display.position.z = target.from.position.z + (0 - target.from.position.z) * progress;
 					target.display.angle = target.from.angle + (0 - target.from.angle) * progress;
+				}
+			}*/
+			{
+				"start" : 0,
+				"duration" : 50,
+				"transition" : function (self, target, view, constant, progress) {
+					self.display.position.z = self.from.position.z + (50 - self.from.position.z) * progress;
+				}
+			},
+			{
+				"delay" : 0,
+				"duration" : 50,
+				"transition" : function (self, target, view, constant, progress) {
+					self.display.position.z = self.from.position.z + (0 - self.from.position.z) * progress;
+				}
+			},
+			{
+				"delay" : 0,
+				"duration" : 50,
+				"transition" : function (self, target, view, constant, progress) {
+					self.display.position.y = self.from.position.y + (50 - self.from.position.y) * progress;
+				}
+			},
+			{
+				"delay" : 0,
+				"duration" : 50,
+				"transition" : function (self, target, view, constant, progress) {
+					self.display.position.y = self.from.position.y + (0 - self.from.position.y) * progress;
 				}
 			}
 			]]
@@ -407,7 +435,7 @@ Moves = {
 		{
 			start : 0,
 			duration : 100,
-			transition : function (self, target, progress, constant) {
+			transition : function (self, target, view, constant, progress, constant) {
 				View.position.x = random(-constant.magnitude, constant.magnitude);
 				View.position.y = random(-constant.magnitude, constant.magnitude);
 			}
@@ -961,7 +989,7 @@ Moves = {
 		{
 			start : 0,
 			duration : 30,
-			transition : function (self, target, progress) {
+			transition : function (self, target, view, constant, progress) {
 				self.display.position.x = self.from.position.x + (30 - self.from.position.y) * progress;
 				self.display.position.y = self.from.position.y + ((Battle.canvas.height / Game.zoom / 2) - self.from.position.y) * progress;
 				self.display.position.z = self.from.position.z + (30 - self.from.position.z) * progress;
@@ -979,7 +1007,7 @@ Moves = {
 		{
 			delay : 0,
 			duration : 30,
-			transition : function (self, target, progress) {
+			transition : function (self, target, view, constant, progress) {
 				self.display.position.y = self.from.position.y + (20 - self.from.position.y) * progress;
 				self.display.position.z = self.from.position.z + (115 - self.from.position.z) * progress;
 			}
@@ -987,7 +1015,7 @@ Moves = {
 		{
 			delay : -5,
 			duration : 10,
-			transition : function (self, target, progress) {
+			transition : function (self, target, view, constant, progress) {
 				target.display.position.x = target.from.position.x + (-50 - target.from.position.x) * progress;
 				target.display.position.z = target.from.position.z + (-20 - target.from.position.z) * progress;
 				target.display.angle = target.from.angle + (-0.2 - target.from.angle) * progress;
@@ -996,7 +1024,7 @@ Moves = {
 		{
 			delay : 0,
 			duration : 30,
-			transition : function (self, target, progress) {
+			transition : function (self, target, view, constant, progress) {
 				self.display.position.x = self.from.position.x + (0 - self.from.position.x) * progress;
 				self.display.position.y = self.from.position.y + (0 - self.from.position.y) * progress;
 				self.display.position.z = self.from.position.z + (0 - self.from.position.z) * progress;
@@ -1005,7 +1033,7 @@ Moves = {
 		{
 			delay : 10,
 			duration : 30,
-			transition : function (self, target, progress) {
+			transition : function (self, target, view, constant, progress) {
 				target.display.position.x = target.from.position.x + (0 - target.from.position.x) * progress;
 				target.display.position.z = target.from.position.z + (0 - target.from.position.z) * progress;
 				target.display.angle = target.from.angle + (0 - target.from.angle) * progress;
@@ -1051,7 +1079,7 @@ Moves = {
 		{
 			start : 0,
 			duration : 30,
-			transition : function (self, target, progress) {
+			transition : function (self, target, view, constant, progress) {
 				self.display.height = self.from.height + (0 - self.from.height) * progress;
 			}
 		}
@@ -1060,7 +1088,7 @@ Moves = {
 		{
 			start : 0,
 			duration : 30,
-			transition : function (self, target, progress) {
+			transition : function (self, target, view, constant, progress) {
 				self.display.height = self.from.height + (1 - self.from.height) * progress;
 			}
 		}
@@ -1104,7 +1132,7 @@ Moves = {
 		{
 			start : 0,
 			duration : 30,
-			transition : function (self, target, progress) {
+			transition : function (self, target, view, constant, progress) {
 				self.display.height = self.from.height + (0 - self.from.height) * progress;
 			}
 		}
@@ -1113,7 +1141,7 @@ Moves = {
 		{
 			start : 0,
 			duration : 30,
-			transition : function (self, target, progress) {
+			transition : function (self, target, view, constant, progress) {
 				self.display.height = self.from.height + (1 - self.from.height) * progress;
 			}
 		}
@@ -1324,16 +1352,13 @@ Moves = {
 		}
 	}
 };
+
 forevery(Moves, function (move) {
 	if (!move.hasOwnProperty("priority"))
 		move.priority = 0;
 	if (!move.hasOwnProperty("classification"))
 		move.classification = [];
-	if (move.hasOwnProperty("despite")) {
-		foreach(move.despite, function (affect, i) {
-			move.despite[i] = Moves[affect];
-		});
-	} else
+	if (!move.hasOwnProperty("despite"))
 		move.despite = [];
 	if (!move.hasOwnProperty("targets")) // The choice of Pokémon the user has to attack
 		move.targets = move.affects;
