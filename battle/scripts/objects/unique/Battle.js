@@ -2111,9 +2111,14 @@ Battle = FunctionObject.new({
 	},
 	inflict : function (poke, status) {
 		var types = Pokedex._(poke.species).types;
-		if ((status !== "burned" || !types.contains("Fire")) && (status !== "paralysed" || !types.contains("Electric")) && status !== "frozen" || !types.contains("Ice") && ((status !== "poisoned" && status !== "badly poisoned") || (!types.contains("Poison") && !types.contains("Steel")))) {
+		if ((status !== "burned" || !types.contains("Fire")) && (status !== "paralysed" || !types.contains("Electric")) && (status !== "frozen" || !types.contains("Ice")) && ((status !== "poisoned" && status !== "badly poisoned") || (!types.contains("Poison") && !types.contains("Steel")))) {
+			Textbox.state(poke.name() + " was  " + status + "!");
 			poke.status = status;
 			Battle.recoverFromStatus(poke);
+			return true;
+		} else {
+			Textbox.state("But " + poke.name() + " was not " + status + "!");
+			return false;
 		}
 	},
 	recoverFromStatus : function (poke) {
