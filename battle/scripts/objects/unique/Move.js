@@ -126,7 +126,7 @@ Move = {
 								missEffect = true;
 							} else {
 								// Actually use the move
-								var response = move.effects.use[stage].effect(mover, targetted, constant);
+								var response = move.effects.use[stage].effect(mover, targetted, constant, 1);
 								if (response) {
 									if (response.hasOwnProperty("failed") && response.failed)
 										failed = true;

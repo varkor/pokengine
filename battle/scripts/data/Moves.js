@@ -1163,9 +1163,6 @@ Moves = {
 			use : [
 				{
 					effect : function (self, target, constant, repetitions) {
-						var finished = false;
-						if (arguments.length < 4)
-							repetitions = 1;
 						Battle.damage(target, Move.damage(self, target, "Pin Missile"), repetitions === 1);
 						if (target !== NoPokemon && !target.fainted() && (repetitions < 2 || (repetitions <= 3 && srandom.chance(3)) || (repetitions <= 5 && srandom.chance(6)))) {
 							Moves._("Pin Missile").effects.use[0].effect(self, target, constant, ++ repetitions); // Not the standard Move.use() form, so that it can take advantage of repetitions
