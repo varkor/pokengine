@@ -108,6 +108,7 @@ Genders = ["male", "female", "neuter"];
 
 Time = {
 	framerate : Settings._("framerate"),
+	speed : Settings._("speed"),
 	millisecond : 1,
 	milliseconds : 1,
 	second : 1000,

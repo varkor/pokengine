@@ -1,6 +1,7 @@
 Settings.addData({
 	"screen dimensions" : { width : 356, height : 288 },
-	"framerate" : 60,
+	"framerate" : 60, // The framerate—does not affect the game speed at all
+	"speed" : 1, // Allows one to speed up the entire game (i.e. 1 is just normal speed, 2 is twice-as-fast, etc.)
 	"font" : {
 		typeface : "Open Sans",
 		weight : "300"

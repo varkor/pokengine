@@ -2141,11 +2141,15 @@ Battle = FunctionObject.new({
 		}
 	},
 	update : function () {
-		if (Battle.active && Battle.state.kind === "opening") {
-			Battle.state.transition += 1 / (Time.framerate * Settings._("segue transition duration"));
-			Battle.state.transition = Math.clamp(0, Battle.state.transition, 1);
-			if (Battle.state.transition === 1)
-				Battle.begin();
+		if (Battle.active) {
+			if (Battle.state.kind === "opening") {
+				Battle.state.transition += 1 / (Time.framerate * Settings._("segue transition duration"));
+				Battle.state.transition = Math.clamp(0, Battle.state.transition, 1);
+				if (Battle.state.transition === 1)
+					Battle.begin();
+			}
+			if (Settings._("visual weather effects") || display.flags.weather)
+				Weather.particles.update();
 		}
 	},
 	drawing : {

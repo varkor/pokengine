@@ -113,7 +113,10 @@ Weather = {
 						} else {
 							particle.velocity.speed = 0;
 						}
-						particle.calc = {cos : Math.cos(particle.velocity.direction), sin : Math.sin(particle.velocity.direction)};
+						particle.calc = {
+							cos : Math.cos(particle.velocity.direction),
+							sin : Math.sin(particle.velocity.direction)
+						};
 					}
 				}
 				if (!inRange(particle.position.x, 0 - particle.size, Battle.canvas.width + particle.size) || !inRange(particle.position.y, 0 - particle.size, Battle.canvas.height + particle.size) || (particle.position.y >= particle.landed && particle.velocity.speed === 0))
@@ -160,7 +163,6 @@ Weather = {
 				Weather.particles.add();
 		}
 		Weather.particles.draw(context);
-		Weather.particles.update();
 		var overlay;
 		switch (weather) {
 			case "intenseSunlight":
