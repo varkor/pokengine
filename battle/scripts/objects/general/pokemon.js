@@ -699,7 +699,7 @@ function pokemon (data, validate) {
 	};
 
 	self.recoil = function (move, damage) {
-		damage = Move.exactDamage(self, self, move, Math.floor(damage));
+		damage = Move.exactDamage(self, self, move, Math.floor(damage), "Typeless");
 		Textbox.state(self.name() + " took recoil damage!");
 		Battle.damage(self, damage);
 	};
