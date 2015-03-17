@@ -2043,33 +2043,35 @@ Battle = FunctionObject.new({
 		return Battle.alliesTo(pokeA) === Battle.alliesTo(pokeB);
 	},
 	flinch : function (poke) {
-		if (!poke.battler.flinching && poke.battler.substitute === 0) {
+		if (!poke.battler.flinching && poke.battler.substitute === 0)
 			poke.battler.flinching = true;
-			Textbox.state(poke.name() + " flinched!");
-		}
 	},
 	confuse : function (poke) {
-		if (poke.battler.confused) {
-			Textbox.state(poke.name() + " is already confused!");
-		} else {
-			Textbox.state(poke.name() + " has become confused!");
-			poke.battler.confused = true;
-			Battle.haveEffect(function (target) {
-				Textbox.state(target.name() + " broke out of " + target.possessivePronoun() + " confusion!");
-				target.battler.confused = false;
-			}, srandom.int(1, 4), poke);
+		if (!poke.fainted()) {
+			if (poke.battler.confused) {
+				Textbox.state(poke.name() + " is already confused!");
+			} else {
+				Textbox.state(poke.name() + " has become confused!");
+				poke.battler.confused = true;
+				Battle.haveEffect(function (target) {
+					Textbox.state(target.name() + " broke out of " + target.possessivePronoun() + " confusion!");
+					target.battler.confused = false;
+				}, srandom.int(1, 4), poke);
+			}
 		}
 	},
 	infatuate : function (poke) {
-		if (poke.battler.infatuated) {
-			Textbox.state(poke.name() + " is already infatuated!");
-		} else {
-			Textbox.state(poke.name() + " has become infatuated!");
-			poke.battler.infatuated = true;
-			Battle.haveEffect(function (target) {
-				Textbox.state(target.name() + " broke out of " + target.possessivePronoun() + " infatuation!");
-				target.battler.infatuated = false;
-			}, srandom.int(1, 4), poke);
+		if (!poke.fainted()) {
+			if (poke.battler.infatuated) {
+				Textbox.state(poke.name() + " is already infatuated!");
+			} else {
+				Textbox.state(poke.name() + " has become infatuated!");
+				poke.battler.infatuated = true;
+				Battle.haveEffect(function (target) {
+					Textbox.state(target.name() + " broke out of " + target.possessivePronoun() + " infatuation!");
+					target.battler.infatuated = false;
+				}, srandom.int(1, 4), poke);
+			}
 		}
 	},
 	placeHazard : function (hazard, maximum, side) {
@@ -2148,12 +2150,16 @@ Battle = FunctionObject.new({
 	inflict : function (poke, status, force) {
 		var types = Pokedex._(poke.species).types;
 		if ((poke.status === "none" || force) && (status !== "burned" || !types.contains("Fire")) && (status !== "paralysed" || !types.contains("Electric")) && (status !== "frozen" || !types.contains("Ice")) && ((status !== "poisoned" && status !== "badly poisoned") || (!types.contains("Poison") && !types.contains("Steel")))) {
-			Textbox.state(poke.name() + " was " + (status !== "asleep" ? status : "put to sleep") + "!");
-			poke.status = status;
-			Battle.recoverFromStatus(poke);
+			if (!poke.fainted()) {
+				Textbox.state(poke.name() + " was " + (status !== "asleep" ? status : "put to sleep") + "!");
+				poke.status = status;
+				Battle.recoverFromStatus(poke);
+			}
 			return true;
 		} else {
-			Textbox.state("But " + poke.name() + " was not " + status + "!");
+			if (!poke.fainted()) {
+				Textbox.state("But " + poke.name() + " was not " + status + "!");
+			}
 			return false;
 		}
 	},

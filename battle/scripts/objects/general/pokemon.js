@@ -603,8 +603,10 @@ function pokemon (data, validate) {
 			Textbox.state(self.name() + " was paralysed and couldn't move!");
 			return false;
 		}
-		if (self.battler.flinching)
+		if (self.battler.flinching) {
+			Textbox.state(self.name() + " flinched!");
 			return false;
+		}
 		if (self.battler.confused) {
 			Textbox.state(self.name() + " is confused.");
 			if (srandom.chance(2)) {
