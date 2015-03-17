@@ -1130,11 +1130,47 @@ Battle = FunctionObject.new({
 			if (Battle.style === "double" && Battle.selection > 0)
 				actions.insert(0, "Back");
 			Textbox.ask("What do you want " + currentBattler.name() + " to do?", moves, function (response, i, major) {
+				Textbox.details = null;
 				if (major) {
 					Battle.input("Fight", i);
 				} else
 					Battle.input(response);
-			}, actions, null, hotkeys, "Action: " + currentBattler.unique, null, true);
+			}, actions, null, hotkeys, "Action: " + currentBattler.unique, function (i, major) {
+				if (major && Keys.isHeld(Settings._("keys => tertiary"))) {
+					Textbox.details = function (context, left, top, width, height) {
+						var move = currentBattler.usableMoves()[i], stats = Moves._(move.move), padding = {
+							horizontal : 36,
+							vertical : 24
+						};
+						context.fillStyle = "hsla(0, 0%, 0%, 0.9)";
+						context.fillRect(left * Game.zoom, top * Game.zoom, width * Game.zoom, height * Game.zoom);
+						context.fillStyle = "white";
+						context.textBaseline = "top";
+						context.textAlign = "left";
+						context.font = Font.load(24 * Game.zoom);
+						context.fillText(move.move, (left + padding.horizontal) * Game.zoom, (top + padding.vertical) * Game.zoom);
+						context.textAlign = "right";
+						context.fillText(move.PP + "/" + Move.maximumPP(move.move, move.PPUps), (left + width - padding.horizontal) * Game.zoom, (top + padding.vertical) * Game.zoom);
+						context.textAlign = "left";
+						context.font = Font.load(18 * Game.zoom);
+						context.fillText(stats.type, (left + padding.horizontal) * Game.zoom, (top + padding.vertical + 44) * Game.zoom);
+						if (stats.hasOwnProperty("power"))
+							context.fillText("Power: " + stats.power, (left + padding.horizontal) * Game.zoom, (top + padding.vertical + 70) * Game.zoom);
+						context.textAlign = "right";
+						context.fillText(stats.category === Move.category.physical ? "Physical" : stats.category === Move.category.special ? "Special" : stats.category === Move.category.status ? "Status" : "", (left + width - padding.horizontal) * Game.zoom, (top + padding.vertical + 44) * Game.zoom);
+						if (stats.hasOwnProperty("accuracy"))
+							context.fillText("Accuracy: " + Math.round(stats.accuracy * 100) + "%", (left + width - padding.horizontal) * Game.zoom, (top + padding.vertical + 70) * Game.zoom);
+						context.textAlign = "left";
+						context.font = Font.load(14 * Game.zoom);
+						var lines = Textbox.wrap(stats.description, Textbox.newStyleContext(), [], (width - padding.horizontal * 2) * Game.zoom).split("\n");
+						foreach(lines, function (line, i) {
+							context.fillText(line, (left + padding.horizontal) * Game.zoom, (top + 128 + 16 * i) * Game.zoom);
+						});
+					};
+				} else {
+					Textbox.details = null;
+				}
+			}, true);
 		} else {
 			var action = Battle.recording.actions.shift()[Battle.selection];
 			Battle.input(action.primary, action.secondary, action.tertiary);

@@ -5,7 +5,7 @@ Input = FunctionObject.new({
 	update : function () {
 		forevery(Keys.held, function (duration, key) {
 			if (!foreach(Keys.handlers, function (handler) {
-				if (handler.keys.contains(key) && handler.handler(key, duration === 1))
+				if (handler.keys.contains(key) && handler.handler(key, duration === 1, false))
 					return true;
 				if (Keys.heldKeys().length > 1 && handler.keys.contains(Keys.combination(Keys.heldKeys())) && handler.handler(Keys.combination(Keys.heldKeys()), duration === 1))
 					return true;
@@ -39,7 +39,8 @@ Input = FunctionObject.new({
 							}
 						}
 					} else {
-						Input.controlScheme = "keyboard";
+						if (![Settings._("keys => tertiary")].contains(key))
+							Input.controlScheme = "keyboard";
 						Textbox.requestRedraw = true;
 					}
 				}
@@ -163,10 +164,11 @@ Keys = {
 	isPressed : function (key) {
 		return Keys.isHeld(key) && Keys.held[key].duration === 1;
 	},
-	addHandler : function (handler, forWhichKeys) {
+	addHandler : function (handler, forWhichKeys, notifyOfReleases) {
 		var data = {
 			handler : handler,
-			keys : wrapArray(forWhichKeys)
+			keys : wrapArray(forWhichKeys),
+			notifyOfReleases : (arguments.length >= 3 && notifyOfReleases)
 		};
 		Keys.handlers.push(data);
 		return data;
@@ -177,10 +179,15 @@ Keys = {
 	press : function (key) {
 		if (!Keys.held.hasOwnProperty(key))
 			Keys.held[key] = 1;
-		Input.priority = "keyboard";
+		if (![Settings._("keys => tertiary")].contains(key))
+			Input.priority = "keyboard";
 		return false;
 	},
 	release : function (key) {
+		foreach(Keys.handlers, function (handler) {
+			if (handler.keys.contains(key) && handler.notifyOfReleases && handler.handler(key, false, true))
+				return true;
+		});
 		delete Keys.held[key];
 		return false;
 	},

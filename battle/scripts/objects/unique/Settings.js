@@ -36,6 +36,7 @@ Settings.addData({
 	"keys" : {
 		primary : "space",
 		secondary : "Z",
+		tertiary : "shift",
 		up : "up",
 		right : "right",
 		down : "down",

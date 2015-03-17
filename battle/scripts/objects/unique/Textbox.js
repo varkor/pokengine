@@ -4,6 +4,7 @@ Textbox = FunctionObject.new({
 	displayed : "",
 	character : 0,
 	dialogue : [],
+	details : null,
 	response : null, // The selected option when a question is asked
 	hoverResponse : null, // Which response the cursor is hovering over
 	responsePosition : { x : 0, y : 0 }, // Used to allow for much more natural keyboard input
@@ -116,9 +117,7 @@ Textbox = FunctionObject.new({
 		}
 	},
 	metrics : function (style) {
-		var styleForMetrics = style;
-		if (arguments.length < 1)
-			styleForMetrics = Textbox.currentStyle();
+		var styleForMetrics = (arguments.length < 1 ? Textbox.currentStyle() : style);
 		var textboxWidth = Settings._("screen dimensions => width"), textboxHeight = Settings._("screen dimensions => height");
 		var metrics = {
 			left : styleForMetrics.margin.horizontal,
@@ -398,8 +397,9 @@ Textbox = FunctionObject.new({
 			}
 		});
 	},
-	wrap : function (text, styling, entities) {
-		var context = Textbox.canvas.getContext("2d"), style = Textbox.styles._(Textbox.style), metrics = Textbox.metrics(style), styleContext = Textbox.newStyleContext(style);
+	wrap : function (text, styling, entities, _width) {
+		var context = Textbox.canvas.getContext("2d");
+		var style = Textbox.styles._(Textbox.style), metrics = Textbox.metrics(style), boundsWidth = (arguments.length < 4 ? metrics.inner.width : _width), styleContext = Textbox.newStyleContext(style);
 		entities = entities.slice(0);
 		for (var i = 0, width = 0, character, breakpoint = null, softBreakpoint = null; i < text.length; ++ i) {
 			character = text[i];
@@ -417,10 +417,12 @@ Textbox = FunctionObject.new({
 				continue;
 			if (/\s/.test(character))
 				breakpoint = i;
-			Textbox.updateStyleContext(styleContext, styling, i, style);
-			context.font = Font.loadFromStyle(styleContext);
+			if (arguments.length < 4) {
+				Textbox.updateStyleContext(styleContext, styling, i, style);
+				context.font = Font.loadFromStyle(styleContext);
+			}
 			width += context.measureText(text[i]).width;
-			if (width > metrics.inner.width) {
+			if (width > boundsWidth) {
 				if (breakpoint) {
 					text = text.substr(0, breakpoint) + "\n" + text.substr(breakpoint + 1);
 					i = breakpoint;
@@ -432,7 +434,7 @@ Textbox = FunctionObject.new({
 					breakpoint = softBreakpoint = null;
 					width = 0;
 				}
-			} else if (width + context.measureText("-").width <= metrics.inner.width) {
+			} else if (width + context.measureText("-").width <= boundsWidth) {
 				softBreakpoint = i;
 			}
 		}
@@ -614,6 +616,10 @@ Textbox = FunctionObject.new({
 		Textbox.measurement.style.opacity = 0;
 		Textbox.measurement.style.position = "absolute";
 		document.body.appendChild(Textbox.measurement);
+		Keys.addHandler(function (key, pressed, released) {
+			if (pressed || released)
+				Textbox.requestRedraw = true;
+		}, Settings._("keys => tertiary"), true);
 	},
 	update : function () {
 		if (Textbox.pausing && Textbox.pausing()) {
@@ -778,6 +784,9 @@ Textbox = FunctionObject.new({
 					} else if (responses > 0) {
 						context.fillStyle = "hsla(0, 0%, 0%, 0.6)";
 						context.fillRect(0, (metrics.top + metrics.height) * Game.zoom, canvas.width, canvas.height - (metrics.top + metrics.height) * Game.zoom);
+					}
+					if (Textbox.details) {
+						Textbox.details(context,metrics.left * Game.zoom, style.margin.vertical * Game.zoom, metrics.width * Game.zoom, (metrics.top - style.margin.vertical) * Game.zoom);
 					}
 				}
 			}

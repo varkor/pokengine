@@ -2,7 +2,6 @@ Display = {
 	store : function (poke) {
 		if (poke === NoPokemon)
 			return NoPokemon;
-		a = poke;
 		var newPoke = new pokemon(poke.store());
 		if (poke.hasOwnProperty("original"))
 			newPoke.original = poke.original;
