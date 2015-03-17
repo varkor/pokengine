@@ -82,8 +82,14 @@ function pokemon (data, validate) {
 	setProperty("nationality", "British");
 	setProperty("item", null);
 	setProperty("form(e)", function () {
-		if (species["form(e)s"] !== null)
-			return Object.keys(species["form(e)s"]).first();
+		if (species["form(e)s"] !== null) {
+			var forms = Object.keys(species["form(e)s"]);
+			if (forms.contains("Male") && self.gender === "male")
+				return "Male";
+			if (forms.contains("Female") && self.gender === "female")
+				return "Female";
+			return forms.first();
+		}
 		else return null;
 	});
 	setProperty("friendship", species.friendship);
@@ -172,7 +178,7 @@ function pokemon (data, validate) {
 		if (!isInteger(self.experience) || !inRange(self.experience, 0, self.experienceFromLevelToNextLevel())) return false;
 		if (!isString(self.nationality) || !Nationalities._(self.nationality + "?")) return false;
 		if (!isString(self.item) || !Items._(self.item + "?")) return false;
-		if ((self["form(e)"] !== null && !isString(self["form(e)"])) || (self["form(e)"] !== null && !species["form(e)s"].hasOwnProperty(self["form(e)"]))) return false;
+		if ((self["form(e)"] !== null && !isString(self["form(e)"])) || (self["form(e)"] !== null && !species["form(e)s"].hasOwnProperty(self["form(e)"])) || (self["form(e)"] === "Male" && self.gender !== "male") || (self["form(e)"] === "Female" && self.gender !== "female")) return false;
 		if (!isInteger(self.friendship) || !inRange(self.friendship, 0, 255)) return false;
 		if (!isBoolean(self.shiny)) return false;
 		if ((self.egg !== null && !isInteger(self.egg)) || (self.egg !== null && !inRange(self.egg, 0, 121))) return false;
@@ -256,6 +262,8 @@ function pokemon (data, validate) {
 			var region = self.currentSpecies().match(/ \(\w+\)$/).first().match(/\w+/).first(), name = self.currentSpecies().replace(/ \(\w+\)$/, "");
 			contracted = contracted.replace("{region}", region);
 			contracted = contracted.replace("{species}", name);
+			contracted = contracted.replace("{whichform(e)}", self["form(e)"] === null ? "" : " ({form(e)})");
+			contracted = contracted.replace("{form(e)}", self["form(e)"] === null ? "" : self["form(e)"]);
 			contracted = contracted.replace("{which}", (which ? "~" + which : ""));
 			contracted = contracted.replace(/\{filetype=[a-z0-9]+\}/, (includeFiletype ? "." + contracted.match(/\{filetype=([a-z0-9]+)\}/)[1] : ""));
 			if (typeof Dex !== "undefined") {
@@ -263,6 +271,7 @@ function pokemon (data, validate) {
 				var IDs = Dex.getPokemonByName(name + "," + region);
 				contracted = contracted.replace("{region-id}", IDs.dex);
 				contracted = contracted.replace("{species-id}", IDs.id);
+				contracted = contracted.replace("{form(e)-id}", IDs["form(e)"]);
 			}
 			contracted = contracted.replace("{side}", which ? which : "front");
 			return contracted;

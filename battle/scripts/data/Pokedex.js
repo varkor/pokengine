@@ -19,18 +19,11 @@
 	"Bulbasaur (Nintendo)" : {
 		types : ["Grass", "Poison"],
 		experience : "fast",
-		"form(e)s" : {
-			"Normal" : {
-			},
-			"Metallic" : {
-				types : ["Grass", "Steel"],
-				attack : 200
-			}
-		},
+		"form(e)s" : null,
 		yield : {
 			experience : 50
 		},
-		stats : {"health" : 45, "attack" : 49, "defence" : 49, "special attack" : 65, "special defence" : 65, "speed" : 45 },
+		stats : { "health" : 45, "attack" : 49, "defence" : 49, "special attack" : 65, "special defence" : 65, "speed" : 45 },
 		moveset : {
 			2 : ["Hyper Beam"]
 		},
@@ -66,7 +59,7 @@
 		yield : {
 			experience : 50
 		},
-		stats : {"health" : 60, "attack" : 62, "defence" : 63, "special attack" : 80, "special defence" : 80, "speed" : 60 },
+		stats : { "health" : 60, "attack" : 62, "defence" : 63, "special attack" : 80, "special defence" : 80, "speed" : 60 },
 		moveset : {
 			3 : ["Metronome"]
 		},
@@ -101,7 +94,7 @@
 		yield : {
 			experience : 50
 		},
-		stats : {"health" : 78, "attack" : 84, "defence" : 78, "special attack" : 109, "special defence" : 85, "speed" : 100 },
+		stats : { "health" : 78, "attack" : 84, "defence" : 78, "special attack" : 109, "special defence" : 85, "speed" : 100 },
 		moveset : {
 			1 : ["Tackle"]
 		},
@@ -130,7 +123,31 @@
 		yield : {
 			experience : 50
 		},
-		stats : {"health" : 79, "attack" : 83, "defence" : 100, "special attack" : 85, "special defence" : 105, "speed" : 78 },
+		stats : { "health" : 79, "attack" : 83, "defence" : 100, "special attack" : 85, "special defence" : 105, "speed" : 78 },
+		moveset : {},
+		friendship : 70,
+		"catch rate" : 45,
+		"gender ratio" : 0.875,
+		abilities : {
+			normal : ["Overgrow"],
+			hidden : "Chlorophyll"
+		}
+	},
+	"Giratina (Nintendo)" : {
+		types : ["Ghost", "Dragon"],
+		experience : "slow",
+		"form(e)s" : {
+			"Altered" : {
+				
+			},
+			"Origin" : {
+				
+			}
+		},
+		yield : {
+			experience : 306
+		},
+		stats : { "health" : 79, "attack" : 83, "defence" : 100, "special attack" : 85, "special defence" : 105, "speed" : 78 },
 		moveset : {},
 		friendship : 70,
 		"catch rate" : 45,
@@ -147,7 +164,7 @@
 		yield : {
 			experience : 50
 		},
-		stats : {"health" : 78, "attack" : 115, "defence" : 90, "special attack" : 74, "special defence" : 78, "speed" : 95 },
+		stats : { "health" : 78, "attack" : 115, "defence" : 90, "special attack" : 74, "special defence" : 78, "speed" : 95 },
 		moveset : {},
 		friendship : 70,
 		"catch rate" : 45,
@@ -164,7 +181,7 @@
 		yield : {
 			experience : 50
 		},
-		stats : {"health" : 85, "attack" : 105, "defence" : 73, "special attack" : 80, "special defence" : 77, "speed" : 110 },
+		stats : { "health" : 85, "attack" : 105, "defence" : 73, "special attack" : 80, "special defence" : 77, "speed" : 110 },
 		moveset : {},
 		friendship : 70,
 		"catch rate" : 45,
@@ -181,7 +198,7 @@
 		yield : {
 			experience : 50
 		},
-		stats : {"health" : 100, "attack" : 75, "defence" : 98, "special attack" : 100, "special defence" : 98, "speed" : 59 },
+		stats : { "health" : 100, "attack" : 75, "defence" : 98, "special attack" : 100, "special defence" : 98, "speed" : 59 },
 		moveset : {},
 		friendship : 70,
 		"catch rate" : 45,
@@ -198,7 +215,7 @@
 		yield : {
 			experience : 50
 		},
-		stats : {"health" : 95, "attack" : 125, "defence" : 100, "special attack" : 60, "special defence" : 81, "speed" : 79 },
+		stats : { "health" : 95, "attack" : 125, "defence" : 100, "special attack" : 60, "special defence" : 81, "speed" : 79 },
 		moveset : {},
 		friendship : 70,
 		"catch rate" : 45,
@@ -215,7 +232,7 @@
 		yield : {
 			experience : 50
 		},
-		stats : {"health" : 60, "attack" : 110, "defence" : 100, "special attack" : 65, "special defence" : 65, "speed" : 89 },
+		stats : { "health" : 60, "attack" : 110, "defence" : 100, "special attack" : 65, "special defence" : 65, "speed" : 89 },
 		moveset : {},
 		friendship : 70,
 		"catch rate" : 45,
@@ -232,7 +249,7 @@
 		yield : {
 			experience : 50
 		},
-		stats : {"health" : 90, "attack" : 80, "defence" : 85, "special attack" : 135, "special defence" : 105, "speed" : 55 },
+		stats : { "health" : 90, "attack" : 80, "defence" : 85, "special attack" : 135, "special defence" : 105, "speed" : 55 },
 		moveset : {},
 		friendship : 70,
 		"catch rate" : 45,
@@ -249,7 +266,7 @@
 		yield : {
 			experience : 50
 		},
-		stats : {"health" : 90, "attack" : 105, "defence" : 75, "special attack" : 55, "special defence" : 60, "speed" : 105 },
+		stats : { "health" : 90, "attack" : 105, "defence" : 75, "special attack" : 55, "special defence" : 60, "speed" : 105 },
 		moveset : {},
 		friendship : 70,
 		"catch rate" : 45,
@@ -266,7 +283,7 @@
 		yield : {
 			experience : 50
 		},
-		stats : {"health" : 112, "attack" : 98, "defence" : 73, "special attack" : 50, "special defence" : 70, "speed" : 92 },
+		stats : { "health" : 112, "attack" : 98, "defence" : 73, "special attack" : 50, "special defence" : 70, "speed" : 92 },
 		moveset : {},
 		friendship : 70,
 		"catch rate" : 45,
@@ -291,7 +308,7 @@
 		yield : {
 			experience : 50
 		},
-		stats : {"health" : 85, "attack" : 120, "defence" : 90, "special attack" : 70, "special defence" : 80, "speed" : 90 },
+		stats : { "health" : 85, "attack" : 120, "defence" : 90, "special attack" : 70, "special defence" : 80, "speed" : 90 },
 		moveset : {},
 		friendship : 70,
 		"catch rate" : 45,
@@ -308,7 +325,7 @@
 		yield : {
 			experience : 50
 		},
-		stats : {"health" : 60, "attack" : 60, "defence" : 60, "special attack" : 60, "special defence" : 60, "speed" : 60 },
+		stats : { "health" : 60, "attack" : 60, "defence" : 60, "special attack" : 60, "special defence" : 60, "speed" : 60 },
 		moveset : {},
 		friendship : 70,
 		"catch rate" : 45,
@@ -325,7 +342,7 @@
 		yield : {
 			experience : 50
 		},
-		stats : {"health" : 75, "attack" : 85, "defence" : 55, "special attack" : 65, "special defence" : 55, "speed" : 65 },
+		stats : { "health" : 75, "attack" : 85, "defence" : 55, "special attack" : 65, "special defence" : 55, "speed" : 65 },
 		moveset : {},
 		friendship : 70,
 		"catch rate" : 45,
@@ -342,7 +359,7 @@
 		yield : {
 			experience : 50
 		},
-		stats : {"health" : 65, "attack" : 50, "defence" : 65, "special attack" : 98, "special defence" : 80, "speed" : 111 },
+		stats : { "health" : 65, "attack" : 50, "defence" : 65, "special attack" : 98, "special defence" : 80, "speed" : 111 },
 		moveset : {},
 		friendship : 70,
 		"catch rate" : 45,
@@ -359,7 +376,7 @@
 		yield : {
 			experience : 50
 		},
-		stats : {"health" : 75, "attack" : 75, "defence" : 75, "special attack" : 75, "special defence" : 75, "speed" : 75 },
+		stats : { "health" : 75, "attack" : 75, "defence" : 75, "special attack" : 75, "special defence" : 75, "speed" : 75 },
 		moveset : {},
 		friendship : 70,
 		"catch rate" : 45,

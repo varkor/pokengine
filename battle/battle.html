@@ -285,10 +285,14 @@
 						});
 					});
 				}, addPokemon = function () {
-					var li = document.createElement("li"), select = document.createElement("select"), option;
+					var li = document.createElement("li"), select = document.createElement("select"), option, speciesNames = [];
 					forevery(Pokedex, function (poke, name) {
 						if (name === "Missingno. (Nintendo)")
 							return;
+						speciesNames.push(name);
+					});
+					speciesNames.sort();
+					foreach(speciesNames, function (name) {
 						option = document.createElement("option");
 						option.innerHTML = name.replace(/ \(\w+\)$/, "");
 						option.value = name;
