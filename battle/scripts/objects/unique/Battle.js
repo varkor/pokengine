@@ -2145,10 +2145,10 @@ Battle = FunctionObject.new({
 				return true;
 		});
 	},
-	inflict : function (poke, status) {
+	inflict : function (poke, status, force) {
 		var types = Pokedex._(poke.species).types;
-		if ((status !== "burned" || !types.contains("Fire")) && (status !== "paralysed" || !types.contains("Electric")) && (status !== "frozen" || !types.contains("Ice")) && ((status !== "poisoned" && status !== "badly poisoned") || (!types.contains("Poison") && !types.contains("Steel")))) {
-			Textbox.state(poke.name() + " was  " + status + "!");
+		if ((poke.status === "none" || force) && (status !== "burned" || !types.contains("Fire")) && (status !== "paralysed" || !types.contains("Electric")) && (status !== "frozen" || !types.contains("Ice")) && ((status !== "poisoned" && status !== "badly poisoned") || (!types.contains("Poison") && !types.contains("Steel")))) {
+			Textbox.state(poke.name() + " was " + (status !== "asleep" ? status : "put to sleep") + "!");
 			poke.status = status;
 			Battle.recoverFromStatus(poke);
 			return true;
