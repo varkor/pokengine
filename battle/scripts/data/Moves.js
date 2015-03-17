@@ -1,5 +1,5 @@
 Moves = {
-	_Confused : {
+	Confused : {
 		type : "Typeless",
 		category : Move.category.physical,
 		classification : ["_", "special"],
@@ -11,7 +11,7 @@ Moves = {
 			use : [
 				{
 					effect : function (self) {
-						Battle.damage(self, Move.damage(self, self, "_Confused"));
+						Battle.damage(self, Move.damage(self, self, "Confused"));
 					},
 					targets : true
 				}

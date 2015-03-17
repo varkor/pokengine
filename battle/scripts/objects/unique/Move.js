@@ -75,7 +75,7 @@ Move = {
 				affected = Battle.affectedByMove(mover, targetPokemon, move).filter(onlyPokemon);
 			}
 		}
-		if (finalStage && moveName[0] !== "_") {
+		if (finalStage && (!move.classification.contains("_") || moveName === "Struggle")) {
 			if (affected.notEmpty() || affectsEntireSide)
 				animationEffect = Textbox.state(mover.name() + " used " + moveName + (!affectsEntireSide && move.affects === Move.targets.directTarget && affected.notEmpty() ? " on " + (targetPokemon !== mover ? targetPokemon.name() : mover.selfPronoun()) : "") + "!", function () { return Move.animate(mover, move, stage, targetPokemon, constant); });
 			else

@@ -261,7 +261,7 @@
 						li.appendChild(document.createTextNode(", "));
 					var select = document.createElement("select"), option, moves = [];
 					forevery(Moves, function (move, name) {
-						if (["_Confused", "Struggle"].contains(name))
+						if (move.classification.contains("_"))
 							return;
 						moves.push(name);
 					});

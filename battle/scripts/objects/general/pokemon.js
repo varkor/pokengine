@@ -695,7 +695,7 @@ function pokemon (data, validate) {
 
 	self.hurtInConfusion = function () {
 		Textbox.state(self.name() + " hurt " + self.selfPronoun() + " in the confusion!");
-		Move.use("_Confused", 0, self, self);
+		Move.use("Confused", 0, self, self);
 	};
 
 	self.recoil = function (move, damage) {
