@@ -24,7 +24,12 @@ function pokemon (data, validate) {
 	};
 
 	setProperty("species", "Missingno. (Nintendo)");
-	var species = Pokedex._(self.species);
+	var species = function (property) {
+		if (self["form(e)"] === null)
+			return Pokedex._(self.species)[property];
+		else
+			return Pokedex._(self.species + " -> form(e)s ~> " + self["form(e)"] + " => " + property);
+	};
 	setProperty("nickname", null);
 	setProperty("unique", Game.unique());
 	setProperty("level", species.lowestPossibleLevel);
@@ -32,11 +37,22 @@ function pokemon (data, validate) {
 		return srandom.chooseFromArray(Object.keys(Natures));
 	});
 	setProperty("gender", function () {
-		var genderRatio = species["gender ratio"];
+		var genderRatio = species("gender ratio");
 		return genderRatio !== null ? (srandom.point() < genderRatio ? "male" : "female") : "neuter";
 	});
+	setProperty("form(e)", function () {
+		if (Pokedex._(self.species)["form(e)s"] !== null) {
+			var forms = Object.keys(Pokedex._(self.species)["form(e)s"]);
+			if (forms.contains("Male") && self.gender === "male")
+				return "Male";
+			if (forms.contains("Female") && self.gender === "female")
+				return "Female";
+			return forms.first();
+		}
+		else return null;
+	});
 	setProperty("moves", function () {
-		var moveSet = species.moveset, moves = [];
+		var moveSet = species("moveset"), moves = [];
 		foreach(Object.keys(moveSet).sort(function (a, b) { return b - a; }), function (level) {
 			var movesAtLevel = moveSet[level];
 			if (foreach(movesAtLevel, function (move) {
@@ -61,7 +77,7 @@ function pokemon (data, validate) {
 		}
 	});
 	setProperty("ability", function () {
-		return srandom.chooseFromArray(species.abilities.normal);
+		return srandom.chooseFromArray(species("abilities").normal);
 	});
 	setProperty("status", "none");
 	setProperty("IVs", function () {
@@ -81,18 +97,7 @@ function pokemon (data, validate) {
 	setProperty("experience", 0);
 	setProperty("nationality", "British");
 	setProperty("item", null);
-	setProperty("form(e)", function () {
-		if (species["form(e)s"] !== null) {
-			var forms = Object.keys(species["form(e)s"]);
-			if (forms.contains("Male") && self.gender === "male")
-				return "Male";
-			if (forms.contains("Female") && self.gender === "female")
-				return "Female";
-			return forms.first();
-		}
-		else return null;
-	});
-	setProperty("friendship", species.friendship);
+	setProperty("friendship", species("friendship"));
 	setProperty("shiny", function () {
 		return srandom.chance(8192);
 	});
@@ -110,12 +115,19 @@ function pokemon (data, validate) {
 		return self._("-> battler ~> transform => species");
 	};
 
+	self.currentProperty = function (property) {
+		if (self["form(e)"] === null)
+			return Pokedex._(self.currentSpecies())[property];
+		else
+			return Pokedex._(self.currentSpecies() + " -> form(e)s ~> " + self["form(e)"] + " => " + property);
+	};
+
 	self.currentMoves = function () {
 		return self._("-> battler ~> transform => moves");
 	};
 	
 	self.stats.health = function () {
-		return Math.floor(((self.IVs.health + 2 * Pokedex._(self.species).stats.health + self.EVs.health / 4 + 100) * self.level) / 100 + 10);
+		return Math.floor(((self.IVs.health + 2 * species("stats").health + self.EVs.health / 4 + 100) * self.level) / 100 + 10);
 	};
 
 	self.maximumHealth = function () {
@@ -128,7 +140,7 @@ function pokemon (data, validate) {
 		if (stat === "health")
 			return;
 		self.stats[stat] = function (stageModifier) {
-			return Math.floor(((((self.IVs[stat] + 2 * Pokedex._(self.currentSpecies()).stats[stat] + self.EVs[stat] / 4) * self.level) / 100 + 5) * (Natures[self.nature].increased === stat ? 1.1 : Natures[self.nature].decreased === stat ? 0.9 : 1)) * (stageModifier ? (self.battler.statLevel[stat] >= 0 ? 1 + 0.5 * self.battler.statLevel[stat] : 2 / (2 - self.battler.statLevel[stat])) : 1));
+			return Math.floor(((((self.IVs[stat] + 2 * self.currentProperty("stats")[stat] + self.EVs[stat] / 4) * self.level) / 100 + 5) * (Natures[self.nature].increased === stat ? 1.1 : Natures[self.nature].decreased === stat ? 0.9 : 1)) * (stageModifier ? (self.battler.statLevel[stat] >= 0 ? 1 + 0.5 * self.battler.statLevel[stat] : 2 / (2 - self.battler.statLevel[stat])) : 1));
 		};
 	});
 
@@ -209,7 +221,7 @@ function pokemon (data, validate) {
 			return false;
 		if (!self.rename(self.nickname))
 			return false;
-		var genderRatio = species["gender ratio"];
+		var genderRatio = species("gender ratio");
 		switch (self.gender) {
 			case "male":
 				if (genderRatio === null || genderRatio === 0)
@@ -227,7 +239,7 @@ function pokemon (data, validate) {
 		foreach(self.Moves, function (move) {
 			// Due to the changing nature of the content, move validity is not a good thing to test for, as it may change in the future
 		});
-		if (species.abilities.normal.contains(self.ability) && self.ability !== species.abilities.hidden)
+		if (species("abilities").normal.contains(self.ability) && self.ability !== species("abilities").hidden)
 			return false;
 		// Due to the changing nature of the content, forme(s) are not good thing to test for, as they may change in the future
 		if (self.caught && !["Safari", "Sport", "Park", "Dream", "Cherish"].contains(self.caught.ball)) {
@@ -235,12 +247,12 @@ function pokemon (data, validate) {
 				return false; // For now, these balls are invalid
 			if (self.caught.ball === "Cherish" && matchedEvent === null)
 				return false; // Only event Pokémon are distributed with Cherish balls
-			if (self.caught.ball === "Sport" && !species.types.contains("Bug"))
+			if (self.caught.ball === "Sport" && !species("types").contains("Bug"))
 				return false; // There may be other competitions involving Sport balls later, but for now, only the Bug-Catching Competition is valid
 		}
 		// Due to the changing nature of the content, shiny locking is not a good thing to test for, as it may change in the future
 		if (self.egg !== null) {
-			if (species.eggGroups.contains("Undiscovered"))
+			if (species("egg groups").contains("Undiscovered"))
 				return false;
 		}
 		if (self.caught) {
@@ -389,7 +401,7 @@ function pokemon (data, validate) {
 			return;
 		sharedBetween = sharedBetween || 1;
 		var eventModifiers = product(Battle.triggerEvent(Triggers.experience, {}, defeated, self)), OPower = self.trainer.OPowers["Exp. Point"];
-		var gain = Math.ceil((((Battle.situation === Battles.situation.trainer ? 1.5 : 1) * _(Pokedex, defeated.species).yield.experience * defeated.level) / (5 * (participated ? 1 : 2)) * Math.pow((2 * defeated.level + 10) / (defeated.level + self.level + 10), 2.5) + 1) * (self.caught && self.trainer.unique === self.caught.trainer ? 1 : self.trainer.nationality === self.nationality ? 1.5 : 1.7) * (OPower === 1 ? 1.2 : OPower === 2 ? 1.5 : OPower === 3 ? 2 : 1) * eventModifiers / sharedBetween);
+		var gain = Math.ceil((((Battle.situation === Battles.situation.trainer ? 1.5 : 1) * defeated.currentProperty("yield").experience * defeated.level) / (5 * (participated ? 1 : 2)) * Math.pow((2 * defeated.level + 10) / (defeated.level + self.level + 10), 2.5) + 1) * (self.caught && self.trainer.unique === self.caught.trainer ? 1 : self.trainer.nationality === self.nationality ? 1.5 : 1.7) * (OPower === 1 ? 1.2 : OPower === 2 ? 1.5 : OPower === 3 ? 2 : 1) * eventModifiers / sharedBetween);
 		if (Battle.active)
 			Textbox.state(self.name() + " gained " + gain + " experience!");
 		var levelledUp = false;
@@ -405,8 +417,8 @@ function pokemon (data, validate) {
 			var display = Display.state.save();
 				Textbox.state(self.name() + " has grown to level " + self.level + "!", function (display) { return function () { Display.state.load(display); }; }(display));
 			}
-			if (species.moveset.hasOwnProperty(self.level)) {
-				foreach(species.moveset[self.level], function (move) {
+			if (species("moveset").hasOwnProperty(self.level)) {
+				foreach(species("moveset")[self.level], function (move) {
 					self.learn(move);
 				});
 			}
@@ -414,8 +426,8 @@ function pokemon (data, validate) {
 		if (self.level < 100)
 			self.experience += gain;
 		var maximumEVgain = 510 - self.totalEVs(), maximumEVgainForStat;
-		forevery(Pokedex._(defeated.species).yield.EVs, function (stat) {
-			maximumEVgainForStat = Math.min(maximumEVgain, Pokedex._(defeated.species).yield.EVs[stat] * (self.Pokerus === "infected" ? 2 : 1));
+		forevery(defeated.currentProperty("yield").EVs, function (boost, stat) {
+			maximumEVgainForStat = Math.min(maximumEVgain, boost * (self.Pokerus === "infected" ? 2 : 1));
 			maximumEVgainForStat = Math.min(maximumEVgainForStat, 252 - maximumEVgainForStat);
 			maximumEVgain -= maximumEVgainForStat;
 			self.EVs[stat] += maximumEVgainForStat;
@@ -482,8 +494,12 @@ function pokemon (data, validate) {
 		else
 			Textbox.state("Congratulations! " + self.name() + " evolved into " + article(intoName) + " " + intoName + "!");
 		self.species = evolution;
-		if (species.moveset.hasOwnProperty(self.level)) {
-			foreach(species.moveset[self.level], function (move) {
+		if (Pokedex._(evolution)["form(e)s"] === null)
+			self["form(e)"] = null;
+		else if (!Pokedex._(evolution)["form(e)s"].hasOwnProperty(self["form(e)"]))
+			self["form(e)"] = Object.keys(Pokedex._(self.species)["form(e)s"]).first();
+		if (evolution.moveset.hasOwnProperty(self.level)) {
+			foreach(evolution.moveset[self.level], function (move) {
 				self.learn(move);
 			});
 		}
@@ -505,7 +521,7 @@ function pokemon (data, validate) {
 
 	self.experienceAtLevel = function (level) {
 		var n = level;
-		switch (species.experience) {
+		switch (species("experience")) {
 			case "erratic":
 				if (n <= 50)
 					return Math.ceil(Math.pow(n, 3) * (100 - n) / 50);
@@ -537,7 +553,7 @@ function pokemon (data, validate) {
 
 	self.ofType = function () {
 		for (var i = 0; i < arguments.length; ++ i)
-			if (Pokedex._(self.currentSpecies()).types.indexOf(arguments[i]) > -1)
+			if (self.currentProperty("types").indexOf(arguments[i]) > -1)
 				return true;
 		return false;
 	};
@@ -559,7 +575,7 @@ function pokemon (data, validate) {
 
 	self.effectiveness = function (attackType, classification, byWhom) {
 		var multiplier = 1, current;
-		foreach(Pokedex._(self.currentSpecies()).types, function (type) {
+		foreach(self.currentProperty("types"), function (type) {
 			if (attackType === "Ground" && type === "Flying" && self.battler.grounded)
 				return;
 			if (classification.contains("Powder") && type === "Grass") {

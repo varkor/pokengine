@@ -435,7 +435,7 @@ Moves = {
 		{
 			start : 0,
 			duration : 100,
-			transition : function (self, target, view, constant, progress, constant) {
+			transition : function (self, target, view, progress, constant) {
 				View.position.x = random(-constant.magnitude, constant.magnitude);
 				View.position.y = random(-constant.magnitude, constant.magnitude);
 			}

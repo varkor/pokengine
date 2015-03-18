@@ -138,10 +138,10 @@
 		experience : "slow",
 		"form(e)s" : {
 			"Altered" : {
-				
+				stats : { "health" : 70, "attack" : 1, "defence" : 100, "special attack" : 85, "special defence" : 105, "speed" : 78 },
 			},
 			"Origin" : {
-				
+				stats : { "health" : 79, "attack" : 1000, "defence" : 100, "special attack" : 85, "special defence" : 105, "speed" : 78 },
 			}
 		},
 		yield : {

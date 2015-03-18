@@ -86,9 +86,9 @@ function _ (_object, _path) {
 		while (keys.length) {
 			key = keys.shift();
 			if (keys.length || key.substr(-1) !== "?") {
-				if (value.hasOwnProperty(key))
+				if (value !== null && value.hasOwnProperty(key))
 					value = value[key];
-				else if (value.hasOwnProperty(key = key.replace(/ ?\(.*\)/, "")))
+				else if (value !== null && value.hasOwnProperty(key = key.replace(/ ?\(.*\)/, "")))
 					value = value[key];
 				else {
 					error.message = "That object has no property with the path: " + path;
