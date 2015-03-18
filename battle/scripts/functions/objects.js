@@ -75,16 +75,16 @@ FunctionObject = {
 					if (details.drawing.canvas.hasOwnProperty("smoothing") && !details.drawing.canvas.smoothing)
 						canvas.getContext("2d").imageSmoothingEnabled = false;
 					object.canvas = canvas;
-					object.draw = function () {
-						if (!passive || object.requestRedraw)
+					object.draw = function (automatic) {
+						if (!passive || object.requestRedraw || !automatic)
 							details.drawing.draw(object.canvas);
 						object.requestRedraw = false;
 					};
 				}
 				details.initialise = object.initialise;
 			} else {
-				object.draw = function () {
-					if (!passive || object.requestRedraw)
+				object.draw = function (automatic) {
+					if (!passive || object.requestRedraw || !automatic)
 						details.drawing.draw();
 					object.requestRedraw = false;
 				}
@@ -113,7 +113,7 @@ FunctionObject = {
 			window.requestAnimationFrame(function () {
 				foreach(FunctionObject.objects, function (object) {
 					if (object.draw && object.object.draw) {
-						object.object.draw();
+						object.object.draw(true);
 					}
 				});
 				draw();

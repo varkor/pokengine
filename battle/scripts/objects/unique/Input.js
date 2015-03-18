@@ -234,14 +234,17 @@ Cursor = {
 	click : function () {
 		Input.controlScheme = "mouse";
 		if (typeof Textbox !== "undefined" && Textbox.canvas) {
-			if (Cursor.inArea(Textbox.canvas, 0, 0, Textbox.canvas.width, Textbox.canvas.height))
+			if (Cursor.inArea(Textbox.canvas, 0, 0, Textbox.canvas.width, Textbox.canvas.height)) {
+				Textbox.draw(); // Redraws the textbox so that the hovered response is updated on touchscreen devices
 				Textbox.progress();
+			}
 		}
 	}
 };
+
 window.addEventListener("mousemove", function (event) {
-	Cursor.x = event.clientX;
-	Cursor.y = event.clientY;
+	Cursor.x = event.pageX - window.scrollX;
+	Cursor.y = event.pageY - window.scrollY;
 	Cursor.lastMoved = 0;
 	Input.priority = "mouse";
 });
