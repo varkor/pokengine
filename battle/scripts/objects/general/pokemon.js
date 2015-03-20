@@ -32,7 +32,6 @@ function pokemon (data, validate) {
 	};
 	setProperty("nickname", null);
 	setProperty("unique", Game.unique());
-	setProperty("level", species("lowestPossibleLevel"));
 	setProperty("nature", function () {
 		return srandom.chooseFromArray(Object.keys(Natures));
 	});
@@ -51,6 +50,7 @@ function pokemon (data, validate) {
 		}
 		else return null;
 	});
+	setProperty("level", species("lowestPossibleLevel"));
 	setProperty("moves", function () {
 		var moveSet = species("moveset"), moves = [];
 		foreach(Object.keys(moveSet).sort(function (a, b) { return b - a; }), function (level) {

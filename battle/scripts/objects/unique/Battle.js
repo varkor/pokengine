@@ -302,9 +302,11 @@ Battle = FunctionObject.new({
 			File.load(resource, function (resource) { return function () {
 				progress(resource);
 			}; }(resource), function (resource, message) {
-				Battle.state.failed.push(resource);
-				if (Settings._("ignore missing files"))
-					progress();
+				if (Battle.state.kind === "loading") { // If the game lags a lot, file loading attempts may overshoot the timeout
+					Battle.state.failed.push(resource);
+					if (Settings._("ignore missing files"))
+						progress();
+				}
 				Debugger.error("There was an error loading one of the files", resource);
 			});
 		});
@@ -2362,7 +2364,7 @@ Battle = FunctionObject.new({
 						}
 						// Pokémon
 						var filters = [];
-						if (poke.shiny)
+						if (poke._("shiny"))
 							filters.push({ type : "filter", kind : "shiny", pokemon : poke });
 						filters.push({ type : "crop", heightRatio : poke.battler.display.height });
 						Sprite.draw(canvas, poke.paths.sprite(side), position.x, position.y - position.z, true, filters, generalMatrix, now);
