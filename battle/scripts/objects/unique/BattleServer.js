@@ -35,10 +35,10 @@ exports.BattleServer = {
 					exports.BattleServer.clients.splice(index, 1);
 				index = -1;
 				exports.BattleServer.battles.forEach(function (battle, i) {
-					if (Battle.clientA.client === from) {
+					if (battle.clientA.client === from) {
 						index = i;
 						return;
-					} else if (Battle.clientB.client === from) {
+					} else if (battle.clientB.client === from) {
 						index = i;
 						return;
 					}
