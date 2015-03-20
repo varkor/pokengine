@@ -786,7 +786,8 @@ Textbox = FunctionObject.new({
 						context.fillRect(0, (metrics.top + metrics.height) * Game.zoom, canvas.width, canvas.height - (metrics.top + metrics.height) * Game.zoom);
 					}
 					if (Textbox.details) {
-						Textbox.details(context,metrics.left * Game.zoom, style.margin.vertical * Game.zoom, metrics.width * Game.zoom, (metrics.top - style.margin.vertical) * Game.zoom);
+						// The drawing function provided is expected to handle differing zoom levels (Game.zoom)
+						Textbox.details(context, metrics.left, style.margin.vertical, metrics.width, (metrics.top - style.margin.vertical));
 					}
 				}
 			}
