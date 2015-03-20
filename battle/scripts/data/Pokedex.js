@@ -107,6 +107,11 @@
 				}
 			}
 		],
+		"mega evolutions" : {
+			"Mega X" : {
+
+			}
+		},
 		"shiny" : "E64110D55210F6A410E6B410FFD510E6E610833118313941EEB45ABDBDACCD52415A5A6AEE8329837B94084152831029207394BD2041EEDE7BDEDEAC",
 		"friendship" : 70,
 		"catch rate" : 45,
@@ -276,6 +281,37 @@
 			hidden : "Tough Claws"
 		}
 	},
+	"Pidgeot (Nintendo)" : {
+		types : ["Normal", "Flying"],
+		experience : "fast",
+		"form(e)s" : null,
+		"mega evolutions" : {
+			"Mega" : {
+				attributes : {
+					"floating" : {
+						height : 35,
+						deviation : 10,
+						period : 5
+					}
+				},
+				"shiny" : "D59356E1D6319E613CD6A91B6384B79100FFD75163E4D82D94425DAFA5044B27374D490546516A6105A7"
+			}
+		},
+		yield : {
+			experience : 50
+		},
+		stats : { "health" : 112, "attack" : 98, "defence" : 73, "special attack" : 50, "special defence" : 70, "speed" : 92 },
+		moveset : {},
+		friendship : 70,
+		"catch rate" : 45,
+		"gender ratio" : 0.5,
+		abilities : {
+			normal : ["Overgrow"],
+			hidden : "Tough Claws"
+		},
+		"shiny" : "73524A8B6208FFE68BFFFF7BE6B462FFD552EE6241FFD5008B3920C56200D53118F6A400AC7B5AB48310E6A49CFFCD5A5A3929734A00BD7B7BCD9439",
+		aerial : true
+	},
 	"Horrendove (Atlas)" : {
 		types : ["Dark", "Flying"],
 		experience : "fast",
@@ -296,7 +332,7 @@
 		attributes : {
 			"floating" : {
 				height : 40,
-				variation : 10,
+				deviation : 10,
 				period : 5
 			}
 		}
@@ -388,12 +424,29 @@
 	}
 };
 
-forevery(Pokedex, function (poke, name) {
+var processPokemon = [], processExtras = [];
+forevery(Pokedex, function (poke) {
+	processPokemon.push(poke);
+	processExtras.push(poke);
+});
+while (processPokemon.notEmpty()) {
+	var poke = processPokemon.shift();
 	if (!poke.hasOwnProperty("evolutions"))
 		poke.evolutions = [];
 	poke.evolutions = wrapArray(poke.evolutions);
-	if (!poke.hasOwnProperty("aerial")) {
+	if (!poke.hasOwnProperty("aerial"))
 		poke.aerial = false;
+	if (!poke.hasOwnProperty("mega evolutions")) {
+		poke["mega evolutions"] = null;
+	} else {
+		forevery(poke["mega evolutions"], function (mega) {
+			processExtras.push(mega);
+		});
+	}
+	if (poke.hasOwnProperty("form(e)s")) {
+		forevery(poke["form(e)s"], function (form) {
+			processExtras.push(form);
+		});
 	}
 	if (!poke.hasOwnProperty("stats")) {
 		poke.stats = {};
@@ -407,6 +460,14 @@ forevery(Pokedex, function (poke, name) {
 	if (!poke.hasOwnProperty("attributes")) {
 		poke.attributes = {};
 	}
+	if (!poke.yield.hasOwnProperty("EVs")) {
+		poke.yield.EVs = {};
+		poke.yield.EVs.health = 1;
+		poke.yield.EVs.speed = 2;
+	}
+}
+while (processExtras.notEmpty()) {
+	var poke = processExtras.shift();
 	if (poke.hasOwnProperty("shiny")) {
 		var pairs = poke.shiny.toLowerCase().match(/.{12}/g).map(function (pair) {
 			return pair.match(/.{6}/g);
@@ -421,9 +482,4 @@ forevery(Pokedex, function (poke, name) {
 	} else {
 		poke.shiny = {};
 	}
-	if (!poke.yield.hasOwnProperty("EVs")) {
-		poke.yield.EVs = {};
-		poke.yield.EVs.health = 1;
-		poke.yield.EVs.speed = 2;
-	}
-});
+}

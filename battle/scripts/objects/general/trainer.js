@@ -46,6 +46,8 @@ function trainer (data) {
 		self.OPowers[stat] = 0;
 	});
 
+	self.megaEvolution = "possible"; // Whether the trainer has Mega Evolved their Pokémon during the current battle, whether they intend to, or whether they haven't at all
+
 	self.store = function () {
 		// Returns an object that contains all the data for the trainer, without any methods
 		var store = {};
@@ -140,7 +142,7 @@ function trainer (data) {
 			return [];
 		var pokes = [], excluding = (arguments.length >= 2 && typeof _excluding !== "undefined" && _excluding !== null ? wrapArray(_excluding) : []);
 		foreach(self.party.pokemon, function (poke) {
-			if (poke.conscious() && (!thatAreNotBattling || (!poke.battler.battling && !poke.battler.reserved)) && !excluding.contains(poke) && !(arguments.length >= 3 && typeof style !== "undefined" && style !== null && style === "sky" && !Pokedex._(poke.species).aerial))
+			if (poke.conscious() && (!thatAreNotBattling || (!poke.battler.battling && !poke.battler.reserved)) && !excluding.contains(poke) && !(arguments.length >= 3 && typeof style !== "undefined" && style !== null && style === "sky" && !poke.currentProperty("aerial")))
 				pokes.push(poke);
 		});
 		return pokes;
@@ -180,5 +182,9 @@ function trainer (data) {
 				maximum = badge.obediance;
 		});
 		return maximum;
+	};
+
+	self.ownsKeyStone = function () {
+		return self.bag.has("Key Stone");
 	};
 }

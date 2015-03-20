@@ -54,7 +54,12 @@ function _ (_object, _path) {
 			} else {
 				if (property.hasOwnProperty(specialCase.first()))
 					property = property[specialCase.first()];
-				else throw "That object has no property with the path: " + path;
+				else {
+					if (checkForProperty)
+						return false;
+					else
+						throw "That object has no property with the path: " + path;
+				}
 			}
 		}
 		return property;
@@ -105,7 +110,10 @@ function _ (_object, _path) {
 			return returned;
 		}
 	}
-	throw "That object has no property with the path: " + path;
+	if (checkForProperty)
+		return false;
+	else
+		throw "That object has no property with the path: " + path;
 }
 
 function _method (object) {

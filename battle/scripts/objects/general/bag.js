@@ -40,7 +40,7 @@ function bag (items) {
 				self.items.push({
 					item : item,
 					quantity : quantity,
-					intentToUse : 0 // When the player selects "Use item" in their bag, it should count an item as having being used even before it has been
+					intentToUse : 0 // When the player selects "Use item" in their bag, it should count an item as having being used even before it has been, so that a player cannot try to use the same item twice in a single turn, during a battle
 				});
 			return true;
 		}
@@ -80,8 +80,8 @@ function bag (items) {
 	};
 
 	self.has = function (item) {
-		return foreach(self.items, function (which, i) {
-			if (which.item === item)
+		return foreach(self.items, function (which) {
+			if (which.item === item || (Items._(which.item + " => category?") && Items._(which.item + " => category") === item)) // Whether the exact item was in possession, or an item in the same category
 				return true;
 		});
 	};

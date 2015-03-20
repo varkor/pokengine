@@ -119,12 +119,13 @@ Time.refresh = Time.second / Time.framerate;
 Nationalities = ["British"];
 
 Item = {
-	use : {
-		healing : q = 0, // Restore health
-		curing : ++ q, // Cure a status effect
-		capture : ++ q, // Captures a Pokémon
-		experience : ++ q // Modifies received experience
-	}
+	use : [
+		"healing", // Restore health
+		"curing", // Cure a status effect
+		"capture", // Captures a Pokémon
+		"experience", // Modifies received experience
+		"form change" // Changes a Pokémon's form(e), e.g. through Mega Evolution
+	]
 };
 
 Teams = {

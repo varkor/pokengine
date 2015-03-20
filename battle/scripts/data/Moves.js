@@ -560,6 +560,7 @@ Moves = {
 							shiny : target.shiny,
 							ability : target.ability,
 							"form(e)" : target["form(e)"],
+							mega : target.mega,
 							gender : target.gender
 						};
 						self.battler.statLevel = JSONCopy(target.battler.statLevel);

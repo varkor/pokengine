@@ -110,16 +110,21 @@ function pokemon (data, validate) {
 
 	self.trainer = null;
 	self.stats = {};
+	self.mega = null;
 
 	self.currentSpecies = function () {
 		return self._("-> battler ~> transform => species");
 	};
 
 	self.currentProperty = function (property) {
-		if (self["form(e)"] === null)
-			return Pokedex._(self.currentSpecies())[property];
-		else
-			return Pokedex._(self.currentSpecies() + " -> form(e)s ~> " + self["form(e)"] + " => " + property);
+		if (self.mega === null) {
+			if (self["form(e)"] === null)
+				return Pokedex._(self.currentSpecies())[property];
+			else
+				return Pokedex._(self.currentSpecies() + " -> form(e)s ~> " + self["form(e)"] + " => " + property);
+		} else {
+			return Pokedex._(self.currentSpecies() + " -> mega evolutions ~> " + self.mega + " => " + property);
+		}
 	};
 
 	self.currentMoves = function () {
@@ -274,13 +279,15 @@ function pokemon (data, validate) {
 			var region = self.currentSpecies().match(/ \(\w+\)$/).first().match(/\w+/).first(), name = self.currentSpecies().replace(/ \(\w+\)$/, "");
 			contracted = contracted.replace("{region}", region);
 			contracted = contracted.replace("{species}", name);
-			contracted = contracted.replace("{whichform(e)}", self["form(e)"] === null ? "" : " ({form(e)})");
-			contracted = contracted.replace("{form(e)}", self["form(e)"] === null ? "" : self["form(e)"]);
+			contracted = contracted.replace("{whichform(e)}", self.mega === null && self["form(e)"] === null ? "" : " ({form(e)})");
+			contracted = contracted.replace("{form(e)}", self.mega === null ? (self["form(e)"] === null ? "" : self["form(e)"]) : self.mega);
+			contracted = contracted.replace("{whichmega}", self.mega === null ? "" : " ({mega})");
+			contracted = contracted.replace("{mega}", self.mega === null ? "" : self.mega);
 			contracted = contracted.replace("{which}", (which ? "~" + which : ""));
 			contracted = contracted.replace(/\{filetype=[a-z0-9]+\}/, (includeFiletype ? "." + contracted.match(/\{filetype=([a-z0-9]+)\}/)[1] : ""));
 			if (typeof Dex !== "undefined") {
 				// Compatibility with pokéngine
-				var IDs = Dex.getPokemonByName(name + "," + region);
+				var IDs = Dex.getPokemonByName(name + "," + region + (self.mega === null ? (self["form(e)"] === null ? "" : "," + self["form(e)"]) : "," + self.mega));
 				contracted = contracted.replace("{region-id}", IDs.dex);
 				contracted = contracted.replace("{species-id}", IDs.id);
 				contracted = contracted.replace("{form(e)-id}", IDs["form(e)"]);
@@ -802,5 +809,27 @@ function pokemon (data, validate) {
 
 	self.cry = function () {
 		Sound.play(self.paths.cry());
+	};
+
+	self.potentialMegaEvolution = function (intentOnMegaEvolvingSelf) {
+		if (self.inBattle() && (self.trainer === null || (self.trainer.ownsKeyStone() && (self.trainer.megaEvolution === "possible" || (intentOnMegaEvolvingSelf && self.trainer.megaEvolution === "intending")))) && species("mega evolutions") !== null && self.item && Items._(self.item + " => category?") && Items._(self.item + " => category") === "Mega Stone" && Items._(self.item + " => Pokémon") === self.species && species("mega evolutions").hasOwnProperty(Items._(self.item + " => form"))) {
+			return Items._(self.item + " => form");
+		}
+		return null;
+	};
+
+	self.megaEvolve = function () {
+		var form;
+		if (form = self.potentialMegaEvolution(true)) {
+			self.mega = form;
+			if (self.trainer !== null)
+				self.trainer.megaEvolution = "successful";
+			var display = Display.state.save();
+			Textbox.effect(function () {
+				Display.state.load(display);
+				self.cry();
+			});
+			Textbox.state(self.name() + " Mega Evolved!");
+		}
 	};
 }

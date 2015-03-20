@@ -22,7 +22,7 @@ Settings.addData({
 		"sounds" : "sounds",
 		"Pokemon" : {
 			"image" : "pokemon/{region}/{species}{whichform(e)}{which}{filetype=png}",
-			"sound" : "pokemon/{region}/{species}{filetype=mp3}"
+			"sound" : "pokemon/{region}/{species}{whichmega}{filetype=mp3}"
 		},
 		"characters" : {
 			"image" : "characters/{game}/{who}{filetype=png}"

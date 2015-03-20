@@ -9,6 +9,7 @@ Display = {
 			newPoke.original = poke;
 		newPoke.battler.side = poke.battler.side;
 		newPoke.battler.display = JSONCopy(poke.battler.display);
+		newPoke.mega = poke.mega;
 		newPoke.battler.transform = poke.battler.transform;
 		return newPoke;
 	},

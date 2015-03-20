@@ -120,8 +120,9 @@ Sprite = FunctionObject.new({
 			return [x, x, x, components[3]];
 		},
 		shiny : function (i, components, data) {
-			if (Pokedex._(data.pokemon._("species")).shiny.hasOwnProperty(components.slice(0, -1)))
-				return Pokedex._(data.pokemon._("species")).shiny[components.slice(0, -1)].concat([components[3]]);
+			var replacements = data.pokemon.currentProperty("shiny");
+			if (replacements.hasOwnProperty(components.slice(0, -1)))
+				return replacements[components.slice(0, -1)].concat([components[3]]);
 			else
 				return components;
 		}

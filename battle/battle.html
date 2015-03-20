@@ -201,6 +201,7 @@
 							"party" : Interface.buildParty(),
 							"money" : 10000
 						}));
+						Game.player.bag.add("Key Stones => Mega Bracelet");
 						Battle.beginWildBattle(Game.player, [new pokemon({
 							species : "Charizard (Nintendo)",
 							level : 45,
@@ -351,7 +352,9 @@
 						pokes.add(new pokemon({
 							species : li.querySelector("select").value,
 							level : parseInt(li.querySelector("input").value),
-							moves : moves
+							moves : moves,
+							item : "Mega Stones => Pidgeotite",
+							shiny : true
 						}));
 					});
 					return pokes.store();

@@ -1,7 +1,7 @@
 Items = {
-	Other : {
+	"Other" : {
 		"Lucky Egg" : {
-			use : Item.use.experience,
+			use : "experience",
 			targets : Move.targets.self,
 			onetime : false,
 			direct : false,
@@ -19,10 +19,10 @@ Items = {
 			]
 		},
 	},
-	Balls : {
+	"Balls" : {
 		standard : {
 			category : "Ball",
-			use : Item.use.capture,
+			use : "capture",
 			targets : Move.targets.opponents,
 			onetime : true,
 			direct : true,
@@ -55,10 +55,10 @@ Items = {
 			}
 		}
 	},
-	Berries : {
+	"Berries" : {
 		standard : {
 			category : "Berry",
-			use : Item.use.healing,
+			use : "healing",
 			targets : Move.targets.party,
 			onetime : true, // Whether the item is used up after its effect has occurred
 			direct : true, // Whether you can use it as a trainer, directly (rather than just being a held item)
@@ -77,6 +77,27 @@ Items = {
 					}
 				}
 			]
+		}
+	},
+	"Key Stones" : {
+		standard : {
+			category : "Key Stone"
+		},
+		"Mega Bracelet" : {
+		}
+	},
+	"Mega Stones" : {
+		standard : {
+			category : "Mega Stone",
+			use : "form change",
+			targets : Move.targets.self,
+			onetime : false,
+			direct : false,
+			useMessage : false
+		},
+		"Pidgeotite" : {
+			"Pokémon" : "Pidgeot (Nintendo)",
+			"form" : "Mega"
 		}
 	}
 };

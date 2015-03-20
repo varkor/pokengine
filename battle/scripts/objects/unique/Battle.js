@@ -207,7 +207,7 @@ Battle = FunctionObject.new({
 		position : function (entity, time) {
 			var position = {};
 			if (entity instanceof pokemon) {
-				var poke = entity, display = Display.state.current, attributes = Pokedex._(poke.species).attributes, floating = (attributes.hasOwnProperty("floating") ? attributes.floating.height + (attributes.floating.hasOwnProperty("variation") && attributes.floating.hasOwnProperty("period") && poke.battler.display.position.y === 0 ? Math.sin(time * (2 * Math.PI) / (attributes.floating.period * Time.second)) * attributes.floating.variation : 0) : 0);
+				var poke = entity, display = Display.state.current, attributes = poke.currentProperty("attributes"), floating = (attributes.hasOwnProperty("floating") ? attributes.floating.height + (attributes.floating.hasOwnProperty("deviation") && attributes.floating.hasOwnProperty("period") && poke.battler.display.position.y === 0 ? Math.sin(time * (2 * Math.PI) / (attributes.floating.period * Time.second)) * attributes.floating.deviation : 0) : 0);
 				var ally = display.allies.contains(entity), place, count = Battle.pokemonPerSide();
 				if (ally) {
 					place = display.allies.indexOf(poke);
@@ -391,6 +391,7 @@ Battle = FunctionObject.new({
 			}
 			if (foreach(Battle.alliedTrainers, function (participant) {
 				participant.display.visible = true;
+				participant.megaEvolution = "possible";
 				if (!participant.hasHealthyEligiblePokemon()) {
 					Battle.active = true;
 					Battle.finish();
@@ -415,6 +416,7 @@ Battle = FunctionObject.new({
 				return;
 			if (foreach(Battle.opposingTrainers, function (participant) {
 				participant.display.visible = true;
+				participant.megaEvolution = "possible";
 				if (!participant.hasHealthyEligiblePokemon()) {
 					Battle.active = true;
 					Battle.finish();
@@ -498,6 +500,7 @@ Battle = FunctionObject.new({
 			Battle.opponents = [];
 			foreach(Battle.allTrainers(), function (participant) {
 				foreach(participant.party.pokemon, function (poke) {
+					poke.mega = null;
 					if (Battle.participants.contains(poke) && Battle.levelUppers.contains(poke)) {
 						var mayEvolve = poke.attemptEvolution("level");
 						if (mayEvolve) {
@@ -803,7 +806,7 @@ Battle = FunctionObject.new({
 							poke : currentBattler,
 							priority : 6,
 							action : function (poke) {
-								Battle.swap(currentBattler, character.party.pokemon[secondary]);
+								Battle.swap(poke, character.party.pokemon[secondary]);
 							}
 						});
 					}
@@ -822,6 +825,19 @@ Battle = FunctionObject.new({
 				Battle.inputs.pop();
 				-- Battle.selection;
 				advance = false;
+				break;
+			case "Mega Evolve":
+				character.megaEvolution = "intending";
+				Battle.actions.push({
+					poke : currentBattler,
+					priority : 5.9, // Technically 6, but should occur after switching
+					action : function (poke) {
+						poke.megaEvolve();
+					},
+					undo : function () {
+						character.megaEvolution = "possible";
+					}
+				});
 				break;
 		}
 		if (Battle.kind !== Battles.kind.online || character === Game.player) {
@@ -1127,8 +1143,10 @@ Battle = FunctionObject.new({
 			foreach(currentBattler.usableMoves(), function (move) {
 				moves.push(move.move);
 			});
-			if (Battle.style === "double" && Battle.selection > 0)
-				actions.insert(0, "Back");
+			if (Battle.pokemonPerSide() > 1 && Battle.selection > 0)
+				actions.insert(2, "Back");
+			if (currentBattler.potentialMegaEvolution() !== null)
+				actions.insert(2, "Mega Evolve");
 			Textbox.ask("What do you want " + currentBattler.name() + " to do?", moves, function (response, i, major) {
 				Textbox.details = null;
 				if (major) {
@@ -1207,6 +1225,11 @@ Battle = FunctionObject.new({
 	startTurn : function () {
 		Battle.queue = [];
 		var all = Battle.all(true);
+		foreach(Battle.allTrainers(), function (trainer) {
+			// If the trainer is still intending to Mega Evolve after last turn, it means they were unsuccessful, and they still have the chance to do it this turn
+			if (trainer.megaEvolution === "intending")
+				trainer.megaEvolution = "possible";
+		});
 		foreach(all, function (poke) {
 			foreach(Battle.opponentsTo(poke).filter(onlyPokemon), function (opponent) {
 				poke.battler.opponents.pushIfNotAlreadyContained(opponent);
@@ -1612,6 +1635,7 @@ Battle = FunctionObject.new({
 					var displayFaint = Display.state.save();
 					Textbox.state(poke.name() + " fainted!", function () { return Display.state.transition(displayFaint); });
 					poke.alterFriendship(-1);
+					poke.mega = null;
 					Battle.removeFromBattle(poke, drawnBattle);
 					cleanedUp = true;
 				}
@@ -1693,7 +1717,7 @@ Battle = FunctionObject.new({
 		var OPower = trainer.OPowers["Capture"];
 		var modifiers = {
 			status : 1,
-			species : Pokedex._(poke.species)["catch rate"],
+			species : poke.currentProperty("catch rate"),
 			ball : (typeof ball["catch rate"] === "number" ? ball["catch rate"] : ball["catch rate"]()),
 			grass : 1,
 			OPower : (OPower === 1 ? 1.5 : OPower === 2 ? 2 : OPower === 3 ? 2.5 : 1)
@@ -2148,7 +2172,7 @@ Battle = FunctionObject.new({
 		});
 	},
 	inflict : function (poke, status, force) {
-		var types = Pokedex._(poke.species).types;
+		var types = poke.currentProperty(types);
 		if ((poke.status === "none" || force) && (status !== "burned" || !types.contains("Fire")) && (status !== "paralysed" || !types.contains("Electric")) && (status !== "frozen" || !types.contains("Ice")) && ((status !== "poisoned" && status !== "badly poisoned") || (!types.contains("Poison") && !types.contains("Steel")))) {
 			if (!poke.fainted()) {
 				Textbox.state(poke.name() + " was " + (status !== "asleep" ? status : "put to sleep") + "!");

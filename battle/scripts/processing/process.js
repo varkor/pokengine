@@ -80,6 +80,8 @@ forevery(Items, function (category) {
 				item[key] = value;
 		});
 		item.fullname = name + (["Berry", "Ball"].contains(item.category) ? " " + item.category : "");
+		if (!item.hasOwnProperty("effects"))
+			item.effects = [];
 	});
 });
 
