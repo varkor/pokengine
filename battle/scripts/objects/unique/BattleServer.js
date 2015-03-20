@@ -102,13 +102,13 @@ exports.BattleServer = {
 							};
 							exports.BattleServer.battles.push(battle);
 							var clientAInfo = {
-								user : Battle.clientA.client.user,
-								ip : Battle.clientA.client.ip,
-								trainer : Battle.clientA.trainer
+								user : battle.clientA.client.user,
+								ip : battle.clientA.client.ip,
+								trainer : battle.clientA.trainer
 							}, clientBInfo = {
-								user : Battle.clientB.client.user,
-								ip : Battle.clientB.client.ip,
-								trainer : Battle.clientB.trainer
+								user : battle.clientB.client.user,
+								ip : battle.clientB.client.ip,
+								trainer : battle.clientB.trainer
 							};
 							exports.BattleServer.send({
 								action : "begin",
@@ -257,7 +257,7 @@ exports.BattleServer = {
 	battleForClient : function (client) {
 		var which = null;
 		exports.BattleServer.battles.forEach(function (battle) {
-			if (Battle.clientA.client === client || Battle.clientB.client === client) {
+			if (battle.clientA.client === client || battle.clientB.client === client) {
 				which = battle;
 				return;
 			}
