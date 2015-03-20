@@ -617,8 +617,10 @@ Textbox = FunctionObject.new({
 		Textbox.measurement.style.position = "absolute";
 		document.body.appendChild(Textbox.measurement);
 		Keys.addHandler(function (key, pressed, released) {
-			if (pressed || released)
-				Textbox.requestRedraw = true;
+			if (typeof Battle !== "undefined" && document.activeElement === Battle.canvas) {
+				if (pressed || released)
+					Textbox.requestRedraw = true;
+			}
 		}, Settings._("keys => tertiary"), true);
 	},
 	update : function () {
