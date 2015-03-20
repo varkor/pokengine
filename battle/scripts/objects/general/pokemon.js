@@ -32,7 +32,7 @@ function pokemon (data, validate) {
 	};
 	setProperty("nickname", null);
 	setProperty("unique", Game.unique());
-	setProperty("level", species.lowestPossibleLevel);
+	setProperty("level", species("lowestPossibleLevel"));
 	setProperty("nature", function () {
 		return srandom.chooseFromArray(Object.keys(Natures));
 	});
@@ -222,7 +222,7 @@ function pokemon (data, validate) {
 		});
 		if (matchedEvent) // Events do not have to conform to normal rules
 			return true;
-		if (self.level < species.lowestPossibleLevel)
+		if (self.level < species("lowestPossibleLevel"))
 			return false;
 		if (!self.rename(self.nickname))
 			return false;
@@ -452,7 +452,7 @@ function pokemon (data, validate) {
 			return null;
 		var evolution = null;
 		// Cycle through all the available evolutions
-		foreach(species.evolutions, function (evo) {
+		foreach(species("evolutions"), function (evo) {
 			if (evo.method === method) {
 				if (method === "item" && self.item !== specific)
 					return;
