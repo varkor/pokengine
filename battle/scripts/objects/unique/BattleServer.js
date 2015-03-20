@@ -115,16 +115,16 @@ exports.BattleServer = {
 								team : 0,
 								self : clientAInfo,
 								other : clientBInfo,
-								seed : Battle.seed,
-								settings : Battle.settings
+								seed : battle.seed,
+								settings : battle.settings
 							}, clientA);
 							exports.BattleServer.send({
 								action : "begin",
 								team : 1,
 								self : clientBInfo,
 								other : clientAInfo,
-								seed : Battle.seed,
-								settings : Battle.settings
+								seed : battle.seed,
+								settings : battle.settings
 							}, clientB);
 						}
 					}
