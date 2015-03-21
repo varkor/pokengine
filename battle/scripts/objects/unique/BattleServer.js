@@ -170,7 +170,11 @@ exports.BattleServer = {
 	send : function (message, to) {
 		if (!message.hasOwnProperty("reference"))
 			message.reference = (new Date());
-		to.send(JSON.stringify([56, message]).slice(1, -1));
+		to.send(JSON.stringify([56, message]).slice(1, -1), function (error) {
+			if (error) {
+				to.close();
+			}
+		});
 		return message.reference;
 	},
 	validateForRules : function (client, trainer, rules, reference) {
