@@ -6,9 +6,12 @@ function foreach (array, fn) {
 			break;
 		}
 	}
-	deletion.sort(function (a, b) { return a - b; });
-	for (i = 0; i < deletion.length; ++ i)
-		array.remove(deletion[i] - i);
+	if (deletion.length) {
+		deletion = deletion.removeDuplicates();
+		deletion.sort(function (a, b) { return a - b; });
+		for (i = 0; i < deletion.length; ++ i)
+			array.remove(deletion[i] - i);
+	}
 	return broke;
 }
 
@@ -202,6 +205,10 @@ function wrapArray (wrap) {
 	return Array.isArray(wrap) ? wrap : [wrap];
 }
 
+function unwrapArray (wrap) {
+	return wrap.length === 1 ? wrap[0] : wrap;
+}
+
 function sum (array, partial) {
 	var result = 0, partialAmount = partial;
 	if (arguments.length < 2)
@@ -260,8 +267,9 @@ Array.prototype.remove = function (index, number) {
 		var numberOfElements = number;
 		if (arguments.length < 2)
 			numberOfElements = 1;
-		this.splice(index, numberOfElements);
+		return unwrapArray(this.splice(index, numberOfElements));
 	}
+	return [];
 };
 
 Array.prototype.removeElementsOfValue = function (element) {

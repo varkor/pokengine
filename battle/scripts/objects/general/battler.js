@@ -17,7 +17,6 @@ function battler (pokemon) {
 	self.pokemon = pokemon;
 
 	self.reset = function () {
-		self.battling = false; // Whether the Pokémon is in the battle right now
 		self.side = null;
 		self.statLevel = [];
 		self.statLevel = {};
@@ -54,10 +53,13 @@ function battler (pokemon) {
 			foreach(self.pokemon.currentMoves(), function (move) {
 				delete move.disabled;
 			});
-		foreach(Battle.effects.specific, function (effect) {
-			if (effect.target === self)
-				effect.expired = true;
-		});
+		if (self.battling)
+			foreach(self.battle.effects.specific, function (effect) {
+				if (effect.target === self)
+					effect.expired = true;
+			});
+		self.battling = false; // Whether the Pokémon is in the battle right now
+		self.battle = null; // Which battle object is responsible for this battler
 	};
 	self.reset();
 

@@ -13,7 +13,7 @@ function trainer (data) {
 	};
 
 	setProperty("name", "Someone");
-	setProperty("unique", Game.unique());
+	setProperty("identification", Game.unique());
 	setProperty("gender", "male");
 	setProperty("party", []);
 	setProperty("nationality", "British");
@@ -51,7 +51,7 @@ function trainer (data) {
 	self.store = function () {
 		// Returns an object that contains all the data for the trainer, without any methods
 		var store = {};
-		foreach(["name", "unique", "gender", "money", "nationality", "badges", "game", "class", "individual", "pressure speech", "defeat speech"], function (property) {
+		foreach(["name", "identification", "gender", "money", "nationality", "badges", "game", "class", "individual", "pressure speech", "defeat speech"], function (property) {
 			store[property] = JSONCopy(self._(property));
 		});
 		store.party = self.party.store();
@@ -148,18 +148,17 @@ function trainer (data) {
 		return pokes;
 	};
 
-	self.healthyEligiblePokemon = function (thatAreNotBattling, excluding) {
-		// Assumes a battle is in progress
-		return self.healthyPokemon(thatAreNotBattling, excluding, Battle.style);
+	self.healthyEligiblePokemon = function (thatAreNotBattling, excluding, style) {
+		return self.healthyPokemon(thatAreNotBattling, excluding, style);
 	};
 
 	self.hasHealthyPokemon = function (thatAreNotBattling, excluding, style) {
 		return self.healthyPokemon(thatAreNotBattling, excluding, style).length > 0;
 	};
 
-	self.hasHealthyEligiblePokemon = function (thatAreNotBattling, excluding) {
+	self.hasHealthyEligiblePokemon = function (thatAreNotBattling, excluding, style) {
 		// Assumes a battle is in progress
-		return self.healthyEligiblePokemon(thatAreNotBattling, excluding).length > 0;
+		return self.healthyEligiblePokemon(thatAreNotBattling, excluding, style).length > 0;
 	};
 
 	self.isAnNPC = function () {
@@ -188,3 +187,7 @@ function trainer (data) {
 		return self.bag.has("Key Stone");
 	};
 }
+
+TheWild = new trainer({
+	name : "The Wild"
+});

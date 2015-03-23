@@ -55,11 +55,11 @@ Move = {
 		moveName = move;
 		move = Moves._(move);
 		if (target instanceof pokemon)
-			target = Battle.placeOfPokemon(target);
+			target = mover.battler.battle.placeOfPokemon(target);
 		var constant = {},
 			affectsEntireSide = (target === Battles.side.far || target === Battles.side.near),
-			targetPokemon = (target !== NoPokemon && !affectsEntireSide ? Battle.pokemonInPlace(target) : NoPokemon),
-			affected = (targetPokemon !== NoPokemon ? Battle.affectedByMove(mover, targetPokemon, move).filter(onlyPokemon) : []),
+			targetPokemon = (target !== NoPokemon && !affectsEntireSide ? mover.battler.battle.pokemonInPlace(target) : NoPokemon),
+			affected = (targetPokemon !== NoPokemon ? mover.battler.battle.affectedByMove(mover, targetPokemon, move).filter(onlyPokemon) : []),
 			completelyFailed = true,
 			statedFailureReason = false,
 			finalStage = (stage === move.effects.use.length - 1),
@@ -68,11 +68,11 @@ Move = {
 			modifiedMove = false;
 		// If the move won't hit anything, try aiming for a different target
 		if (!affectsEntireSide && stage === 0 && affected.empty()) {
-			var newTarget = Battle.targetsForMove(mover, move, true);
+			var newTarget = mover.battler.battle.targetsForMove(mover, move, true);
 			if (newTarget.notEmpty()) {
 				target = newTarget[0].place;
 				targetPokemon = newTarget[0].poke;
-				affected = Battle.affectedByMove(mover, targetPokemon, move).filter(onlyPokemon);
+				affected = mover.battler.battle.affectedByMove(mover, targetPokemon, move).filter(onlyPokemon);
 			}
 		}
 		if (finalStage && (!move.classification.contains("_") || moveName === "Struggle")) {
@@ -98,7 +98,7 @@ Move = {
 				var missEffect = false;
 				foreach(affected, function (targetted) {
 					var failed = false, accuracy, evasion;
-					if (Battle.triggerEvent(Triggers.move, {
+					if (mover.battler.battle.triggerEvent(Triggers.move, {
 						move : move,
 						affected : true
 					}, mover, targetted).contains(true)) {
@@ -112,7 +112,7 @@ Move = {
 							accuracy = 1;
 							evasion = 1;
 						}
-						var hit = (!finalStage || (move.hasOwnProperty("accuracy") ? move.accuracy * (accuracy / evasion) >= srandom.point() : true));
+						var hit = (!finalStage || (move.hasOwnProperty("accuracy") ? move.accuracy * (accuracy / evasion) >= mover.battler.battle.random.point() : true));
 						if (hit) {
 							if (move.effects.use[stage].targets && targetted.battler.protected && !move.piercing) {
 								Textbox.state(targetted.name() + " protected " + targetted.selfPronoun() + ".");
@@ -195,7 +195,7 @@ Move = {
 				Textbox.effect(function () { Display.state.load(displayRendered); });
 			}
 		} else {
-			Battle.survey();
+			mover.battler.battle.survey();
 		}
 		return {
 			succeeded : !completelyFailed,
@@ -305,15 +305,15 @@ Move = {
 	},
 	damage : function (attacker, target, move, power, type, noCritical) {
 		move = Moves._(move);
-		var weather = Battle.weather, multiTarget = (Battle.style === "double");
+		var weather = attacker.battler.battle.weather, multiTarget = (attacker.battler.battle.style === "double");
 		power = power || move.power;
 		if (arguments.length < 5)
 			type = move.type;
 		var modifiers = {
-			critical : (srandom.chance(attacker.battler.statLevel.critical <= 0 ? 16 : attacker.battler.statLevel.critical === 1 ? 8 : attacker.battler.statLevel.critical === 2 ? 2 : 1) ? 1.5 : 1),
+			critical : (attacker.battler.battle.random.chance(attacker.battler.statLevel.critical <= 0 ? 16 : attacker.battler.statLevel.critical === 1 ? 8 : attacker.battler.statLevel.critical === 2 ? 2 : 1) ? 1.5 : 1),
 			multiTarget : (multiTarget ? 0.75 : 1),
-			weather : ((Battle.weather === "intenseSunlight" && type === "Fire") || (Battle.weather === "rain" && type === "Water") ? 1.5 : (Battle.weather === "intenseSunlight" && type === "Water") || (Battle.weather === "rain" && type === "Fire") ? 0.5 : 1),
-			sandstorm : (Battle.weather === "sandstorm" && target.ofType("Rock") ? 1.5 : 1),
+			weather : ((attacker.battler.battle.weather === "intenseSunlight" && type === "Fire") || (attacker.battler.battle.weather === "rain" && type === "Water") ? 1.5 : (attacker.battler.battle.weather === "intenseSunlight" && type === "Water") || (attacker.battler.battle.weather === "rain" && type === "Fire") ? 0.5 : 1),
+			sandstorm : (attacker.battler.battle.weather === "sandstorm" && target.ofType("Rock") ? 1.5 : 1),
 			STAB : (attacker.ofType(type) ? 1.5 : 1),
 			burn : (type === Move.category.physical && attacker.status === "burned" ? 0.5 : 1)
 		};
@@ -321,7 +321,7 @@ Move = {
 			modifiers.critical = 1;
 		var min = (target.effectiveness(type, move.classification) > 0 ? 1 : 0);
 		return {
-			damage : Math.min(target.health, Math.max(1, Math.floor(Math.floor(Math.floor((Math.floor((2 * attacker.level * modifiers.critical) / 5 + 2) * power * (move.category === Move.category.physical ? attacker.stats.attack(true) : attacker.stats["special attack"](true))) / (move.category === Move.category.physical ? target.stats.defence(true) : target.stats["special defence"](true) * modifiers.sandstorm)) / 50 + 2) * modifiers.STAB * modifiers.weather * modifiers.multiTarget * modifiers.burn * target.effectiveness(type, move.classification) * (Math.floor(srandom.number(85, 100)) / 100)))),
+			damage : Math.min(target.health, Math.max(1, Math.floor(Math.floor(Math.floor((Math.floor((2 * attacker.level * modifiers.critical) / 5 + 2) * power * (move.category === Move.category.physical ? attacker.stats.attack(true) : attacker.stats["special attack"](true))) / (move.category === Move.category.physical ? target.stats.defence(true) : target.stats["special defence"](true) * modifiers.sandstorm)) / 50 + 2) * modifiers.STAB * modifiers.weather * modifiers.multiTarget * modifiers.burn * target.effectiveness(type, move.classification) * (Math.floor(attacker.battler.battle.random.number(85, 100)) / 100)))),
 			effectiveness : target.effectiveness(type, move.classification, attacker),
 			critical : (modifiers.critical > 1),
 			category : move.category,

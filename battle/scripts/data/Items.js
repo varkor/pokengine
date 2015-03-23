@@ -29,9 +29,9 @@ Items = {
 			useMessage : false,
 			"catch rate" : 1,
 			effect : function (self, poke, trainer) {
-				if (Battle.situation === Battles.situation.wild) {
+				if (poke.battler.battle.situation === Battles.situation.wild) {
 					Textbox.state(trainer.pronoun(true) + " threw a " + self.fullname + " at " + poke.name() + "!");
-					Battle.attemptCapture(poke, self, trainer);
+					poke.battler.battle.attemptCapture(poke, self, trainer);
 				} else {
 					Textbox.state(poke.trainer.pronoun(true) + " blocked " + trainer.possessivePronoun() + " " + self.fullname + "! " + (trainer === Game.player ? "You can't catch other people's Pokémon!" : trainer.pronoun(true) + " tried to capture your Pokémon!"));
 				}
@@ -47,11 +47,11 @@ Items = {
 		"Clone" : {
 			"catch rate" : 255,
 			effect : function (self, poke, trainer) {
-				var thrownByPlayer = (poke.trainer !== Battle.alliedTrainers[0]);
-				Textbox.state((thrownByPlayer ? Battle.alliedTrainers[0] : Battle.opposingTrainers[0]).pronoun(true) + " threw a " + self.fullname + " at " + poke.name() + "!");
-				if (Battle.situation !== Battles.situation.wild)
-					Textbox.state((thrownByPlayer ? Battle.opposingTrainers[0] : Battle.alliedTrainers[0]).pronoun(true) + " look" + (thrownByPlayer ? "s" : "") + " on helplessly as " + (thrownByPlayer ? Battle.alliedTrainers[0] : Battle.opposingTrainers[0]).possessivePronoun() + " " + self.fullname + " closes in!");
-				Battle.attemptCapture(poke, self, trainer);
+				var thrownByPlayer = (poke.trainer !== poke.battler.battle.alliedTrainers[0]);
+				Textbox.state((thrownByPlayer ? poke.battler.battle.alliedTrainers[0] : poke.battler.battle.opposingTrainers[0]).pronoun(true) + " threw a " + self.fullname + " at " + poke.name() + "!");
+				if (poke.battler.battle.situation !== Battles.situation.wild)
+					Textbox.state((thrownByPlayer ? poke.battler.battle.opposingTrainers[0] : poke.battler.battle.alliedTrainers[0]).pronoun(true) + " look" + (thrownByPlayer ? "s" : "") + " on helplessly as " + (thrownByPlayer ? poke.battler.battle.alliedTrainers[0] : poke.battler.battle.opposingTrainers[0]).possessivePronoun() + " " + self.fullname + " closes in!");
+				poke.battler.battle.attemptCapture(poke, self, trainer);
 			}
 		}
 	},
@@ -66,7 +66,7 @@ Items = {
 		},
 		"Sitrus" : {
 			effect : function (self, poke) {
-				Battle.healPercentage(poke, 0.25, Items._("Berries => Sitrus"));
+				poke.battler.battle.healPercentage(poke, 0.25, Items._("Berries => Sitrus"));
 			},
 			effects : [
 				{

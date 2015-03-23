@@ -6,8 +6,8 @@ Abilities = {
 				oneself : true,
 				action : function (data, self, other) {
 					Textbox.state(self.name() + "'s Intimidate is lowering the Attack of the opposing Pokémon!");
-					foreach(Battle.opponentsTo(self), function (poke) {
-						Battle.stat(poke, "attack", -1, self);
+					foreach(self.battler.battle.opponentsTo(self), function (poke) {
+						poke.battler.battle.stat(poke, "attack", -1, self);
 					});
 				}
 			}
@@ -48,7 +48,7 @@ Abilities = {
 				event : Triggers.effectiveness,
 				type : "Ground",
 				action : function (data, self, other) {
-					if (!Battle.active || !self.battler.grounded) {
+					if (!self.battler.grounded) {
 						if (other)
 							Textbox.state(self.name() + "'s Levitate protects " + self.personalPronoun() + " from " + other.name() + "'s Ground-type attack!");
 						return 0;

@@ -23,6 +23,8 @@ function pokemon (data, validate) {
 		}
 	};
 
+	var random = new srandom();
+
 	setProperty("species", "Missingno. (Nintendo)");
 	var species = function (property) {
 		if (self["form(e)"] === null)
@@ -31,13 +33,13 @@ function pokemon (data, validate) {
 			return Pokedex._(self.species + " -> form(e)s ~> " + self["form(e)"] + " => " + property);
 	};
 	setProperty("nickname", null);
-	setProperty("unique", Game.unique());
+	setProperty("identification", Game.unique());
 	setProperty("nature", function () {
-		return srandom.chooseFromArray(Object.keys(Natures));
+		return random.chooseFromArray(Object.keys(Natures));
 	});
 	setProperty("gender", function () {
 		var genderRatio = species("gender ratio");
-		return genderRatio !== null ? (srandom.point() < genderRatio ? "male" : "female") : "neuter";
+		return genderRatio !== null ? (random.point() < genderRatio ? "male" : "female") : "neuter";
 	});
 	setProperty("form(e)", function () {
 		if (Pokedex._(self.species)["form(e)s"] !== null) {
@@ -77,13 +79,13 @@ function pokemon (data, validate) {
 		}
 	});
 	setProperty("ability", function () {
-		return srandom.chooseFromArray(species("abilities").normal);
+		return random.chooseFromArray(species("abilities").normal);
 	});
 	setProperty("status", "none");
 	setProperty("IVs", function () {
 		var IVs = {};
 		foreach(Stats, function (stat) {
-			IVs[stat] = srandom.int(0, 31);
+			IVs[stat] = random.int(0, 31);
 		});
 		return IVs;
 	});
@@ -99,13 +101,13 @@ function pokemon (data, validate) {
 	setProperty("item", null);
 	setProperty("friendship", species("friendship"));
 	setProperty("shiny", function () {
-		return srandom.chance(8192);
+		return random.chance(8192);
 	});
 	setProperty("egg", null); // Number of egg cycles, or null (for not an egg)
 	setProperty("caught", null);
 	setProperty("ribbons", []);
 	setProperty("Pokerus", function () {
-		return srandom.chance(3, 65536) ? "infected" : "uninfected";
+		return random.chance(3, 65536) ? "infected" : "uninfected";
 	});
 
 	self.trainer = null;
@@ -173,7 +175,7 @@ function pokemon (data, validate) {
 
 		if (!isString(self.species) || !Pokedex._(self.species + "?")) return false;
 		if (!isString(self.nickname)) return false;
-		if (!self.hasOwnProperty("unique")) return false;
+		if (!self.hasOwnProperty("identification")) return false;
 		if (!isInteger(self.level) || !inRange(self.level, 1, 100)) return false;
 		if (!isString(self.nature) || !Natures.hasOwnProperty(self.nature)) return false;
 		if (!isString(self.gender) || !Genders.contains(self.gender)) return false;
@@ -325,7 +327,7 @@ function pokemon (data, validate) {
 	self.store = function () {
 		// Returns an object that contains all the data for the Pokémon, without any methods
 		var store = {};
-		foreach(["species", "health", "item", "moves", "ability", "nickname", "unique", "level", "nature", "gender", "status", "IVs", "EVs", "experience", "nationality", "form(e)", "friendship", "shiny", "egg", "ribbons", "caught", "Pokerus"], function (property) {
+		foreach(["species", "health", "item", "moves", "ability", "nickname", "identification", "level", "nature", "gender", "status", "IVs", "EVs", "experience", "nationality", "form(e)", "friendship", "shiny", "egg", "ribbons", "caught", "Pokerus"], function (property) {
 			store[property] = JSONCopy(self._(property));
 		});
 		foreach(store.moves, function (move) {
@@ -351,12 +353,12 @@ function pokemon (data, validate) {
 			});
 		} else {
 			var resumeNormalProceedings;
-			if (Battle.active) {
+			if (self.inBattle()) {
 				resumeNormalProceedings = function () {
-					Battle.delayForInput = false;
-					Battle.prompt();
+					self.battler.battle.delayForInput = false;
+					self.battler.battle.prompt();
 				};
-				Battle.delayForInput = true;
+				self.battler.battle.delayForInput = true;
 			} else {
 				resumeNormalProceedings = function () {};
 			}
@@ -407,9 +409,9 @@ function pokemon (data, validate) {
 		if (self.trainer === null || self.trainer.isAnNPC())
 			return;
 		sharedBetween = sharedBetween || 1;
-		var eventModifiers = product(Battle.triggerEvent(Triggers.experience, {}, defeated, self)), OPower = self.trainer.OPowers["Exp. Point"];
-		var gain = Math.ceil((((Battle.situation === Battles.situation.trainer ? 1.5 : 1) * defeated.currentProperty("yield").experience * defeated.level) / (5 * (participated ? 1 : 2)) * Math.pow((2 * defeated.level + 10) / (defeated.level + self.level + 10), 2.5) + 1) * (self.caught && self.trainer.unique === self.caught.trainer ? 1 : self.trainer.nationality === self.nationality ? 1.5 : 1.7) * (OPower === 1 ? 1.2 : OPower === 2 ? 1.5 : OPower === 3 ? 2 : 1) * eventModifiers / sharedBetween);
-		if (Battle.active)
+		var eventModifiers = product(defeated.battler.battle.triggerEvent(Triggers.experience, {}, defeated, self)), OPower = self.trainer.OPowers["Exp. Point"];
+		var gain = Math.ceil((((defeated.battler.battle.situation === Battles.situation.trainer ? 1.5 : 1) * defeated.currentProperty("yield").experience * defeated.level) / (5 * (participated ? 1 : 2)) * Math.pow((2 * defeated.level + 10) / (defeated.level + self.level + 10), 2.5) + 1) * (self.caught && self.trainer.identification === self.caught.trainer ? 1 : self.trainer.nationality === self.nationality ? 1.5 : 1.7) * (OPower === 1 ? 1.2 : OPower === 2 ? 1.5 : OPower === 3 ? 2 : 1) * eventModifiers / sharedBetween);
+		if (defeated.battler.battle.active)
 			Textbox.state(self.name() + " gained " + gain + " experience!");
 		var levelledUp = false;
 		while (self.level < 100 && self.experience + gain >= self.experienceFromLevelToNextLevel()) {
@@ -420,7 +422,7 @@ function pokemon (data, validate) {
 			Textbox.effect(function (display) { return function () { return Display.state.transition(display); }; }(display));
 			self.raiseLevel();
 			self.experience = 0;
-			if (Battle.active) {
+			if (defeated.battler.battle.active) {
 			var display = Display.state.save();
 				Textbox.state(self.name() + " has grown to level " + self.level + "!", function (display) { return function () { Display.state.load(display); }; }(display));
 			}
@@ -439,7 +441,7 @@ function pokemon (data, validate) {
 			maximumEVgain -= maximumEVgainForStat;
 			self.EVs[stat] += maximumEVgainForStat;
 		});
-		if (Battle.active) {
+		if (defeated.battler.battle.active) {
 			var display = Display.state.save();
 			Textbox.effect(function () { return Display.state.transition(display); });
 		}
@@ -589,9 +591,9 @@ function pokemon (data, validate) {
 				multiplier = 0;
 				return true;
 			}
-			multiplier *= Move.effectiveness(attackType, type, Battle.flags);
+			multiplier *= Move.effectiveness(attackType, type, self.battler.battle.flags);
 		});
-		var modification = Battle.triggerEvent(Triggers.effectiveness, {
+		var modification = self.battler.battle.triggerEvent(Triggers.effectiveness, {
 			type : attackType,
 			multiplier : multiplier
 		}, byWhom, self);
@@ -612,7 +614,7 @@ function pokemon (data, validate) {
 				ball : null,
 				location : Game.location,
 				level : self.level,
-				trainer : who.unique
+				trainer : who.identification
 			};
 		}
 		self.trainer = who;
@@ -631,7 +633,7 @@ function pokemon (data, validate) {
 			Textbox.state(self.name() + " is frozen solid.");
 			return false;
 		}
-		if (self.status === "paralysed" && srandom.chance(4)) {
+		if (self.status === "paralysed" && random.chance(4)) {
 			Textbox.state(self.name() + " was paralysed and couldn't move!");
 			return false;
 		}
@@ -641,14 +643,14 @@ function pokemon (data, validate) {
 		}
 		if (self.battler.confused) {
 			Textbox.state(self.name() + " is confused.");
-			if (srandom.chance(2)) {
+			if (random.chance(2)) {
 				self.hurtInConfusion();
 				return false;
 			}
 		}
 		if (self.battler.infatuated) {
 			Textbox.state(self.name() + " is infatuated.");
-			if (srandom.chance(2)) {
+			if (random.chance(2)) {
 				Textbox.state(self.name() + " couldn't move due to infatuation.");
 				return false;
 			}
@@ -709,14 +711,14 @@ function pokemon (data, validate) {
 	};
 
 	self.disobey = function () {
-		if (self.trainer !== null && (self.trainer.unique !== self.caught.trainer && self.trainer.holdsControlOverPokemonUpToLevel() < self.level && srandom.chance(2))) {
-			return srandom.choose(
+		if (self.trainer !== null && (self.trainer.identification !== self.caught.trainer && self.trainer.holdsControlOverPokemonUpToLevel() < self.level && random.chance(2))) {
+			return random.choose(
 				function (poke) {
-					Textbox.state(poke.name() + srandom.choose(" is loafing around!", " turned away!", " won't obey!"));
+					Textbox.state(poke.name() + random.choose(" is loafing around!", " turned away!", " won't obey!"));
 				},
 				function (poke) {
 					Textbox.state(poke.name() + " began to nap!");
-					Battle.inflict("asleep");
+					self.battler.battle.inflict("asleep");
 				},
 				function (poke) {
 					Textbox.state(poke.name() + " won't obey!");
@@ -735,13 +737,13 @@ function pokemon (data, validate) {
 	self.recoil = function (move, damage) {
 		damage = Move.exactDamage(self, self, move, Math.floor(damage), "Typeless");
 		Textbox.state(self.name() + " took recoil damage!");
-		Battle.damage(self, damage);
+		self.battler.battle.damage(self, damage);
 	};
 
 	self.crash = function (damage) {
 		damage = Math.floor(damage);
 		Textbox.state(self.name() + " took crash damage!");
-		Battle.damage(self, {damage : damage});
+		self.battler.battle.damage(self, {damage : damage});
 	};
 
 	self.usableMoves = function () {
@@ -790,8 +792,10 @@ function pokemon (data, validate) {
 		return responses;
 	};
 
-	self.inBattle = function () {
-		return self.battler.battling;
+	self.inBattle = function (whichBattle) {
+		if (arguments.length >= 1)
+			return self.battler.battling && self.battler.battle === whichBattle;
+		else return self.battler.battling;
 	};
 
 	self.fainted = function () {
@@ -831,5 +835,12 @@ function pokemon (data, validate) {
 			});
 			Textbox.state(self.name() + " Mega Evolved!");
 		}
+	};
+
+	self.knowsMove = function (moves) {
+		moves = wrapArray(moves);
+		return foreach(self.moves, function (move) {
+			return moves.contains(move.move);
+		});
 	};
 }

@@ -20,9 +20,9 @@ function bag (items) {
 		return store;
 	};
 
-	self.usableItems = function () {
+	self.usableItems = function (direct) {
 		return self.items.filter(function (item) {
-			return item.quantity - item.intentToUse > 0;
+			return (item.quantity - item.intentToUse > 0) && (!direct || Items._(item.item).direct);
 		});
 	};
 

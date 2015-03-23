@@ -43,6 +43,7 @@ DataObject = {
 
 FunctionObject = {
 	objects : [],
+	initialised : false,
 	new : function (object, details) {
 		if (details.hasOwnProperty("initialise"))
 			object.initialise = details.initialise;
@@ -55,7 +56,7 @@ FunctionObject = {
 				object.requestRedraw = false;
 				object.initialise = function () {
 					if (initialise)
-						initialise();
+						initialise(object);
 					var canvas = null;
 					if (details.drawing.canvas.hasOwnProperty("selector"))
 						canvas = document.querySelector(details.drawing.canvas.selector);
@@ -90,28 +91,42 @@ FunctionObject = {
 				}
 			}
 		}
-		FunctionObject.objects.push({
+		var entry;
+		FunctionObject.objects.push(entry = {
 			object : object,
 			initialise : details.hasOwnProperty("initialise"),
 			update : details.hasOwnProperty("update"),
 			draw : details.hasOwnProperty("drawing")
 		});
+		object.destroy = function () {
+			if (details.hasOwnProperty("drawing"))
+				object.canvas.parentElement.removeChild(object.canvas);
+			FunctionObject.objects.removeElementsOfValue(entry);
+		};
+		if (FunctionObject.initialised)
+			FunctionObject.initialise(entry);
 		return object;
 	},
-	initialise : function () {
-		foreach(FunctionObject.objects, function (object) {
+	initialise : function (objects) {
+		if (arguments.length < 1) {
+			objects = FunctionObject.objects;
+			FunctionObject.initialised = true;
+		} else {
+			objects = wrapArray(objects);
+		}
+		foreach(objects, function (object) {
 			if (object.initialise)
 				object.object.initialise();
 		});
 		window.setInterval(function () {
-			foreach(FunctionObject.objects, function (object) {
+			foreach(objects, function (object) {
 				if (object.update)
 					object.object.update();
 			});
 		}, Time.refresh);
 		var draw = function () {
 			window.requestAnimationFrame(function () {
-				foreach(FunctionObject.objects, function (object) {
+				foreach(objects, function (object) {
 					if (object.draw && object.object.draw) {
 						object.object.draw(true);
 					}

@@ -141,8 +141,7 @@ Battles = {
 	style : ["normal", "double", "sky"],
 	kind : {
 		local : q = 0,
-		online : ++ q,
-		recording : ++ q
+		online : ++ q
 	},
 	side : {
 		near : {},

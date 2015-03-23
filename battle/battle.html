@@ -86,6 +86,8 @@
 		<ul id="team" class="zebra"></ul>
 		<ul id="users"></ul>
 		<script>
+		Battle = null;
+
 		Interface = {
 			initialise : function () {
 				document.querySelector("#connect").addEventListener("mousedown", function (event) {
@@ -193,6 +195,9 @@
 					};
 					Interface.popup(document.querySelector("#local"), function (event) {
 						document.querySelector("#local").disabled = true;
+						if (Battle === null) {
+							Battle = BattleContext(true);
+						}
 						Game.takePossessionOf(new trainer({
 							"name" : document.querySelector("#name").value,
 							"class" : "Pokémon Trainer",

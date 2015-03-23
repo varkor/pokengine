@@ -212,14 +212,14 @@ window.addEventListener("keydown", function (event) {
 	if (Keys.press(Keys.name(event.keyCode))) {
 		event.stopPropagation();
 	}
-	 if (!(event.metaKey || event.ctrlKey) && typeof Battle !== "undefined" && document.activeElement === Battle.canvas)
+	 if (!(event.metaKey || event.ctrlKey) && typeof Battle === "object" && Battle !== null && Battle.hasOwnProperty("canvas") && document.activeElement === Battle.canvas)
 	 	event.preventDefault();
 });
 window.addEventListener("keyup", function (event) {
 	if (Keys.release(Keys.name(event.keyCode))) {
 		event.stopPropagation();
 	}
-	 if (!(event.metaKey || event.ctrlKey) && typeof Battle !== "undefined" && document.activeElement === Battle.canvas)
+	 if (!(event.metaKey || event.ctrlKey) && typeof Battle === "object" && Battle !== null && Battle.hasOwnProperty("canvas") && document.activeElement === Battle.canvas)
 	 	event.preventDefault();
 });
 
@@ -233,7 +233,7 @@ Cursor = {
 	},
 	click : function () {
 		Input.controlScheme = "mouse";
-		if (typeof Textbox !== "undefined" && Textbox.canvas) {
+		if (typeof Textbox === "object" && Textbox.canvas) {
 			if (Cursor.inArea(Textbox.canvas, 0, 0, Textbox.canvas.width, Textbox.canvas.height)) {
 				Textbox.draw(); // Redraws the textbox so that the hovered response is updated on touchscreen devices
 				Textbox.progress();
