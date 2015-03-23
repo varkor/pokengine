@@ -8,7 +8,6 @@ Supervisor = {
 			data : data
 		}); */
 	},
-	raise : function ()
 	receive : function (message, data, identifier) {
 		/* Assumes message is well-formed but may not necessarily contain valid data in the case of relays */
 		switch (message) {
