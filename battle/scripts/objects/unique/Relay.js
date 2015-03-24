@@ -1,7 +1,7 @@
 Relay = {
 	identification : null,
 	processes : {},
-	pass : function (identifier, message, data) {
+	pass : function (message, data, identifier) {
 		/* Send message along via the relevant WebSocket connection */
 		/* <CONNECTION>.send({
 			identifier : identifier,
@@ -17,11 +17,15 @@ Relay = {
 				break;
 			case "initiate": // Begin a battle
 				/*
-					data : {
-						ally,
-						opponent,
-						seed,
-						parameters
+					{
+						rules,
+						callback,
+						data : {
+							ally,
+							opponent,
+							seed,
+							parameters
+						}
 					}
 				*/
 				var battle = BattleContext(true);
@@ -29,18 +33,25 @@ Relay = {
 					battle : battle
 				};
 				battle.identifier = identifier;
-				var ally = new trainer(data.ally), opponent = new trainer(data.opponent);
-				if (ally.identification !== Relay.identification) {
-					ally.type = Trainers.type.online;
-				} else {
+				var ally, opponent;
+				if (data.data.teamA.identification === Relay.identification) {
+					ally = new trainer(data.data.teamA);
+					opponent = new trainer(data.data.teamB);
 					Game.takePossessionOf(ally);
+				} else if (datadata.teamB.identification === Relay.identification) {
+					ally = new trainer(data.data.teamB);
+					opponent = new trainer(data.data.teamA);
+					Game.takePossessionOf(ally);
+				} else {
+					ally.type = Trainers.type.online;
 				}
 				opponent.type = Trainers.type.online;
 				ally.team = ally.identification;
 				opponent.team = opponent.identification;
 				battle.canvas.focus();
 				Battle = battle;
-				battle.beginOnline(data.seed, ally, opponent, data.parameters, function () {
+				battle.beginOnline(data.data.seed, ally, opponent, data.data.parameters, function (flags) {
+					data.callback(flags);
 					battle.destroy();
 				});
 				break;

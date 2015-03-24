@@ -1,7 +1,10 @@
 //? BattleContext will now need to deal with all the other Textbox.ask situations like learning new moves, (preventing) evolving, etc.
 //? Any stuff that's if (kind !== online) is not dealt with, so battle replays will have to be taken into account later
 //? Trainer type should be elimated entirely. Battle kind can probably be eliminated too, as online battles are no different than trainer house battles, etc.
-//? Doesn't handle "send" in .communication
+//? Doesn't handle "for" : "send" in .communication (...what?)
+//? Do regular syncing
+//? Validating relay and sync dataOf
+//? Send clauses too, as they can affect gameplay
 
 function BattleContext (client) {
 	if (arguments.length < 1)
@@ -530,7 +533,6 @@ function BattleContext (client) {
 			return [];
 		},
 		load : function (alliedTrainers, opposingTrainers, settings) {
-			battleContext.active = true;
 			battleContext.state = {
 				kind : "loading",
 				progress : 0,
@@ -678,8 +680,13 @@ function BattleContext (client) {
 					}
 				}))
 					return;
-				Display.state.load(Display.state.save());
-				battleContext.load(alliedTrainers, opposingTrainers, settings);
+				battleContext.active = true;
+				if (!battleContext.process) {
+					Display.state.load(Display.state.save());
+					battleContext.load(alliedTrainers, opposingTrainers, settings);
+				} else {
+					battleContext.begin();
+				}
 			} else
 				throw "You've tried to start a battle when one is already in progress!";
 		},
@@ -729,7 +736,8 @@ function BattleContext (client) {
 				if (!battleContext.process && forcefully)
 					Textbox.clear();
 				if (!battleContext.process) Textbox.setStyle("standard");
-				battleContext.draw();
+				if (!battleContext.process)
+					battleContext.draw();
 				battleContext.situation = null;
 				foreach(battleContext.all(true), function (poke) {
 					if (poke.status === "badly poisoned")
@@ -813,8 +821,10 @@ function BattleContext (client) {
 					battleContext.state.stage = "preparation";
 				});
 			} else {
-				Keys.removeHandler(battleContext.handler);
-				delete battleContext.handler;
+				if (!battleContext.process) {
+					Keys.removeHandler(battleContext.handler);
+					delete battleContext.handler;
+				}
 				battleContext.state = {
 					kind : "inactive"
 				};
@@ -1099,16 +1109,14 @@ function BattleContext (client) {
 			}
 		},
 		playerIsParticipating : function () {
-			return Game.player !== null && Battle.alliedTrainers.contains(Game.player);
+			return !battleContext.process && Game.player !== null && Battle.alliedTrainers.contains(Game.player);
 		},
 		flushInputs : function () {
 			// Sends any inputs the player has made since the inputs were last flushed, to the server
 			// This is done after every set of inputs has been made at the start of the turn, and whenever extra input is required, such as when a Pokémon faints and the player has to decide which one to send out next
 			if (battleContext.kind === Battles.kind.online) {
 				if (battleContext.inputs.notEmpty())
-					Relay.pass(battleContext.identifier, "relay", {
-						actions : battleContext.inputs
-					});
+					Relay.pass("relay", battleContext.inputs, battleContext.identifier);
 			}
 			battleContext.inputs = [];
 		},
@@ -1119,19 +1127,14 @@ function BattleContext (client) {
 				foreach(Battle.allTrainers(), function (trainer) {
 					trainers[trainer.identification] = trainer.store();
 				});
-				Relay.pass(battleContext.identifier, "sync", {
+				Relay.pass("sync", {
 					state : {
-						seed : battle.random.seed,
-						weather : battle.weather,
+						seed : battleContext.random.seed,
+						weather : battleContext.weather,
 						trainers : trainers
 					}
-				});
+				}, battleContext.identifier);
 			}
-			compare(battle.random.seed, state.seed);
-			compare(battle.weather, state.weather);
-			foreach([].concat(battle.alliedTrainers, battle.opposingTrainers), function (trainer) {
-				compare(trainer.store(), state.trainers);
-			});
 		},
 		advance : function () {
 			if (!battleContext.playerIsParticipating() || ++ battleContext.selection === Game.player.battlers().length) {
@@ -1418,14 +1421,15 @@ function BattleContext (client) {
 				Textbox.effect(function () { Display.state.load(display); });
 				currentBattler.battler.display.outlined = false;
 			}
-			
 			var actions = [], hotkeys = {};
 			if (!Widgets.isAvailable("Pokémon"))
 				actions = ["Pokémon"].concat(actions);
 			if (battleContext.rules.items === "allowed" && !Widgets.isAvailable("Bag"))
 				actions.push("Bag");
-			actions.push("Run");
-			hotkeys[Settings._("keys => secondary")] = "Run";
+			if (battleContext.situation === Battles.situation.wild) {
+				actions.push("Run");
+				hotkeys[Settings._("keys => secondary")] = "Run";
+			}
 			var moves = [];
 			foreach(currentBattler.usableMoves(), function (move) {
 				moves.push(move.move);

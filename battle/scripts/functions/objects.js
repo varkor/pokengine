@@ -99,7 +99,7 @@ FunctionObject = {
 			draw : details.hasOwnProperty("drawing")
 		});
 		object.destroy = function () {
-			if (details.hasOwnProperty("drawing"))
+			if (details.hasOwnProperty("drawing") && details.drawing.hasOwnProperty("canvas") && !details.drawing.canvas.hasOwnProperty("selector"))
 				object.canvas.parentElement.removeChild(object.canvas);
 			FunctionObject.objects.removeElementsOfValue(entry);
 		};

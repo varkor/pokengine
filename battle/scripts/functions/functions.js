@@ -326,12 +326,13 @@ Array.prototype.pushIfNotAlreadyContained = function (element) {
 	return false;
 };
 
-CanvasRenderingContext2D.prototype.fillCircle = function (x, y, radius, _arcAngle) {
-	var arcAngle = (arguments.length < 4 ? 2 * Math.PI : _arcAngle);
-	this.beginPath();
-	this.arc(x, y, radius, 0, arcAngle, false);
-	this.fill();
-};
+if (CanvasRenderingContext2D) // Don't want it making trouble on Node!
+	CanvasRenderingContext2D.prototype.fillCircle = function (x, y, radius, _arcAngle) {
+		var arcAngle = (arguments.length < 4 ? 2 * Math.PI : _arcAngle);
+		this.beginPath();
+		this.arc(x, y, radius, 0, arcAngle, false);
+		this.fill();
+	};
 
 function article (word) {
 	return (["a", "e", "i", "o", "u"].contains(word.charAt(0).toLowerCase()) ? "an" : "a");

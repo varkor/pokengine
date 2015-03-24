@@ -13,7 +13,7 @@ Supervisor = {
 		switch (message) {
 			case "initiate":
 				// Initiate a battle between two parties
-				// data: parties, data, rules
+				// data: parties, data, rules, flags
 				identifier = Supervisor.identification;
 				// Check that all the rules are matched
 				var valid = true;
@@ -32,18 +32,25 @@ Supervisor = {
 					}
 				});
 				if (valid) {
-					var battle = BattleContext(true);
+					var battle = BattleContext();
 					Supervisor.processes[identifier] = {
 						parties : data.parties,
 						parameters : data.data,
+						rules : data.rules,
 						relay : [],
-						battle : BattleContext()
+						battle : battle
 					};
-					var ally = new trainer(data.data.ally), opponent = new trainer(data.data.opponent);
-					ally.type = opponent.type = Trainers.type.online;
-					battle.beginOnline(data.data.seed, ally, opponent, data.data.parameters);
+					var teamA = new trainer(data.data.teamA), teamB = new trainer(data.data.teamB);
+					teamA.type = teamB.type = Trainers.type.online;
+					battle.beginOnline(data.data.seed, teamA, teamB, data.data.parameters, function (flags) {
+						data.callback(flags);
+						delete Supervisor.processes[identifier];
+					});
 					foreach(data.parties, function (party) {
-						Supervisor.send(party, "initiate", data.parameters, identifier);
+						Supervisor.send(party, "initiate", {
+							rules : data.rules,
+							data : data.data
+						}, identifier);
 					});
 					return Supervisor.identification ++;
 				}
@@ -57,12 +64,12 @@ Supervisor = {
 				// Terminates a battle that is in progress
 				// data: reason
 				var process = Supervisor.processes[identifier];
+				process.battle.end(true);
 				foreach(process.parties, function (party) {
 					Supervisor.send(party, "terminate", data.reason, identifier);
 				});
 				delete Supervisor.processes[identifier];
 				return process;
-				break;
 			case "relay":
 				// Sends data between two battling parties
 				// data: actor, data

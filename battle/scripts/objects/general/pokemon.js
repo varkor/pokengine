@@ -33,7 +33,7 @@ function pokemon (data, validate) {
 			return Pokedex._(self.species + " -> form(e)s ~> " + self["form(e)"] + " => " + property);
 	};
 	setProperty("nickname", null);
-	setProperty("identification", Game.unique());
+	setProperty("identification", typeof "Game" === "object" ? Game.unique() : null);
 	setProperty("nature", function () {
 		return random.chooseFromArray(Object.keys(Natures));
 	});
@@ -612,7 +612,7 @@ function pokemon (data, validate) {
 		if (!self.caught) {
 			self.caught = {
 				ball : null,
-				location : Game.location,
+				location : null,
 				level : self.level,
 				trainer : who.identification
 			};
