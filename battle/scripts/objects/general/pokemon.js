@@ -344,7 +344,7 @@ function pokemon (data, validate) {
 			return false;
 		if (self.moves.length < 4) {
 			if (!initial)
-				Textbox.state(self.name() + " learnt " + move + "!");
+				if (!self.battler.battle.process) Textbox.state(self.name() + " learnt " + move + "!");
 			self.moves.push({
 				move : move,
 				number : self.moves.length,
@@ -362,7 +362,7 @@ function pokemon (data, validate) {
 			} else {
 				resumeNormalProceedings = function () {};
 			}
-			Textbox.state(self.name() + " wants to learn " + move + ". But " + self.name() + " already knows 4 moves!");
+			if (!self.battler.battle.process) Textbox.state(self.name() + " wants to learn " + move + ". But " + self.name() + " already knows 4 moves!");
 			var immediatelyProceeding = Textbox.confirm("Do you want " + self.name() + " to forget a move to make room for " + move + "?", function (response) {
 				if (response === "Yes") {
 					var moves = [], hotkeys = {};
@@ -396,7 +396,7 @@ function pokemon (data, validate) {
 			}
 		})) {
 			if (!initial)
-				Textbox.state(self.name() + " forgot " + move + "!");
+				if (!self.battler.battle.process) Textbox.state(self.name() + " forgot " + move + "!");
 			return true;
 		}
 	};
@@ -412,7 +412,7 @@ function pokemon (data, validate) {
 		var eventModifiers = product(defeated.battler.battle.triggerEvent(Triggers.experience, {}, defeated, self)), OPower = self.trainer.OPowers["Exp. Point"];
 		var gain = Math.ceil((((defeated.battler.battle.situation === Battles.situation.trainer ? 1.5 : 1) * defeated.currentProperty("yield").experience * defeated.level) / (5 * (participated ? 1 : 2)) * Math.pow((2 * defeated.level + 10) / (defeated.level + self.level + 10), 2.5) + 1) * (self.caught && self.trainer.identification === self.caught.trainer ? 1 : self.trainer.nationality === self.nationality ? 1.5 : 1.7) * (OPower === 1 ? 1.2 : OPower === 2 ? 1.5 : OPower === 3 ? 2 : 1) * eventModifiers / sharedBetween);
 		if (defeated.battler.battle.active)
-			Textbox.state(self.name() + " gained " + gain + " experience!");
+			if (!self.battler.battle.process) Textbox.state(self.name() + " gained " + gain + " experience!");
 		var levelledUp = false;
 		while (self.level < 100 && self.experience + gain >= self.experienceFromLevelToNextLevel()) {
 			levelledUp = true;
@@ -422,8 +422,8 @@ function pokemon (data, validate) {
 			Textbox.effect(function (display) { return function () { return Display.state.transition(display); }; }(display));
 			self.raiseLevel();
 			self.experience = 0;
-			if (defeated.battler.battle.active) {
-			var display = Display.state.save();
+			if (defeated.battler.battle.active && !self.battler.battle.process) {
+				var display = Display.state.save();
 				Textbox.state(self.name() + " has grown to level " + self.level + "!", function (display) { return function () { Display.state.load(display); }; }(display));
 			}
 			if (species("moveset").hasOwnProperty(self.level)) {
@@ -498,10 +498,12 @@ function pokemon (data, validate) {
 
 	self.evolve = function (evolution) {
 		var fromName = self.species.replace(/ \(\w+\)$/, ""), intoName = evolution.replace(/ \(\w+\)$/, "");
-		if (self.name() !== fromName)
-			Textbox.state("Congratulations! " + self.name() + " evolved from " + article(fromName) + " " + fromName + " into " + article(intoName) + " " + intoName + "!");
-		else
-			Textbox.state("Congratulations! " + self.name() + " evolved into " + article(intoName) + " " + intoName + "!");
+		if (!self.battler.battle.process) {
+			if (self.name() !== fromName)
+				Textbox.state("Congratulations! " + self.name() + " evolved from " + article(fromName) + " " + fromName + " into " + article(intoName) + " " + intoName + "!");
+			else
+				Textbox.state("Congratulations! " + self.name() + " evolved into " + article(intoName) + " " + intoName + "!");
+		}
 		self.species = evolution;
 		if (Pokedex._(evolution)["form(e)s"] === null)
 			self["form(e)"] = null;
@@ -679,13 +681,13 @@ function pokemon (data, validate) {
 				move = self.currentMoves()[move].move;
 			} else {
 				move = "Struggle";
-				Textbox.state(self.name() + " has no PP left...");
+				if (!self.battler.battle.process) Textbox.state(self.name() + " has no PP left...");
 			}
 		}
 		if (moveNumber !== null && (moveNumber < 0 || moveNumber >= self.currentMoves().length || self.currentMoves()[moveNumber].PP === 0))
 			return;
 		if (moveNumber !== null && self.battler.moveStage === 0 && self.currentMoves()[moveNumber].disabled) {
-			Textbox.state("The move " + self.name() + " attempted to use is disabled!");
+			if (!self.battler.battle.process) Textbox.state("The move " + self.name() + " attempted to use is disabled!");
 		} else {
 			if (moveNumber !== null)
 				-- self.currentMoves()[moveNumber].PP;
@@ -730,19 +732,19 @@ function pokemon (data, validate) {
 	};
 
 	self.hurtInConfusion = function () {
-		Textbox.state(self.name() + " hurt " + self.selfPronoun() + " in the confusion!");
+		if (!self.battler.battle.process) Textbox.state(self.name() + " hurt " + self.selfPronoun() + " in the confusion!");
 		Move.use("Confused", 0, self, self);
 	};
 
 	self.recoil = function (move, damage) {
 		damage = Move.exactDamage(self, self, move, Math.floor(damage), "Typeless");
-		Textbox.state(self.name() + " took recoil damage!");
+		if (!self.battler.battle.process) Textbox.state(self.name() + " took recoil damage!");
 		self.battler.battle.damage(self, damage);
 	};
 
 	self.crash = function (damage) {
 		damage = Math.floor(damage);
-		Textbox.state(self.name() + " took crash damage!");
+		if (!self.battler.battle.process) Textbox.state(self.name() + " took crash damage!");
 		self.battler.battle.damage(self, {damage : damage});
 	};
 
@@ -757,7 +759,7 @@ function pokemon (data, validate) {
 
 	self.useHeldItem = function () {
 		var item = Items._(self.item);
-		Textbox.state(self.name() + " used the " + item.fullname + " " + self.pronoun() + " was holding on " + self.selfPronoun() + "!");
+		if (!self.battler.battle.process) Textbox.state(self.name() + " used the " + item.fullname + " " + self.pronoun() + " was holding on " + self.selfPronoun() + "!");
 		var response = item.effect(self.item, self);
 		if (item.onetime)
 			self.item = null;
@@ -833,7 +835,7 @@ function pokemon (data, validate) {
 				Display.state.load(display);
 				self.cry();
 			});
-			Textbox.state(self.name() + " Mega Evolved!");
+			if (!self.battler.battle.process) Textbox.state(self.name() + " Mega Evolved!");
 		}
 	};
 
