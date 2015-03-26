@@ -38,7 +38,7 @@ Relay = {
 					ally = new trainer(data.data.teamA);
 					opponent = new trainer(data.data.teamB);
 					Game.takePossessionOf(ally);
-				} else if (datadata.teamB.identification === Relay.identification) {
+				} else if (data.data.teamB.identification === Relay.identification) {
 					ally = new trainer(data.data.teamB);
 					opponent = new trainer(data.data.teamA);
 					Game.takePossessionOf(ally);

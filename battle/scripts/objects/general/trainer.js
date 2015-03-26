@@ -36,7 +36,7 @@ function trainer (data) {
 	self.dex = new dex(self.dex);
 	self.bag = new bag(self.bag);
 	self.type = Trainers.type.NPC;
-	self.team = Game.unique();
+	self.team = self.identification;
 	self.OPowers = {
 		"Exp. Point" : 0,
 		"Prize Money" : 0,

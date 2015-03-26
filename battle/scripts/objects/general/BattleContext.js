@@ -781,6 +781,10 @@ function BattleContext (client) {
 					}, Settings._("keys => secondary"));
 				}
 				battleContext.continueEvolutions();
+				var stored = [];
+				foreach(battleContext.allTrainers(), function (trainer) {
+					stored.push(trainer.store());
+				});
 				battleContext.alliedTrainers = [];
 				battleContext.opposingTrainers = [];
 				battleContext.participants = [];
@@ -803,7 +807,7 @@ function BattleContext (client) {
 					*/
 					battleContext.callback(arguments.length >= 2 ? flags : {
 						"outcome" : "termination"
-					});
+					}, stored);
 				}
 			}
 		},
