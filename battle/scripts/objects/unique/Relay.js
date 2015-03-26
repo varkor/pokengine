@@ -55,7 +55,7 @@ Relay = {
 					battle.destroy();
 				};
 				if (opponent.identification === 0) { /* Code for TheWild */
-					Battle.random.seed = data.data.seed;
+					battle.random.seed = data.data.seed;
 					battle.beginWildBattle(ally, opponent.party.pokemon, data.data.parameters, callback);
 				} else {
 					battle.beginOnline(data.data.seed, ally, opponent, data.data.parameters, callback);

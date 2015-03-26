@@ -42,10 +42,18 @@ Supervisor = {
 					};
 					var teamA = new trainer(data.data.teamA), teamB = new trainer(data.data.teamB);
 					teamA.type = teamB.type = Trainers.type.online;
-					battle.beginOnline(data.data.seed, teamA, teamB, data.data.parameters, function (flags, trainers) {
+					var callback = function (flags, trainers) {
 						data.callback(flags, trainers);
 						delete Supervisor.processes[identifier];
-					});
+					};
+					battle.random.seed = data.data.seed;
+					if (teamA.identification === 0) { /* Code for TheWild */
+						battle.beginWildBattle(teamB, teamA.party.pokemon, data.data.parameters, callback);
+					} else if (teamB.identification === 0) {
+						battle.beginWildBattle(teamA, teamB.party.pokemon, data.data.parameters, callback);
+					} else {
+						battle.beginOnline(data.data.seed, teamA, teamB, data.data.parameters, callback);
+					}
 					foreach(data.parties, function (party) {
 						Supervisor.send(party, "initiate", {
 							rules : data.rules,
