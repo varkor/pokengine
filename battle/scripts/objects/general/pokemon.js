@@ -718,7 +718,7 @@ function pokemon (data, validate) {
 				},
 				function (poke) {
 					Textbox.state(poke.name() + " began to nap!");
-					self.battler.battle.inflict("asleep");
+					self.battler.battle.inflict(self, "asleep");
 				},
 				function (poke) {
 					Textbox.state(poke.name() + " won't obey!");

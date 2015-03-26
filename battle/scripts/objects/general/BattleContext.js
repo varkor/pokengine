@@ -1118,7 +1118,7 @@ function BattleContext (client) {
 		flushInputs : function () {
 			// Sends any inputs the player has made since the inputs were last flushed, to the server
 			// This is done after every set of inputs has been made at the start of the turn, and whenever extra input is required, such as when a Pokémon faints and the player has to decide which one to send out next
-			if (battleContext.kind === Battles.kind.online) {
+			if (battleContext.identifier !== null) {
 				if (battleContext.inputs.notEmpty())
 					Relay.pass("relay", battleContext.inputs, battleContext.identifier);
 			}
@@ -1126,7 +1126,7 @@ function BattleContext (client) {
 		},
 		sync : function () {
 			// Sends the current state of the battle to the server to make sure there haven't been any disruptions to the battle, especially of a... suspicious manner
-			if (battleContext.kind === Battles.kind.online) {
+			if (battleContext.identifier !== null) {
 				var trainers = {};
 				foreach(Battle.allTrainers(), function (trainer) {
 					trainers[trainer.identification] = trainer.store();

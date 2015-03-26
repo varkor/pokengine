@@ -3,7 +3,7 @@ function srandom (seed) {
 	
 	if (arguments.length >= 1)
 		self.seed = seed;
-	else self.seed = 1;
+	else self.seed = Math.random();
 	
 	self.point = function () {
 		var x = Math.sin(self.seed = self.increase(self.seed)) * 1000000;

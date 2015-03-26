@@ -50,10 +50,16 @@ Relay = {
 				opponent.team = opponent.identification;
 				battle.canvas.focus();
 				Battle = battle;
-				battle.beginOnline(data.data.seed, ally, opponent, data.data.parameters, function (flags) {
-					data.callback(flags);
+				var callback = function (flags, trainers) {
+					data.callback(flags, trainers);
 					battle.destroy();
-				});
+				};
+				if (opponent.identification === 0) { /* Code for TheWild */
+					Battle.random.seed = data.data.seed;
+					battle.beginWildBattle(ally, opponent.party.pokemon, data.data.parameters, callback);
+				} else {
+					battle.beginOnline(data.data.seed, ally, opponent, data.data.parameters, callback);
+				}
 				break;
 			case "terminate": // A battle must be stopped
 				Relay.processes[identifier].battle.end(true);

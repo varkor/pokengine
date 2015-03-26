@@ -42,8 +42,8 @@ Supervisor = {
 					};
 					var teamA = new trainer(data.data.teamA), teamB = new trainer(data.data.teamB);
 					teamA.type = teamB.type = Trainers.type.online;
-					battle.beginOnline(data.data.seed, teamA, teamB, data.data.parameters, function (flags) {
-						data.callback(flags);
+					battle.beginOnline(data.data.seed, teamA, teamB, data.data.parameters, function (flags, trainers) {
+						data.callback(flags, trainers);
 						delete Supervisor.processes[identifier];
 					});
 					foreach(data.parties, function (party) {
