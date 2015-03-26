@@ -418,8 +418,10 @@ function pokemon (data, validate) {
 			levelledUp = true;
 			gain -= self.experienceFromLevelToNextLevel() - self.experience;
 			self.experience = self.experienceFromLevelToNextLevel();
-			var display = Display.state.save();
-			Textbox.effect(function (display) { return function () { return Display.state.transition(display); }; }(display));
+			if (!self.battler.battle.process) {
+				var display = Display.state.save();
+				Textbox.effect(function (display) { return function () { return Display.state.transition(display); }; }(display));
+			}
 			self.raiseLevel();
 			self.experience = 0;
 			if (defeated.battler.battle.active && !self.battler.battle.process) {
@@ -441,7 +443,7 @@ function pokemon (data, validate) {
 			maximumEVgain -= maximumEVgainForStat;
 			self.EVs[stat] += maximumEVgainForStat;
 		});
-		if (defeated.battler.battle.active) {
+		if (defeated.battler.battle.active && !self.battler.battle.process) {
 			var display = Display.state.save();
 			Textbox.effect(function () { return Display.state.transition(display); });
 		}

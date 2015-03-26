@@ -5,6 +5,7 @@
 //? Do regular syncing
 //? Validating relay and sync dataOf
 //? Send clauses too, as they can affect gameplay
+//? Send all inputs at once, rather than immediately upon receiving actions
 
 function BattleContext (client) {
 	if (arguments.length < 1)
@@ -1096,7 +1097,7 @@ function BattleContext (client) {
 					});
 					break;
 			}
-			if (battleContext.kind !== Battles.kind.online || character === Game.player) {
+			if (battleContext.kind !== Battles.kind.online || (!battleContext.process && character === Game.player)) {
 				if (advance) {
 					var action = {
 						action : "command",
@@ -2153,7 +2154,7 @@ function BattleContext (client) {
 			}
 			poke.battler.reset();
 			if (!poke.trainer.hasHealthyEligiblePokemon(false, poke)) {
-				var playerHasBeenDefeated = (poke.trainer === battleContext.alliedTrainers.first()), trainerbattleContext = (battleContext.situation === Battles.situation.trainer), playerName = battleContext.alliedTrainers.first().pronoun(true), endbattleContextFlags;
+				var playerHasBeenDefeated = (poke.trainer === battleContext.alliedTrainers.first()), trainerbattleContext = (battleContext.situation === Battles.situation.trainer), playerName = !battleContext.process ? battleContext.alliedTrainers.first().pronoun(true) : null, endbattleContextFlags;
 				if (trainerbattleContext) {
 					var opponents = [];
 					foreach(battleContext.opposingTrainers, function (opposer) {
