@@ -75,18 +75,20 @@ Move = {
 				affected = mover.battler.battle.affectedByMove(mover, targetPokemon, move).filter(onlyPokemon);
 			}
 		}
-		if (finalStage && (!move.classification.contains("_") || moveName === "Struggle")) {
-			if (affected.notEmpty() || affectsEntireSide)
-				animationEffect = Textbox.state(mover.name() + " used " + moveName + (!affectsEntireSide && move.affects === Move.targets.directTarget && affected.notEmpty() ? " on " + (targetPokemon !== mover ? targetPokemon.name() : mover.selfPronoun()) : "") + "!", function () { return Move.animate(mover, move, stage, targetPokemon, constant); });
-			else
-				Textbox.state(mover.name() + " tried to use " + moveName + "...");
-		} else
-			animationEffect = Textbox.effect(function () { return Move.animate(mover, move, stage, targetPokemon, constant); });
-		// Makes sure any Display states after the move has been used takes into consideration any movements by any of the Pokémon
-		if (targetPokemon !== NoPokemon || affectsEntireSide) {
-			Move.renderAnimation(mover, move, stage, targetPokemon, constant);
-			var displayRendered = Display.state.save();
-			stateEffect = Textbox.effect(function () { Display.state.load(displayRendered); });
+		if (!mover.battler.battle.process) {
+			if (finalStage && (!move.classification.contains("_") || moveName === "Struggle")) {
+				if (affected.notEmpty() || affectsEntireSide)
+					animationEffect = Textbox.state(mover.name() + " used " + moveName + (!affectsEntireSide && move.affects === Move.targets.directTarget && affected.notEmpty() ? " on " + (targetPokemon !== mover ? targetPokemon.name() : mover.selfPronoun()) : "") + "!", function () { return Move.animate(mover, move, stage, targetPokemon, constant); });
+				else
+					Textbox.state(mover.name() + " tried to use " + moveName + "...");
+			} else
+				animationEffect = Textbox.effect(function () { return Move.animate(mover, move, stage, targetPokemon, constant); });
+			// Makes sure any Display states after the move has been used takes into consideration any movements by any of the Pokémon
+			if (targetPokemon !== NoPokemon || affectsEntireSide) {
+				Move.renderAnimation(mover, move, stage, targetPokemon, constant);
+				var displayRendered = Display.state.save();
+				stateEffect = Textbox.effect(function () { Display.state.load(displayRendered); });
+			}
 		}
 		if (move.effects.hasOwnProperty("constant") && (targetPokemon !== NoPokemon || affectsEntireSide)) {
 			var constantData = move.effects.constant(mover, targetPokemon !== NoPokemon ? targetPokemon : target);
@@ -115,12 +117,12 @@ Move = {
 						var hit = (!finalStage || (move.hasOwnProperty("accuracy") ? move.accuracy * (accuracy / evasion) >= mover.battler.battle.random.point() : true));
 						if (hit) {
 							if (move.effects.use[stage].targets && targetted.battler.protected && !move.piercing) {
-								Textbox.state(targetted.name() + " protected " + targetted.selfPronoun() + ".");
+								if (!mover.battler.battle.process) Textbox.state(targetted.name() + " protected " + targetted.selfPronoun() + ".");
 								failed = true;
 								statedFailureReason = true;
 								missEffect = true;
 							} else if (move.effects.use[stage].targets && targetted.invulnerable && !move.despite.contains(targetted.invulnerable)) { // Dig, Fly, etc.
-								Textbox.state(targetted.name() + " cannot be found!");
+								if (!mover.battler.battle.process) Textbox.state(targetted.name() + " cannot be found!");
 								failed = true;
 								statedFailureReason = true;
 								missEffect = true;
@@ -131,7 +133,7 @@ Move = {
 									if (response.hasOwnProperty("failed") && response.failed)
 										failed = true;
 									if (response.hasOwnProperty("reason")) {
-										Textbox.state(response.reason);
+										if (!mover.battler.battle.process) Textbox.state(response.reason);
 										statedFailureReason = true;
 									}
 									if (response.hasOwnProperty("modifiedMove") && response.modifiedMove)
@@ -140,9 +142,9 @@ Move = {
 							}
 						} else {
 							if (accuracy <= evasion)
-								Textbox.state(mover.name() + " missed " + targetted.name() + "!");
+								if (!mover.battler.battle.process) Textbox.state(mover.name() + " missed " + targetted.name() + "!");
 							else
-								Textbox.state(targetted.name() + " evaded the attack!");
+								if (!mover.battler.battle.process) Textbox.state(targetted.name() + " evaded the attack!");
 							failed = true;
 							statedFailureReason = true;
 							missEffect = true;
@@ -175,24 +177,26 @@ Move = {
 					};
 				} else
 					completelyFailed = false;
-			} else {
+			} else if (!mover.battler.battle.process) {
 				Textbox.state("There was no target for " + mover.name() + " to hit...");
 			}
 		}
 		if (completelyFailed) {
-			if (!statedFailureReason)
-				Textbox.state("But it failed!");
-			if (animationEffect !== null)
-				Textbox.removeEffects(animationEffect);
-			if (stateEffect !== null) {
-				Textbox.remove(mover);
-				battler.resetDisplay(mover.battler);
-				// Currently commented out because it resets Dive / Dig / etc.
-				// foreach(affected, function (targetted) {
-				// 	battler.resetDisplay(targetted.battler);
-				// });
-				displayRendered = Display.state.save();
-				Textbox.effect(function () { Display.state.load(displayRendered); });
+			if (!mover.battler.battle.process) {
+				if (!statedFailureReason)
+					Textbox.state("But it failed!");
+				if (animationEffect !== null)
+					Textbox.removeEffects(animationEffect);
+				if (stateEffect !== null) {
+					Textbox.remove(mover);
+					battler.resetDisplay(mover.battler);
+					// Currently commented out because it resets Dive / Dig / etc.
+					// foreach(affected, function (targetted) {
+					// 	battler.resetDisplay(targetted.battler);
+					// });
+					displayRendered = Display.state.save();
+					Textbox.effect(function () { Display.state.load(displayRendered); });
+				}
 			}
 		} else {
 			mover.battler.battle.survey();

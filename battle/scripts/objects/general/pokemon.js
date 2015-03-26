@@ -626,32 +626,32 @@ function pokemon (data, validate) {
 
 	self.notHinderedByAilments = function () {
 		if (self.status === "asleep") {
-			Textbox.state(self.name() + " is sleeping soundly.");
+			if (!self.battler.battle.process) Textbox.state(self.name() + " is sleeping soundly.");
 			return false;
 		}
 		if (self.status === "frozen") {
-			Textbox.state(self.name() + " is frozen solid.");
+			if (!self.battler.battle.process) Textbox.state(self.name() + " is frozen solid.");
 			return false;
 		}
 		if (self.status === "paralysed" && random.chance(4)) {
-			Textbox.state(self.name() + " was paralysed and couldn't move!");
+			if (!self.battler.battle.process) Textbox.state(self.name() + " was paralysed and couldn't move!");
 			return false;
 		}
 		if (self.battler.flinching) {
-			Textbox.state(self.name() + " flinched!");
+			if (!self.battler.battle.process) Textbox.state(self.name() + " flinched!");
 			return false;
 		}
 		if (self.battler.confused) {
-			Textbox.state(self.name() + " is confused.");
+			if (!self.battler.battle.process) Textbox.state(self.name() + " is confused.");
 			if (random.chance(2)) {
 				self.hurtInConfusion();
 				return false;
 			}
 		}
 		if (self.battler.infatuated) {
-			Textbox.state(self.name() + " is infatuated.");
+			if (!self.battler.battle.process) Textbox.state(self.name() + " is infatuated.");
 			if (random.chance(2)) {
-				Textbox.state(self.name() + " couldn't move due to infatuation.");
+				if (!self.battler.battle.process) Textbox.state(self.name() + " couldn't move due to infatuation.");
 				return false;
 			}
 		}
@@ -714,14 +714,14 @@ function pokemon (data, validate) {
 		if (self.trainer !== null && (self.trainer.identification !== self.caught.trainer && self.trainer.holdsControlOverPokemonUpToLevel() < self.level && random.chance(2))) {
 			return random.choose(
 				function (poke) {
-					Textbox.state(poke.name() + random.choose(" is loafing around!", " turned away!", " won't obey!"));
+					if (!self.battler.battle.process) Textbox.state(poke.name() + random.choose(" is loafing around!", " turned away!", " won't obey!"));
 				},
 				function (poke) {
-					Textbox.state(poke.name() + " began to nap!");
+					if (!self.battler.battle.process) Textbox.state(poke.name() + " began to nap!");
 					self.battler.battle.inflict(self, "asleep");
 				},
 				function (poke) {
-					Textbox.state(poke.name() + " won't obey!");
+					if (!self.battler.battle.process) Textbox.state(poke.name() + " won't obey!");
 					poke.hurtInConfusion();
 				}
 			);
