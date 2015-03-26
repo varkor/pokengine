@@ -1153,7 +1153,7 @@ function BattleContext (client) {
 				var waitForActions = function () {
 					if (battleContext.kind !== Battles.kind.online || battleContext.hasCommunicationForTrainers())
 						battleContext.giveTrainersActions();
-					else {
+					else if (!battleContext.process) {
 						battleContext.state = {
 							"kind" : "waiting",
 							"for" : "command"
@@ -1166,7 +1166,7 @@ function BattleContext (client) {
 			} else
 				battleContext.prompt();
 		},
-		hasCommunicationForTrainers : function () {
+		hasCommunicationForTrainers : function (waitingActions) {
 			var requiredActions = {};
 			foreach(battleContext.allTrainers(), function (trainer) {
 				if (trainer.type === Trainers.type.online) {
@@ -1181,7 +1181,9 @@ function BattleContext (client) {
 				}
 			});
 			var actionsForTrainers = {};
-			foreach(battleContext.communication, function (communication) {
+			if (arguments.length < 1)
+				waitingActions = battleContext.communication;
+			foreach(waitingActions, function (communication) {
 				if (!actionsForTrainers.hasOwnProperty(communication.trainer))
 					actionsForTrainers[communication.trainer] = 0;
 				++ actionsForTrainers[communication.trainer];
@@ -2317,8 +2319,10 @@ function BattleContext (client) {
 			battleContext.recoverFromStatus(poke);
 		},
 		withdraw : function (poke, forced) {
-			poke.battler.display.transition = 0;
-			var display = Display.state.save(), place;
+			if (!battleContext.process) {
+				poke.battler.display.transition = 0;
+				var display = Display.state.save(), place;
+			}
 			if (poke.battler.side === Battles.side.near) {
 				place = battleContext.allies.indexOf(poke);
 				battleContext.allies[place] = NoPokemon;
@@ -2327,8 +2331,8 @@ function BattleContext (client) {
 				battleContext.opponents[place] = NoPokemon;
 			}
 			poke.battler.reset();
-			var displayWithdrawn = Display.state.save();
-			if (poke.health > 0 && !battleContext.process) {
+			if (!poke.fainted() && !battleContext.process) {
+				var displayWithdrawn = Display.state.save();
 				Textbox.state((!forced ? (Game.player === poke.trainer ? "Come back " + poke.name() + "!" : poke.trainer.name + " withdrew " + poke.name() + ".") : poke.name() + " was forced to retreat from the battle!"), function () { return Display.state.transition(display); }, null, function () { Display.state.load(displayWithdrawn); });
 			}
 			return place;

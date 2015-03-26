@@ -67,9 +67,9 @@ Relay = {
 				delete Relay.processes[identifier];
 				break;
 			case "actions": // Actions from one of the parties has been received
-				if (data.actor !== Relay.identification) {
-					Relay.processes[identifier].battle.receiveActions(data.data);
-				}
+				Relay.processes[identifier].battle.receiveActions(data.filter(function (action) {
+					return action.trainer !== Relay.identification;
+				}));
 				break;
 		}
 	}

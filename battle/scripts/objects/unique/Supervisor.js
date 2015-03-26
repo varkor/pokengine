@@ -38,6 +38,7 @@ Supervisor = {
 						parameters : data.data,
 						rules : data.rules,
 						relay : [],
+						relayed : 0,
 						battle : battle
 					};
 					var teamA = new trainer(data.data.teamA), teamB = new trainer(data.data.teamB);
@@ -87,13 +88,15 @@ Supervisor = {
 					action.trainer = data.actor;
 				});
 				process.relay.push(data.data);
-				process.battle.receiveActions(data.data);
-				foreach(process.parties, function (party) {
-					Supervisor.send(party, "actions", {
-						actor : data.actor,
-						data : data.data
-					}, identifier);
-				});
+				var numberOfRequiredActions = process.battle.hasCommunicationForTrainers(process.relay.slice(process.relayed));
+				if (process.relay.length - process.relayed >= numberOfRequiredActions) {
+					var actionsToSend = process.relay.slice(process.relayed, process.relayed + numberOfRequiredActions);
+					process.battle.receiveActions(actionsToSend);
+					foreach(process.parties, function (party) {
+						Supervisor.send(party, "actions", actionsToSend, identifier);
+					});
+					process.relay.length += numberOfRequiredActions;
+				}
 				break;
 			case "sync":
 				// Checks the clients for the different parties are in sync with the main battle
