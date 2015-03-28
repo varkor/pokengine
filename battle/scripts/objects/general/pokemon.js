@@ -33,7 +33,7 @@ function pokemon (data, validate) {
 			return Pokedex._(self.species + " -> form(e)s ~> " + self["form(e)"] + " => " + property);
 	};
 	setProperty("nickname", null);
-	setProperty("identification", typeof "Game" === "object" ? Game.unique() : null);
+	setProperty("identification", typeof Game === "object" ? Game.unique() : null);
 	setProperty("nature", function () {
 		return random.chooseFromArray(Object.keys(Natures));
 	});

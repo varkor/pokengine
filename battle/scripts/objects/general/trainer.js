@@ -13,7 +13,7 @@ function trainer (data) {
 	};
 
 	setProperty("name", "Someone");
-	setProperty("identification", typeof "Game" === "object" ? Game.unique() : null);
+	setProperty("identification", typeof Game === "object" ? Game.unique() : null);
 	setProperty("gender", "male");
 	setProperty("party", []);
 	setProperty("nationality", "British");

@@ -595,7 +595,7 @@ function BattleContext (client) {
 		beginTrainerBattle : function (alliedTrainers, opposingTrainers, settings, callback) {
 			battleContext.initiate(alliedTrainers, opposingTrainers, settings, callback);
 		},
-		initiate : function (alliedTrainers, opposingTrainers, settings, kind, callback) {
+		initiate : function (alliedTrainers, opposingTrainers, settings, callback) {
 			if (!battleContext.active) {
 				if (!battleContext.process) Textbox.setStyle("battle");
 				if (arguments.length < 3 || typeof settings === "undefined" || settings === null)
