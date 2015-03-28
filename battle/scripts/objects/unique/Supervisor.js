@@ -87,15 +87,14 @@ Supervisor = {
 				foreach(data.data, function (action) {
 					action.trainer = data.actor;
 				});
-				process.relay.push(data.data);
-				var numberOfRequiredActions = process.battle.hasCommunicationForTrainers(process.relay.slice(process.relayed));
-				if (process.relay.length - process.relayed >= numberOfRequiredActions) {
-					var actionsToSend = process.relay.slice(process.relayed, process.relayed + numberOfRequiredActions);
+				process.relay = process.relay.concat(data.data);
+				var actionsToSend = process.relay.slice(process.relayed);
+				if (process.battle.hasCommunicationForTrainers(actionsToSend)) {
 					process.battle.receiveActions(actionsToSend);
 					foreach(process.parties, function (party) {
 						Supervisor.send(party, "actions", actionsToSend, identifier);
 					});
-					process.relay.length += numberOfRequiredActions;
+					process.relayed = process.relay.length;
 				}
 				break;
 			case "sync":

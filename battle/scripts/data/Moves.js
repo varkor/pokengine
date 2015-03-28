@@ -203,7 +203,7 @@ Moves = {
 				{
 					effect : function (self, target) {
 						if (!target.battler.trapped.contains("Ingrain")) {
-							if (self.battler.battle.situation === Battles.situation.wild) {
+							if (self.battler.battle.isWildBattle()) {
 								if (self.level > target.level) {
 									Textbox.state(self.name() + " blew " + target.name() + " away!", function () { self.battler.battle.end(); });
 									self.battler.battle.finish();

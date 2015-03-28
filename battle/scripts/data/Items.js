@@ -29,7 +29,7 @@ Items = {
 			useMessage : false,
 			"catch rate" : 1,
 			effect : function (self, poke, trainer) {
-				if (poke.battler.battle.situation === Battles.situation.wild) {
+				if (poke.battler.battle.isWildBattle()) {
 					Textbox.state(trainer.pronoun(true) + " threw a " + self.fullname + " at " + poke.name() + "!");
 					poke.battler.battle.attemptCapture(poke, self, trainer);
 				} else {
