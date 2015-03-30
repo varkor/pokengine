@@ -364,7 +364,7 @@ function BattleContext (client) {
 				battleContext.drawing.complexShape(canvas, shapes, right, y, transition);
 				for (var i = 0, pos; i < trainer.party.pokemon.length; ++ i) {
 					pos = (!right ? 0 : canvas.width) + (12 + i * 16 - 118 * (1 - transition)) * Game.zoom * (!right ? 1 : -1);
-					context.fillStyle = "red";
+					context.fillStyle = !trainer.party.pokemon[i].fainted() ? "red" : "grey";
 					context.fillCircle(pos, y * Game.zoom, 4 * Game.zoom);
 					context.fillStyle = "white";
 					context.fillCircle(pos, y * Game.zoom, 4 * Game.zoom, Math.PI);
@@ -1122,6 +1122,7 @@ function BattleContext (client) {
 				});
 				Relay.pass("sync", {
 					state : {
+						turn : battleContext.turns,
 						seed : battleContext.random.seed,
 						weather : battleContext.weather,
 						trainers : trainers
@@ -1141,7 +1142,7 @@ function BattleContext (client) {
 				var waitForActions = function () {
 					if (battleContext.hasCommunicationForTrainers())
 						battleContext.giveTrainersActions();
-					else if (!battleContext.process) {
+					else {
 						battleContext.state = {
 							"kind" : "waiting",
 							"for" : "command"
@@ -1556,6 +1557,7 @@ function BattleContext (client) {
 					});
 				}
 			});
+			battleContext.sync();
 			if (!battleContext.delayForInput) {
 				if (battleContext.playerIsParticipating())
 					battleContext.prompt();
@@ -1617,9 +1619,6 @@ function BattleContext (client) {
 					});
 				}
 				switch (poke.status) {
-					case "asleep":
-						++ poke.sleep;
-						break;
 					case Statuses.burn:
 						if (!battleContext.process) Textbox.state(poke.name() + " is hurt by " + poke.possessivePronoun() + " burn!");
 						battleContext.damage(poke, Move.percentageDamage(target, 1 / 8));
@@ -1875,7 +1874,6 @@ function BattleContext (client) {
 				battleContext.fillEmptyPlaces(true);
 			} else {
 				++ battleContext.turns;
-				battleContext.sync();
 				battleContext.startTurn();
 			}
 		},

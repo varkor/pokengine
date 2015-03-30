@@ -200,7 +200,7 @@ function pokemon (data, validate) {
 		if ((self["form(e)"] !== null && !isString(self["form(e)"])) || (self["form(e)"] !== null && !species["form(e)s"].hasOwnProperty(self["form(e)"])) || (self["form(e)"] === "Male" && self.gender !== "male") || (self["form(e)"] === "Female" && self.gender !== "female")) return false;
 		if (!isInteger(self.friendship) || !inRange(self.friendship, 0, 255)) return false;
 		if (!isBoolean(self.shiny)) return false;
-		if ((self.egg !== null && !isInteger(self.egg)) || (self.egg !== null && !inRange(self.egg, 0, 121))) return false;
+		if ((self.egg !== null && !isInteger(self.egg)) || (self.egg !== null && !inRange(self.egg, 1, 121))) return false;
 		if (self.caught !== null && (!isObject(self.caught) || !isString(self.caught.location) || !Maps.hasOwnProperty(self.caught.location) || !isInteger(self.caught.level) || !inRange(self.caught.level, 1, 100) || self.caught.level > self.level || !self.caught.hasOwnProperty("trainer") || !isString(self.caught.ball) || !Items._(self.caught.ball + "?") || Items._(self.caught.ball).category !== "Ball" || Object.keys(self.caught).length !== 4)) return false;
 		if (!isArray(self.ribbons)) return false;
 		if (foreach(self.ribbons, function (ribbon) {
@@ -322,8 +322,6 @@ function pokemon (data, validate) {
 		return false;
 	};
 
-	setProperty("health", self.maximumHealth());
-
 	self.store = function () {
 		// Returns an object that contains all the data for the Pokémon, without any methods
 		var store = {};
@@ -411,20 +409,20 @@ function pokemon (data, validate) {
 		sharedBetween = sharedBetween || 1;
 		var eventModifiers = product(defeated.battler.battle.triggerEvent(Triggers.experience, {}, defeated, self)), OPower = self.trainer.OPowers["Exp. Point"];
 		var gain = Math.ceil((((!defeated.battler.battle.isWildBattle() ? 1.5 : 1) * defeated.currentProperty("yield").experience * defeated.level) / (5 * (participated ? 1 : 2)) * Math.pow((2 * defeated.level + 10) / (defeated.level + self.level + 10), 2.5) + 1) * (self.caught && self.trainer.identification === self.caught.trainer ? 1 : self.trainer.nationality === self.nationality ? 1.5 : 1.7) * (OPower === 1 ? 1.2 : OPower === 2 ? 1.5 : OPower === 3 ? 2 : 1) * eventModifiers / sharedBetween);
-		if (defeated.battler.battle.active)
-			if (!self.battler.battle.process) Textbox.state(self.name() + " gained " + gain + " experience!");
+		if (defeated.battler.battle.active && !defeated.battler.battle.process)
+			Textbox.state(self.name() + " gained " + gain + " experience!");
 		var levelledUp = false;
 		while (self.level < 100 && self.experience + gain >= self.experienceFromLevelToNextLevel()) {
 			levelledUp = true;
 			gain -= self.experienceFromLevelToNextLevel() - self.experience;
 			self.experience = self.experienceFromLevelToNextLevel();
-			if (!self.battler.battle.process) {
+			if (!defeated.battler.battle.process) {
 				var display = Display.state.save();
 				Textbox.effect(function (display) { return function () { return Display.state.transition(display); }; }(display));
 			}
 			self.raiseLevel();
 			self.experience = 0;
-			if (defeated.battler.battle.active && !self.battler.battle.process) {
+			if (defeated.battler.battle.active && !defeated.battler.battle.process) {
 				var display = Display.state.save();
 				Textbox.state(self.name() + " has grown to level " + self.level + "!", function (display) { return function () { Display.state.load(display); }; }(display));
 			}
@@ -443,7 +441,7 @@ function pokemon (data, validate) {
 			maximumEVgain -= maximumEVgainForStat;
 			self.EVs[stat] += maximumEVgainForStat;
 		});
-		if (defeated.battler.battle.active && !self.battler.battle.process) {
+		if (defeated.battler.battle.active && !defeated.battler.battle.process) {
 			var display = Display.state.save();
 			Textbox.effect(function () { return Display.state.transition(display); });
 		}
@@ -486,7 +484,7 @@ function pokemon (data, validate) {
 		var boost = (self.friendship < 100 ? boosts[0] : self.friendship < 200 ? boosts[1] : self.friendship < 256 ? boosts[2] : 0);
 		self.friendship += boost
 			+ (boost > 0 && self.caught && self.ball === "Luxury" ? 1 : 0)
-			+ (boost > 0 && self.caught && Game.location === self.caught.location ? 1 : 0);
+			/*+ (boost > 0 && self.caught && Game.location === self.caught.location ? 1 : 0)*/;
 		self.friendship = Math.clamp(0, self.friendship, 255);
 	};
 

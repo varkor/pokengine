@@ -128,11 +128,6 @@ Item = {
 	]
 };
 
-Teams = {
-	allies : q = 0,
-	opponents : ++ q
-};
-
 Battles = {
 	style : ["normal", "double", "sky"],
 	side : {

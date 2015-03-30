@@ -13,7 +13,7 @@ Supervisor = {
 		switch (message) {
 			case "initiate":
 				// Initiate a battle between two parties
-				// data: parties, data, rules, flags
+				// data: parties, data, rules, flags, callback, alert
 				identifier = Supervisor.identification;
 				// Check that all the rules are matched
 				var valid = true;
@@ -39,7 +39,8 @@ Supervisor = {
 						rules : data.rules,
 						relay : [],
 						relayed : 0,
-						battle : battle
+						battle : battle,
+						alert : data.alert
 					};
 					var teamA = new trainer(data.data.teamA), teamB = new trainer(data.data.teamB);
 					teamA.type = teamB.type = Trainers.type.online;
@@ -100,22 +101,27 @@ Supervisor = {
 			case "sync":
 				// Checks the clients for the different parties are in sync with the main battle
 				// data: party, state
-				var battle = Supervisor.processes[identifier].battle;
-				var assert = function (local, external) {
+				var process = Supervisor.processes[identifier], battle = process.battle, issues = [];
+				var assert = function (parameter, local, external) {
 					if (local !== external) {
-						return {
-							message : "desynchronised",
-							party : data.party
-						}
+						issues.push({
+							"reason" : "desynchronised",
+							"party" : party,
+							"state" : parameter,
+							"local" : local,
+							"external" : external
+						});
 					}
 				};
-				assert(battle.random.seed, state.seed);
-				assert(battle.weather, state.weather);
+				assert("turn", battle.turns, state.turn);
+				assert("seed", battle.random.seed, state.seed);
+				assert("weather", battle.weather, state.weather);
 				forevery(battle.allTrainers(), function (trainer) {
-					assert(trainer.store(), state.trainers[trainer.identification]);
+					assert("trainer: " + trainer.identification, trainer.store(), state.trainers[trainer.identification]);
 				});
+				if (issues.notEmpty())
+					process.alert(issues);
 				break;
 		}
-		return null; // There were no issues raised
 	}
 };
