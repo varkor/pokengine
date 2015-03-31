@@ -96,8 +96,8 @@ Sprite = FunctionObject.new({
 				animated : false,
 				frames : 1
 			};
-			var fileData, genericPath = path.replace(new RegExp("^" + Settings._("paths => images").replace("{animation}", "(animated|static)") + "/"), "").replace(/~.*/, "");
-			if (Settings._("animated sprites") && (fileData = FileData.images).hasOwnProperty(genericPath)) {
+			var fileData = FileData.images, genericPath = path.replace(new RegExp("^" + Settings._("paths => images").replace("/{animation}", "") + "/"), "").replace(/~.*/, "").replace(/(animated|static)\//, "");
+			if (Sprite.shouldAnimate(genericPath)) {
 				data = JSONCopy(fileData[genericPath]);
 				if (data.hasOwnProperty("durations"))
 					data.frames = data.durations.length;
@@ -112,7 +112,7 @@ Sprite = FunctionObject.new({
 		}, null, arguments.length >= 4 && typeof filetype !== "undefined" ? filetype : "png", paths, uponLoad, uponError);
 	},
 	shouldAnimate : function (path) {
-		return Settings._("animated sprites") && FileData.images.hasOwnProperty(path.replace(/~.*/, ""));
+		return Settings._("animated sprites") && FileData.images.hasOwnProperty(path.replace(/~.*/, "").replace("/{animation}", ""));
 	},
 	filters : {
 		invert : function (i, components) {
