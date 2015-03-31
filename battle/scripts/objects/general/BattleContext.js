@@ -1734,7 +1734,7 @@ function BattleContext (client) {
 				var anyQueries = false;
 				// Queueing here is necessary so that the player can switch out their Pokémon before the opponent if the "switching chance" setting is on
 				if (emptyPlaces.notEmpty()) { // If the opponent needs to send out a Pokémon
-					if (battleContext.process === null || (battleContext.opposingTrainers.length === 1 && battleContext.opposingTrainers.first().type === Trainers.type.NPC)) {
+					if (battleContext.process === null || (!player && battleContext.opposingTrainers.length === 1 && battleContext.opposingTrainers.first().type === Trainers.type.NPC)) {
 						foreach(battleContext.opposingTrainers, function (trainer) {
 							if (!emptyPlaces.length)
 								return true;

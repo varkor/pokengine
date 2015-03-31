@@ -295,6 +295,7 @@ function pokemon (data, validate) {
 				contracted = contracted.replace("{form(e)-id}", IDs["form(e)"]);
 			}
 			contracted = contracted.replace("{side}", which ? which : "front");
+			contracted = contracted.replace("{animation}", Sprite.shouldAnimate(contracted) ? "animated" : "static");
 			return contracted;
 		},
 		sprite : function (which, includeFiletype) {

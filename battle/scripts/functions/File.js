@@ -89,7 +89,7 @@ Sprite = FunctionObject.new({
 	load : function (_paths, uponLoad, uponError, filetype) {
 		var paths = wrapArray(_paths);
 		foreach(paths, function (path, i) {
-			paths[i] = Settings._("paths => images").replace("{animation}", Settings._("animated sprites") && FileData.images.hasOwnProperty(path.replace(/~.*/, "")) ? "animated" : "static") + "/" + paths[i];
+			paths[i] = Settings._("paths => images").replace("{animation}", Sprite.shouldAnimate(path) ? "animated" : "static") + "/" + paths[i];
 		});
 		return File.loadFileOfType("sprites", Image, "load", function (event, image, store, path) {
 			var data = {
@@ -110,6 +110,9 @@ Sprite = FunctionObject.new({
 			data.height = image.height;
 			return data;
 		}, null, arguments.length >= 4 && typeof filetype !== "undefined" ? filetype : "png", paths, uponLoad, uponError);
+	},
+	shouldAnimate : function (path) {
+		return Settings._("animated sprites") && FileData.images.hasOwnProperty(path.replace(/~.*/, ""));
 	},
 	filters : {
 		invert : function (i, components) {
