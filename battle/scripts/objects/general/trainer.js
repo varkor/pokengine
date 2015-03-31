@@ -189,5 +189,6 @@ function trainer (data) {
 }
 
 TheWild = new trainer({
-	name : "The Wild"
+	name : "The Wild",
+	identification : 0
 });

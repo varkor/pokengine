@@ -82,11 +82,11 @@ Supervisor = {
 				return process;
 			case "relay":
 				// Sends data between two battling parties
-				// data: actor, data
+				// data: party, data
 				// Assumes the party sending the data was one of the parties involved in the process it is sending to
 				var process = Supervisor.processes[identifier];
 				foreach(data.data, function (action) {
-					action.trainer = data.actor;
+					action.trainer = data.party;
 				});
 				process.relay = process.relay.concat(data.data);
 				var actionsToSend = process.relay.slice(process.relayed);
@@ -100,24 +100,24 @@ Supervisor = {
 				break;
 			case "sync":
 				// Checks the clients for the different parties are in sync with the main battle
-				// data: party, state
+				// data: party, data : { state }
 				var process = Supervisor.processes[identifier], battle = process.battle, issues = [];
 				var assert = function (parameter, local, external) {
 					if (local !== external) {
 						issues.push({
 							"reason" : "desynchronised",
-							"party" : party,
+							"party" : data.party,
 							"state" : parameter,
 							"local" : local,
 							"external" : external
 						});
 					}
 				};
-				assert("turn", battle.turns, state.turn);
-				assert("seed", battle.random.seed, state.seed);
-				assert("weather", battle.weather, state.weather);
+				assert("turn", battle.turns, data.data.state.turn);
+				assert("seed", battle.random.seed, data.data.state.seed);
+				assert("weather", battle.weather, data.data.state.weather);
 				forevery(battle.allTrainers(), function (trainer) {
-					assert("trainer: " + trainer.identification, trainer.store(), state.trainers[trainer.identification]);
+					assert("trainer: " + trainer.identification, trainer.store(), data.data.state.trainers[trainer.identification]);
 				});
 				if (issues.notEmpty())
 					process.alert(issues);

@@ -6,6 +6,11 @@
 //? Validating relay and sync dataOf
 //? Allow a mixture of NPC and online opponents when switching out new Pokémon to fill empty places
 
+//? Experience doesn't save properly
+//? TheWild is global (has global party)
+//? catching pokes sets caught correctly?
+//? pressure speech does not work in multiplayer
+
 function BattleContext (client) {
 	if (arguments.length < 1)
 		client = false;
@@ -219,7 +224,7 @@ function BattleContext (client) {
 						foreach(display.allies, function (poke, place) {
 							if (poke !== NoPokemon)
 								drawAfterwards.push(function (canvas) {
-									battleContext.drawing.bar(canvas, poke, true, 120 + 42 * place, true);
+									battleContext.drawing.bar(canvas, poke, true, 134 + 42 * place, true);
 								});
 						});
 						if (battleContext.state.kind === "opening") {
@@ -1272,7 +1277,7 @@ function BattleContext (client) {
 						});
 					}
 				});
-				return (excludeAlliesIfPossible ? (inRange.opponents.length > 0 ? inRange.opponents : inRange.allies) : [].concat(inRange.opponents, inRange.allies));
+				return (excludeAlliesIfPossible ? (inRange.opponents.notEmpty() ? inRange.opponents : inRange.allies) : [].concat(inRange.opponents, inRange.allies));
 			} else {
 				var ally = battleContext.allies.contains(user);
 				return [{
@@ -1344,8 +1349,7 @@ function BattleContext (client) {
 		AI : {
 			action : function (trainer) {
 				// Decide whether to use a move, item, switch out, etc.
-				var group = (arguments.length < 1 ? battleContext.opponents : trainer.battlers());
-				foreach(group, function (poke) {
+				foreach(trainer.battlers(), function (poke) {
 					var disobey = poke.battler.disobeying;
 					if (!disobey) {
 						var usableMoves = poke.usableMoves(), use = battleContext.random.chooseFromArray(usableMoves), useActual = Moves._(use.move), againstWhom;
@@ -1359,15 +1363,6 @@ function BattleContext (client) {
 								}
 							});
 						}
-					} else {
-						battleContext.actions.push({
-							poke : poke,
-							priority : 0,
-							action : function (poke) {
-								if (poke.notHinderedByAilments(poke))
-									disobey(poke);
-							}
-						});
 					}
 				});
 			}
@@ -1693,7 +1688,7 @@ function BattleContext (client) {
 				Textbox.effect(function () { Display.state.load(displayAfterWeather); });
 			}
 			battleContext.survey();
-			battleContext.fillEmptyPlaces(battleContext.playerIsParticipating()); // Fill the player's empty places
+			battleContext.fillEmptyPlaces(true); // Fill the player's empty places
 		},
 		fillEmptyPlaces : function (player) {
 			var emptyPlaces = [];
@@ -1701,7 +1696,7 @@ function BattleContext (client) {
 				if (poke === NoPokemon)
 					emptyPlaces.push(i);
 			});
-			if (player) {
+			if (player && battleContext.playerIsParticipating()) {
 				var trainer = Game.player, progress = false;
 				if (emptyPlaces.notEmpty()) {
 					var healthyEligiblePokemon = trainer.healthyEligiblePokemon(true);
@@ -1739,7 +1734,7 @@ function BattleContext (client) {
 				var anyQueries = false;
 				// Queueing here is necessary so that the player can switch out their Pokémon before the opponent if the "switching chance" setting is on
 				if (emptyPlaces.notEmpty()) { // If the opponent needs to send out a Pokémon
-					if (battleContext.process === null) {
+					if (battleContext.process === null || (battleContext.opposingTrainers.length === 1 && battleContext.opposingTrainers.first().type === Trainers.type.NPC)) {
 						foreach(battleContext.opposingTrainers, function (trainer) {
 							if (!emptyPlaces.length)
 								return true;
@@ -1823,7 +1818,7 @@ function BattleContext (client) {
 							}
 						});
 					} else {
-						var healthyEligiblePokemon = battleContext.opposingTrainers.first().healthyEligiblePokemon(true);
+						var healthyEligiblePokemon = (!player ? battleContext.opposingTrainers : battleContext.alliedTrainers).first().healthyEligiblePokemon(true);
 						if (healthyEligiblePokemon.length > emptyPlaces.length) {
 							var waitForActions = function () {
 								if (battleContext.communication.length >= emptyPlaces.length) {
@@ -1833,7 +1828,7 @@ function BattleContext (client) {
 										"kind" : "waiting",
 										"for" : "send"
 									};
-									Textbox.stateUntil("Waiting for " + (battleContext.playerIsParticipating() ? "the other player" : "both players") + " to make a decision...", function () { return battleContext.state.kind !== "waiting"; });
+									if (!battleContext.process) Textbox.stateUntil("Waiting for " + (battleContext.playerIsParticipating() ? "the other player" : "both players") + " to make a decision...", function () { return battleContext.state.kind !== "waiting"; });
 								}
 							};
 							if (battleContext.process) waitForActions();
@@ -1937,7 +1932,7 @@ function BattleContext (client) {
 				has been dealt out.
 			*/
 			if (!battleContext.finished) {
-				var cleanedUp = false, drawnbattleContext = !battleContext.alliedTrainers.first().hasHealthyEligiblePokemon() && !battleContext.opposingTrainers.first().hasHealthyEligiblePokemon();
+				var cleanedUp = false, drawnBattle = !battleContext.alliedTrainers.first().hasHealthyEligiblePokemon() && !battleContext.opposingTrainers.first().hasHealthyEligiblePokemon();
 				foreach(battleContext.all(true), function (poke) {
 					if (poke.fainted()) {
 						poke.battler.display.transition = 0;
@@ -1948,11 +1943,11 @@ function BattleContext (client) {
 						}
 						poke.alterFriendship(-1);
 						poke.mega = null;
-						battleContext.removeFromBattle(poke, drawnbattleContext);
+						battleContext.removeFromBattle(poke, drawnBattle);
 						cleanedUp = true;
 					}
 				});
-				if (drawnbattleContext) {
+				if (drawnBattle) {
 					if (!battleContext.process) {
 						if (battleContext.isWildBattle()) {
 							Textbox.state(battleContext.alliedTrainers.first().pronoun(true) + " defeated the wild Pokémon, but at heavy costs...");
@@ -2122,7 +2117,7 @@ function BattleContext (client) {
 			}
 			return caught;
 		},
-		removeFromBattle : function (poke, drawnbattleContext) {
+		removeFromBattle : function (poke, drawnBattle) {
 			// Stops a Pokémon battling, either because they've fainted, or because they've been caught in a Poké ball
 			if (!battleContext.isCompetitiveBattle()) {
 				foreach(poke.battler.opponents, function (gainer) {
@@ -2149,7 +2144,7 @@ function BattleContext (client) {
 						opponents.push(opposer.fullname());
 					});
 				}
-				if (!drawnbattleContext) {
+				if (!drawnBattle) {
 					if (playerHasBeenDefeated) {
 						if (!battleContext.process) {
 							if (trainerBattle)
