@@ -239,16 +239,11 @@ Sprite = FunctionObject.new({
 							}
 							break;
 						case "fill":
+							contexts[0].drawImage(image, 0, 0);
+							contexts[0].globalCompositeOperation = "source-in";
 							contexts[0].fillStyle = filter.colour;
 							contexts[0].fillRect(0, 0, Sprite.canvases[0].width, Sprite.canvases[0].height);
-							contexts[1].fillStyle = "black";
-							contexts[1].fillRect(0, 0, Sprite.canvases[1].width, Sprite.canvases[1].height);
-							contexts[1].globalCompositeOperation = "destination-out";
-							contexts[1].drawImage(image, 0, 0);
-							contexts[0].globalCompositeOperation = "destination-out";
-							contexts[0].drawImage(Sprite.canvases[1], 0, 0);
 							contexts[0].globalCompositeOperation = "source-over";
-							contexts[1].globalCompositeOperation = "source-over";
 							break;
 						case "crop":
 							var width = Sprite.canvases[0].width, height = Sprite.canvases[0].height;

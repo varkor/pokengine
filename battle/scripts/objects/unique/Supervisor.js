@@ -90,7 +90,11 @@ Supervisor = {
 				});
 				process.relay = process.relay.concat(data.data);
 				var actionsToSend = process.relay.slice(process.relayed);
-				if (process.battle.hasCommunicationForTrainers(actionsToSend)) {
+				battleContext.state = {
+							"kind" : "waiting",
+							"for" : "command"
+						};
+				if (process.battle.state.kind === "waiting" && process.battle.hasCommunicationForTrainers(process.battle.state.for, actionsToSend)) {
 					process.battle.receiveActions(actionsToSend);
 					foreach(process.parties, function (party) {
 						Supervisor.send(party, "actions", actionsToSend, identifier);

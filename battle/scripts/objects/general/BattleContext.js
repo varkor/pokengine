@@ -5,6 +5,7 @@
 //? Do regular syncing
 //? Validating relay and sync dataOf
 //? Allow a mixture of NPC and online opponents when switching out new Pokémon to fill empty places
+//? Check order of "send" / "command" messages are correct (or are valid at that point in time)
 
 //? Experience doesn't save properly
 //? TheWild is global (has global party)
@@ -1145,7 +1146,7 @@ function BattleContext (client) {
 				}
 				battleContext.flushInputs();
 				var waitForActions = function () {
-					if (battleContext.hasCommunicationForTrainers())
+					if (battleContext.hasCommunicationForTrainers("command"))
 						battleContext.giveTrainersActions();
 					else {
 						battleContext.state = {
@@ -1160,22 +1161,28 @@ function BattleContext (client) {
 			} else
 				battleContext.prompt();
 		},
-		hasCommunicationForTrainers : function (waitingActions) {
+		hasCommunicationForTrainers : function (kind, waitingActions) {
 			var requiredActions = {};
 			foreach(battleContext.allTrainers(), function (trainer) {
 				if (trainer.type === Trainers.type.online) {
 					var requiredActionsForTrainer = 0;
-					for (var i = 0; i < trainer.battlers().length; ++ i) {
-						if (!battleContext.pokemonForcedIntoAction(trainer.battlers()[i], true)) {
-							++ requiredActionsForTrainer;
+					if (kind === "command") {
+						for (var i = 0; i < trainer.battlers().length; ++ i) {
+							if (!battleContext.pokemonForcedIntoAction(trainer.battlers()[i], true)) {
+								++ requiredActionsForTrainer;
+							}
 						}
+					} else if (kind === "send") {
+						var numberOfPokemonPerTrainer = battleContext.pokemonPerSide() / (battleContext.alliedTrainers.contains(trainer) ? battleContext.alliedTrainers : battleContext.opposingTrainers).length;
+						if (trainer.battlers().length < numberOfPokemonPerTrainer)
+							requiredActionsForTrainer = numberOfPokemonPerTrainer - trainer.battlers().length;
 					}
 					if (requiredActionsForTrainer)
 						requiredActions[trainer.identification] = requiredActionsForTrainer;
 				}
 			});
 			var actionsForTrainers = {};
-			if (arguments.length < 1)
+			if (arguments.length < 2)
 				waitingActions = battleContext.communication;
 			foreach(waitingActions, function (communication) {
 				if (!actionsForTrainers.hasOwnProperty(communication.trainer))
@@ -1224,9 +1231,9 @@ function BattleContext (client) {
 			if (actions.notEmpty()) {
 				battleContext.communication = battleContext.communication.concat(actions);
 				if (battleContext.state.kind === "waiting") {
-					if (battleContext.state.for === "command" && battleContext.hasCommunicationForTrainers())
+					if (battleContext.state.for === "command" && battleContext.hasCommunicationForTrainers("command"))
 						battleContext.giveTrainersActions();
-					else if (battleContext.state.for === "send" && battleContext.communication.length >= battleContext.opponents.filter(onlyNoPokemon).length)
+					else if (battleContext.state.for === "send" && battleContext.hasCommunicationForTrainers("send"))
 						battleContext.continueToNextTurn(true);
 				}
 			}
@@ -1821,7 +1828,7 @@ function BattleContext (client) {
 						var healthyEligiblePokemon = (!player ? battleContext.opposingTrainers : battleContext.alliedTrainers).first().healthyEligiblePokemon(true);
 						if (healthyEligiblePokemon.length > emptyPlaces.length) {
 							var waitForActions = function () {
-								if (battleContext.communication.length >= emptyPlaces.length) {
+								if (battleContext.hasCommunicationForTrainers("send")) {
 									battleContext.continueToNextTurn(true);
 								} else {
 									battleContext.state = {
@@ -1842,7 +1849,7 @@ function BattleContext (client) {
 					}
 				}
 				if (!anyQueries)
-					battleContext.continueToNextTurn();
+					battleContext.continueToNextTurn(false);
 			}
 		},
 		continueToNextTurn : function (sendOutOpponentPokemon) {
