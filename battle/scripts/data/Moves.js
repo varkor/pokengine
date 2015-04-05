@@ -63,55 +63,7 @@ Moves = {
 			]
 		},
 		animation : [[
-			/*{
-				from : 0,
-				to : 30,
-				transition : function (self, target, view, constant, progress) {
-					// self {display, from}
-					self.display.position.x = self.from.position.x + (-20 - self.from.position.x) * progress;
-				}
-			},
 			{
-				from : 40,
-				to : 50,
-				transition : function (self, target, view, constant, progress) {
-					self.display.position.x = self.from.position.x + (50 - self.from.position.x) * progress;
-				}
-			},
-			{
-				from : 45,
-				to : 55,
-				transition : function (self, target, view, constant, progress) {
-					target.display.position.x = target.from.position.x + (-50 - target.from.position.x) * progress;
-				}
-			},
-			{
-				from : 60,
-				to : 90,
-				transition : function (self, target, view, constant, progress) {
-					self.display.position.x = self.from.position.x + (0 - self.from.position.x) * progress;
-				}
-			},
-			{
-				from : 100,
-				to : 150,
-				transition : function (self, target, view, constant, progress) {
-					target.display.position.x = target.from.position.x + (0 - target.from.position.x) * progress;
-				}
-			}*/
-			/*{
-				time: 40,
-				animation : function (self, target) {
-					self.display.position.x = 50;
-				}
-			},
-			{
-				time: 100,
-				animation : function (self, target) {
-					self.display.position.x = 0;
-				}
-			}*/
-			/*{
 				start : 0,
 				duration : 30,
 				transition : function (self, target, view, constant, progress) {
@@ -153,34 +105,6 @@ Moves = {
 					target.display.position.x = target.from.position.x + (0 - target.from.position.x) * progress;
 					target.display.position.z = target.from.position.z + (0 - target.from.position.z) * progress;
 					target.display.angle = target.from.angle + (0 - target.from.angle) * progress;
-				}
-			}*/
-			{
-				"start" : 0,
-				"duration" : 50,
-				"transition" : function (self, target, view, constant, progress) {
-					self.display.position.z = self.from.position.z + (50 - self.from.position.z) * progress;
-				}
-			},
-			{
-				"delay" : 0,
-				"duration" : 50,
-				"transition" : function (self, target, view, constant, progress) {
-					self.display.position.z = self.from.position.z + (0 - self.from.position.z) * progress;
-				}
-			},
-			{
-				"delay" : 0,
-				"duration" : 50,
-				"transition" : function (self, target, view, constant, progress) {
-					self.display.position.y = self.from.position.y + (50 - self.from.position.y) * progress;
-				}
-			},
-			{
-				"delay" : 0,
-				"duration" : 50,
-				"transition" : function (self, target, view, constant, progress) {
-					self.display.position.y = self.from.position.y + (0 - self.from.position.y) * progress;
 				}
 			}
 			]]

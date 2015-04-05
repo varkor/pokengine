@@ -1852,16 +1852,37 @@ function BattleContext (client) {
 					battleContext.continueToNextTurn(false);
 			}
 		},
-		continueToNextTurn : function (sendOutOpponentPokemon) {
-			if (sendOutOpponentPokemon) {
-				var emptyPlaces = [];
+		continueToNextTurn : function (sendOutNonPlayerPokemon) {
+			if (sendOutNonPlayerPokemon) {
+				var emptyPlaces = {
+					near : [],
+					far : []
+				};
+				foreach(battleContext.allies, function (poke, i) {
+					if (poke === NoPokemon)
+						emptyPlaces.near.push(i);
+				});
 				foreach(battleContext.opponents, function (poke, i) {
 					if (poke === NoPokemon)
-						emptyPlaces.push(i);
+						emptyPlaces.far.push(i);
 				});
-				var healthyEligiblePokemon = battleContext.opposingTrainers.first().healthyEligiblePokemon(true);
-				foreach(emptyPlaces, function (place) {
-					battleContext.enter(healthyEligiblePokemon[battleContext.communication.shift().which], true, place);
+				foreach(battleContext.allTrainers(), function (trainer) {
+					if (trainer.type === Trainers.type.online) {
+						var ally = battleContext.alliedTrainers.contains(trainer), numberOfPokemonPerTrainer = battleContext.pokemonPerSide() / (ally ? battleContext.alliedTrainers : battleContext.opposingTrainers).length;
+						while (trainer.battlers().length < numberOfPokemonPerTrainer --) {
+							var action = null;
+							foreach(battleContext.communication, function (communication, j) {
+								if (communication.trainer === trainer.identification) {
+									action = j;
+									return true;
+								}
+							});
+							if (action !== null) {
+								action = battleContext.communication.remove(action);
+								battleContext.enter(trainer.healthyEligiblePokemon(true)[action.which], true, emptyPlaces[ally ? "near" : "far"].shift());
+							} else break;
+						}
+					}
 				});
 			}
 			battleContext.race(battleContext.queue);
