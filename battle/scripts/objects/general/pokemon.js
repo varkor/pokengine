@@ -401,7 +401,11 @@ function pokemon (data, validate) {
 	};
 
 	self.totalEVs = function () {
-		return sum(self.EVs);
+		var sum = 0;
+		forevery(self.EVs, function (value) {
+			sum += value;
+		});
+		return sum;
 	};
 
 	self.gainExperience = function (defeated, sharedBetween, participated) {
@@ -437,7 +441,7 @@ function pokemon (data, validate) {
 			self.experience += gain;
 		var maximumEVgain = 510 - self.totalEVs(), maximumEVgainForStat;
 		forevery(defeated.currentProperty("yield").EVs, function (boost, stat) {
-			maximumEVgainForStat = Math.min(maximumEVgain, boost * (self.Pokerus === "infected" ? 2 : 1));
+			maximumEVgainForStat = Math.max(0, Math.min(maximumEVgain, boost * (self.Pokerus === "infected" ? 2 : 1)));
 			maximumEVgainForStat = Math.min(maximumEVgainForStat, 252 - maximumEVgainForStat);
 			maximumEVgain -= maximumEVgainForStat;
 			self.EVs[stat] += maximumEVgainForStat;
@@ -492,7 +496,7 @@ function pokemon (data, validate) {
 	self.raiseLevel = function () {
 		var previousMaximumHealth = self.maximumHealth();
 		++ self.level;
-		self.health = Math.min(self.stats.health(), self.health + self.stats.health() - previousMaximumHealth);
+		self.health = Math.min(self.maximumHealth(), self.health + self.maximumHealth() - previousMaximumHealth);
 		if (self.battler.battling)
 			self.alterFriendship([5, 4, 3]);
 	};

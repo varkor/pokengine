@@ -1,12 +1,11 @@
 //? BattleContext will now need to deal with all the other Textbox.ask situations like learning new moves, (preventing) evolving, etc.
 //? Any stuff that's if (kind !== online) is not dealt with, so battle replays will have to be taken into account later
 //? Trainer type should be elimated entirely. Battle kind can probably be eliminated too, as online battles are no different than trainer house battles, etc.
-//? Doesn't handle "for" : "send" in .communication
 //? Do regular syncing
 //? Validating relay and sync dataOf
 //? Allow a mixture of NPC and online opponents when switching out new Pokémon to fill empty places
 //? Check order of "send" / "command" messages are correct (or are valid at that point in time)
-
+//? Allow "switching chance" on server.
 //? Experience doesn't save properly
 //? TheWild is global (has global party)
 //? catching pokes sets caught correctly?
