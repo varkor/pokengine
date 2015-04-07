@@ -1903,7 +1903,26 @@ function BattleContext (client) {
 			var amount = damage.damage;
 			if (amount < 0)
 				return;
+			if (damage.effectiveness === 0)
+				return;
 			amount = Math.floor(amount);
+			if (poke.battler.substitute > 0 && !damage.infiltrates) {
+				if (!battleContext.process) Textbox.state(poke.name() + "'s Substitute took the damage!");
+				poke.battler.substitute -= amount;
+				if (poke.battler.substitute <= 0) {
+					if (!battleContext.process) Textbox.state(poke.name() + "'s Substitute broke!");
+					poke.battler.substitute = 0;
+				}
+				return;
+			}
+			var previousHealth = poke.health;
+			poke.health = Math.max(0, poke.health - amount);
+			if (typeof damage.category !== "undefined" && damage.category !== null)
+				poke.battler.damaged[damage.category] += amount;
+			if (!battleContext.process) {
+				var display = Display.state.save();
+				Textbox.effect(function () { return Display.state.transition(display); });
+			}
 			if (!battleContext.process) {
 				if (damage.critical && damage.effectiveness > 0)
 					Textbox.state("It's a critical hit!");
@@ -1925,26 +1944,8 @@ function BattleContext (client) {
 							break;
 						case 0:
 							Textbox.state("It doesn't affect " + poke.name() + "!");
-							return;
 					}
 				}
-			}
-			if (poke.battler.substitute > 0 && !damage.infiltrates) {
-				if (!battleContext.process) Textbox.state(poke.name() + "'s Substitute took the damage!");
-				poke.battler.substitute -= amount;
-				if (poke.battler.substitute <= 0) {
-					if (!battleContext.process) Textbox.state(poke.name() + "'s Substitute broke!");
-					poke.battler.substitute = 0;
-				}
-				return;
-			}
-			var previousHealth = poke.health;
-			poke.health = Math.max(0, poke.health - amount);
-			if (typeof damage.category !== "undefined" && damage.category !== null)
-				poke.battler.damaged[damage.category] += amount;
-			if (!battleContext.process) {
-				var display = Display.state.save();
-				Textbox.effect(function () { return Display.state.transition(display); });
 			}
 			if (!poke.fainted()) {
 				battleContext.triggerEvent(Triggers.health, {
@@ -2046,14 +2047,14 @@ function BattleContext (client) {
 									"outcome" : "escape"
 								});
 							};
-							if (!battleContext.process) Textbox.state(battleContext.alliedTrainers[0].pronoun(true) + " escaped successfully!", effect);
+							if (!battleContext.process) Textbox.state(battleContext.alliedTrainers.first().pronoun(true) + " escaped successfully!", effect);
 							else effect();
 							battleContext.finish();
 						}
 					});
 				} else
 					battleContext.queue.push({priority : 6, action : function () {
-						if (!battleContext.process) Textbox.state(battleContext.alliedTrainers[0].pronoun(true) + " couldn't get away!");
+						if (!battleContext.process) Textbox.state(battleContext.alliedTrainers.first().pronoun(true) + " couldn't get away!");
 					}});
 			}
 		},
