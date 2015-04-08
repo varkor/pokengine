@@ -54,7 +54,8 @@ File = {
 				successful(dataForFile(event, file, store, path), uponLoadObject);
 			});
 			file.addEventListener("error", errorResponse);
-			file.src = (!(path.substr(0, 5) === "data:" || path.substr(0, 5) === "http:" || path.substr(0, 6) === "https:") ? (directory ? directory + "/" : "") + (path.replace(/\?.*$/, "") + "." + filetype + path.match(/\?.*$/)[0]) : path);
+			var suffix =  path.match(/\?.*$/);
+			file.src = (!(path.substr(0, 5) === "data:" || path.substr(0, 5) === "http:" || path.substr(0, 6) === "https:") ? (directory ? directory + "/" : "") + (path.replace(/\?.*$/, "") + "." + filetype + (suffix !== null ? suffix[0] : "")) : path);
 			store[path] = uponLoadObject;
 		}
 		return null;
@@ -87,7 +88,7 @@ Files = {
 Sprite = FunctionObject.new({
 	canvases : [],
 	load : function (_paths, uponLoad, uponError, _filetype) {
-		var paths = wrapArray(_paths), filetype = arguments.length >= 4 && typeof _filetype !== "undefined" ? _filetype : "png";
+		var paths = wrapArray(_paths).slice(0), filetype = arguments.length >= 4 && typeof _filetype !== "undefined" ? _filetype : "png";
 		foreach(paths, function (path, i) {
 			paths[i] = Settings._("paths => images").replace("{animation}", Sprite.shouldAnimate(path) ? "animated" : "static") + "/" + paths[i];
 			if (typeof Cache === "object" && Cache !== null) {
@@ -99,7 +100,7 @@ Sprite = FunctionObject.new({
 				animated : false,
 				frames : 1
 			};
-			var fileData = FileData.images, genericPath = path.replace(new RegExp("^" + Settings._("paths => images").replace("/{animation}", "") + "/"), "").replace(/~.*/, "").replace(/(animated|static)\//, "");
+			var fileData = FileData.images, genericPath = path.replace(new RegExp("^" + Settings._("paths => images").replace("/{animation}", "") + "/"), "").replace(/[~?].*/, "").replace(/(animated|static)\//, "");
 			if (Sprite.shouldAnimate(genericPath)) {
 				data = JSONCopy(fileData[genericPath]);
 				if (data.hasOwnProperty("durations"))
@@ -115,7 +116,7 @@ Sprite = FunctionObject.new({
 		}, null, filetype, paths, uponLoad, uponError);
 	},
 	shouldAnimate : function (path) {
-		return Settings._("animated sprites") && FileData.images.hasOwnProperty(path.replace(/~.*/, "").replace("/{animation}", ""));
+		return Settings._("animated sprites") && FileData.images.hasOwnProperty(path.replace(/~.*/, "").replace("?", "").replace(/\/?\{(animation|cache)\}/g, ""));
 	},
 	filters : {
 		invert : function (i, components) {
@@ -297,7 +298,13 @@ Sprite = FunctionObject.new({
 });
 
 Sound = {
-	load : function (paths, uponLoad, uponError, filetype, playImmediately) {
+	load : function (_paths, uponLoad, uponError, filetype, playImmediately) {
+		var paths = wrapArray(_paths).slice(0), filetype = arguments.length >= 4 && typeof _filetype !== "undefined" ? _filetype : "png";
+		if (typeof Cache === "object" && Cache !== null) {
+			foreach(paths, function (path, i) {
+				paths[i] = paths[i].replace("{cache}", Cache.getURL(paths[i] + "." + filetype, null, true));
+			});
+		}
 		return File.loadFileOfType("sounds", Audio, "canplaythrough", function (event, sound, store, path) {
 			var data = {
 				sound : sound
@@ -305,7 +312,7 @@ Sound = {
 			if (playImmediately && Settings._("sound effects"))
 				sound.play();
 			return store[path] = data;
-		}, Settings._("paths => sounds"), arguments.length >= 4 && typeof filetype !== "undefined" ? filetype : "mp3", paths, uponLoad, uponError);
+		}, Settings._("paths => sounds"), filetype, paths, uponLoad, uponError);
 	},
 	play : function (paths, uponError, filetype) {
 		if (Settings._("sound effects")) {

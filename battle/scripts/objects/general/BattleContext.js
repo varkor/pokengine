@@ -6,10 +6,12 @@
 //? Allow a mixture of NPC and online opponents when switching out new Pokémon to fill empty places
 //? Check order of "send" / "command" messages are correct (or are valid at that point in time)
 //? Allow "switching chance" on server.
-//? Experience doesn't save properly
 //? TheWild is global (has global party)
 //? catching pokes sets caught correctly?
 //? pressure speech does not work in multiplayer
+//? preload sprites again
+//? .place bug
+// hp bug
 
 function BattleContext (client) {
 	if (arguments.length < 1)
@@ -547,12 +549,12 @@ function BattleContext (client) {
 				failed : []
 			};
 			var resources = [Scenes._(settings.scene).paths.sprite(true)], loaded = 0;
-			foreach([].concat(alliedTrainers, opposingTrainers), function (trainer) {
-				resources.push(trainer.paths.sprite(alliedTrainers.contains(trainer) ? "back" : null, true));
-				foreach(trainer.party.pokemon, function (poke) {
-					resources.push(poke.paths.sprite("front", true), poke.paths.sprite("back", true), poke.paths.cry(true));
-				});
-			});
+			// foreach([].concat(alliedTrainers, opposingTrainers), function (trainer) {
+			// 	resources.push(trainer.paths.sprite(alliedTrainers.contains(trainer) ? "back" : null, true));
+			// 	foreach(trainer.party.pokemon, function (poke) {
+			// 		resources.push(poke.paths.sprite("front", true), poke.paths.sprite("back", true), poke.paths.cry(true));
+			// 	});
+			// });
 			var timeout = 3 * Time.seconds, unloadedResources = resources.slice(0);
 			var finish = function () {
 				if (!battleContext.process) Textbox.stateUntil("", function () { return battleContext.state.kind !== "opening"; });
