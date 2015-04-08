@@ -86,10 +86,13 @@ Files = {
 
 Sprite = FunctionObject.new({
 	canvases : [],
-	load : function (_paths, uponLoad, uponError, filetype) {
-		var paths = wrapArray(_paths);
+	load : function (_paths, uponLoad, uponError, _filetype) {
+		var paths = wrapArray(_paths), filetype = arguments.length >= 4 && typeof _filetype !== "undefined" ? _filetype : "png";
 		foreach(paths, function (path, i) {
 			paths[i] = Settings._("paths => images").replace("{animation}", Sprite.shouldAnimate(path) ? "animated" : "static") + "/" + paths[i];
+			if (typeof Cache === "object" && Cache !== null) {
+				paths[i].replace("{cache}", Cache.getURL(paths[i] + "." + filetype));
+			}
 		});
 		return File.loadFileOfType("sprites", Image, "load", function (event, image, store, path) {
 			var data = {
@@ -109,7 +112,7 @@ Sprite = FunctionObject.new({
 			data.width = image.width / data.frames;
 			data.height = image.height;
 			return data;
-		}, null, arguments.length >= 4 && typeof filetype !== "undefined" ? filetype : "png", paths, uponLoad, uponError);
+		}, null, filetype, paths, uponLoad, uponError);
 	},
 	shouldAnimate : function (path) {
 		return Settings._("animated sprites") && FileData.images.hasOwnProperty(path.replace(/~.*/, "").replace("/{animation}", ""));
