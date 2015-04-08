@@ -178,20 +178,22 @@ Moves = {
 				{
 					effect : function (self, target) {
 						self.battler.battle.damage(target, Move.damage(self, target, "Wrap"));
-						Textbox.state(target.name() + " was wrapped by " + self.name() + "!");
-						target.battler.trapped.pushIfNotAlreadyContained("Wrap");
-						if (!self.battler.battle.moveHasEffect("Wrap", target)) {
-							var turns = self.battler.battle.random.int(2, 5), effects = [];
-							for (var i = 0, effect; i <= turns; ++ i) {
-								self.battler.battle.moveHaveEffect("Wrap", i + 0.5, target, effect = {
-									user : self,
-									freed : (i === turns)
+						if (!target.fainted()) {
+							Textbox.state(target.name() + " was wrapped by " + self.name() + "!");
+							target.battler.trapped.pushIfNotAlreadyContained("Wrap");
+							if (!self.battler.battle.moveHasEffect("Wrap", target)) {
+								var turns = self.battler.battle.random.int(2, 5), effects = [];
+								for (var i = 0, effect; i <= turns; ++ i) {
+									self.battler.battle.moveHaveEffect("Wrap", i + 0.5, target, effect = {
+										user : self,
+										freed : (i === turns)
+									});
+									effects.push(effect);
+								}
+								foreach(effects, function (effect) {
+									effect.family = effects;
 								});
-								effects.push(effect);
 							}
-							foreach(effects, function (effect) {
-								effect.family = effects;
-							});
 						}
 					},
 					targets : true
@@ -1092,10 +1094,13 @@ Moves = {
 			use : [
 				{
 					effect : function (self, target, constant, repetitions) {
-						self.battler.battle.damage(target, Move.damage(self, target, "Pin Missile"), repetitions === 1);
-						if (target !== NoPokemon && !target.fainted() && (repetitions < 2 || (repetitions <= 3 && self.battler.battle.random.chance(3)) || (repetitions <= 5 && self.battler.battle.random.chance(6)))) {
+						var finalRepetition = !(target !== NoPokemon && !target.fainted() && (repetitions < 2 || (repetitions <= 3 && self.battler.battle.random.chance(3)) || (repetitions <= 5 && self.battler.battle.random.chance(6))));
+						if (finalRepetition)
+							Textbox.state("Hit " + target.name() + " " + quantityWord(repetitions) + "!");
+						self.battler.battle.damage(target, Move.damage(self, target, "Pin Missile"), finalRepetition);
+						if (!finalRepetition) {
 							Moves._("Pin Missile").effects.use[0].effect(self, target, constant, ++ repetitions); // Not the standard Move.use() form, so that it can take advantage of repetitions
-						} else Textbox.state("Hit " + target.name() + " " + quantityWord(repetitions) + "!");
+						}
 					},
 					targets : true
 				}
