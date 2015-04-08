@@ -54,7 +54,7 @@ File = {
 				successful(dataForFile(event, file, store, path), uponLoadObject);
 			});
 			file.addEventListener("error", errorResponse);
-			file.src = (!(path.substr(0, 5) === "data:" || path.substr(0, 5) === "http:" || path.substr(0, 6) === "https:") ? (directory ? directory + "/" : "") + path + "." + filetype : path);
+			file.src = (!(path.substr(0, 5) === "data:" || path.substr(0, 5) === "http:" || path.substr(0, 6) === "https:") ? (directory ? directory + "/" : "") + (path.replace(/\?.*$/, "") + "." + filetype + path.match(/\?.*$/)[0]) : path);
 			store[path] = uponLoadObject;
 		}
 		return null;
@@ -91,7 +91,7 @@ Sprite = FunctionObject.new({
 		foreach(paths, function (path, i) {
 			paths[i] = Settings._("paths => images").replace("{animation}", Sprite.shouldAnimate(path) ? "animated" : "static") + "/" + paths[i];
 			if (typeof Cache === "object" && Cache !== null) {
-				paths[i].replace("{cache}", Cache.getURL(paths[i] + "." + filetype));
+				paths[i] = paths[i].replace("{cache}", Cache.getURL(paths[i] + "." + filetype, null, true));
 			}
 		});
 		return File.loadFileOfType("sprites", Image, "load", function (event, image, store, path) {
