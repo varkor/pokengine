@@ -167,8 +167,9 @@ function BattleContext (client) {
 							context.lineWidth = position.scale * 2;
 							transition = (poke.fainted() ? 1 : poke.battler.display.transition);
 							generalMatrix = matrix.scale(position.scale * transition).rotate(poke.battler.display.angle);
+							context.globalAlpha = poke.battler.display.opacity;
 							// Shadow
-							Sprite.draw(shadowCanvas, poke.paths.sprite(side), position.x, battleContext.drawing.positions[poke.battler.side === Battles.side.near ? "sideNear" : "sideFar"].y - position.z, true, [{ type : "fill", colour : "hsla(0, 0%, 0%, " + (1 - Math.min(1, position.height / (canvas.height / Game.zoom / 2))) + ")" }, { type : "crop", heightRatio : poke.battler.display.height }], generalMatrix.multiply(shadowMatrix).scale(Math.pow(2, - position.height / (canvas.height / Game.zoom / 4))), now, true);
+							Sprite.draw(shadowCanvas, poke.paths.sprite(side), position.x, battleContext.drawing.positions[poke.battler.side === Battles.side.near ? "sideNear" : "sideFar"].y - position.z, true, [{ type : "fill", colour : "hsla(0, 0%, 0%, " + (1 - Math.min(1, position.height / (canvas.height / Game.zoom / 2))) * poke.battler.display.opacity + ")" }, { type : "crop", heightRatio : poke.battler.display.height }], generalMatrix.multiply(shadowMatrix).scale(Math.pow(2, - position.height / (canvas.height / Game.zoom / 4))), now, true);
 							// Outline
 							if (poke.battler.display.outlined) {
 								for (var angle = 0; angle < Math.PI * 2; angle += Math.PI / 2) {
@@ -181,12 +182,16 @@ function BattleContext (client) {
 								filters.push({ type : "filter", kind : "shiny", pokemon : poke });
 							filters.push({ type : "crop", heightRatio : poke.battler.display.height });
 							Sprite.draw(canvas, poke.paths.sprite(side), position.x, position.y - position.z, true, filters, generalMatrix, now);
+							// Overlay
+							if (poke.battler.display.overlay !== null)
+								Sprite.draw(canvas, poke.paths.sprite(side), position.x, position.y - position.z, true, [{ type : "fill", colour : poke.battler.display.overlay }, { type : "crop", heightRatio : poke.battler.display.height }], generalMatrix, now);
 							// Lighting
 							if (Scenes._(battleContext.scene).hasOwnProperty("lighting"))
 								Sprite.draw(canvas, poke.paths.sprite(side), position.x, position.y - position.z, true, [{ type : "fill", colour : Scenes._(battleContext.scene).lighting }, { type : "crop", heightRatio : poke.battler.display.height }], generalMatrix, now);
 							// Glow / Fade
 							if (transition > 0 && transition < 1)
 								Sprite.draw(canvas, poke.paths.sprite(side), position.x, position.y - position.z, true, [{ type : "fill", colour : "white" }, { type : "opacity", value : Math.pow(1 - transition, 0.4) }, { type : "crop", heightRatio : poke.battler.display.height }], generalMatrix, now);
+							context.globalAlpha = 1;
 						});
 						// Trainers
 						foreach(battleContext.allTrainers(), function (trainer) {
@@ -1908,8 +1913,10 @@ function BattleContext (client) {
 			var amount = damage.damage;
 			if (amount < 0)
 				return;
-			if (damage.effectiveness === 0)
+			if (damage.effectiveness === 0) {
+				if (!battleContext.process) Textbox.state("It doesn't affect " + poke.name() + "!");
 				return;
+			}
 			amount = Math.floor(amount);
 			if (poke.battler.substitute > 0 && !damage.infiltrates) {
 				if (!battleContext.process) Textbox.state(poke.name() + "'s Substitute took the damage!");
@@ -1926,6 +1933,34 @@ function BattleContext (client) {
 				poke.battler.damaged[damage.category] += amount;
 			if (!battleContext.process) {
 				var display = Display.state.save();
+				if (Settings._("status transition duration") > 0) {
+					track = { completed : false }, flashes = 3, damageAnimation = function (state, poke, track, progress, iteration) {
+						switch (iteration % 3) {
+							case 0:
+								poke.battler.display.overlay = "black";
+								break;
+							case 1:
+								poke.battler.display.overlay = null;
+								poke.battler.display.opacity = 0;
+								break;
+							case 2:
+								poke.battler.display.opacity = 1;
+								break;
+						}
+						if (progress >= 1) {
+							track.completed = true;
+							poke.battler.display.overlay = null;
+						} else {
+							setTimeout(function () {
+								damageAnimation(state, poke, track, progress + 1 / (flashes * 3), iteration + 1);
+							}, Settings._("status transition duration") * Time.seconds / (flashes * 3));
+						}
+					};
+					Textbox.effect(function () {
+						damageAnimation(Display.state.current, Display.pokemonInState(poke), track, 0, 0);
+						return track;
+					});
+				}
 				Textbox.effect(function () { return Display.state.transition(display); });
 			}
 			if (!battleContext.process) {
@@ -1947,8 +1982,6 @@ function BattleContext (client) {
 						case 0.25:
 							Textbox.state("It's not very effective...");
 							break;
-						case 0:
-							Textbox.state("It doesn't affect " + poke.name() + "!");
 					}
 				}
 			}

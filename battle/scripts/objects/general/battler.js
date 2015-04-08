@@ -8,7 +8,9 @@ battler.resetDisplay = function (self) {
 			z : 0
 		},
 		angle : 0,
-		outlined : false
+		outlined : false,
+		overlay : null,
+		opacity : 1
 	};
 };
 
