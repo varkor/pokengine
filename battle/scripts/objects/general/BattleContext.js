@@ -1812,7 +1812,12 @@ function BattleContext (client) {
 											Textbox.effect(function () {
 												trainer.display.visible = true;
 											}, battleContext.drawing.transition(poke.trainer.display.position, "x", -(battleContext.style === "double" ? 80 : 40), Settings._("switch transition duration") * Time.framerate));
-											Textbox.spiel(trainer._("pressure speech"), null, battleContext.drawing.transition(poke.trainer.display.position, "x", -200, Settings._("switch transition duration") * Time.framerate), function () {
+											var moveBack;
+											Textbox.spiel(trainer._("pressure speech"), function () {
+												moveBack = battleContext.drawing.transition(poke.trainer.display.position, "x", -200, Settings._("switch transition duration") * Time.framerate);
+											}, function () {
+												return moveBack();
+											}, function () {
 												trainer.display.visible = false;
 											});
 											Textbox.say("", 0); // Little hack to make sure the right textbox displays, not the next (menu) one
