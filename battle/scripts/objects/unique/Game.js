@@ -15,12 +15,14 @@ Game = {
 	changeZoomLevel : function (zoom) {
 		Game.zoom = zoom;
 		foreach([Battle, Textbox], function (object) {
-			var imageSmoothingEnabled = object.canvas.getContext("2d").imageSmoothingEnabled;
-			object.canvas.width = Settings._("screen dimensions => width") * Game.zoom;
-			object.canvas.height = Settings._("screen dimensions => height") * Game.zoom;
-			object.canvas.getContext("2d").imageSmoothingEnabled = imageSmoothingEnabled;
-			if (typeof object.requestRedraw !== undefined)
-				object.requestRedraw = true;
+			if (typeof object === "object" && object !== null) {
+				var imageSmoothingEnabled = object.canvas.getContext("2d").imageSmoothingEnabled;
+				object.canvas.width = Settings._("screen dimensions => width") * Game.zoom;
+				object.canvas.height = Settings._("screen dimensions => height") * Game.zoom;
+				object.canvas.getContext("2d").imageSmoothingEnabled = imageSmoothingEnabled;
+				if (typeof object.requestRedraw !== undefined)
+					object.requestRedraw = true;
+			}
 		});
 	}
 };

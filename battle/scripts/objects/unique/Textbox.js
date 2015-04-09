@@ -766,7 +766,11 @@ Textbox = FunctionObject.new({
 							selected = (hovered = Cursor.inArea(canvas, responseMetrics.x * Game.zoom, responseMetrics.y * Game.zoom, responseMetrics.width * Game.zoom, responseMetrics.height * Game.zoom) && Input.priority === "mouse") || (Input.controlScheme === "keyboard" && Textbox.response === response && (!cursorIsOverAResponse || Input.priority === "keyboard"));
 							context.fillStyle = (selected ? "hsla(0, 0%, 100%, 0.8)" : "hsla(0, 0%, 0%, 0.6)");
 							context.fillRect(responseMetrics.x * Game.zoom, responseMetrics.y * Game.zoom, responseMetrics.width * Game.zoom, responseMetrics.height * Game.zoom);
-							context.font = Font.load((isMajor ? metrics.response.major : metrics.response.minor).height * 0.8 * Game.zoom);
+							var pixelDeficit = 0;
+							do {
+								context.font = Font.load((isMajor ? metrics.response.major : metrics.response.minor).height * 0.8 * Game.zoom - pixelDeficit);
+								pixelDeficit += 1;
+							} while (context.measureText(dialogue.responses[response]).width > (responseMetrics.width - 4) * Game.zoom);
 							context.fillStyle = (selected ? "black" : "white");
 							context.fillText(dialogue.responses[response], (responseMetrics.x + responseMetrics.width / 2) * Game.zoom, (responseMetrics.y + responseMetrics.height / 2) * Game.zoom);
 							if (selected) {
