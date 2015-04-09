@@ -8,6 +8,8 @@
 //? pressure speech does not work in multiplayer
 //? preload sprites again
 //? .place bug
+//? hp bug
+//? add to PC on server
 
 function BattleContext (client) {
 	if (arguments.length < 1)
@@ -193,6 +195,7 @@ function BattleContext (client) {
 						});
 						// Trainers
 						foreach(battleContext.allTrainers(), function (trainer) {
+							if (!trainer.isWild() && trainer.display.visible) {
 								position = battleContext.drawing.position(trainer, now);
 								side = (battleContext.alliedTrainers.contains(trainer) ? "back" : null);
 								// Shadow
@@ -206,6 +209,7 @@ function BattleContext (client) {
 						});
 						if (sortDisplay.allies.length === 0 || sortDisplay.opponents.length === 0) {
 							foreach(battleContext.allTrainers(), function (trainer) {
+								if (!trainer.isWild() && trainer.display.visible) {
 									drawAfterwards.push(function (canvas) {
 										battleContext.drawing.partyBar(canvas, trainer, battleContext.alliedTrainers.contains(trainer), battleContext.alliedTrainers.contains(trainer) ? 120 : 30);
 									});
@@ -592,6 +596,7 @@ function BattleContext (client) {
 		},
 		beginWildBattle : function (alliedTrainers, pokes, settings, callback) {
 			pokes = wrapArray(pokes);
+			battleContext.initiate(alliedTrainers, trainer.newWildTrainer(pokes), settings, callback);
 		},
 		beginTrainerBattle : function (alliedTrainers, opposingTrainers, settings, callback) {
 			battleContext.initiate(alliedTrainers, opposingTrainers, settings, callback);
@@ -660,6 +665,7 @@ function BattleContext (client) {
 					} else {
 						for (var i = 0, newPoke; i < Math.min(battleContext.pokemonPerSide() / battleContext.opposingTrainers.length, participant.healthyEligiblePokemon().length); ++ i) {
 							newPoke = participant.healthyEligiblePokemon()[i];
+							if (newPoke.isWild())
 								battleContext.enter(newPoke, true, null, true);
 							else battleContext.queue.push({
 								poke : newPoke,
@@ -1744,6 +1750,7 @@ function BattleContext (client) {
 								if (!battleContext.isCompetitiveBattle() && Settings._("switching chance")) {
 									var character = Game.player;
 									if (character.healthyEligiblePokemon(true).notEmpty()) {
+										if (!poke.trainer.isWild())
 											Textbox.state(trainer.name + " is about to send out " + poke.name() + ".");
 										else
 											Textbox.state("A wild " + poke.name() + " is about to appear!");
@@ -2308,6 +2315,7 @@ function BattleContext (client) {
 			}
 			// The start of the battle
 			if (!battleContext.process) {
+				if (!poke.trainer.isWild()) {
 					poke.battler.display.transition = 0;
 					var displayInitial = Display.state.save();
 					poke.battler.display.transition = 1;
@@ -2322,6 +2330,7 @@ function BattleContext (client) {
 						poke.trainer.display.visible = false;
 					});
 				}
+				if (!poke.trainer.isWild())
 					Textbox.effect(function () { Display.state.load(displayInitial); return Display.state.transition(display); });
 				Textbox.effect(function () {
 					poke.cry();
@@ -2588,6 +2597,7 @@ function BattleContext (client) {
 			}
 		},
 		isWildBattle : function () {
+			return battleContext.opposingTrainers.length === 1 && battleContext.opposingTrainers.first().isWild();
 		},
 		isCompetitiveBattle : function () {
 			return battleContext.flags.contains("competitive");
