@@ -1145,54 +1145,9 @@ function BattleContext (client) {
 					Textbox.effect(function () { Display.state.load(display); });
 				}
 				battleContext.flushInputs();
-				var waitForActions = function () {
-					if (battleContext.hasCommunicationForTrainers("command"))
-						battleContext.giveTrainersActions();
-					else {
-						battleContext.state = {
-							"kind" : "waiting",
-							"for" : "command"
-						};
-						if (!battleContext.process) Textbox.stateUntil("Waiting for " + (battleContext.playerIsParticipating() ? "the other player" : "both players") + " to make a decision...", function () { return battleContext.state.kind !== "waiting" && Textbox.dialogue.length > 1; });
-					}
-				};
-				if (battleContext.process) waitForActions();
-				else Textbox.effect(waitForActions);
+				battleContext.waitForActions("command", battleContext.giveTrainersActions);
 			} else
 				battleContext.prompt();
-		},
-		hasCommunicationForTrainers : function (kind, waitingActions) {
-			var requiredActions = {};
-			foreach(battleContext.allTrainers(), function (trainer) {
-				if (trainer.type === Trainers.type.online) {
-					var requiredActionsForTrainer = 0;
-					if (kind === "command") {
-						for (var i = 0; i < trainer.battlers().length; ++ i) {
-							if (!battleContext.pokemonForcedIntoAction(trainer.battlers()[i], true)) {
-								++ requiredActionsForTrainer;
-							}
-						}
-					} else if (kind === "send") {
-						var numberOfPokemonPerTrainer = battleContext.pokemonPerSide() / (battleContext.alliedTrainers.contains(trainer) ? battleContext.alliedTrainers : battleContext.opposingTrainers).length;
-						if (trainer.battlers().length < numberOfPokemonPerTrainer)
-							requiredActionsForTrainer = numberOfPokemonPerTrainer - trainer.battlers().length;
-					}
-					if (requiredActionsForTrainer)
-						requiredActions[trainer.identification] = requiredActionsForTrainer;
-				}
-			});
-			var actionsForTrainers = {};
-			if (arguments.length < 2)
-				waitingActions = battleContext.communication;
-			foreach(waitingActions, function (communication) {
-				if (!actionsForTrainers.hasOwnProperty(communication.trainer))
-					actionsForTrainers[communication.trainer] = 0;
-				++ actionsForTrainers[communication.trainer];
-			});
-			return !forevery(requiredActions, function (number, trainer) {
-				if (!actionsForTrainers.hasOwnProperty(trainer) || actionsForTrainers[trainer] < number)
-					return true;
-			});
 		},
 		giveTrainersActions : function () {
 			foreach(battleContext.allTrainers(), function (trainer) {
@@ -1218,23 +1173,79 @@ function BattleContext (client) {
 			});
 			battleContext.queue = battleContext.queue.concat(battleContext.actions);
 			battleContext.actions = [];
-			if (battleContext.state.kind === "waiting") {
-				battleContext.state = {
-					kind : "running"
-				};
-				if (!battleContext.process) Textbox.update();
-			}
 			battleContext.processTurn();
+		},
+		hasCommunicationForTrainers : function (kind, waitingActions) {
+			if (arguments.length < 2)
+				waitingActions = battleContext.communication;
+			var requiredActions = {};
+			foreach(battleContext.allTrainers(), function (trainer) {
+				if (trainer.type === Trainers.type.online) {
+					var requiredActionsForTrainer = 0;
+					switch (kind) {
+						case "command":
+							for (var i = 0; i < trainer.battlers().length; ++ i) {
+								if (!battleContext.pokemonForcedIntoAction(trainer.battlers()[i], true)) {
+									++ requiredActionsForTrainer;
+								}
+							}
+							break;
+						case "send":
+							var numberOfPokemonPerTrainer = battleContext.pokemonPerSide() / (battleContext.alliedTrainers.contains(trainer) ? battleContext.alliedTrainers : battleContext.opposingTrainers).length;
+							if (trainer.battlers().length < numberOfPokemonPerTrainer)
+								requiredActionsForTrainer = numberOfPokemonPerTrainer - trainer.battlers().length;
+							break;
+						case "learn":
+							if (battleContext.delayForInput && trainer === battleContext.alliedTrainers.first())
+								++ requiredActionsForTrainer;
+							console.log(requiredActionsForTrainer);
+							break;
+					}
+					if (requiredActionsForTrainer)
+						requiredActions[trainer.identification] = requiredActionsForTrainer;
+				}
+			});
+			var actionsForTrainers = {};
+			foreach(waitingActions, function (communication) {
+				if (!actionsForTrainers.hasOwnProperty(communication.trainer))
+					actionsForTrainers[communication.trainer] = 0;
+				++ actionsForTrainers[communication.trainer];
+			});
+			return !forevery(requiredActions, function (number, trainer) {
+				if (!actionsForTrainers.hasOwnProperty(trainer) || actionsForTrainers[trainer] < number)
+					return true;
+			});
+		},
+		waitForActions : function (kind, response) {
+			var wait = function () {
+				if (battleContext.hasCommunicationForTrainers(kind)) {
+					response();
+				} else {
+					battleContext.state = {
+						"kind" : "waiting",
+						"for" : kind,
+						"response" : function () {
+							battleContext.state = {
+								kind : "running"
+							};
+							if (!battleContext.process) Textbox.update();
+							response();
+						}
+					};
+					if (!battleContext.process) Textbox.stateUntil("Waiting for " + (battleContext.playerIsParticipating() ? "the other player" : "both players") + " to make a decision...", function () { return battleContext.state.kind !== "waiting" && Textbox.dialogue.length > 1; });
+				}
+			};
+			if (battleContext.process)
+				wait();
+			else
+				Textbox.effect(wait);
 		},
 		receiveActions : function (actions) {
 			// Receive the opponent's actions, in an online battle
 			if (actions.notEmpty()) {
 				battleContext.communication = battleContext.communication.concat(actions);
-				if (battleContext.state.kind === "waiting") {
-					if (battleContext.state.for === "command" && battleContext.hasCommunicationForTrainers("command"))
-						battleContext.giveTrainersActions();
-					else if (battleContext.state.for === "send" && battleContext.hasCommunicationForTrainers("send"))
-						battleContext.continueToNextTurn(true);
+				if (battleContext.state.kind === "waiting" && battleContext.hasCommunicationForTrainers(battleContext.state.for)) {
+					battleContext.state.response();
 				}
 			}
 		},
@@ -1832,19 +1843,9 @@ function BattleContext (client) {
 					} else {
 						var healthyEligiblePokemon = (!player ? battleContext.opposingTrainers : battleContext.alliedTrainers).first().healthyEligiblePokemon(true);
 						if (healthyEligiblePokemon.length > emptyPlaces.length) {
-							var waitForActions = function () {
-								if (battleContext.hasCommunicationForTrainers("send")) {
-									battleContext.continueToNextTurn(true);
-								} else {
-									battleContext.state = {
-										"kind" : "waiting",
-										"for" : "send"
-									};
-									if (!battleContext.process) Textbox.stateUntil("Waiting for " + (battleContext.playerIsParticipating() ? "the other player" : "both players") + " to make a decision...", function () { return battleContext.state.kind !== "waiting"; });
-								}
-							};
-							if (battleContext.process) waitForActions();
-							else Textbox.effect(waitForActions);
+							battleContext.waitForActions("send", function () {
+								battleContext.continueToNextTurn(true);
+							});
 							anyQueries = true;
 						} else {
 							foreach(healthyEligiblePokemon, function (poke, which) {
@@ -1892,12 +1893,6 @@ function BattleContext (client) {
 			}
 			battleContext.race(battleContext.queue);
 			battleContext.queue = [];
-			if (battleContext.state.kind === "waiting") {
-				battleContext.state = {
-					kind : "running"
-				};
-				if (!battleContext.process) Textbox.update();
-			}
 			if (battleContext.survey()) {
 				battleContext.fillEmptyPlaces(true);
 			} else {

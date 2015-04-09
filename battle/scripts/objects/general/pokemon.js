@@ -351,39 +351,69 @@ function pokemon (data, validate) {
 				PPUps : 0
 			});
 		} else {
-			var resumeNormalProceedings;
+			var battleContext = self.battler.battle, immediatelyProceeding, resumeNormalProceedings = null, learnNewMove = function (replacing) {
+				if (self.inBattle()) {
+					battleContext.inputs.push({
+						"action" : "learn",
+						"forget" : replacing
+					});
+				}
+				Textbox.insertAfter(Textbox.state(self.name() + " forgot " + self.moves[replacing].move + " and learnt " + move + "!", resumeNormalProceedings), immediatelyProceeding);
+				self.moves[replacing] = {
+					move : move,
+					number : replacing,
+					PP : move.PP,
+					PPUps : 0
+				};
+			}, doNotLearnNewMove = function () {
+				if (self.inBattle()) {
+					battleContext.inputs.push({
+						"action" : "learn",
+						"forget" : null
+					});
+				}
+				Textbox.insertAfter(Textbox.state(self.name() + " didn't learn " + move + ".", resumeNormalProceedings), immediatelyProceeding);
+			};
 			if (self.inBattle()) {
 				resumeNormalProceedings = function () {
-					self.battler.battle.delayForInput = false;
-					self.battler.battle.prompt();
+					battleContext.flushInputs();
+					battleContext.delayForInput = false;
+					if (battleContext.playerIsParticipating())
+						battleContext.prompt();
+					else
+						battleContext.advance();
 				};
 				self.battler.battle.delayForInput = true;
-			} else {
-				resumeNormalProceedings = function () {};
 			}
 			if (!self.battler.battle.process) Textbox.state(self.name() + " wants to learn " + move + ". But " + self.name() + " already knows 4 moves!");
-			var immediatelyProceeding = Textbox.confirm("Do you want " + self.name() + " to forget a move to make room for " + move + "?", function (response) {
-				if (response === "Yes") {
-					var moves = [], hotkeys = {};
-					hotkeys[Game.key.secondary] = "Never mind";
-					foreach(self.moves, function (move) {
-						moves.push(move.move);
-					});
-					immediatelyProceeding = Textbox.insertAfter(Textbox.ask("Which move do you want " + self.name() + " to forget?", moves, function (response, i, major) {
-						if (major) {
-							Textbox.insertAfter(Textbox.state(self.name() + " forgot " + self.moves[i].move + " and learnt " + move + "!", resumeNormalProceedings), immediatelyProceeding);
-							self.moves[i] = {
-								move : move,
-								number : i,
-								PP : move.PP,
-								PPUps : 0
-							};
-						} else
-							Textbox.insertAfter(Textbox.state(self.name() + " didn't learn " + move + ".", resumeNormalProceedings), immediatelyProceeding);
-					}, ["Never mind"], null, hotkeys), immediatelyProceeding);
-				} else
-					Textbox.insertAfter(Textbox.state(self.name() + " didn't learn " + move + ".", resumeNormalProceedings), immediatelyProceeding);
-			});
+			if (!battleContext.playerIsParticipating()) {
+				immediatelyProceeding = Textbox.say("", 0);
+				battleContext.waitForActions("learn", function () {
+					var decision = battleContext.communication.shift();
+					if (decision.forget === null)
+						doNotLearnNewMove();
+					else
+						learnNewMove(decision.forget);
+				});
+			} else {
+				immediatelyProceeding = Textbox.confirm("Do you want " + self.name() + " to forget a move to make room for " + move + "?", function (yes) {
+					if (yes) {
+						var moves = [], hotkeys = {};
+						hotkeys[Settings._("keys => secondary")] = "Never mind";
+						foreach(self.moves, function (move) {
+							moves.push(move.move);
+						});
+						immediatelyProceeding = Textbox.insertAfter(Textbox.ask("Which move do you want " + self.name() + " to forget?", moves, function (response, i, major) {
+							if (major) {
+								learnNewMove(i);
+							} else {
+								doNotLearnNewMove();
+							}
+						}, ["Never mind"], null, hotkeys), immediatelyProceeding);
+					} else
+						doNotLearnNewMove();
+				});
+			}
 		}
 	};
 
