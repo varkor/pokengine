@@ -49,7 +49,7 @@ Supervisor = {
 						delete Supervisor.processes[identifier];
 					};
 					battle.random.seed = data.data.seed;
-					if (teamA.identification === 0) { /* Code for TheWild */
+					if (teamA.identification === 0) { /* Code for wild battles */
 						battle.beginWildBattle(teamB, teamA.party.pokemon, data.data.parameters, callback);
 					} else if (teamB.identification === 0) {
 						battle.beginWildBattle(teamA, teamB.party.pokemon, data.data.parameters, callback);

@@ -1191,9 +1191,9 @@ Moves = {
 					targets : true
 				}
 			],
-			effect : function (poke) {
-				Textbox.state(poke.name() + " recovered some of " + poke.possessivePronoun() + " health through " + poke.possessivePronoun() + " ingrained roots!");
-				self.battler.battle.healPercentage(poke, 1 / 16, poke);
+			effect : function (self) {
+				Textbox.state(self.name() + " recovered some of " + self.possessivePronoun() + " health through " + self.possessivePronoun() + " ingrained roots!");
+				self.battler.battle.healPercentage(self, 1 / 16, self);
 			}
 		}
 	},

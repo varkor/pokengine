@@ -186,9 +186,20 @@ function trainer (data) {
 	self.ownsKeyStone = function () {
 		return self.bag.has("Key Stone");
 	};
+
+	self.isWild = function () {
+		return self.identification === 0;
+	};
 }
 
-TheWild = new trainer({
-	name : "The Wild",
-	identification : 0
-});
+trainer.newWildTrainer = function (pokes) {
+	var wildTrainer = new trainer({
+		name : "The Wild",
+		identification : 0,
+		party : pokes
+	});
+	foreach(pokes, function (poke) {
+		poke.trainer = wildTrainer;
+	});
+	return wildTrainer;
+};

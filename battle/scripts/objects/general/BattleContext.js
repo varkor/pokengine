@@ -3,15 +3,11 @@
 //? Trainer type should be elimated entirely. Battle kind can probably be eliminated too, as online battles are no different than trainer house battles, etc.
 //? Do regular syncing
 //? Validating relay and sync dataOf
-//? Allow a mixture of NPC and online opponents when switching out new Pokémon to fill empty places
 //? Check order of "send" / "command" messages are correct (or are valid at that point in time)
 //? Allow "switching chance" on server.
-//? TheWild is global (has global party)
-//? catching pokes sets caught correctly?
 //? pressure speech does not work in multiplayer
 //? preload sprites again
 //? .place bug
-// hp bug
 
 function BattleContext (client) {
 	if (arguments.length < 1)
@@ -197,7 +193,6 @@ function BattleContext (client) {
 						});
 						// Trainers
 						foreach(battleContext.allTrainers(), function (trainer) {
-							if (trainer !== TheWild && trainer.display.visible) {
 								position = battleContext.drawing.position(trainer, now);
 								side = (battleContext.alliedTrainers.contains(trainer) ? "back" : null);
 								// Shadow
@@ -211,7 +206,6 @@ function BattleContext (client) {
 						});
 						if (sortDisplay.allies.length === 0 || sortDisplay.opponents.length === 0) {
 							foreach(battleContext.allTrainers(), function (trainer) {
-								if (trainer !== TheWild && trainer.display.visible) {
 									drawAfterwards.push(function (canvas) {
 										battleContext.drawing.partyBar(canvas, trainer, battleContext.alliedTrainers.contains(trainer), battleContext.alliedTrainers.contains(trainer) ? 120 : 30);
 									});
@@ -598,11 +592,6 @@ function BattleContext (client) {
 		},
 		beginWildBattle : function (alliedTrainers, pokes, settings, callback) {
 			pokes = wrapArray(pokes);
-			TheWild.party.empty();
-			foreach(pokes, function (poke) {
-				TheWild.give(poke);
-			});
-			battleContext.initiate(alliedTrainers, TheWild, settings, callback);
 		},
 		beginTrainerBattle : function (alliedTrainers, opposingTrainers, settings, callback) {
 			battleContext.initiate(alliedTrainers, opposingTrainers, settings, callback);
@@ -671,7 +660,6 @@ function BattleContext (client) {
 					} else {
 						for (var i = 0, newPoke; i < Math.min(battleContext.pokemonPerSide() / battleContext.opposingTrainers.length, participant.healthyEligiblePokemon().length); ++ i) {
 							newPoke = participant.healthyEligiblePokemon()[i];
-							if (newPoke.trainer === TheWild)
 								battleContext.enter(newPoke, true, null, true);
 							else battleContext.queue.push({
 								poke : newPoke,
@@ -702,7 +690,6 @@ function BattleContext (client) {
 				Display.state.load(Display.state.save());
 				var names = [], number = 0;
 				if (battleContext.isWildBattle()) {
-					var wildPokemon = TheWild.healthyEligiblePokemon();
 					if (wildPokemon.length === 1)
 						Textbox.state("A wild " + wildPokemon.first().name() + " appeared!");
 					else {
@@ -1757,7 +1744,6 @@ function BattleContext (client) {
 								if (!battleContext.isCompetitiveBattle() && Settings._("switching chance")) {
 									var character = Game.player;
 									if (character.healthyEligiblePokemon(true).notEmpty()) {
-										if (poke.trainer !== TheWild)
 											Textbox.state(trainer.name + " is about to send out " + poke.name() + ".");
 										else
 											Textbox.state("A wild " + poke.name() + " is about to appear!");
@@ -2322,7 +2308,6 @@ function BattleContext (client) {
 			}
 			// The start of the battle
 			if (!battleContext.process) {
-				if (poke.trainer !== TheWild) {
 					poke.battler.display.transition = 0;
 					var displayInitial = Display.state.save();
 					poke.battler.display.transition = 1;
@@ -2337,7 +2322,6 @@ function BattleContext (client) {
 						poke.trainer.display.visible = false;
 					});
 				}
-				if (poke.trainer !== TheWild)
 					Textbox.effect(function () { Display.state.load(displayInitial); return Display.state.transition(display); });
 				Textbox.effect(function () {
 					poke.cry();
@@ -2604,7 +2588,6 @@ function BattleContext (client) {
 			}
 		},
 		isWildBattle : function () {
-			return battleContext.opposingTrainers.length === 1 && battleContext.opposingTrainers.first() === TheWild;
 		},
 		isCompetitiveBattle : function () {
 			return battleContext.flags.contains("competitive");

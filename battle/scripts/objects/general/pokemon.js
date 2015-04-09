@@ -850,4 +850,8 @@ function pokemon (data, validate) {
 			return moves.contains(move.move);
 		});
 	};
+
+	self.isWild = function () {
+		return self.trainer && self.trainer.isWild();
+	};
 }

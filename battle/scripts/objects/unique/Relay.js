@@ -54,7 +54,7 @@ Relay = {
 					data.callback(flags, trainers);
 					battle.destroy();
 				};
-				if (opponent.identification === 0) { /* Code for TheWild */
+				if (opponent.identification === 0) { /* Code for wild battles */
 					battle.random.seed = data.data.seed;
 					battle.beginWildBattle(ally, opponent.party.pokemon, data.data.parameters, callback);
 				} else {
