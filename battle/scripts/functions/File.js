@@ -90,7 +90,7 @@ Sprite = FunctionObject.new({
 	load : function (_paths, uponLoad, uponError, _filetype) {
 		var paths = wrapArray(_paths).slice(0), filetype = arguments.length >= 4 && typeof _filetype !== "undefined" ? _filetype : null;
 		if (filetype === null) {
-			var filetypeMatch = paths[0].match(/\.[a-z0-9]+$/i);
+			var filetypeMatch = paths[0].replace(/\{.*\}/, "").match(/\.[a-z0-9]+$/i);
 			if (filetypeMatch) {
 				filetype = filetypeMatch[0].slice(1);
 				foreach(paths, function (path, i) {
@@ -127,7 +127,7 @@ Sprite = FunctionObject.new({
 		}, null, filetype, paths, uponLoad, uponError);
 	},
 	shouldAnimate : function (path) {
-		return Settings._("animated sprites") && FileData.images.hasOwnProperty(path.replace(/~.*/, "").replace("?", "").replace(/\/?\{(animation|cache)\}/g, ""));
+		return Settings._("animated sprites") && FileData.images.hasOwnProperty(path.replace(/(~|\.).*/, "").replace("?", "").replace(/\/?\{(animation|cache)\}/g, ""));
 	},
 	filters : {
 		invert : function (i, components) {
@@ -312,7 +312,7 @@ Sound = {
 	load : function (_paths, uponLoad, uponError, filetype, playImmediately) {
 		var paths = wrapArray(_paths).slice(0), filetype = arguments.length >= 4 && typeof _filetype !== "undefined" ? _filetype : null;
 		if (filetype === null) {
-			var filetypeMatch = paths[0].match(/\.[a-z0-9]+$/i);
+			var filetypeMatch = paths[0].replace(/\{.*\}/, "").match(/\.[a-z0-9]+$/i);
 			if (filetypeMatch) {
 				filetype = filetypeMatch[0].slice(1);
 				foreach(paths, function (path, i) {

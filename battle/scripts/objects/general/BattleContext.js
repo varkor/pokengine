@@ -1,15 +1,9 @@
-//? BattleContext will now need to deal with all the other Textbox.ask situations like learning new moves, (preventing) evolving, etc.
-//? Any stuff that's if (kind !== online) is not dealt with, so battle replays will have to be taken into account later
-//? Trainer type should be elimated entirely. Battle kind can probably be eliminated too, as online battles are no different than trainer house battles, etc.
 //? Do regular syncing
-//? Validating relay and sync dataOf
-//? Check order of "send" / "command" messages are correct (or are valid at that point in time)
+//? Validating relay and sync dataOf — Check order of "send" / "command" messages are correct (or are valid at that point in time)
 //? Allow "switching chance" on server.
 //? pressure speech does not work in multiplayer
 //? preload sprites again
-//? .place bug
-//? hp bug
-//? add to PC on server
+//? add to PC, and evolution to the server
 
 function BattleContext (client) {
 	if (arguments.length < 1)
@@ -284,7 +278,8 @@ function BattleContext (client) {
 		callback : null,
 		encounterTile : null,
 		selection : 0,
-		delayForInput : false, // Delay asking the player what they'd like to do until a potentially breaking change has been made (such as learning a new move, which needs to wait, so that the new move will show up in the Pokémon's move list)
+		delayForInput : 0, // Delay asking the player what they'd like to do until a potentially breaking change has been made (such as learning a new move, which needs to wait, so that the new move will show up in the Pokémon's move list)
+		delayFlags : null,
 		queue : [],
 		actions : [],
 		random : new srandom(),
@@ -374,7 +369,7 @@ function BattleContext (client) {
 				battleContext.drawing.complexShape(canvas, shapes, right, y, transition);
 				for (var i = 0, pos; i < trainer.party.pokemon.length; ++ i) {
 					pos = (!right ? 0 : canvas.width) + (12 + i * 16 - 118 * (1 - transition)) * Game.zoom * (!right ? 1 : -1);
-					context.fillStyle = !trainer.party.pokemon[i].fainted() ? "red" : "grey";
+					context.fillStyle = !trainer.party.pokemon[right ? trainer.party.pokemon.length - (i + 1) : i].fainted() ? "red" : "grey";
 					context.fillCircle(pos, y * Game.zoom, 4 * Game.zoom);
 					context.fillStyle = "white";
 					context.fillCircle(pos, y * Game.zoom, 4 * Game.zoom, Math.PI);
@@ -387,7 +382,7 @@ function BattleContext (client) {
 					context.fillCircle(pos, y * Game.zoom, 1.75 * Game.zoom);
 					context.fillStyle = "white";
 					context.fillCircle(pos, y * Game.zoom, 1 * Game.zoom);
-					if (trainer.party.pokemon[i].fainted()) {
+					if (trainer.party.pokemon[right ? trainer.party.pokemon.length - (i + 1) : i].fainted()) {
 						context.fillStyle = "hsla(0, 0%, 0%, 0.3)";
 						context.fillCircle(pos, y * Game.zoom, 4 * Game.zoom);
 					}
@@ -633,7 +628,7 @@ function BattleContext (client) {
 					if (!participant.hasHealthyEligiblePokemon(battleContext.style)) {
 						battleContext.active = true;
 						battleContext.finish();
-						battleContext.end(false, {
+						battleContext.end({
 							"outcome" : "illegal battle"
 						});
 						return true;
@@ -658,7 +653,7 @@ function BattleContext (client) {
 					if (!participant.hasHealthyEligiblePokemon(battleContext.style)) {
 						battleContext.active = true;
 						battleContext.finish();
-						battleContext.end(false, {
+						battleContext.end({
 							"outcome" : "illegal battle"
 						});
 						return true;
@@ -725,9 +720,10 @@ function BattleContext (client) {
 		finish : function () {
 			battleContext.finished = true;
 		},
-		end : function (forcefully, flags) {
+		end : function (flags) {
 			if (battleContext.active) {
 				battleContext.active = false;
+				var forcefully = arguments.length === 0;
 				if (!battleContext.process && forcefully)
 					Textbox.clear();
 				if (!battleContext.process) Textbox.setStyle("standard");
@@ -1196,9 +1192,8 @@ function BattleContext (client) {
 								requiredActionsForTrainer = numberOfPokemonPerTrainer - trainer.battlers().length;
 							break;
 						case "learn":
-							if (battleContext.delayForInput && trainer === battleContext.alliedTrainers.first())
+							if (battleContext.delayForInput > 0 && trainer === battleContext.alliedTrainers.first())
 								++ requiredActionsForTrainer;
-							console.log(requiredActionsForTrainer);
 							break;
 					}
 					if (requiredActionsForTrainer)
@@ -1571,11 +1566,22 @@ function BattleContext (client) {
 				}
 			});
 			battleContext.sync();
-			if (!battleContext.delayForInput) {
-				if (battleContext.playerIsParticipating())
-					battleContext.prompt();
-				else
-					battleContext.advance();
+			battleContext.endDelay();
+		},
+		endDelay : function () {
+			if (battleContext.delayForInput === 0) {
+				if (battleContext.finished) {
+					var effect = function () {
+						battleContext.end(Battle.delayFlags);
+					};
+					if (!battleContext.process) Textbox.effect(effect);
+					else effect();
+				} else {
+					if (battleContext.playerIsParticipating())
+						battleContext.prompt();
+					else
+						battleContext.advance();
+				}
 			}
 		},
 		endTurn : function () {
@@ -2014,7 +2020,7 @@ function BattleContext (client) {
 						}
 					}
 					var effect = function () {
-						battleContext.end(false, {
+						battleContext.end({
 							"outcome" : "draw"
 						});
 					};
@@ -2072,7 +2078,7 @@ function BattleContext (client) {
 						priority : 6,
 						action : function () {
 							var effect = function () {
-								battleContext.end(false, {
+								battleContext.end({
 									"outcome" : "escape"
 								});
 							};
@@ -2177,11 +2183,12 @@ function BattleContext (client) {
 		removeFromBattle : function (poke, drawnBattle) {
 			// Stops a Pokémon battling, either because they've fainted, or because they've been caught in a Poké ball
 			if (!battleContext.isCompetitiveBattle()) {
+				poke.battler.opponents = poke.battler.opponents.filter(function (opponent) {
+					return !opponent.fainted();
+				});
 				foreach(poke.battler.opponents, function (gainer) {
-					if (!gainer.fainted()) {
-						if (gainer.gainExperience(poke, poke.battler.opponents.length, true)) // If a level was gained
-							battleContext.levelUppers.pushIfNotAlreadyContained(gainer);
-					}
+					if (gainer.gainExperience(poke, poke.battler.opponents.length, true)) // If a level was gained
+						battleContext.levelUppers.pushIfNotAlreadyContained(gainer);
 				});
 			}
 			var place;
@@ -2193,8 +2200,9 @@ function BattleContext (client) {
 				battleContext.opponents[place] = NoPokemon;
 			}
 			poke.battler.reset();
-			if (!poke.trainer.hasHealthyEligiblePokemon(false, poke)) {
-				var playerHasBeenDefeated = (poke.trainer === battleContext.alliedTrainers.first()), trainerBattle = !battleContext.isWildBattle(), playerName = !battleContext.process ? battleContext.alliedTrainers.first().pronoun(true) : null, endbattleContextFlags;
+			var trainer = poke.trainer;
+			if (!trainer.hasHealthyEligiblePokemon(false, poke)) {
+				var playerHasBeenDefeated = (trainer === battleContext.alliedTrainers.first()), trainerBattle = !battleContext.isWildBattle(), playerName = !battleContext.process ? battleContext.alliedTrainers.first().pronoun(true) : null, endBattleFlags;
 				if (trainerBattle) {
 					var opponents = [];
 					foreach(battleContext.opposingTrainers, function (opposer) {
@@ -2207,16 +2215,16 @@ function BattleContext (client) {
 							if (trainerBattle)
 								Textbox.state(opponents + " " + (opponents.length !== 1 ? "have" : "has") + " defeated " + playerName + "!");
 							else
-								Textbox.state(playerName + " " + (poke.trainer === Game.player ? "have" : "has") + " been defeated by the wild Pokémon!");
+								Textbox.state(playerName + " " + (trainer === Game.player ? "have" : "has") + " been defeated by the wild Pokémon!");
 						}
 						if (!battleContext.isCompetitiveBattle()) {
 							var highestLevel = 0;
-							foreach(poke.trainer.party.pokemon, function (pkmn) {
+							foreach(trainer.party.pokemon, function (pkmn) {
 								if (pkmn.level > highestLevel)
 									highestLevel = pkmn.level;
 							});
 							var basePayout;
-							switch (Math.min(8, poke.trainer.badges.length)) { // May have greater than 8 badges due to multiple regions
+							switch (Math.min(8, trainer.badges.length)) { // May have greater than 8 badges due to multiple regions
 								case 0: basePayout = 8; break;
 								case 1: basePayout = 16; break;
 								case 2: basePayout = 24; break;
@@ -2228,9 +2236,9 @@ function BattleContext (client) {
 								case 8: basePayout = 120; break;
 							}
 							var OPower = battleContext.opposingTrainers.first().OPowers["Prize Money"], priceOfDefeat = highestLevel * basePayout * (OPower === 1 ? 1.5 : OPower === 2 ? 2 : OPower === 3 ? 3 : 1);
-							if (poke.trainer.money > 0) {
-								priceOfDefeat = Math.min(priceOfDefeat, poke.trainer.money);
-								if (!battleContext.process) Textbox.state(playerName + " " + (trainerBattle ? "paid out" : "dropped") + " $" + priceOfDefeat + " " + (trainerBattle ? "to " + commaSeparatedList(opponents) : "in " + poke.trainer.possessiveGenderPronoun() + " panic to get away") + ".");
+							if (trainer.money > 0) {
+								priceOfDefeat = Math.min(priceOfDefeat, trainer.money);
+								if (!battleContext.process) Textbox.state(playerName + " " + (trainerBattle ? "paid out" : "dropped") + " $" + priceOfDefeat + " " + (trainerBattle ? "to " + commaSeparatedList(opponents) : "in " + trainer.possessiveGenderPronoun() + " panic to get away") + ".");
 								battleContext.alliedTrainers.first().money -= priceOfDefeat;
 							} else if (trainerBattle) {
 								if (!battleContext.process) Textbox.state(playerName + " didn't have any money to pay " + opponents + "!");
@@ -2238,7 +2246,7 @@ function BattleContext (client) {
 							if (!battleContext.alliedTrainers.first().hasHealthyPokemon()) // Not necessarily true for Sky Battles
 								if (!battleContext.process) Textbox.state(playerName + " blacked out!");
 						}
-						endbattleContextFlags = {
+						endBattleFlags = {
 							"outcome" : "opposing victory"
 						};
 					} else {
@@ -2247,12 +2255,12 @@ function BattleContext (client) {
 							if (!battleContext.process) {
 								foreach(battleContext.opposingTrainers, function (opposer, i) {
 									Textbox.effect(function () {
-										poke.trainer.display.visible = true;
-									}, battleContext.drawing.transition(poke.trainer.display.position, "x", 0, Settings._("switch transition duration") * Time.framerate));
+										trainer.display.visible = true;
+									}, battleContext.drawing.transition(trainer.display.position, "x", 0, Settings._("switch transition duration") * Time.framerate));
 									Textbox.spiel(opposer._("defeat speech"));
 									if (i !== battleContext.opposingTrainers.length - 1) {
-										Textbox.effect(null, battleContext.drawing.transition(poke.trainer.display.position, "x", -200, Settings._("switch transition duration") * Time.framerate), function () {
-											poke.trainer.display.visible = false;
+										Textbox.effect(null, battleContext.drawing.transition(trainer.display.position, "x", -200, Settings._("switch transition duration") * Time.framerate), function () {
+											trainer.display.visible = false;
 										});
 									}
 								});
@@ -2267,15 +2275,12 @@ function BattleContext (client) {
 								battleContext.alliedTrainers.first().money += prizeMoney;
 							}
 						}
-						endbattleContextFlags = {
+						endBattleFlags = {
 							"outcome" : "allied victory"
 						};
 					}
-					var effect = function () {
-						battleContext.end(false, endbattleContextFlags);
-					};
-					if (!battleContext.process) Textbox.effect(effect);
-					else effect();
+					battleContext.delayFlags = endBattleFlags;
+					battleContext.endDelay();
 					battleContext.finish();
 					return;
 				}

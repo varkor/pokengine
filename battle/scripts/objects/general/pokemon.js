@@ -358,7 +358,7 @@ function pokemon (data, validate) {
 						"forget" : replacing
 					});
 				}
-				Textbox.insertAfter(Textbox.state(self.name() + " forgot " + self.moves[replacing].move + " and learnt " + move + "!", resumeNormalProceedings), immediatelyProceeding);
+				if (!battleContext.process) Textbox.insertAfter(Textbox.state(self.name() + " forgot " + self.moves[replacing].move + " and learnt " + move + "!", resumeNormalProceedings), immediatelyProceeding);
 				self.moves[replacing] = {
 					move : move,
 					number : replacing,
@@ -372,22 +372,19 @@ function pokemon (data, validate) {
 						"forget" : null
 					});
 				}
-				Textbox.insertAfter(Textbox.state(self.name() + " didn't learn " + move + ".", resumeNormalProceedings), immediatelyProceeding);
+				if (!battleContext.process) Textbox.insertAfter(Textbox.state(self.name() + " didn't learn " + move + ".", resumeNormalProceedings), immediatelyProceeding);
 			};
 			if (self.inBattle()) {
 				resumeNormalProceedings = function () {
 					battleContext.flushInputs();
-					battleContext.delayForInput = false;
-					if (battleContext.playerIsParticipating())
-						battleContext.prompt();
-					else
-						battleContext.advance();
+					-- battleContext.delayForInput;
+					battleContext.endDelay();
 				};
-				self.battler.battle.delayForInput = true;
+				++ battleContext.delayForInput;
 			}
-			if (!self.battler.battle.process) Textbox.state(self.name() + " wants to learn " + move + ". But " + self.name() + " already knows 4 moves!");
+			if (!battleContext.process) Textbox.state(self.name() + " wants to learn " + move + ". But " + self.name() + " already knows 4 moves!");
 			if (!battleContext.playerIsParticipating()) {
-				immediatelyProceeding = Textbox.say("", 0);
+				if (!battleContext.process) immediatelyProceeding = Textbox.say("", 0);
 				battleContext.waitForActions("learn", function () {
 					var decision = battleContext.communication.shift();
 					if (decision.forget === null)
@@ -444,6 +441,7 @@ function pokemon (data, validate) {
 		sharedBetween = sharedBetween || 1;
 		var eventModifiers = product(defeated.battler.battle.triggerEvent(Triggers.experience, {}, defeated, self)), OPower = self.trainer.OPowers["Exp. Point"];
 		var gain = Math.ceil((((!defeated.battler.battle.isWildBattle() ? 1.5 : 1) * defeated.currentProperty("yield").experience * defeated.level) / (5 * (participated ? 1 : 2)) * Math.pow((2 * defeated.level + 10) / (defeated.level + self.level + 10), 2.5) + 1) * (self.caught && self.trainer.identification === self.caught.trainer ? 1 : self.trainer.nationality === self.nationality ? 1.5 : 1.7) * (OPower === 1 ? 1.2 : OPower === 2 ? 1.5 : OPower === 3 ? 2 : 1) * eventModifiers / sharedBetween);
+		gain *= 200;
 		if (defeated.battler.battle.active && !defeated.battler.battle.process)
 			Textbox.state(self.name() + " gained " + gain + " experience!");
 		var levelledUp = false;
@@ -469,13 +467,14 @@ function pokemon (data, validate) {
 		}
 		if (self.level < 100)
 			self.experience += gain;
-		var maximumEVgain = 510 - self.totalEVs(), maximumEVgainForStat;
+		var previousMaximumHealth = self.maximumHealth(), maximumEVgain = 510 - self.totalEVs(), maximumEVgainForStat;
 		forevery(defeated.currentProperty("yield").EVs, function (boost, stat) {
 			maximumEVgainForStat = Math.max(0, Math.min(maximumEVgain, boost * (self.Pokerus === "infected" ? 2 : 1)));
 			maximumEVgainForStat = Math.min(maximumEVgainForStat, 252 - maximumEVgainForStat);
 			maximumEVgain -= maximumEVgainForStat;
 			self.EVs[stat] += maximumEVgainForStat;
 		});
+		self.health = Math.min(self.maximumHealth(), self.health + self.maximumHealth() - previousMaximumHealth);
 		if (defeated.battler.battle.active && !defeated.battler.battle.process) {
 			var display = Display.state.save();
 			Textbox.effect(function () { return Display.state.transition(display); });
