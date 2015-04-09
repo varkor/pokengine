@@ -88,7 +88,18 @@ Files = {
 Sprite = FunctionObject.new({
 	canvases : [],
 	load : function (_paths, uponLoad, uponError, _filetype) {
-		var paths = wrapArray(_paths).slice(0), filetype = arguments.length >= 4 && typeof _filetype !== "undefined" ? _filetype : "png";
+		var paths = wrapArray(_paths).slice(0), filetype = arguments.length >= 4 && typeof _filetype !== "undefined" ? _filetype : null;
+		if (filetype === null) {
+			var filetypeMatch = paths[0].match(/\.[a-z0-9]+$/i);
+			if (filetypeMatch) {
+				filetype = filetypeMatch[0].slice(1);
+				foreach(paths, function (path, i) {
+					paths[i] = paths[i].replace("." + filetype, "");
+				});
+			} else {
+				filetype = "png";
+			}
+		}
 		foreach(paths, function (path, i) {
 			paths[i] = Settings._("paths => images").replace("{animation}", Sprite.shouldAnimate(path) ? "animated" : "static") + "/" + paths[i];
 			if (typeof Cache === "object" && Cache !== null) {
@@ -299,7 +310,18 @@ Sprite = FunctionObject.new({
 
 Sound = {
 	load : function (_paths, uponLoad, uponError, filetype, playImmediately) {
-		var paths = wrapArray(_paths).slice(0), filetype = arguments.length >= 4 && typeof _filetype !== "undefined" ? _filetype : "png";
+		var paths = wrapArray(_paths).slice(0), filetype = arguments.length >= 4 && typeof _filetype !== "undefined" ? _filetype : null;
+		if (filetype === null) {
+			var filetypeMatch = paths[0].match(/\.[a-z0-9]+$/i);
+			if (filetypeMatch) {
+				filetype = filetypeMatch[0].slice(1);
+				foreach(paths, function (path, i) {
+					paths[i] = paths[i].replace("." + filetype, "");
+				});
+			} else {
+				filetype = "mp3";
+			}
+		}
 		if (typeof Cache === "object" && Cache !== null) {
 			foreach(paths, function (path, i) {
 				paths[i] = paths[i].replace("{cache}", Cache.getURL(paths[i] + "." + filetype, null, true));

@@ -95,9 +95,9 @@ function BattleContext (client) {
 						context.textAlign = "center";
 						context.textBaseline = "middle";
 						if (battleContext.state.stage === "before" || battleContext.state.stage === "preparation" || battleContext.state.stage === "stopped")
-							Sprite.draw(canvas, battleContext.state.evolving.paths.sprite("front"), canvas.width / 2, canvas.height / 2, true, null, null, now);
+							Sprite.draw(canvas, battleContext.state.evolving.paths.sprite("front", true), canvas.width / 2, canvas.height / 2, true, null, null, now);
 						if (battleContext.state.stage === "finishing" || battleContext.state.stage === "after")
-							Sprite.draw(canvas, battleContext.state.into.paths.sprite("front"), canvas.width / 2, canvas.height / 2, true, null, null, now);
+							Sprite.draw(canvas, battleContext.state.into.paths.sprite("front", true), canvas.width / 2, canvas.height / 2, true, null, null, now);
 						if (battleContext.state.stage === "preparation")
 							battleContext.state.transition += 0.05;
 						if (battleContext.state.stage === "evolving")
@@ -130,7 +130,7 @@ function BattleContext (client) {
 								fade = Math.sin(battleContext.state.transition * (transformationRate / 2) + Math.PI * 0.25) >= 0 ? 1 : 0;
 								scale = 1 + Math.sin(battleContext.state.transition * transformationRate) * 0.5;
 							}
-							Sprite.draw(canvas, battleContext.state.evolving.paths.sprite("front"), canvas.width / 2, canvas.height / 2, true, [{ type : "fill", colour : "white" }, { type : "opacity", value : fade }], new Matrix().scale(scale), now);
+							Sprite.draw(canvas, battleContext.state.evolving.paths.sprite("front", true), canvas.width / 2, canvas.height / 2, true, [{ type : "fill", colour : "white" }, { type : "opacity", value : fade }], new Matrix().scale(scale), now);
 						}
 						if (battleContext.state.stage !== "before" && battleContext.state.stage !== "preparation") {
 							var scale = 1, fade = 0;
@@ -140,7 +140,7 @@ function BattleContext (client) {
 								fade = Math.sin(battleContext.state.transition * (transformationRate / 2) + Math.PI * 1.25) > 0 ? 1 : 0;
 								scale = 1 + Math.sin(battleContext.state.transition * transformationRate) * 0.5;
 							}
-							Sprite.draw(canvas, battleContext.state.into.paths.sprite("front"), canvas.width / 2, canvas.height / 2, true, [{ type : "fill", colour : "white" }, { type : "opacity", value : fade }], new Matrix().scale(scale), now);
+							Sprite.draw(canvas, battleContext.state.into.paths.sprite("front", true), canvas.width / 2, canvas.height / 2, true, [{ type : "fill", colour : "white" }, { type : "opacity", value : fade }], new Matrix().scale(scale), now);
 						}
 						if (battleContext.state.stage !== "before" && battleContext.state.stage !== "after" && battleContext.state.stage !== "stopped") {
 							context.fillStyle = "black";
@@ -151,7 +151,7 @@ function BattleContext (client) {
 							context.fillRect(0, canvas.height, canvas.width, - canvas.height / 6 * enclose);
 						}
 					} else {
-						Sprite.draw(battleContext.sketching[2], Scenes._(battleContext.scene).paths.sprite(), 0, 0);
+						Sprite.draw(battleContext.sketching[2], Scenes._(battleContext.scene).paths.sprite(true), 0, 0);
 						context.textAlign = "center";
 						context.textBaseline = "bottom";
 						context.lineWidth = 2;
@@ -171,11 +171,11 @@ function BattleContext (client) {
 							generalMatrix = matrix.scale(position.scale * transition).rotate(poke.battler.display.angle);
 							context.globalAlpha = poke.battler.display.opacity;
 							// Shadow
-							Sprite.draw(shadowCanvas, poke.paths.sprite(side), position.x, battleContext.drawing.positions[poke.battler.side === Battles.side.near ? "sideNear" : "sideFar"].y - position.z, true, [{ type : "fill", colour : "hsla(0, 0%, 0%, " + (1 - Math.min(1, position.height / (canvas.height / Game.zoom / 2))) * poke.battler.display.opacity + ")" }, { type : "crop", heightRatio : poke.battler.display.height }], generalMatrix.multiply(shadowMatrix).scale(Math.pow(2, - position.height / (canvas.height / Game.zoom / 4))), now, true);
+							Sprite.draw(shadowCanvas, poke.paths.sprite(side, true), position.x, battleContext.drawing.positions[poke.battler.side === Battles.side.near ? "sideNear" : "sideFar"].y - position.z, true, [{ type : "fill", colour : "hsla(0, 0%, 0%, " + (1 - Math.min(1, position.height / (canvas.height / Game.zoom / 2))) * poke.battler.display.opacity + ")" }, { type : "crop", heightRatio : poke.battler.display.height }], generalMatrix.multiply(shadowMatrix).scale(Math.pow(2, - position.height / (canvas.height / Game.zoom / 4))), now, true);
 							// Outline
 							if (poke.battler.display.outlined) {
 								for (var angle = 0; angle < Math.PI * 2; angle += Math.PI / 2) {
-									Sprite.draw(canvas, poke.paths.sprite(side), position.x + Math.cos(angle) * context.lineWidth, position.y - position.z + Math.sin(angle) * context.lineWidth, true, [{ type : "fill", colour : context.strokeStyle }, { type : "crop", heightRatio : poke.battler.display.height }], generalMatrix, now);
+									Sprite.draw(canvas, poke.paths.sprite(side, true), position.x + Math.cos(angle) * context.lineWidth, position.y - position.z + Math.sin(angle) * context.lineWidth, true, [{ type : "fill", colour : context.strokeStyle }, { type : "crop", heightRatio : poke.battler.display.height }], generalMatrix, now);
 								}
 							}
 							// Pokémon
@@ -183,16 +183,16 @@ function BattleContext (client) {
 							if (poke._("shiny"))
 								filters.push({ type : "filter", kind : "shiny", pokemon : poke });
 							filters.push({ type : "crop", heightRatio : poke.battler.display.height });
-							Sprite.draw(canvas, poke.paths.sprite(side), position.x, position.y - position.z, true, filters, generalMatrix, now);
+							Sprite.draw(canvas, poke.paths.sprite(side, true), position.x, position.y - position.z, true, filters, generalMatrix, now);
 							// Overlay
 							if (poke.battler.display.overlay !== null)
-								Sprite.draw(canvas, poke.paths.sprite(side), position.x, position.y - position.z, true, [{ type : "fill", colour : poke.battler.display.overlay }, { type : "crop", heightRatio : poke.battler.display.height }], generalMatrix, now);
+								Sprite.draw(canvas, poke.paths.sprite(side, true), position.x, position.y - position.z, true, [{ type : "fill", colour : poke.battler.display.overlay }, { type : "crop", heightRatio : poke.battler.display.height }], generalMatrix, now);
 							// Lighting
 							if (Scenes._(battleContext.scene).hasOwnProperty("lighting"))
-								Sprite.draw(canvas, poke.paths.sprite(side), position.x, position.y - position.z, true, [{ type : "fill", colour : Scenes._(battleContext.scene).lighting }, { type : "crop", heightRatio : poke.battler.display.height }], generalMatrix, now);
+								Sprite.draw(canvas, poke.paths.sprite(side, true), position.x, position.y - position.z, true, [{ type : "fill", colour : Scenes._(battleContext.scene).lighting }, { type : "crop", heightRatio : poke.battler.display.height }], generalMatrix, now);
 							// Glow / Fade
 							if (transition > 0 && transition < 1)
-								Sprite.draw(canvas, poke.paths.sprite(side), position.x, position.y - position.z, true, [{ type : "fill", colour : "white" }, { type : "opacity", value : Math.pow(1 - transition, 0.4) }, { type : "crop", heightRatio : poke.battler.display.height }], generalMatrix, now);
+								Sprite.draw(canvas, poke.paths.sprite(side, true), position.x, position.y - position.z, true, [{ type : "fill", colour : "white" }, { type : "opacity", value : Math.pow(1 - transition, 0.4) }, { type : "crop", heightRatio : poke.battler.display.height }], generalMatrix, now);
 							context.globalAlpha = 1;
 						});
 						// Trainers
@@ -201,12 +201,12 @@ function BattleContext (client) {
 								position = battleContext.drawing.position(trainer, now);
 								side = (battleContext.alliedTrainers.contains(trainer) ? "back" : null);
 								// Shadow
-								Sprite.draw(shadowCanvas, trainer.paths.sprite(side), position.x, position.y - position.z + trainer.display.position.y, true, { type : "fill", colour : "black" }, shadowMatrix.scale(position.scale).scale(Math.pow(2, -trainer.display.position.y / 100)), now);
+								Sprite.draw(shadowCanvas, trainer.paths.sprite(side, true), position.x, position.y - position.z + trainer.display.position.y, true, { type : "fill", colour : "black" }, shadowMatrix.scale(position.scale).scale(Math.pow(2, -trainer.display.position.y / 100)), now);
 								// Trainer
-								Sprite.draw(canvas, trainer.paths.sprite(side), position.x, position.y - position.z, true, null, matrix.scale(position.scale), now);
+								Sprite.draw(canvas, trainer.paths.sprite(side, true), position.x, position.y - position.z, true, null, matrix.scale(position.scale), now);
 								// Lighting
 								if (Scenes._(battleContext.scene).hasOwnProperty("lighting"))
-									Sprite.draw(canvas, trainer.paths.sprite(side), position.x, position.y - position.z, true, { type : "fill", colour : Scenes._(battleContext.scene).lighting }, matrix.scale(position.scale), now);
+									Sprite.draw(canvas, trainer.paths.sprite(side, true), position.x, position.y - position.z, true, { type : "fill", colour : Scenes._(battleContext.scene).lighting }, matrix.scale(position.scale), now);
 							}
 						});
 						if (sortDisplay.allies.length === 0 || sortDisplay.opponents.length === 0) {

@@ -819,7 +819,7 @@ function pokemon (data, validate) {
 	};
 
 	self.cry = function () {
-		Sound.play(self.paths.cry());
+		Sound.play(self.paths.cry(true));
 	};
 
 	self.potentialMegaEvolution = function (intentOnMegaEvolvingSelf) {
