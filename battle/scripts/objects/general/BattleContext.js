@@ -696,6 +696,7 @@ function BattleContext (client) {
 				Display.state.load(Display.state.save());
 				var names = [], number = 0;
 				if (battleContext.isWildBattle()) {
+					var wildPokemon = battleContext.opposingTrainers.first().healthyEligiblePokemon();
 					if (wildPokemon.length === 1)
 						Textbox.state("A wild " + wildPokemon.first().name() + " appeared!");
 					else {
