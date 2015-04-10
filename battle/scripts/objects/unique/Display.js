@@ -78,10 +78,10 @@ Display = {
 					continue;
 				foreach(["health", "experience"], function (property) {
 					var difference = (toAll[i][property] - originalAll[i][property]) * ((1 / Settings._("stat transition duration")) / Time.framerate);
-					fromAll[i][property] += difference;
-					if (Math.abs(fromAll[i][property] - toAll[i][property]) > Math.abs(difference))
+					if (Math.abs(fromAll[i][property] - toAll[i][property]) > Math.abs(difference)) {
 						completed = false;
-					else
+						fromAll[i][property] += difference;
+					} else
 						fromAll[i][property] = toAll[i][property];
 				});
 				foreach(["transition", "height"], function (property) {

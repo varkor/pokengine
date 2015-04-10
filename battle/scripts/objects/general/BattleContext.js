@@ -4,6 +4,8 @@
 //? pressure speech does not work in multiplayer
 //? preload sprites again
 //? add to PC, and evolution to the server
+//? hp/exp. transition bug, not gaining EVs at the right time
+//? battle.enter bug / Textbox (battlecontext:~1040 .input()) not defined bug — possibly invalid input?
 
 function BattleContext (client) {
 	if (arguments.length < 1)
@@ -101,11 +103,21 @@ function BattleContext (client) {
 							battleContext.state.transition = 0;
 						}
 						if (battleContext.state.stage === "evolving" && battleContext.state.transition >= 1) {
-							battleContext.state.stage = "finishing";
-							battleContext.state.transition = 4;
+							if (!battleContext.state.prevented) {
+								battleContext.state.stage = "finishing";
+								battleContext.state.transition = 4;
+							} else {
+								battleContext.continueEvolutions(true);
+							}
 						}
 						if (battleContext.state.stage === "finishing" && battleContext.state.transition <= 0) {
 							battleContext.state.stage = "after";
+							if (battleContext.playerIsParticipating()) {
+								battleContext.inputs.push({
+									action : "evolve",
+									prevent : false
+								});
+							}
 							battleContext.state.evolving.evolve(battleContext.state.into._("species"));
 							var effect = function () {
 								battleContext.continueEvolutions();
@@ -729,13 +741,6 @@ function BattleContext (client) {
 				if (!battleContext.process) Textbox.setStyle("standard");
 				if (!battleContext.process)
 					battleContext.draw();
-				foreach(battleContext.all(true), function (poke) {
-					if (poke.status === "badly poisoned")
-						poke.status = "poisoned";
-					poke.battler.reset();
-				});
-				battleContext.allies = [];
-				battleContext.opponents = [];
 				foreach(battleContext.allTrainers(), function (participant) {
 					foreach(participant.party.pokemon, function (poke) {
 						poke.mega = null;
@@ -754,69 +759,113 @@ function BattleContext (client) {
 						item.intentToUse = 0;
 					});
 				});
-				if (!battleContext.process) {
+				if (battleContext.playerIsParticipating()) {
 					battleContext.handler = Keys.addHandler(function (key, pressed) {
 						if (pressed && battleContext.state.kind === "evolution" && !["stopped", "finishing", "after"].contains(battleContext.state.stage) && Textbox.dialogue.empty()) {
-							battleContext.state = {
-								kind : "evolution",
-								stage : "stopped",
-								transition: 0,
-								evolving : battleContext.state.evolving,
-								into : battleContext.state.into
-							};
-							Textbox.state("...what? " + battleContext.state.evolving.name() + " has stopped evolving!", function () {
-								battleContext.continueEvolutions();
+							battleContext.inputs.push({
+								action : "evolve",
+								prevent : true
 							});
+							battleContext.continueEvolutions(true);
 						}
 					}, Settings._("keys => secondary"));
 				}
-				battleContext.continueEvolutions();
-				var stored = [];
-				foreach(battleContext.allTrainers(), function (trainer) {
-					stored.push(trainer.store());
-				});
-				battleContext.alliedTrainers = [];
-				battleContext.opposingTrainers = [];
-				battleContext.participants = [];
-				battleContext.levelUppers = [];
-				battleContext.queue = [];
-				battleContext.inputs = [];
-				battleContext.rules = [];
-				battleContext.escapeAttempts = 0;
-				battleContext.turns = 0;
-				battleContext.communication = [];
-				if (battleContext.callback) {
-					/*
-					Possible values for the "outcome" flag:
-						"termination" [forceful terminal of the battle by an outside event]
-						"allied victory" [the allied side won the battle]
-						"opposing victory" [the opposing side won the battle]
-						"draw" [it was a complete draw]
-						"escape" [the allies escaped from a wild battle]
-						"illegal battle" [the trainers did not have Pokémon matching the battle requirements]
-					*/
-					battleContext.callback(arguments.length >= 2 ? flags : {
-						"outcome" : "termination"
-					}, stored);
+				var finishUp = function () {
+					foreach(battleContext.all(true), function (poke) {
+						if (poke.status === "badly poisoned")
+							poke.status = "poisoned";
+						poke.battler.reset();
+					});
+					battleContext.allies = [];
+					battleContext.opponents = [];
+					var stored = [];
+					foreach(battleContext.allTrainers(), function (trainer) {
+						stored.push(trainer.store());
+					});
+					battleContext.alliedTrainers = [];
+					battleContext.opposingTrainers = [];
+					battleContext.participants = [];
+					battleContext.levelUppers = [];
+					battleContext.queue = [];
+					battleContext.inputs = [];
+					battleContext.rules = [];
+					battleContext.escapeAttempts = 0;
+					battleContext.turns = 0;
+					battleContext.communication = [];
+					if (battleContext.callback) {
+						/*
+						Possible values for the "outcome" flag:
+							"termination" [forceful terminal of the battle by an outside event]
+							"allied victory" [the allied side won the battle]
+							"opposing victory" [the opposing side won the battle]
+							"draw" [it was a complete draw]
+							"escape" [the allies escaped from a wild battle]
+							"illegal battle" [the trainers did not have Pokémon matching the battle requirements]
+						*/
+						battleContext.callback(arguments.length >= 2 ? flags : {
+							"outcome" : "termination"
+						}, stored);
+					}
+					battleContext.identifier = null;
+				};
+				if (!battleContext.process)
+					battleContext.continueEvolutions();
+				if (!battleContext.playerIsParticipating()) {
+					battleContext.waitForActions("evolve", function () {
+						foreach(battleContext.evolving, function (evolving) {
+							var action = null;
+							foreach(battleContext.communication, function (communication, j) {
+								if (communication.action === "evolve" && communication.trainer === trainer.identification) {
+									action = j;
+									return true;
+								}
+							});
+							if (action !== null) {
+								action = battleContext.communication.remove(action);
+								if (!action.prevent) {
+									if (battleContext.process) evolving.from.evolve(evolving.into._("species"));
+								} else if (!battleContext.process) {
+									evolving.prevented = true;
+								}
+							} else return true;
+						});
+						if (battleContext.process) {
+							battleContext.evolving = [];
+							finishUp();
+						} else
+							battleContext.continueEvolutions();
+					});
 				}
-				battleContext.identifier = null;
 			}
 		},
-		continueEvolutions : function () {
-			if (battleContext.evolving.notEmpty()) {
+		continueEvolutions : function (preventCurrentEvolution) {
+			if (preventCurrentEvolution) {
+				battleContext.state = {
+					kind : "evolution",
+					stage : "stopped",
+					transition: 0,
+					evolving : battleContext.state.evolving,
+					into : battleContext.state.into
+				};
+				Textbox.state("...what? " + battleContext.state.evolving.name() + " has stopped evolving!", function () {
+					battleContext.continueEvolutions();
+				});
+			} else if (battleContext.evolving.notEmpty()) {
 				var evolver = battleContext.evolving.shift();
 				battleContext.state = {
 					kind : "evolution",
 					stage : !battleContext.process ? "before" : "preparation",
 					transition: 0,
 					evolving : evolver.from,
-					into : evolver.into
+					into : evolver.into,
+					prevented : evolver.prevented
 				};
 				if (!battleContext.process) Textbox.state("What? " + evolver.from.name() + " is evolving!", function () {
 					battleContext.state.stage = "preparation";
 				});
 			} else {
-				if (!battleContext.process) {
+				battleContext.flushInputs();
+				if (battleContext.playerIsParticipating()) {
 					Keys.removeHandler(battleContext.handler);
 					delete battleContext.handler;
 				}
@@ -1154,7 +1203,7 @@ function BattleContext (client) {
 						if (!battleContext.pokemonForcedIntoAction(trainer.battlers()[i])) {
 							action = null;
 							foreach(battleContext.communication, function (communication, j) {
-								if (communication.trainer === trainer.identification) {
+								if (communication.action === "command" && communication.trainer === trainer.identification) {
 									action = j;
 									return true;
 								}
@@ -1194,6 +1243,10 @@ function BattleContext (client) {
 						case "learn":
 							if (battleContext.delayForInput > 0 && trainer === battleContext.alliedTrainers.first())
 								++ requiredActionsForTrainer;
+							break;
+						case "evolve":
+							if (trainer === Battle.alliedTrainers.first())
+								requiredActionsForTrainer += battleContext.evolving.length;
 							break;
 					}
 					if (requiredActionsForTrainer)
@@ -1572,7 +1625,7 @@ function BattleContext (client) {
 			if (battleContext.delayForInput === 0) {
 				if (battleContext.finished) {
 					var effect = function () {
-						battleContext.end(Battle.delayFlags);
+						battleContext.end(battleContext.delayFlags);
 					};
 					if (!battleContext.process) Textbox.effect(effect);
 					else effect();
@@ -1884,7 +1937,7 @@ function BattleContext (client) {
 						while (trainer.battlers().length < numberOfPokemonPerTrainer --) {
 							var action = null;
 							foreach(battleContext.communication, function (communication, j) {
-								if (communication.trainer === trainer.identification) {
+								if (communication.action === "send" && communication.trainer === trainer.identification) {
 									action = j;
 									return true;
 								}
@@ -2280,8 +2333,8 @@ function BattleContext (client) {
 						};
 					}
 					battleContext.delayFlags = endBattleFlags;
-					battleContext.endDelay();
 					battleContext.finish();
+					battleContext.endDelay();
 					return;
 				}
 			}

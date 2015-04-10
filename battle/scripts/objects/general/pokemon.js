@@ -56,15 +56,17 @@ function pokemon (data, validate) {
 	setProperty("moves", function () {
 		var moveSet = species("moveset"), moves = [];
 		foreach(Object.keys(moveSet).sort(function (a, b) { return b - a; }), function (level) {
-			var movesAtLevel = moveSet[level];
-			if (foreach(movesAtLevel, function (move) {
-					moves.push({
-						"move" : move
-					});
-					if (moves.length === 4)
-						return true;
-			}))
-				return true;
+			if (self.level >= level) {
+				var movesAtLevel = moveSet[level];
+				if (foreach(movesAtLevel, function (move) {
+						moves.push({
+							"move" : move
+						});
+						if (moves.length === 4)
+							return true;
+				}))
+					return true;
+			}
 		});
 		// If the moves are empty now, you've got a problem
 		return moves;
@@ -365,6 +367,8 @@ function pokemon (data, validate) {
 					PP : move.PP,
 					PPUps : 0
 				};
+				if (battleContext.process)
+					resumeNormalProceedings();
 			}, doNotLearnNewMove = function () {
 				if (self.inBattle()) {
 					battleContext.inputs.push({
@@ -373,6 +377,8 @@ function pokemon (data, validate) {
 					});
 				}
 				if (!battleContext.process) Textbox.insertAfter(Textbox.state(self.name() + " didn't learn " + move + ".", resumeNormalProceedings), immediatelyProceeding);
+				else
+					resumeNormalProceedings();
 			};
 			if (self.inBattle()) {
 				resumeNormalProceedings = function () {
@@ -441,7 +447,6 @@ function pokemon (data, validate) {
 		sharedBetween = sharedBetween || 1;
 		var eventModifiers = product(defeated.battler.battle.triggerEvent(Triggers.experience, {}, defeated, self)), OPower = self.trainer.OPowers["Exp. Point"];
 		var gain = Math.ceil((((!defeated.battler.battle.isWildBattle() ? 1.5 : 1) * defeated.currentProperty("yield").experience * defeated.level) / (5 * (participated ? 1 : 2)) * Math.pow((2 * defeated.level + 10) / (defeated.level + self.level + 10), 2.5) + 1) * (self.caught && self.trainer.identification === self.caught.trainer ? 1 : self.trainer.nationality === self.nationality ? 1.5 : 1.7) * (OPower === 1 ? 1.2 : OPower === 2 ? 1.5 : OPower === 3 ? 2 : 1) * eventModifiers / sharedBetween);
-		gain *= 200;
 		if (defeated.battler.battle.active && !defeated.battler.battle.process)
 			Textbox.state(self.name() + " gained " + gain + " experience!");
 		var levelledUp = false;
@@ -539,12 +544,13 @@ function pokemon (data, validate) {
 				Textbox.state("Congratulations! " + self.name() + " evolved into " + article(intoName) + " " + intoName + "!");
 		}
 		self.species = evolution;
-		if (Pokedex._(evolution)["form(e)s"] === null)
+		var evolutionData = Pokedex._(evolution);
+		if (evolutionData["form(e)s"] === null)
 			self["form(e)"] = null;
-		else if (!Pokedex._(evolution)["form(e)s"].hasOwnProperty(self["form(e)"]))
+		else if (!evolutionData["form(e)s"].hasOwnProperty(self["form(e)"]))
 			self["form(e)"] = Object.keys(Pokedex._(self.species)["form(e)s"]).first();
-		if (evolution.moveset.hasOwnProperty(self.level)) {
-			foreach(evolution.moveset[self.level], function (move) {
+		if (evolutionData.moveset.hasOwnProperty(self.level)) {
+			foreach(evolutionData.moveset[self.level], function (move) {
 				self.learn(move);
 			});
 		}

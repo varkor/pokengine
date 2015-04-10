@@ -622,8 +622,7 @@ Moves = {
 						if (self.level >= target.level && (self.level - target.level + 30) / 100 >= self.battler.battle.random.point()) {
 							Textbox.state("It's a one-hit knockout!");
 							self.battler.battle.damage(target, Move.exactDamage(self, target, "Guillotine", target.health));
-						} else
-						return {
+						} else return {
 							failed : true
 						};
 					},
