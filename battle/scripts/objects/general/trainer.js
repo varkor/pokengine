@@ -16,6 +16,7 @@ function trainer (data) {
 	setProperty("identification", typeof Game === "object" ? Game.unique() : null);
 	setProperty("gender", "male");
 	setProperty("party", []);
+	setProperty("storage", []);
 	setProperty("nationality", "British");
 	setProperty("bag", []);
 	setProperty("dex", (new dex()).store());
@@ -33,6 +34,7 @@ function trainer (data) {
 	foreach(self.party.pokemon, function (poke) {
 		poke.belong(self);
 	});
+	self.storage = new storage(self.storage)
 	self.dex = new dex(self.dex);
 	self.bag = new bag(self.bag);
 	self.type = Trainers.type.NPC;
@@ -55,6 +57,7 @@ function trainer (data) {
 			store[property] = JSONCopy(self._(property));
 		});
 		store.party = self.party.store();
+		store.storage = self.storage.store();
 		store.bag = self.bag.store();
 		return JSONCopy(store);
 	};
@@ -110,19 +113,11 @@ function trainer (data) {
 		self.dex.capture(poke.species);
 		if (self.party.pokemon.length < self.party.space)
 			self.party.add(poke);
-		else if (self === Game.player) {
-			var placement = Storage.store(poke);
-			Textbox.say(poke.name() + " has been placed in \"" + placement.box + "\".");
+		else {
+			var placement = self.storage.add(poke);
+			if (!self.inBattle() || !self.battlers().first().battler.battle.process)
+				Textbox.say(poke.name() + " has been placed in <colour:cyan>" + placement.box + "<colour:>.");
 		}
-	};
-
-	self.rent = function (poke) {
-		/*
-			Gives the trainer a Pokémon, but only temporarily, so it is not added to the Pokédex.
-			This is used for some tournament battles, such as in the Battle Factory
-		*/
-		if (self.party.pokemon.length < self.party.space) // Otherwise, it cannot be added to the party
-			self.party.add(poke);
 	};
 
 	self.release = function (poke) {
@@ -172,6 +167,10 @@ function trainer (data) {
 				battlers.push(poke);
 		});
 		return battlers;
+	};
+
+	self.inBattle = function () {
+		return self.battlers().notEmpty();
 	};
 
 	self.holdsControlOverPokemonUpToLevel = function () {

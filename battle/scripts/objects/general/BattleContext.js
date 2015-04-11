@@ -1,9 +1,3 @@
-//? Do regular syncing
-//? Validating relay and sync dataOf — Check order of "send" / "command" messages are correct (or are valid at that point in time)
-//? Allow "switching chance" on server.
-//? pressure speech does not work in multiplayer
-//? preload sprites again
-//? add to PC, and evolution to the server
 //? hp/exp. transition bug, not gaining EVs at the right time
 //? battle.enter bug / Textbox (battlecontext:~1040 .input()) not defined bug — possibly invalid input?
 
@@ -770,46 +764,6 @@ function BattleContext (client) {
 						}
 					}, Settings._("keys => secondary"));
 				}
-				var finishUp = function () {
-					foreach(battleContext.all(true), function (poke) {
-						if (poke.status === "badly poisoned")
-							poke.status = "poisoned";
-						poke.battler.reset();
-					});
-					battleContext.allies = [];
-					battleContext.opponents = [];
-					var stored = [];
-					foreach(battleContext.allTrainers(), function (trainer) {
-						stored.push(trainer.store());
-					});
-					battleContext.alliedTrainers = [];
-					battleContext.opposingTrainers = [];
-					battleContext.participants = [];
-					battleContext.levelUppers = [];
-					battleContext.queue = [];
-					battleContext.inputs = [];
-					battleContext.rules = [];
-					battleContext.escapeAttempts = 0;
-					battleContext.turns = 0;
-					battleContext.communication = [];
-					if (battleContext.callback) {
-						/*
-						Possible values for the "outcome" flag:
-							"termination" [forceful terminal of the battle by an outside event]
-							"allied victory" [the allied side won the battle]
-							"opposing victory" [the opposing side won the battle]
-							"draw" [it was a complete draw]
-							"escape" [the allies escaped from a wild battle]
-							"illegal battle" [the trainers did not have Pokémon matching the battle requirements]
-						*/
-						battleContext.callback(arguments.length >= 2 ? flags : {
-							"outcome" : "termination"
-						}, stored);
-					}
-					battleContext.identifier = null;
-				};
-				if (!battleContext.process)
-					battleContext.continueEvolutions();
 				if (!battleContext.playerIsParticipating()) {
 					battleContext.waitForActions("evolve", function () {
 						foreach(battleContext.evolving, function (evolving) {
@@ -831,12 +785,52 @@ function BattleContext (client) {
 						});
 						if (battleContext.process) {
 							battleContext.evolving = [];
-							finishUp();
+							battleContext.complete(flags);
 						} else
 							battleContext.continueEvolutions();
 					});
 				}
+				if (!battleContext.process)
+					battleContext.continueEvolutions();
 			}
+		},
+		complete : function (flgas) {
+			foreach(battleContext.all(true), function (poke) {
+				if (poke.status === "badly poisoned")
+					poke.status = "poisoned";
+				poke.battler.reset();
+			});
+			battleContext.allies = [];
+			battleContext.opponents = [];
+			var stored = [];
+			foreach(battleContext.allTrainers(), function (trainer) {
+				stored.push(trainer.store());
+			});
+			battleContext.alliedTrainers = [];
+			battleContext.opposingTrainers = [];
+			battleContext.participants = [];
+			battleContext.levelUppers = [];
+			battleContext.queue = [];
+			battleContext.inputs = [];
+			battleContext.rules = [];
+			battleContext.escapeAttempts = 0;
+			battleContext.turns = 0;
+			battleContext.communication = [];
+			if (battleContext.callback) {
+				/*
+				Possible values for the "outcome" flag:
+					"termination" [forceful terminal of the battle by an outside event]
+					"allied victory" [the allied side won the battle]
+					"opposing victory" [the opposing side won the battle]
+					"draw" [it was a complete draw]
+					"escape" [the allies escaped from a wild battle]
+					"illegal battle" [the trainers did not have Pokémon matching the battle requirements]
+				*/
+				battleContext.callback(arguments.length >= 2 ? flags : {
+					"outcome" : "termination"
+				}, stored);
+			}
+			battleContext.identifier = null;
 		},
 		continueEvolutions : function (preventCurrentEvolution) {
 			if (preventCurrentEvolution) {
@@ -872,6 +866,7 @@ function BattleContext (client) {
 				battleContext.state = {
 					kind : "inactive"
 				};
+				battleContext.complete();
 			}
 		},
 		input : function (primary, secondary, tertiary, character, selection) {
@@ -2227,9 +2222,12 @@ function BattleContext (client) {
 					var display = Display.state.save();
 					Textbox.state((trainer === Game.player ? "Gotcha! " : "") + poke.name() + " was caught!", function () { return Display.state.transition(display); });
 				}
-				battleContext.removeFromBattle(poke, false);
+				var previousTrainer = poke.trainer;
 				poke.caught.ball = ball;
 				trainer.give(poke);
+				poke.trainer = previousTrainer;
+				battleContext.removeFromBattle(poke, false);
+				poke.trainer = trainer;
 			}
 			return caught;
 		},

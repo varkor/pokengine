@@ -22,10 +22,6 @@ function party (initial) {
 		self.pokemon.remove(self.pokemon.indexOf(poke));
 	};
 
-	self.empty = function () {
-		self.pokemon = [];
-	};
-
 	self.store = function () {
 		var store = [];
 		foreach(self.pokemon, function (poke) {

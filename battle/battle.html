@@ -190,7 +190,7 @@
 						return;
 					Interface.clearIssues();
 					event.stopPropagation();
-					var afterwards = function (flags) {
+					var afterwards = function (flags, stored) {
 						document.querySelector("#local").disabled = false;
 					};
 					Interface.popup(document.querySelector("#local"), function (event) {
@@ -207,6 +207,7 @@
 							"money" : 10000
 						}));
 						Game.player.bag.add("Key Stones => Mega Bracelet");
+						Game.player.bag.add("Balls => Master");
 						Battle.beginWildBattle(Game.player, [new pokemon({
 							species : "Charizard (Nintendo)",
 							level : 45,
