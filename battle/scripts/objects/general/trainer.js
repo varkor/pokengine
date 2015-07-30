@@ -34,7 +34,7 @@ function trainer (data) {
 	foreach(self.party.pokemon, function (poke) {
 		poke.belong(self);
 	});
-	self.storage = new storage(self.storage)
+	self.storage = new storage(self.storage);
 	self.dex = new dex(self.dex);
 	self.bag = new bag(self.bag);
 	self.type = Trainers.type.NPC;

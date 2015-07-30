@@ -106,7 +106,7 @@ function _ (_object, _path) {
 				return value.hasOwnProperty(key.slice(0, -1));
 		}
 		return value;
-	}
+	};
 	for (var take = 0, returned; take < paths.length; ++ take) {
 		returned = follow(object, paths[take]);
 		if (returned !== error) {
@@ -120,9 +120,10 @@ function _ (_object, _path) {
 }
 
 function _method (object) {
-	return object._ = function (path) {
+	object._ = function (path) {
 		return _(object, path);
-	}
+	};
+	return object._;
 }
 
 function random (x, y) {
@@ -244,7 +245,7 @@ Array.prototype.isSimilarTo = function (other) {
 	var self = this.slice(0), other = other.slice(0), numerically = function (a, b) { return a - b; };
 	self.sort(numerically);
 	other.sort(numerically);
-	var length = self.length
+	var length = self.length;
 	for (var i = 0; i < length; ++ i)
 		if (JSON.stringify(self.shift()) !== JSON.stringify(other.shift()))
 			return false;
@@ -300,14 +301,14 @@ Array.prototype.last = function () {
 function JSONCopy (object, copyFunctionsToo) {
 	var data = JSON.parse(JSON.stringify(object));
 	if (copyFunctionsToo) {
-		function dig (obj, datum) {
+		var dig = function (obj, datum) {
 			forevery(obj, function (value, key) {
 				if (typeof value === "function")
 					datum[key] = value;
 				else if (typeof value === "object")
 					dig(value, data[key]);
 			});
-		}
+		};
 		dig(object, data);
 	}
 	return data;
@@ -425,7 +426,7 @@ Matrix = function (matrix) {
 	};
 	self.applyToContext = function (context) {
 		context.transform(self.matrix[0], self.matrix[1], self.matrix[2], self.matrix[3], self.matrix[4], self.matrix[5]);
-	}
+	};
 };
 Matrix.identity = function () {
 	return [1, 0, 0, 1, 0, 0];

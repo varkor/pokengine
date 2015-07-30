@@ -35,7 +35,7 @@ function BattleContext (client) {
 			draw : function (_canvas) {
 				var originalCanvas = _canvas, originalContext = originalCanvas.getContext("2d"), drawAfterwards = [];
 				var canvas = battleContext.sketching[0], context = canvas.getContext("2d"), display = Display.state.current, now = performance.now();
-				var shadowCanvas = battleContext.sketching[1], shadowContext = shadowCanvas.getContext("2d");
+				var shadowCanvas = battleContext.sketching[1], shadowContext = shadowCanvas.getContext("2d"), shadowOpacity = Lighting.shadows.opacity();
 				shadowContext.textAlign = "center";
 				shadowContext.textBaseline = "bottom";
 				for (var i = 0; i < battleContext.sketching.length; ++ i)
@@ -151,7 +151,7 @@ function BattleContext (client) {
 						context.textBaseline = "bottom";
 						context.lineWidth = 2;
 						context.strokeStyle = "white";
-						var shadowOpacity = Lighting.shadows.opacity(), shadowMatrix = new Matrix ([1, 0.1, -0.6, 0.4, 0, 0]), matrix = new Matrix(), position, transition, side, generalMatrix;
+						var shadowMatrix = new Matrix ([1, 0.1, -0.6, 0.4, 0, 0]), matrix = new Matrix(), position, transition, side, generalMatrix;
 						var sortDisplay = battleContext.cache || (battleContext.cache = Display.states[Display.state.save(Display.state.current)]), poke;
 						var all = [].concat(sortDisplay.allies, sortDisplay.opponents.reverse()).filter(onlyPokemon).sort(function (a, b) {
 							return battleContext.drawing.position(Display.pokemonInState(b), now).z - battleContext.drawing.position(Display.pokemonInState(a), now).z;
@@ -249,7 +249,7 @@ function BattleContext (client) {
 				};
 				drawSketchingCanvas(2);
 				smallContext.globalAlpha = shadowOpacity;
-				drawSketchingCanvas(1)
+				drawSketchingCanvas(1);
 				smallContext.globalAlpha = 1;
 				drawSketchingCanvas(0);
 				smallContext.restore();
@@ -394,7 +394,7 @@ function BattleContext (client) {
 			bar : function (canvas, poke, right, y, detailed) {
 				var context = canvas.getContext("2d"), pixelWidth = 16, percentageHealth = poke.health / poke.maximumHealth(), percentageExperience = poke.experience / poke.experienceFromLevelToNextLevel();
 				do {
-					context.font = pixelWidth + "px " + Settings._("font").typeface
+					context.font = pixelWidth + "px " + Settings._("font").typeface;
 					pixelWidth -= 1;
 				} while (context.measureText(poke.name()).width > 60);
 				var shapes = [
@@ -1567,7 +1567,7 @@ function BattleContext (client) {
 					}
 				}
 			});
-			var all = battleContext.all(true)
+			var all = battleContext.all(true);
 			foreach(all, function (poke) {
 				if (poke.battler.recharging) {
 					if (poke.battler.recharging > 1)
@@ -1685,7 +1685,7 @@ function BattleContext (client) {
 				}
 			});
 			battleContext.survey();
-			var all = battleContext.all(true)
+			var all = battleContext.all(true);
 			foreach(all, function (poke) {
 				if (!battleContext.active || battleContext.finished)
 					return true;
@@ -1992,7 +1992,7 @@ function BattleContext (client) {
 			if (!battleContext.process) {
 				var display = Display.state.save();
 				if (Settings._("status transition duration") > 0) {
-					track = { completed : false }, flashes = 3, damageAnimation = function (state, poke, track, progress, iteration) {
+					var track = { completed : false }, flashes = 3, damageAnimation = function (state, poke, track, progress, iteration) {
 						switch (iteration % 3) {
 							case 0:
 								poke.battler.display.overlay = "black";
@@ -2203,8 +2203,9 @@ function BattleContext (client) {
 			criticalCaptureChance *= modifiedCatchRate;
 			if (battleContext.random.number(255) < criticalCapture)
 				criticalCapture = true;
+			var shakes;
 			if (modifiedCatchRate < 255) {
-				for (var shakes = 0; shakes < (criticalCapture ? 1 : 4); ++ shakes) {
+				for (shakes = 0; shakes < (criticalCapture ? 1 : 4); ++ shakes) {
 					if (battleContext.random.number(65535) > shakeProbability) {
 						caught = false;
 						break;
@@ -2267,8 +2268,8 @@ function BattleContext (client) {
 			var trainer = poke.trainer;
 			if (!trainer.hasHealthyEligiblePokemon(false, poke)) {
 				var playerHasBeenDefeated = (trainer === battleContext.alliedTrainers.first()), trainerBattle = !battleContext.isWildBattle(), playerName = !battleContext.process ? battleContext.alliedTrainers.first().pronoun(true) : null, endBattleFlags;
+				var opponents = [];
 				if (trainerBattle) {
-					var opponents = [];
 					foreach(battleContext.opposingTrainers, function (opposer) {
 						opponents.push(opposer.fullname());
 					});
@@ -2430,8 +2431,9 @@ function BattleContext (client) {
 		withdraw : function (poke, forced) {
 			if (!battleContext.process) {
 				poke.battler.display.transition = 0;
-				var display = Display.state.save(), place;
+				var display = Display.state.save();
 			}
+			var place;
 			if (poke.battler.side === Battles.side.near) {
 				place = battleContext.allies.indexOf(poke);
 				battleContext.allies[place] = NoPokemon;

@@ -228,7 +228,7 @@ Textbox = FunctionObject.new({
 									message.text = Textbox.wrap(text, styling, entities);
 								}, function(entity){ return function () {
 									entities.remove(entities.indexOf(entity));
-								}}(entity));
+								}; }(entity));
 						}
 						exclusive = exclusive.replace(regex, "");
 					}
@@ -575,7 +575,6 @@ Textbox = FunctionObject.new({
 					case Directions.down:
 						++ Textbox.responsePosition.y;
 						break;
-					break;
 				}
 				Textbox.responsePosition.y = Math.mod(Textbox.responsePosition.y, majorRows + minorRows);
 				var responsesOnRow = Textbox.responsesOnRow();
@@ -761,7 +760,7 @@ Textbox = FunctionObject.new({
 							relativeResponse = response - (isMajor ? 0 : majorResponses);
 							responseMetrics.width = Math.ceil(metrics.width / (responsesOfKind % style.responsesPerRow !== 0 && relativeResponse >= responsesOfKind - (responsesOfKind % style.responsesPerRow) ? responsesOfKind % style.responsesPerRow : style.responsesPerRow));
 							responseMetrics.x = Math.ceil(metrics.left + (relativeResponse % style.responsesPerRow) * responseMetrics.width);
-							responseMetrics.y = metrics.top + metrics.height + (isMajor ? Math.floor(relativeResponse / style.responsesPerRow) * metrics.response.major.height : Math.ceil(majorResponses / style.responsesPerRow) * metrics.response.major.height + Math.floor(relativeResponse / style.responsesPerRow) * metrics.response.minor.height)
+							responseMetrics.y = metrics.top + metrics.height + (isMajor ? Math.floor(relativeResponse / style.responsesPerRow) * metrics.response.major.height : Math.ceil(majorResponses / style.responsesPerRow) * metrics.response.major.height + Math.floor(relativeResponse / style.responsesPerRow) * metrics.response.minor.height);
 							responseMetrics.height = (isMajor ? metrics.response.major : metrics.response.minor).height;
 							selected = (hovered = Cursor.inArea(canvas, responseMetrics.x * Game.zoom, responseMetrics.y * Game.zoom, responseMetrics.width * Game.zoom, responseMetrics.height * Game.zoom) && Input.priority === "mouse") || (Input.controlScheme === "keyboard" && Textbox.response === response && (!cursorIsOverAResponse || Input.priority === "keyboard"));
 							context.fillStyle = (selected ? "hsla(0, 0%, 100%, 0.8)" : "hsla(0, 0%, 0%, 0.6)");

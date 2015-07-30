@@ -15,7 +15,7 @@ Lighting = {
 					return 0.1;
 				case "shadowyAura":
 					return 0.4;
-			};
+			}
 		}
 	}
 };
@@ -57,7 +57,7 @@ Weather = {
 					particle.velocity = {
 						speed : random(10, 16),
 						direction : (0 / 2) * Math.PI + (Math.PI / 32) * random(-1, 1)
-					}
+					};
 					appearFromTop = false;
 					break;
 				case "diamondDust":

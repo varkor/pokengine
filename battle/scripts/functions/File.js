@@ -333,7 +333,8 @@ Sound = {
 			};
 			if (playImmediately && Settings._("sound effects"))
 				sound.play();
-			return store[path] = data;
+			store[path] = data;
+			return store[path];
 		}, Settings._("paths => sounds"), filetype, paths, uponLoad, uponError);
 	},
 	play : function (paths, uponError, filetype) {

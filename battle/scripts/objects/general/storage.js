@@ -47,7 +47,7 @@ function storage (initial) {
 		foreach(initial, function (box) {
 			var newBox = self.addBox(box.name);
 			foreach(box.contents, function (poke) {
-				newBox.slots[poke.slot] = new pokemon(poke)
+				newBox.slots[poke.slot] = new pokemon(poke);
 			});
 		});
 

@@ -12,14 +12,14 @@ Clauses = {
 				}
 			});
 		}
-	}
+	},
 	"Endless Battle" : {
 		description : "Pokémon with the capability of intentionally causing an endless battle are banned.",
 		regards : "Pokémon",
 		test : function (poke) {
 			return !(poke.item === "Berries => Leppa" && (poke.knowsMove("Recycle") || poke.ability === "Harvest"));
 		}
-	}
+	},
 	"Evasion" : {
 		description : "A Pokémon may not have either of the moves Double Team or Minimize, or hold the items BrightPowder or Lax Incense",
 		regards : "Pokémon",
@@ -96,4 +96,4 @@ Clauses = {
 			});
 		}
 	}
-}
+};

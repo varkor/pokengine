@@ -62,7 +62,7 @@ forevery(Pokedex, function (poke, name) {
 				return lowerBound + 1;
 			}
 		} else return 100; // There is an evolutionary loop, and technically you shouldn't ever be able to get the Pokémon via this path as you need to evolve it from itself first. The only way to get the Pokémon via this path is to capture it in a location first.
-	}
+	};
 	poke.lowestPossibleLevel = lowestLevelFoundAt(name, 0);
 });
 
@@ -94,5 +94,5 @@ Scenes.__(function (scene, name) {
 			contracted = contracted.replace(/\{filetype=[a-z0-9]+\}/, (includeFiletype ? "." + contracted.match(/\{filetype=([a-z0-9]+)\}/)[1] : ""));
 			return contracted;
 		}
-	}
+	};
 });

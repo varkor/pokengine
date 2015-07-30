@@ -17,7 +17,8 @@ DataObject = {
 			__ : function (fn) {
 				var broken = false;
 				for (var key in object.data) {
-					if (broken = fn(object.data[key], key, object.flags[key], object.data))
+					broken = fn(object.data[key], key, object.flags[key], object.data);
+					if (broken)
 						return broken;
 				}
 				return broken;
@@ -81,14 +82,14 @@ FunctionObject = {
 							details.drawing.draw(object.canvas);
 						object.requestRedraw = false;
 					};
-				}
+				};
 				details.initialise = object.initialise;
 			} else {
 				object.draw = function (automatic) {
 					if (!passive || object.requestRedraw || !automatic)
 						details.drawing.draw();
 					object.requestRedraw = false;
-				}
+				};
 			}
 		}
 		var entry;
