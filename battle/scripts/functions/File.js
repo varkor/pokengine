@@ -280,7 +280,7 @@ Sprite = FunctionObject.new({
 							contexts[0].globalAlpha = 1;
 							break;
 					}
-					contexts[2].clearRect(0, 0, Math.round(Sprite.canvases[2].width), Math.round(Sprite.canvases[2].height));
+					contexts[2].clearRect(0, 0, Sprite.canvases[2].width, Sprite.canvases[2].height);
 					contexts[2].drawImage(Sprite.canvases[0], 0, 0);
 					image = Sprite.canvases[2];
 				});
@@ -290,7 +290,7 @@ Sprite = FunctionObject.new({
 			context.save();
 			context.translate(x, y);
 			transformation.applyToContext(context);
-			context.drawImage(image, positionModification.x, positionModification.y);
+			context.drawImage(image, Math.round(positionModification.x), Math.round(positionModification.y));
 			context.restore();
 			return true;
 		}
