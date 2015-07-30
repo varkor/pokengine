@@ -858,7 +858,7 @@ function pokemon (data, validate) {
 	};
 
 	self.potentialMegaEvolution = function (intentOnMegaEvolvingSelf) {
-		if (self.inBattle() && (self.trainer === null || (self.trainer.ownsKeyStone() && (self.trainer.megaEvolution === "possible" || (intentOnMegaEvolvingSelf && self.trainer.megaEvolution === "intending")))) && species("mega evolutions") !== null && self.item && Items._(self.item + " => category?") && Items._(self.item + " => category") === "Mega Stone" && Items._(self.item + " => Pokémon") === self.species && species("mega evolutions").hasOwnProperty(Items._(self.item + " => form"))) {
+		if (self.inBattle() && (self.trainer === null || (self.trainer.ownsKeyStone() && (self.trainer.megaEvolution === false || (intentOnMegaEvolvingSelf && self.trainer.megaEvolution === self)))) && species("mega evolutions") !== null && self.item && Items._(self.item + " => category?") && Items._(self.item + " => category") === "Mega Stone" && Items._(self.item + " => Pokémon") === self.species && species("mega evolutions").hasOwnProperty(Items._(self.item + " => form"))) {
 			return Items._(self.item + " => form");
 		}
 		return null;
@@ -869,7 +869,7 @@ function pokemon (data, validate) {
 		if (form = self.potentialMegaEvolution(true)) {
 			self.mega = form;
 			if (self.trainer !== null)
-				self.trainer.megaEvolution = "successful";
+				self.trainer.megaEvolution = true;
 			var display = Display.state.save();
 			Textbox.effect(function () {
 				Display.state.load(display);

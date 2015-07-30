@@ -48,7 +48,7 @@ function trainer (data) {
 		self.OPowers[stat] = 0;
 	});
 
-	self.megaEvolution = "possible"; // Whether the trainer has Mega Evolved their Pokémon during the current battle, whether they intend to, or whether they haven't at all
+	self.megaEvolution = false; // Whether the trainer has Mega Evolved their Pokémon during the current battle, whether they intend to, or whether they haven't at all
 
 	self.store = function () {
 		// Returns an object that contains all the data for the trainer, without any methods

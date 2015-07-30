@@ -1,6 +1,3 @@
-//? hp/exp. transition bug, not gaining EVs at the right time
-//? battle.enter bug / Textbox (battlecontext:~1040 .input()) not defined bug — possibly invalid input?
-
 function BattleContext (client) {
 	if (arguments.length < 1)
 		client = false;
@@ -630,7 +627,7 @@ function BattleContext (client) {
 				battleContext.opposingTrainers = opposingTrainers;
 				if (foreach(battleContext.alliedTrainers, function (participant) {
 					participant.display.visible = true;
-					participant.megaEvolution = "possible";
+					participant.megaEvolution = false;
 					if (!participant.hasHealthyEligiblePokemon(battleContext.style)) {
 						battleContext.active = true;
 						battleContext.finish();
@@ -655,7 +652,7 @@ function BattleContext (client) {
 					return;
 				if (foreach(battleContext.opposingTrainers, function (participant) {
 					participant.display.visible = true;
-					participant.megaEvolution = "possible";
+					participant.megaEvolution = false;
 					if (!participant.hasHealthyEligiblePokemon(battleContext.style)) {
 						battleContext.active = true;
 						battleContext.finish();
@@ -1118,17 +1115,10 @@ function BattleContext (client) {
 					advance = false;
 					break;
 				case "Mega Evolve":
-					character.megaEvolution = "intending";
-					battleContext.actions.push({
-						poke : currentBattler,
-						priority : 5.9, // Technically 6, but should occur after switching
-						action : function (poke) {
-							poke.megaEvolve();
-						},
-						undo : function () {
-							character.megaEvolution = "possible";
-						}
-					});
+				case "Mega Evolve ✓":
+					character.megaEvolution = (character.megaEvolution === false ? currentBattler : false);
+					advance = false;
+					reprompt = true;
 					break;
 			}
 			if (!battleContext.process && character === Game.player) {
@@ -1141,6 +1131,11 @@ function BattleContext (client) {
 						action.secondary = secondary;
 					if (typeof tertiary !== "undefined")
 						action.tertiary = tertiary;
+					var flags = [];
+					if (character.megaEvolution === currentBattler)
+						flags.push("mega evolve");
+					if (flags.notEmpty())
+						action.flags = flags;
 					battleContext.inputs.push(action);
 					battleContext.advance();
 				} else if (reprompt)
@@ -1205,10 +1200,28 @@ function BattleContext (client) {
 							});
 							if (action !== null) {
 								action = battleContext.communication.remove(action);
+								if (action.hasOwnProperty("flags")) {
+									action.flags.forEach(function (flag) {
+										switch (flag) {
+											case "mega evolve":
+												battleContext.input("Mega Evolve", null, null, trainer, i);
+												break;
+										}
+									});
+								}
 								battleContext.input(action.primary, action.secondary, action.tertiary, trainer, i);
 							}
 						}
 					}
+				}
+				if (trainer.megaEvolution !== false && trainer.megaEvolution !== true) {
+					battleContext.actions.push({
+						poke : trainer.megaEvolution,
+						priority : 5.9, // Technically 6, but should occur after switching
+						action : function (poke) {
+							poke.megaEvolve();
+						}
+					});
 				}
 			});
 			battleContext.queue = battleContext.queue.concat(battleContext.actions);
@@ -1488,8 +1501,8 @@ function BattleContext (client) {
 			});
 			if (battleContext.pokemonPerSide() > 1 && battleContext.selection > 0)
 				actions.insert(2, "Back");
-			if (currentBattler.potentialMegaEvolution() !== null)
-				actions.insert(2, "Mega Evolve");
+			if (currentBattler.potentialMegaEvolution(currentBattler.trainer.megaEvolution === currentBattler) !== null)
+				actions.insert(2, currentBattler.trainer.megaEvolution === false ? "Mega Evolve" : "Mega Evolve ✓");
 			Textbox.ask("What do you want " + currentBattler.name() + " to do?", moves, function (response, i, major) {
 				Textbox.details = null;
 				if (major) {
@@ -1573,8 +1586,8 @@ function BattleContext (client) {
 			var all = battleContext.all(true);
 			foreach(battleContext.allTrainers(), function (trainer) {
 				// If the trainer is still intending to Mega Evolve after last turn, it means they were unsuccessful, and they still have the chance to do it this turn
-				if (trainer.megaEvolution === "intending")
-					trainer.megaEvolution = "possible";
+				if (trainer.megaEvolution !== true)
+					trainer.megaEvolution = false;
 			});
 			foreach(all, function (poke) {
 				foreach(battleContext.opponentsTo(poke).filter(onlyPokemon), function (opponent) {
@@ -2009,7 +2022,7 @@ function BattleContext (client) {
 				Textbox.effect(function () { return Display.state.transition(display); });
 			}
 			if (!battleContext.process) {
-				if (damage.critical && damage.effectiveness > 0)
+				if (damage.critical)
 					Textbox.state("It's a critical hit!");
 				if (arguments.length < 3 || displayMessages) {
 					switch (damage.effectiveness) {
