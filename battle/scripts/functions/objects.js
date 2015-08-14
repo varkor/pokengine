@@ -11,8 +11,12 @@ DataObject = {
 				});
 				return filtered;
 			},
-			_ : function (path) {
-				return _(object.data, path);
+			_ : function (path, newValue) {
+				if (arguments.length >= 2) {
+					return _(object.data, path, newValue);
+				} else {
+					return _(object.data, path);
+				}
 			},
 			__ : function (fn) {
 				var broken = false;

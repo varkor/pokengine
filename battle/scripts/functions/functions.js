@@ -30,21 +30,39 @@ function forevery (dictionary, fn, includePrototype) {
 	return broke;
 }
 
-function _ (_object, _path) {
+function _ (_object, _path, _newValue) {
 	var object = { object : _object };
 	var path = _path.trim();
 	if (/^ ?[~\-=]> ?/.test(path))
 		path = "object " + path;
 	else
 		path = "object => " + path;
+	var checkForProperty = path.slice(-1) === "?", setNew = arguments.length >= 3, baseKey = null;
+	if (setNew) {
+		if (checkForProperty) {
+			throw "You can't both check for the existence of a property and set it at the same time.";
+		} else {
+			baseKey = path.split(/ ?[~\-=]> ?/g).last();
+			path = path.replace(/.* ?[~\-=]> ?/, "");
+		}
+	}
+	var respond = function (property) {
+		if (setNew) {
+			var oldValue = property.hasOwnProperty(baseKey) ? property[baseKey] : undefined;
+			property[baseKey] = _newValue;
+			return oldValue;
+		} else {
+			return property;
+		}
+	};
 	// Special cases to speed up trivial path traversals
-	var checkForProperty = path.slice(-1) === "?", specialCase = path.split(/ ?[~\-=]> ?/g);
+	var specialCase = path.split(/ ?[~\-=]> ?/g);
 	if (specialCase.length === 2) {
 		if (checkForProperty) {
 			return object.object.hasOwnProperty(specialCase[1].slice(0, -1));
 		} else {
 			if (object.object.hasOwnProperty(specialCase[1]))
-				return object.object[specialCase[1]];
+				return respond(object.object[specialCase[1]]);
 			else throw "That object has no property with the path: " + path;
 		}
 	}
@@ -56,7 +74,7 @@ function _ (_object, _path) {
 				property = property.hasOwnProperty(specialCase.first().slice(0, -1));
 			} else {
 				if (property.hasOwnProperty(specialCase.first()))
-					property = property[specialCase.first()];
+					property = respond(property[specialCase.first()]);
 				else {
 					if (checkForProperty)
 						return false;
@@ -65,7 +83,7 @@ function _ (_object, _path) {
 				}
 			}
 		}
-		return property;
+		return respond(property);
 	}
 	// End of special cases
 	var subpaths = path.split(/ ?=> ?/g), routes = [];
@@ -110,7 +128,7 @@ function _ (_object, _path) {
 	for (var take = 0, returned; take < paths.length; ++ take) {
 		returned = follow(object, paths[take]);
 		if (returned !== error) {
-			return returned;
+			return respond(returned);
 		}
 	}
 	if (checkForProperty)
