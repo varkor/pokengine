@@ -18,7 +18,6 @@ var paths = [
 	"scripts/data/machines.js",
 	"scripts/data/accessories.js",
 	"scripts/data/Events.js",
-	"scripts/objects/unique/Widgets.js",
 	"scripts/objects/unique/Textbox.js",
 	"scripts/objects/unique/Display.js",
 	"scripts/objects/unique/View.js",

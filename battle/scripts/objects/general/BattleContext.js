@@ -268,6 +268,18 @@ function BattleContext (client) {
 		state : {
 			kind : "inactive"
 		},
+		delegates : {
+			Pokemon : {
+				shouldDisplayMenuOption : function () {
+					return true;
+				}
+			},
+			Bag : {
+				shouldDisplayMenuOption : function () {
+					return true;
+				}
+			}
+		},
 		style : null,
 		flags : [],
 		allies : [],
@@ -1487,10 +1499,12 @@ function BattleContext (client) {
 				currentBattler.battler.display.outlined = false;
 			}
 			var actions = [], hotkeys = {};
-			if (!Widgets.isAvailable("Pokémon"))
+			if (battleContext.delegates.Pokemon.shouldDisplayMenuOption()) {
 				actions = ["Pokémon"].concat(actions);
-			if (battleContext.rules.items === "allowed" && !Widgets.isAvailable("Bag"))
+			}
+			if (battleContext.rules.items === "allowed" && battleContext.delegates.Bag.shouldDisplayMenuOption()) {
 				actions.push("Bag");
+			}
 			if (battleContext.isWildBattle()) {
 				actions.push("Run");
 				hotkeys[Settings._("keys => secondary")] = "Run";
