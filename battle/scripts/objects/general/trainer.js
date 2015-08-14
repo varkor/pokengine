@@ -48,6 +48,7 @@ function trainer (data) {
 		self.OPowers[stat] = 0;
 	});
 
+	self.battle = null; // The BattleContext object representing the battle the trainer is currently in (null if they are participating in no battle currently).
 	self.megaEvolution = false; // Whether the trainer has Mega Evolved their Pokémon during the current battle, whether they intend to, or whether they haven't at all
 
 	self.store = function () {

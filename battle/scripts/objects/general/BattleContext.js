@@ -728,6 +728,9 @@ function BattleContext (client) {
 						Textbox.state(commaSeparatedList(names) + " are challenging " + battleContext.alliedTrainers.first().pronoun() + " to a battle!");
 				}
 			}
+			foreach(battleContext.allTrainers(), function (trainer) {
+				trainer.battle = battleContext;
+			});
 			battleContext.race(battleContext.queue);
 			battleContext.queue = [];
 			battleContext.startTurn();
@@ -761,6 +764,7 @@ function BattleContext (client) {
 					foreach(participant.bag, function (item) {
 						item.intentToUse = 0;
 					});
+					participant.battle = null;
 				});
 				if (battleContext.playerIsParticipating()) {
 					battleContext.handler = Keys.addHandler(function (key, pressed) {
