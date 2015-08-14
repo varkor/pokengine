@@ -269,12 +269,32 @@ function BattleContext (client) {
 			kind : "inactive"
 		},
 		delegates : {
-			Pokemon : {
+			Fight : {
+				shouldDisplayMenuOption : function () {
+					return true;
+				}
+			},
+			Pokémon : {
 				shouldDisplayMenuOption : function () {
 					return true;
 				}
 			},
 			Bag : {
+				shouldDisplayMenuOption : function () {
+					return true;
+				}
+			},
+			Run : {
+				shouldDisplayMenuOption : function () {
+					return true;
+				}
+			},
+			Back : {
+				shouldDisplayMenuOption : function () {
+					return true;
+				}
+			},
+			"Mega Evolve" : {
 				shouldDisplayMenuOption : function () {
 					return true;
 				}
@@ -1514,7 +1534,7 @@ function BattleContext (client) {
 			if (battleContext.rules.items === "allowed" && battleContext.delegates.Bag.shouldDisplayMenuOption()) {
 				actions.push("Bag");
 			}
-			if (battleContext.isWildBattle()) {
+			if (battleContext.isWildBattle() && battleContext.delegates.Run.shouldDisplayMenuOption()) {
 				actions.push("Run");
 				hotkeys[Settings._("keys => secondary")] = "Run";
 			}
@@ -1522,9 +1542,9 @@ function BattleContext (client) {
 			foreach(currentBattler.usableMoves(), function (move) {
 				moves.push(move.move);
 			});
-			if (battleContext.pokemonPerSide() > 1 && battleContext.selection > 0)
+			if (battleContext.pokemonPerSide() > 1 && battleContext.selection > 0 && battleContext.delegates.Back.shouldDisplayMenuOption())
 				actions.insert(2, "Back");
-			if (currentBattler.potentialMegaEvolution(currentBattler.trainer.megaEvolution === currentBattler) !== null)
+			if (currentBattler.potentialMegaEvolution(currentBattler.trainer.megaEvolution === currentBattler) !== null && battleContext.delegates["Mega Evolve"].shouldDisplayMenuOption())
 				actions.insert(2, currentBattler.trainer.megaEvolution === false ? "Mega Evolve" : "Mega Evolve ✓");
 			Textbox.ask("What do you want " + currentBattler.name() + " to do?", moves, function (response, i, major) {
 				Textbox.details = null;
