@@ -1082,15 +1082,15 @@ function BattleContext (client) {
 							}, ["Cancel"], null, hotkeys, null, null, true);
 							reprompt = false;
 						} else {
-							Textbox.state("All your Pokémon are already battling!");
+							Textbox.state("All your Pokémon are already battling, or about to be sent out!");
 							reprompt = true;
 						}
 					}  else {
 						if (secondary >= character.pokemon()) {
 							Textbox.state("There's no Pokémon in that slot!");
 							advance = false;
-						} else if (character.party.pokemon[secondary].health === 0) {
-							Textbox.state("That Pokémon has fainted — you can't use that one!");
+						} else if (!character.party.pokemon[secondary].conscious()) {
+							Textbox.state("That Pokémon is not conscious — you can't use that one!");
 							advance = false;
 						} else if (currentBattler.battler.isTrapped()) {
 							Textbox.state(currentBattler.name() + " is trapped and can't switch out!");
@@ -1101,14 +1101,19 @@ function BattleContext (client) {
 								advance = false;
 							}
 						})) {
-							currentBattler.battler.switching = true;
 							battleContext.actions.push({
 								poke : currentBattler,
 								priority : 6,
 								action : function (poke) {
 									battleContext.swap(poke, character.party.pokemon[secondary]);
+								},
+								undo : function () {
+									currentBattler.battler.switching = false;
+									character.party.pokemon[secondary].battler.switching = false;
 								}
 							});
+							currentBattler.battler.switching = true;
+							character.party.pokemon[secondary].battler.switching = true;
 						}
 						else
 							advance = false;
@@ -1917,7 +1922,7 @@ function BattleContext (client) {
 										}
 									}; }(poke)
 								});
-								poke.battler.reserved = true;
+								poke.battler.switching = true;
 								++ sendingOut;
 							}
 						});

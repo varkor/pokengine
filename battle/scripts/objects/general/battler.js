@@ -46,7 +46,6 @@ function battler (pokemon) {
 		self.damaged = [];
 		self.damaged[Move.category.physical] = 0;
 		self.damaged[Move.category.special] = 0;
-		self.reserved = false; // Whether the Pokémon is going to be sent out next time, so can't be a second time (in a double battle, for instance)
 		battler.resetDisplay(self);
 		self.transform = {
 			transformed : false

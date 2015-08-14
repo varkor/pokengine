@@ -137,7 +137,7 @@ function trainer (data) {
 			return [];
 		var pokes = [], excluding = (arguments.length >= 2 && typeof _excluding !== "undefined" && _excluding !== null ? wrapArray(_excluding) : []);
 		foreach(self.party.pokemon, function (poke) {
-			if (poke.conscious() && (!thatAreNotBattling || (!poke.battler.battling && !poke.battler.reserved)) && !excluding.contains(poke) && !(arguments.length >= 3 && typeof style !== "undefined" && style !== null && style === "sky" && !poke.currentProperty("aerial")))
+			if (poke.conscious() && (!thatAreNotBattling || (!poke.battler.battling && !poke.battler.switching)) && !excluding.contains(poke) && !(arguments.length >= 3 && typeof style !== "undefined" && style !== null && style === "sky" && !poke.currentProperty("aerial")))
 				pokes.push(poke);
 		});
 		return pokes;
