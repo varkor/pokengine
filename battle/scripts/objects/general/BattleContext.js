@@ -1175,7 +1175,7 @@ function BattleContext (client) {
 			}
 		},
 		playerIsParticipating : function () {
-			return !battleContext.process && Game.player !== null && Battle.alliedTrainers.contains(Game.player);
+			return !battleContext.process && Game.player !== null && battleContext.alliedTrainers.contains(Game.player);
 		},
 		flushInputs : function () {
 			// Sends any inputs the player has made since the inputs were last flushed, to the server
@@ -1190,7 +1190,7 @@ function BattleContext (client) {
 			// Sends the current state of the battle to the server to make sure there haven't been any disruptions to the battle, especially of a... suspicious manner
 			if (battleContext.identifier !== null) {
 				var trainers = {};
-				foreach(Battle.allTrainers(), function (trainer) {
+				foreach(battleContext.allTrainers(), function (trainer) {
 					trainers[trainer.identification] = trainer.store();
 				});
 				Relay.pass("sync", {
@@ -1285,7 +1285,7 @@ function BattleContext (client) {
 								++ requiredActionsForTrainer;
 							break;
 						case "evolve":
-							if (trainer === Battle.alliedTrainers.first())
+							if (trainer === battleContext.alliedTrainers.first())
 								requiredActionsForTrainer += battleContext.evolving.length;
 							break;
 					}
@@ -1412,8 +1412,8 @@ function BattleContext (client) {
 										return true;
 									// It has passed all the checks, so can be sent in
 									var poke = character.party.pokemon[action.secondary];
-									preservation.pokemon[Battle.allTrainers().indexOf(poke.trainer) + " => party => pokemon => " + poke.trainer.party.pokemon.indexOf(poke) + " => battler => switching"] = false;
-									preservation.pokemon[Battle.allTrainers().indexOf(currentBattler.trainer) + " => party => pokemon => " + currentBattler.trainer.party.pokemon.indexOf(currentBattler) + " => battler => switching"] = false;
+									preservation.pokemon[battleContext.allTrainers().indexOf(poke.trainer) + " => party => pokemon => " + poke.trainer.party.pokemon.indexOf(poke) + " => battler => switching"] = false;
+									preservation.pokemon[battleContext.allTrainers().indexOf(currentBattler.trainer) + " => party => pokemon => " + currentBattler.trainer.party.pokemon.indexOf(currentBattler) + " => battler => switching"] = false;
 									poke.battler.switching = true;
 									currentBattler.battler.switching = true;
 								}
@@ -1437,7 +1437,7 @@ function BattleContext (client) {
 							return true;
 						// It has passed all the checks, so can be sent in
 						var poke = character.healthyEligiblePokemon(true)[action.which];
-						preservation.pokemon[Battle.allTrainers().indexOf(poke.trainer) + " => party => pokemon => " + poke.trainer.party.pokemon.indexOf(poke) + " => battler => switching"] = false;
+						preservation.pokemon[battleContext.allTrainers().indexOf(poke.trainer) + " => party => pokemon => " + poke.trainer.party.pokemon.indexOf(poke) + " => battler => switching"] = false;
 						poke.battler.switching = true;
 						break;
 					case "learn":
@@ -1461,7 +1461,7 @@ function BattleContext (client) {
 						object = character;
 						break;
 					case "pokemon":
-						object = Battle.all(true);
+						object = battleContext.allTrainers();
 						break;
 				}
 				forevery(preserved, function (value, path) {

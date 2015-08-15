@@ -14,8 +14,10 @@ File = {
 			foreach(redirectedPaths.concat(path), function (redirect) {
 				store[redirect] = data;
 			});
-			if (uponLoadObject)
+			if (uponLoadObject && uponLoadObject.uponLoad !== null) {
 				uponLoadObject.uponLoad(data);
+				uponLoadObject.uponLoad = null;
+			}
 		};
 		if (store.hasOwnProperty(path)) {
 			if (!store[path].hasOwnProperty("uponLoad")) {
