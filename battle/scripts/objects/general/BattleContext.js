@@ -1031,16 +1031,7 @@ function BattleContext (client) {
 						}
 					} else {
 						if (arguments.length === 2) {
-							var targets = Items._(character.bag.items[secondary].item).targets;
-							if (targets === Move.targets.party) {
-								targets = character.party.pokemon;
-							} else if (targets === Move.targets.opponents) {
-								targets = [];
-								foreach(battleContext.opponents, function (opponent) {
-									targets.push(opponent);
-								});
-								targets.reverse();
-							}
+							var targets = battleContext.targetsForItem(character, Items._(character.bag.items[secondary].item));
 							names = [];
 							positions = [];
 							var displayAll = [].concat(Display.state.current.allies, Display.state.current.opponents), hotkeys = {};
@@ -1242,7 +1233,7 @@ function BattleContext (client) {
 							if (action !== null) {
 								action = battleContext.communication.remove(action);
 								if (action.hasOwnProperty("flags")) {
-									action.flags.forEach(function (flag) {
+									foreach(action.flags, function (flag) {
 										switch (flag) {
 											case "mega evolve":
 												battleContext.input("Mega Evolve", null, null, trainer, i);
@@ -1313,7 +1304,174 @@ function BattleContext (client) {
 					return true;
 			});
 		},
-		waitForActions : function (kind, response) {
+		communicationForTrainerIsValid : function (party, actions) {
+			// This function assumes that all the actions required for this point are sent — i.e. split data packets are not allowed as it makes it difficult to determine the current Pokémon
+			var properties = [], requireProperty = function (action, property) {
+				if (action.hasOwnProperty("property")) {
+					properties.push(property);
+					return true;
+				} else
+					return false;
+			}, isNaturalNumber = function (variable, below) {
+				return typeof variable === "number" && variable === Math.floor(variable) && variable >= 0 && variable < below;
+			};
+			var character = battleContext.trainerOfTeam(party);
+			if (character === null) // This should never be true, as we receive the trainer data from the Supervisor, who is assumed trustworhy
+				return false;
+			var inBattle = [], currentBattler, selection = 0;
+			foreach(battleContext.all(true), function (poke) {
+				if (poke.trainer === character)
+					inBattle.push(poke);
+			});
+			// We need to make changes to some of the trainers and Pokémon during the analysis, so we can things like: has the trainer attempted to use the same item twice, or tried to mega evolve two different Pokémon in one turn?
+			// But, of course, these changes can't be permanent, because we need them as they are for the rest of the battle, so we store them in `preservation` to restore at the end of the function
+			// `preservation` stores arrow-paths ("a => b => c" etc.) so it can restore them easily afterwards
+			var preservation = {
+				character : {}, // Relative to `character`
+				pokemon : {} // Relative to `battleContext.allTrainers()`
+			};
+			var isValid = (battleContext.state.kind === "waiting" && !foreach(actions, function (action) {
+				if (["command"].contains(battleContext.state.for)) {
+					if (selection >= inBattle.length)
+						return true; // We've received too many actions!
+					currentBattler = inBattle[selection ++];
+				}
+				if (!requireProperty(action, "trainer") || !requireProperty(action, "action")) // The `trainer` parameter is effectively guaranteed because Supervisor adds it itself, so we don't need to check that they all match up 
+					return true;
+				switch (battleContext.state.for) {
+					case "command":
+						if (!requireProperty(action, "primary") || typeof action.primary !== "string" || !["Fight", "Bag", "Pokémon", "Run"].contains(action.primary))
+							return true; // Check it has a valid "primary" property
+						if (["Fight", "Bag", "Pokémon"].contains(action.primary)) {
+							if (!requireProperty(action, "secondary"))
+								return true; // Checks it has a "secondary" property
+							if (!isNaturalNumber(action.secondary, action.primary === "Fight" ? currentBattler.usableMoves().length : action.primary === "Bag" ? character.bag.items.length : character.party.pokemon.length))
+								return true; // Check the "secondary" property is a valid integer
+							var isMultiBattle = battleContext.pokemonPerSide() > 1;
+							if (action.primary === "Fight") {
+								if (isMultiBattle) {
+									if (!requireProperty(action, "tertiary"))
+										return true;
+									if (typeof action.tertiary !== "object")
+										return true;
+									if (!action.tertiary.hasOwnProperty("side"))
+										return true;
+									if (!action.tertiary.hasOwnProperty("team") || action.tertiary.team !== character.team)
+										return true;
+									if (!action.tertiary.hasOwnProperty("position") || !isNaturalNumber(action.tertiary.position, character.party.pokemon.length) || !character.party.pokemon[action.tertiary.position].inBattle())
+										return true;
+									var potentialTargets = battleContext.targetsForMove(currentBattler, Moves._(currentBattler.usableMoves()[action.secondary].move), false), actualTarget = battleContext.pokemonInPlace(action.tertiary);
+									if (!foreach(potentialTargets, function (target) {
+										return target.team === actualTarget.team && target.position === actualTarget.position;
+									})) {
+										return true; // The Pokémon that has been selected to attack cannot be targetted with the selected move
+									}
+								}
+							}
+							if (action.primary === "Bag") {
+								var item = character.bag.items[action.secondary];
+								if (!character.bag.usableItems(true).contains(item))
+									return true; // If the player is using an item, it must actually be a useable item, rather than, for example, a key item. Additionally, the player must not have decided to use it yet already (in a double battle, say).
+								if (![Move.targets.opposingSide, Move.targets.alliedSide].contains(Items._(item.item).targets)) {
+									if (!requireProperty(action, "tertiary"))
+										return true;
+									if (typeof action.tertiary !== "object")
+										return true; 
+									var trainerOfTeam = battleContext.trainerOfTeam(action.tertiary.team);
+									if (!action.tertiary.hasOwnProperty("team") || trainerOfTeam === null)
+										return true;
+									if (!action.tertiary.hasOwnProperty("position") || !isNaturalNumber(action.tertiary.position, trainerOfTeam.party.pokemon.length))
+										return true;
+									var targettedPokemon = trainerOfTeam.party.pokemon[position];
+									if (!action.tertiary.hasOwnProperty("side")) {
+										// The item is being used on a Pokémon that is not currently battling
+										if (targettedPokemon.inBattle())
+											return true; // Tried to use an item on a Pokémon that is not battling as if it were
+									} else {
+										// The item is being used on a Pokémon that is battling
+										if (!targettedPokemon.inBattle())
+											return true; // Tried to use an item on a Pokémon that is battling as if it was not
+									}
+									var potentialTargets = battleContext.targetsForItem(character, Items._(item.item));
+									if (!potentialTargets.contains(targettedPokemon))
+										return true;
+									// It has passed all the checks, so can be used
+									preservation.character["bag => items => " + character.bag.indexOfItem(secondary) + " => intentToUse"] = character.bag.items[character.bag.indexOfItem(item)].intentToUse;
+									character.bag.intendToUse(secondary);
+								}
+							} 
+							if  (action.primary === "Pokémon") {
+								if (!character.party.pokemon[action.secondary].conscious() || currentBattler.battler.isTrapped())
+									return true; // If the player is switching to use a Pokémon, it must be healthy, and the current Pokémon cannot be trapped
+								if (isMultiBattle) {
+									if (!requireProperty(action, "tertiary"))
+										return true;
+									if (!isNaturalNumber(action.tertiary, character.party.pokemon.length))
+										return true;
+									if (!character.party.pokemon[action.tertiary].conscious() || character.party.pokemon[action.tertiary].switching)
+										return true;
+									// It has passed all the checks, so can be sent in
+									var poke = character.party.pokemon[action.secondary];
+									preservation.pokemon[Battle.allTrainers().indexOf(poke.trainer) + " => party => pokemon => " + poke.trainer.party.pokemon.indexOf(poke) + " => battler => switching"] = false;
+									preservation.pokemon[Battle.allTrainers().indexOf(currentBattler.trainer) + " => party => pokemon => " + currentBattler.trainer.party.pokemon.indexOf(currentBattler) + " => battler => switching"] = false;
+									poke.battler.switching = true;
+									currentBattler.battler.switching = true;
+								}
+							}
+						}
+						if (action.primary === "Run" && (!battleContext.isWildBattle() || !currentBattler.battler.isTrapped()))
+							return true; // Can only run in certain situations
+						if (action.hasOwnProperty("flags")) {
+							if (action.flags.length >= 2 || (action.flags.length === 1 && action.flags.first() !== "mega evolve"))
+								return true; // The only valid flag at the moment is "mega evolve"
+							// Mega Evolution Validation
+							if (currentBattler.potentialMegaEvolution(character.megaEvolution === currentBattler) === null)
+								return null;
+							// It has passed all the checks, so can be Mega Evolved
+							preservation.character.megaEvolution = character.megaEvolution;
+							character.megaEvolution = currentBattler;
+						} 
+						break;
+					case "send":
+						if (!requireProperty(action, "which") || !isNaturalNumber(action.which, character.healthyEligiblePokemon(true).length))
+							return true;
+						// It has passed all the checks, so can be sent in
+						var poke = character.healthyEligiblePokemon(true)[action.which];
+						preservation.pokemon[Battle.allTrainers().indexOf(poke.trainer) + " => party => pokemon => " + poke.trainer.party.pokemon.indexOf(poke) + " => battler => switching"] = false;
+						poke.battler.switching = true;
+						break;
+					case "learn":
+						if (!requireProperty(action, "forget") || (action.forget !== null && isNaturalNumber(action.forget, battleContext.state.data.poke.moves.length)))
+							return true;
+						break;
+					case "evolve":
+						if (!requireProperty(action, "prevent") || typeof action.prevent !== "boolean")
+							return true;
+						break;
+				}
+				// We've already ensured that every required property is in the keys, so if they're the same length, they must be equal
+				if (Object.keys(action).length !== properties.length)
+					return true;
+			}));
+			// Restore preserved properties
+			forevery(preservation, function (preserved, key) {
+				var object;
+				switch (key) {
+					case "character":
+						object = character;
+						break;
+					case "pokemon":
+						object = Battle.all(true);
+						break;
+				}
+				forevery(preserved, function (value, path) {
+					_(object, path, value);
+				});
+			});
+			
+			return isValid;
+		},
+		waitForActions : function (kind, response, data) {
 			var wait = function () {
 				if (battleContext.hasCommunicationForTrainers(kind)) {
 					response();
@@ -1327,9 +1485,12 @@ function BattleContext (client) {
 							};
 							if (!battleContext.process) Textbox.update();
 							response();
-						}
+						},
+						"data" : arguments.length >= 3 ? data : null
 					};
-					if (!battleContext.process) Textbox.stateUntil("Waiting for " + (battleContext.playerIsParticipating() ? "the other player" : "both players") + " to make a decision...", function () { return battleContext.state.kind !== "waiting" && Textbox.dialogue.length > 1; });
+					if (!battleContext.process) Textbox.stateUntil("Waiting for " + (battleContext.playerIsParticipating() ? "the other player" : "both players") + " to make a decision...", function () {
+						return battleContext.state.kind !== "waiting" && Textbox.dialogue.length > 1;
+					});
 				}
 			};
 			if (battleContext.process)
@@ -1376,6 +1537,20 @@ function BattleContext (client) {
 				default:
 					return false;
 			}
+		},
+		targetsForItem : function (trainer, item) {
+			// Returns an array of all the Pokémon the user could use the item on
+			var targettedPokemon = item.targets;
+			if (targets === Move.targets.party) {
+				targets = character.party.pokemon;
+			} else if (targets === Move.targets.opponents) {
+				targets = [];
+				foreach(battleContext.opponents, function (opponent) {
+					targets.push(opponent);
+				});
+				targets.reverse();
+			}
+			return targets;
 		},
 		targetsForMove : function (user, move, excludeAlliesIfPossible) {
 			// Returns an array of all the Pokémon that the user could target with the move
@@ -1436,17 +1611,18 @@ function BattleContext (client) {
 			}
 		},
 		placeOfPokemon : function (poke) {
-			if (poke.inBattle())
+			if (poke.inBattle()) {
 				return {
 					side : poke.battler.side,
 					team : poke.trainer.team,
 					position : (poke.battler.side === Battles.side.near ? battleContext.allies : battleContext.opponents).indexOf(poke)
 				};
-			else
+			} else {
 				return {
 					team : poke.trainer.team,
 					position : poke.trainer.party.pokemon.indexOf(poke)
 				};
+			}
 		},
 		pokemonInPlace : function (place) {
 			return (place.hasOwnProperty("side") ? (place.team === battleContext.alliedTrainers.first().team ? battleContext.allies : battleContext.opponents)[place.position] : battleContext.trainerOfTeam(place.team).party.pokemon[place.position]);
@@ -1528,7 +1704,7 @@ function BattleContext (client) {
 				currentBattler.battler.display.outlined = false;
 			}
 			var actions = [], hotkeys = {};
-			if (battleContext.delegates.Pokemon.shouldDisplayMenuOption()) {
+			if (battleContext.delegates.Pokémon.shouldDisplayMenuOption()) {
 				actions = ["Pokémon"].concat(actions);
 			}
 			if (battleContext.rules.items === "allowed" && battleContext.delegates.Bag.shouldDisplayMenuOption()) {

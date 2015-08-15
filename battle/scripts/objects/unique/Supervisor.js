@@ -82,20 +82,38 @@ Supervisor = {
 				return process;
 			case "relay":
 				// Sends data between two battling parties
-				// data: party, data
+				// data: party, data (party here being not a Pokémon party, but a participant)
 				// Assumes the party sending the data was one of the parties involved in the process it is sending to
-				var process = Supervisor.processes[identifier];
-				foreach(data.data, function (action) {
-					action.trainer = data.party;
-				});
-				process.relay = process.relay.concat(data.data);
-				var actionsToSend = process.relay.slice(process.relayed);
-				if (process.battle.state.kind === "waiting" && process.battle.hasCommunicationForTrainers(process.battle.state.for, actionsToSend)) {
-					process.battle.receiveActions(actionsToSend);
-					foreach(process.parties, function (party) {
-						Supervisor.send(party, "actions", actionsToSend, identifier);
+				// The party should be an identifier matches up with a trainer team
+				var process = Supervisor.processes[identifier], valid = true;
+				if (Array.isArray(data.data) && !foreach(data.data, function (datum) {
+					if (typeof datum !== "object" || datum === null)
+						return true;
+				})) {
+					foreach(data.data, function (action) {
+						action.trainer = data.party;
 					});
-					process.relayed = process.relay.length;
+					// Assumes that the correct number of actions will be sent at once (i.e. no split data packets)
+					if (process.battle.communicationForTrainerIsValid(data.party, data.data)) {
+						process.relay = process.relay.concat(data.data);
+						var actionsToSend = process.relay.slice(process.relayed);
+						if (process.battle.state.kind === "waiting" && process.battle.hasCommunicationForTrainers(process.battle.state.for, actionsToSend)) {
+							process.battle.receiveActions(actionsToSend);
+							foreach(process.parties, function (party) {
+								Supervisor.send(party, "actions", actionsToSend, identifier);
+							});
+							process.relayed = process.relay.length;
+						}
+					} else
+						valid = false;
+				} else
+					valid = false;
+				if (!valid) {
+					process.alert({
+						"reason" : "invalid input",
+						"party" : data.party,
+						"input" : data.data
+					});
 				}
 				break;
 			case "sync":

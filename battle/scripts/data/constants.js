@@ -131,6 +131,7 @@ Item = {
 Battles = {
 	style : ["normal", "double", "sky"],
 	side : {
+		// These are empty objects simply so they're unique from one another. They even conserve uniqueness after being transformed to JSON and back, which is rather handy. They do ~not~, however, need to be identified after being transferred by JSON — just distinguished, because getPokemonInPlace does not actually use the `side` parameter — it just checks for it.
 		near : {},
 		far : {}
 	},

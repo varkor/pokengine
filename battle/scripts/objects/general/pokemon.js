@@ -397,6 +397,8 @@ function pokemon (data, validate) {
 						doNotLearnNewMove();
 					else
 						learnNewMove(decision.forget);
+				}, {
+					poke : self
 				});
 			} else {
 				immediatelyProceeding = Textbox.confirm("Do you want " + self.name() + " to forget a move to make room for " + move + "?", function (yes) {
