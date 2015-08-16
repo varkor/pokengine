@@ -129,8 +129,17 @@ Moves = {
 						if (!target.battler.trapped.contains("Ingrain")) {
 							if (self.battler.battle.isWildBattle()) {
 								if (self.level > target.level) {
-									if (!self.battler.battle.process) Textbox.state(self.name() + " blew " + target.name() + " away!", function () { self.battler.battle.end(); });
 									self.battler.battle.finish();
+									if (!self.battler.battle.process)
+										Textbox.state(self.name() + " blew " + target.name() + " away!", function () {
+											self.battler.battle.end({
+												"outcome" : "draw"
+											});
+										});
+									else
+										self.battler.battle.end({
+											"outcome" : "draw"
+										});
 								} else {
 									if (!self.battler.battle.process) Textbox.state(self.name() + "'s Roar doesn't scare " + target.name() + "!");
 									return {
