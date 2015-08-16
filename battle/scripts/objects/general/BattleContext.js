@@ -1304,20 +1304,28 @@ function BattleContext (client) {
 					return true;
 			});
 		},
-		communicationForTrainerIsValid : function (party, actions) {
+		communicationForTrainerIsValid : function (team, actions, issues) {
 			// This function assumes that all the actions required for this point are sent — i.e. split data packets are not allowed as it makes it difficult to determine the current Pokémon
 			var properties = [], requireProperty = function (action, property) {
-				if (action.hasOwnProperty("property")) {
+				if (action.hasOwnProperty(property)) {
 					properties.push(property);
 					return true;
-				} else
+				} else {
+					issues.push("The property `" + property + "` was required but was not found.");
 					return false;
+				}
 			}, isNaturalNumber = function (variable, below) {
-				return typeof variable === "number" && variable === Math.floor(variable) && variable >= 0 && variable < below;
+				var isNatural = typeof variable === "number" && variable === Math.floor(variable) && variable >= 0 && variable < below;
+				if (!isNatural) {
+					issues.push("The property `" + property + "` should have been a natural number below " + below + " but was `" + variable + "`.");
+				}
+				return isNatural;
 			};
-			var character = battleContext.trainerOfTeam(party);
-			if (character === null) // This should never be true, as we receive the trainer data from the Supervisor, who is assumed trustworhy
-				return false;
+			var character = battleContext.trainerOfTeam(team);
+			if (character === null) {
+				issues.push("There was no trainer with a team equal to `" + team + "`.");
+				return false; // This should never be true, as we receive the trainer data from the Supervisor, who is assumed trustworhy
+			}
 			var inBattle = [], currentBattler, selection = 0;
 			foreach(battleContext.all(true), function (poke) {
 				if (poke.trainer === character)
@@ -1332,8 +1340,10 @@ function BattleContext (client) {
 			};
 			var isValid = (battleContext.state.kind === "waiting" && !foreach(actions, function (action) {
 				if (["command"].contains(battleContext.state.for)) {
-					if (selection >= inBattle.length)
+					if (selection >= inBattle.length) {
+						issues.push("Too many actions have been sent.");
 						return true; // We've received too many actions!
+					}
 					currentBattler = inBattle[selection ++];
 				}
 				if (!requireProperty(action, "trainer") || !requireProperty(action, "action")) // The `trainer` parameter is effectively guaranteed because Supervisor adds it itself, so we don't need to check that they all match up 

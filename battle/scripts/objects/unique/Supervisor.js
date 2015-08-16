@@ -9,11 +9,32 @@ Supervisor = {
 		}); */
 	},
 	receive : function (message, data, identifier) {
-		/* Assumes message is well-formed but may not necessarily contain valid data in the case of relays */
+		// Supervisor.receive, for the most part, does not guarantee that any function that is invoked directly by the server is validated (although it does do some checking for convenience).
+		if (arguments.length < 2 || arguments.length > 3) {
+			// This is actually an issue with the way Supervisor is invoked
+			return "Supervisor.receive() expects 2 or 3 arguments, but received " + arguments.length + ".";
+		}
+		var unsuccessful = function (reason) {
+			return {
+				success : false,
+				reason : reason
+			};
+		};
+		// Check the format of the arguments
+		if (typeof message !== "string")
+			return unsuccessful("The parameter `message` should have been a string, but had type `" + (typeof message) + "`.");
+		if (typeof data !== "object")
+			return unsuccessful("The parameter `data` should have been an object, but had type `" + (typeof data) + "`.");
+		if (arguments.length >= 3) {
+			if (typeof identifier !== "number")
+				return unsuccessful("The parameter `identifier` should have been a number, but had type `" + (typeof identifier) + "`.");
+			if (identifier !== Math.floor(identifier) || identifier < 0)
+				return unsuccessful("The parameter `identifier` should have been a natural number, but had value `" + identifier + "`.");
+		}
 		switch (message) {
 			case "initiate":
 				// Initiate a battle between two parties
-				// data: parties, data, rules, flags, callback, alert
+				// data: parties, data, rules, flags, callback
 				identifier = Supervisor.identification;
 				// Check that all the rules are matched
 				var valid = true;
@@ -21,7 +42,19 @@ Supervisor = {
 				// Pokémon (form(e)s)
 				// moves
 				// abilities
-				foreach(data.rules.clauses, function (clause) {
+				if (!data.hasOwnProperty("rules"))
+					return unsuccessful("The parameter `data` should have had a `rules` property.");
+				if (typeof data.rules !== "object")
+					return unsuccessful("The parameter `data.rules` should have been an object, but had type `" + (typeof data.rules) + "`.");
+				if (!data.rules.hasOwnProperty("clauses"))
+					return unsuccessful("The parameter `data.rules` should have had a `clauses` property.");
+				if (!Array.isArray(data.rules.clauses))
+					return unsuccessful("The parameter `data.rules.clauses` should have been an array.");
+				if (foreach(data.rules.clauses, function (clause) {
+					if (typeof clause !== "object")
+						return true;
+					if (!clause.hasOwnProperty("regards"))
+						return true;
 					switch (clause.regards) {
 						case "Pokémon":
 							break;
@@ -30,8 +63,18 @@ Supervisor = {
 						case "move":
 							break;
 					}
-				});
+				})) {
+					return unsuccessful("One of the elements of `data.rules.clauses` was malformed.");
+				}
 				if (valid) {
+					if (!data.hasOwnProperty("parties"))
+						return unsuccessful("The parameter `data` should have had a `parties` property.");
+					if (!Array.isArray(data.parties))
+						return unsuccessful("The parameter `data.parties` should have been an array.");
+					if (!data.hasOwnProperty("data"))
+						return unsuccessful("The parameter `data` should have had a `data` property.");
+					if (typeof data.data !== "object")
+						return unsuccessful("The parameter `data.data` should have been an object, but had type `" + (typeof data.data) + "`.");
 					var battle = BattleContext();
 					Supervisor.processes[identifier] = {
 						parties : data.parties,
@@ -39,15 +82,31 @@ Supervisor = {
 						rules : data.rules,
 						relay : [],
 						relayed : 0,
-						battle : battle,
-						alert : data.alert
+						battle : battle
 					};
+					if (!data.data.hasOwnProperty("teamA"))
+						return unsuccessful("The parameter `data.data` should have had a `teamA` property.");
+					if (typeof data.data.teamA !== "object")
+						return unsuccessful("The parameter `data.data.teamA` should have been an object, but had type `" + (typeof data.data.teamA) + "`.");
+					if (!data.data.hasOwnProperty("teamB"))
+						return unsuccessful("The parameter `data.data` should have had a `teamB` property.");
+					if (typeof data.data.teamA !== "object")
+						return unsuccessful("The parameter `data.data.teamB` should have been an object, but had type `" + (typeof data.data.teamB) + "`.");
+					// It would be good to validate teamA and teamB, but we're trusting the server anyway — the responses in `initialise` are really just to help out anyone debugging the function
 					var teamA = new trainer(data.data.teamA), teamB = new trainer(data.data.teamB);
 					teamA.type = teamB.type = Trainers.type.online;
 					var callback = function (flags, trainers) {
 						data.callback(flags, trainers);
 						delete Supervisor.processes[identifier];
 					};
+					if (!data.data.hasOwnProperty("seed"))
+						return unsuccessful("The parameter `data.data` should have had a `seed` property.");
+					if (typeof data.data.seed !== "number")
+						return unsuccessful("The parameter `data.data.seed` should have been a number, but had type `" + (typeof data.data.seed) + "`.");
+					if (!data.data.hasOwnProperty("parameters"))
+						return unsuccessful("The parameter `data.data` should have had a `parameters` property.");
+					if (typeof data.data.parameters !== "object")
+						return unsuccessful("The parameter `data.data.parameters` should have been an object, but had type `" + (typeof data.data.parameters) + "`.");
 					battle.random.seed = data.data.seed;
 					if (teamA.identification === 0) { /* Code for wild battles */
 						battle.beginWildBattle(teamB, teamA.party.pokemon, data.data.parameters, callback);
@@ -62,39 +121,62 @@ Supervisor = {
 							data : data.data
 						}, identifier);
 					});
-					return Supervisor.identification ++;
+					return {
+						success : true,
+						identification : Supervisor.identification ++
+					};
+				} else {
+					return {
+						success : false,
+						reason : "The parties did not conform to the battle rules."
+					};
 				}
-				break;
 			case "join":
 				// Another party joins a battle (as a spectator)
 				// data: parties
+				if (!data.hasOwnProperty("parties"))
+					return unsuccessful("The parameter `data` should have had a `parties` property.");
+				if (!Array.isArray(data.parties))
+					return unsuccessful("The parameter `data.parties` should have been an array.");
 				Supervisor.processes[identifier].parties = Supervisor.processes[identifier].parties.concat(data.parties);
-				break;
+				return {
+					success : true
+				};
 			case "terminate":
 				// Terminates a battle that is in progress
 				// data: reason
+				if (!data.hasOwnProperty("reason"))
+					return unsuccessful("The parameter `data` should have had a `reason` property.");
 				var process = Supervisor.processes[identifier];
 				process.battle.end(true);
 				foreach(process.parties, function (party) {
 					Supervisor.send(party, "terminate", data.reason, identifier);
 				});
 				delete Supervisor.processes[identifier];
-				return process;
+				return {
+					success : true,
+					process : process
+				};
 			case "relay":
 				// Sends data between two battling parties
-				// data: party, data (party here being not a Pokémon party, but a participant)
+				// data: party, team, data (party here being not a Pokémon party, but a participant)
 				// Assumes the party sending the data was one of the parties involved in the process it is sending to
 				// The party should be an identifier matches up with a trainer team
 				var process = Supervisor.processes[identifier], valid = true;
-				if (Array.isArray(data.data) && !foreach(data.data, function (datum) {
+				if (!data.hasOwnProperty("data"))
+					return unsuccessful("The parameter `data` should have had a `data` property.");
+				if (!Array.isArray(data.data))
+					return unsuccessful("The parameter `data.data` should have been an array.");
+				if (!foreach(data.data, function (datum) {
 					if (typeof datum !== "object" || datum === null)
 						return true;
 				})) {
 					foreach(data.data, function (action) {
-						action.trainer = data.party;
+						action.trainer = data.team;
 					});
 					// Assumes that the correct number of actions will be sent at once (i.e. no split data packets)
-					if (process.battle.communicationForTrainerIsValid(data.party, data.data)) {
+					var issues = [];
+					if (process.battle.communicationForTrainerIsValid(data.team, data.data, issues)) {
 						process.relay = process.relay.concat(data.data);
 						var actionsToSend = process.relay.slice(process.relayed);
 						if (process.battle.state.kind === "waiting" && process.battle.hasCommunicationForTrainers(process.battle.state.for, actionsToSend)) {
@@ -104,18 +186,21 @@ Supervisor = {
 							});
 							process.relayed = process.relay.length;
 						}
-					} else
-						valid = false;
-				} else
-					valid = false;
-				if (!valid) {
-					process.alert({
-						"reason" : "invalid input",
-						"party" : data.party,
-						"input" : data.data
-					});
+					} else {
+						return {
+							success : false,
+							reason : "The input sent by the client was invalid.",
+							party : data.party,
+							input : data.data,
+							issues : issues
+						};
+					}
+				} else {
+					return unsuccessful("One of the elements of `data.data` was not an object.");
 				}
-				break;
+				return {
+					success : true
+				};
 			case "sync":
 				// Checks the clients for the different parties are in sync with the main battle
 				// data: party, data : { state }
@@ -137,9 +222,23 @@ Supervisor = {
 				forevery(battle.allTrainers(), function (trainer) {
 					assert("trainer: " + trainer.identification, trainer.store(), data.data.state.trainers[trainer.identification]);
 				});
-				if (issues.notEmpty())
-					process.alert(issues);
-				break;
+				if (issues.notEmpty()) {
+					return {
+						success : false,
+						reason : "Not every process was in sync.",
+						issues : issues 
+					};
+				} else {
+					return {
+						success : true
+					};
+				}
+			default:
+				// An invalid `message` value has been sent
+				return {
+					success : false,
+					reason : "The `message` parameter was not valid (" + message + ")."
+				};
 		}
 	}
 };
