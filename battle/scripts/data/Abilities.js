@@ -5,7 +5,7 @@ Abilities = {
 				event : Triggers.entrance,
 				oneself : true,
 				action : function (data, self, other) {
-					Textbox.state(self.name() + "'s Intimidate is lowering the Attack of the opposing Pokémon!");
+					if (!self.battler.battle.process) Textbox.state(self.name() + "'s Intimidate is lowering the Attack of the opposing Pokémon!");
 					foreach(self.battler.battle.opponentsTo(self), function (poke) {
 						poke.battler.battle.stat(poke, "attack", -1, self);
 					});
@@ -21,7 +21,7 @@ Abilities = {
 				stat : "attack",
 				action : function (data, self, other) {
 					if (data.change < 0 || (data.change === 0 && self.battler.statLevel["attack"] > 0)) {
-						Textbox.state(self.name() + "'s Hyper Cutter prevents " + self.possessivePronoun() + " Attack from being lowered!");
+						if (!self.battler.battle.process) Textbox.state(self.name() + "'s Hyper Cutter prevents " + self.possessivePronoun() + " Attack from being lowered!");
 						return true;
 					}
 				}
@@ -35,7 +35,7 @@ Abilities = {
 				affected : true,
 				action : function (data, self, other) {
 					if (data.move.classification.contains("Sound")) {
-						Textbox.state(self.name() + "'s Soundproof protects " + self.personalPronoun() + " from " + other.name() + "'s sound-based attack!");
+						if (!self.battler.battle.process) Textbox.state(self.name() + "'s Soundproof protects " + self.personalPronoun() + " from " + other.name() + "'s sound-based attack!");
 						return true;
 					}
 				}
@@ -50,7 +50,7 @@ Abilities = {
 				action : function (data, self, other) {
 					if (!self.battler.grounded) {
 						if (other)
-							Textbox.state(self.name() + "'s Levitate protects " + self.personalPronoun() + " from " + other.name() + "'s Ground-type attack!");
+							if (!self.battler.battle.process) Textbox.state(self.name() + "'s Levitate protects " + self.personalPronoun() + " from " + other.name() + "'s Ground-type attack!");
 						return 0;
 					}
 				}
