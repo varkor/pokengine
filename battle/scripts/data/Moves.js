@@ -129,10 +129,10 @@ Moves = {
 						if (!target.battler.trapped.contains("Ingrain")) {
 							if (self.battler.battle.isWildBattle()) {
 								if (self.level > target.level) {
-									Textbox.state(self.name() + " blew " + target.name() + " away!", function () { self.battler.battle.end(); });
+									if (!self.battler.battle.process) Textbox.state(self.name() + " blew " + target.name() + " away!", function () { self.battler.battle.end(); });
 									self.battler.battle.finish();
 								} else {
-									Textbox.state(self.name() + "'s Roar doesn't scare " + target.name() + "!");
+									if (!self.battler.battle.process) Textbox.state(self.name() + "'s Roar doesn't scare " + target.name() + "!");
 									return {
 										failed : true
 									};
@@ -179,7 +179,7 @@ Moves = {
 					effect : function (self, target) {
 						self.battler.battle.damage(target, Move.damage(self, target, "Wrap"));
 						if (!target.fainted()) {
-							Textbox.state(target.name() + " was wrapped by " + self.name() + "!");
+							if (!self.battler.battle.process) Textbox.state(target.name() + " was wrapped by " + self.name() + "!");
 							target.battler.trapped.pushIfNotAlreadyContained("Wrap");
 							if (!self.battler.battle.moveHasEffect("Wrap", target)) {
 								var turns = self.battler.battle.random.int(2, 5), effects = [];
@@ -201,11 +201,11 @@ Moves = {
 			],
 			effect : function (target, data) {
 				if (data.user.battler.battling && !data.freed) {
-					Textbox.state(target.name() + " is hurt by " + target.possessivePronoun() + " Wrap.");
+					if (!target.battler.battle.process) Textbox.state(target.name() + " is hurt by " + target.possessivePronoun() + " Wrap.");
 					target.battler.battle.damage(target, Move.percentageDamage(target, 1 / 16));
 					return [];
 				} else {
-					Textbox.state(target.name() + " was freed from " + target.possessivePronoun() + " Wrap.");
+					if (!target.battler.battle.process) Textbox.state(target.name() + " was freed from " + target.possessivePronoun() + " Wrap.");
 					target.battler.trapped.removeElementsOfValue("Wrap");
 					return data.family;
 				}
@@ -242,7 +242,7 @@ Moves = {
 									which = move.number;
 							});
 							if (!alreadyDisabledAMove && which !== null && !target.currentMoves()[which].disabled) {
-								Textbox.state(self.name() + " disabled " + target.name() + "'s " + target.currentMoves()[which].move + ".");
+								if (!self.battler.battle.process) Textbox.state(self.name() + " disabled " + target.name() + "'s " + target.currentMoves()[which].move + ".");
 								target.currentMoves()[which].disabled = 4;
 							} else {
 								return {
@@ -348,7 +348,7 @@ Moves = {
 				var constant = {
 					magnitude : self.battler.battle.random.chooseWeighted({value : 4, probability: 0.05}, {value : 5, probability: 0.1}, {value : 6, probability: 0.2}, {value : 7, probability: 0.3}, {value : 8, probability: 0.2}, {value : 9, probability: 0.1}, {value : 10, probability: 0.05})
 				};
-				Textbox.state("It's Magnitude " + constant.magnitude + "!");
+				if (!self.battler.battle.process) Textbox.state("It's Magnitude " + constant.magnitude + "!");
 				return constant;
 			},
 			use : [
@@ -447,7 +447,7 @@ Moves = {
 									failed : true
 								};
 							}
-							Textbox.state(self.name() + " created a Substitute.");
+							if (!self.battler.battle.process) Textbox.state(self.name() + " created a Substitute.");
 							self.battler.battle.damage(self, Move.exactDamage(self, self, "Substitute", sacrificed));
 							self.battler.substitute = sacrificed;
 						} else {
@@ -498,7 +498,7 @@ Moves = {
 							move.PPUps = 0;
 						});
 						var display = Display.state.save(), speciesName = target.currentSpecies().replace(/ \(\w+\)$/, "");
-						Textbox.state(self.name() + " transformed itself into " + article(speciesName) + " " + speciesName + ".", /*transform animation, has finishing transforming, */function () { Display.state.load(display); });
+						if (!self.battler.battle.process) Textbox.state(self.name() + " transformed itself into " + article(speciesName) + " " + speciesName + ".", /*transform animation, has finishing transforming, */function () { Display.state.load(display); });
 					},
 					targets : true
 				}
@@ -555,7 +555,7 @@ Moves = {
 		effects : {
 			constant : function (self, target) {
 				if (!self.battler.battle.hasEffectOnSide(Moves._("Heal Block"), target)) {
-					Textbox.state(self.name() + " put a Heal Block into effect.");
+					if (!self.battler.battle.process) Textbox.state(self.name() + " put a Heal Block into effect.");
 					self.battler.battle.bringIntoEffect(Moves._("Heal Block"), Battles.when.afterFiveTurns, target);
 				} else {
 					return {
@@ -576,7 +576,7 @@ Moves = {
 			oneself : true,
 			action : function (data, target) {
 				if (data.change > 0) {
-					Textbox.state("The Heal Block prevents healing!");
+					if (!target.battler.battle.process) Textbox.state("The Heal Block prevents healing!");
 					return true;
 				}
 			}
@@ -620,7 +620,7 @@ Moves = {
 				{
 					effect : function (self, target) {
 						if (self.level >= target.level && (self.level - target.level + 30) / 100 >= self.battler.battle.random.point()) {
-							Textbox.state("It's a one-hit knockout!");
+							if (!self.battler.battle.process) Textbox.state("It's a one-hit knockout!");
 							self.battler.battle.damage(target, Move.exactDamage(self, target, "Guillotine", target.health));
 						} else return {
 							failed : true
@@ -667,8 +667,8 @@ Moves = {
 		affects : Move.targets.everyone,
 		targets : Move.targets.everyone,
 		effects : {
-			constant : function () {
-				Textbox.state("All Pokémon who hear the song will perish in 3 turns!");
+			constant : function (self) {
+				if (!self.battler.battle.process) Textbox.state("All Pokémon who hear the song will perish in 3 turns!");
 			},
 			use : [
 				{
@@ -687,7 +687,7 @@ Moves = {
 				}
 			],
 			effect : function (target, data) {
-				Textbox.state(target.name() + "'s Perish Count fell to " + data.count + ".");
+				if (!target.battler.battle.process) Textbox.state(target.name() + "'s Perish Count fell to " + data.count + ".");
 				if (data.count === 0)
 					target.battler.battle.damage(target, Move.percentageDamage(target, 1));
 				return [];
@@ -739,7 +739,7 @@ Moves = {
 			],
 			effect : function (target) {
 				if (target.status === "none") {
-					Textbox.state(target.name() + " yawned and fell asleep.");
+					if (!target.battler.battle.process) Textbox.state(target.name() + " yawned and fell asleep.");
 					target.battler.battle.inflict(target, "asleep");
 				}
 			}
@@ -763,7 +763,7 @@ Moves = {
 				{
 					effect : function (self, target) {
 						if (!self.battler.battle.moveHasEffect("Future Sight", target)) {
-							Textbox.state(self.name() + " has foreseen an attack!");
+							if (!self.battler.battle.process) Textbox.state(self.name() + " has foreseen an attack!");
 							self.battler.battle.moveHaveEffect("Future Sight", Battles.when.endOfTurnAfterNext, target, {self : self});
 						} else
 						return {
@@ -774,7 +774,7 @@ Moves = {
 				}
 			],
 			effect : function (target, data) {
-				Textbox.state(target.name() + " took the Future Sight attack!");
+				if (!target.battler.battle.process) Textbox.state(target.name() + " took the Future Sight attack!");
 				target.battler.battle.damage(target, Move.damage(data.self, target, "Future Sight", null, Moves._("Future Sight").type, true));
 			}
 		}
@@ -869,7 +869,7 @@ Moves = {
 							Move.use("Solar Beam", ++ self.battler.moveStage, self, target, true);
 							return;
 						}
-						Textbox.state(self.name() + " began absorbing sunlight.");
+						if (!self.battler.battle.process) Textbox.state(self.name() + " began absorbing sunlight.");
 					},
 					targets : false
 				},
@@ -897,7 +897,7 @@ Moves = {
 			use : [
 				{
 					effect : function (self, target) {
-						Textbox.state(self.name() + " flew up high.");
+						if (!self.battler.battle.process) Textbox.state(self.name() + " flew up high.");
 						self.invulnerable = "Fly";
 					},
 					targets : false
@@ -987,7 +987,7 @@ Moves = {
 			use : [
 				{
 					effect : function (self, target) {
-						Textbox.state(self.name() + " dived into the water.");
+						if (!self.battler.battle.process) Textbox.state(self.name() + " dived into the water.");
 						self.invulnerable = "Dive";
 					},
 					targets : false
@@ -1040,7 +1040,7 @@ Moves = {
 			use : [
 				{
 					effect : function (self, target) {
-						Textbox.state(self.name() + " burrowed into the ground.");
+						if (!self.battler.battle.process) Textbox.state(self.name() + " burrowed into the ground.");
 						self.invulnerable = "Dig";
 					},
 					targets : false
@@ -1095,7 +1095,7 @@ Moves = {
 					effect : function (self, target, constant, repetitions) {
 						var finalRepetition = !(target !== NoPokemon && !target.fainted() && (repetitions < 2 || (repetitions <= 3 && self.battler.battle.random.chance(3)) || (repetitions <= 5 && self.battler.battle.random.chance(6))));
 						if (finalRepetition)
-							Textbox.state("Hit " + target.name() + " " + quantityWord(repetitions) + "!");
+							if (!self.battler.battle.process) Textbox.state("Hit " + target.name() + " " + quantityWord(repetitions) + "!");
 						self.battler.battle.damage(target, Move.damage(self, target, "Pin Missile"), finalRepetition);
 						if (!finalRepetition) {
 							Moves._("Pin Missile").effects.use[0].effect(self, target, constant, ++ repetitions); // Not the standard Move.use() form, so that it can take advantage of repetitions
@@ -1144,9 +1144,9 @@ Moves = {
 			use : [
 				{
 					effect : function (self, target) {
-						Textbox.state(self.name() + " scattered sharp spikes around the far side.");
+						if (!self.battler.battle.process) Textbox.state(self.name() + " scattered sharp spikes around the far side.");
 						if (!self.battler.battle.placeHazard("Spikes", 3, target)) {
-							Textbox.state("But they were already layered so deep that it didn't make a difference!");
+							if (!self.battler.battle.process) Textbox.state("But they were already layered so deep that it didn't make a difference!");
 							return {
 								failed : true
 							};
@@ -1157,7 +1157,7 @@ Moves = {
 			],
 			hazard : function (target, stack) {
 				if (target.effectiveness(Moves._("Spikes").type, Moves._("Spikes").classification) > 0) {
-					Textbox.state("The sharp spikes hurt " + target.name() + "!");
+					if (!target.battler.battle.process) Textbox.state("The sharp spikes hurt " + target.name() + "!");
 					self.battler.battle.damage(target, { damage : Math.floor(target.stats.health() / (8 - 2 * (stack - 1))) });
 				}
 			}
@@ -1178,7 +1178,7 @@ Moves = {
 				{
 					effect : function (self) {
 						if (!self.battler.battle.moveHasEffect("Ingrain", self)) {
-							Textbox.state(self.name() + " rooted " + self.selfPronoun() + " firmly.");
+							if (!self.battler.battle.process) Textbox.state(self.name() + " rooted " + self.selfPronoun() + " firmly.");
 							self.battler.grounded = true;
 							self.battler.trapped.pushIfNotAlreadyContained("Ingrain");
 							self.battler.battle.moveHaveRepeatingEffect("Ingrain", Battles.when.endOfTurn, self);
@@ -1191,7 +1191,7 @@ Moves = {
 				}
 			],
 			effect : function (self) {
-				Textbox.state(self.name() + " recovered some of " + self.possessivePronoun() + " health through " + self.possessivePronoun() + " ingrained roots!");
+				if (!self.battler.battle.process) Textbox.state(self.name() + " recovered some of " + self.possessivePronoun() + " health through " + self.possessivePronoun() + " ingrained roots!");
 				self.battler.battle.healPercentage(self, 1 / 16, self);
 			}
 		}
@@ -1212,7 +1212,7 @@ Moves = {
 					effect : function (self, target) {
 						if (self.ofType("Ghost")) {
 							if (!self.battler.battle.moveHasEffect("Curse", self)) {
-								Textbox.state(target.name() + " was put under an evil Curse!");
+								if (!self.battler.battle.process) Textbox.state(target.name() + " was put under an evil Curse!");
 								self.battler.battle.damage(self, Move.exactDamage(self, self, "Curse", Math.floor(self.stats.health() / 2)));
 								self.battler.battle.moveHaveRepeatingEffect("Curse", Battles.when.endOfThisTurn, target);
 							} else
@@ -1229,7 +1229,7 @@ Moves = {
 				}
 			],
 			effect : function (target) {
-				Textbox.state(target.name() + " lost a quarter of " + target.possessivePronoun() + " health to " + target.possessivePronoun() + " curse!");
+				if (!target.battler.battle.process) Textbox.state(target.name() + " lost a quarter of " + target.possessivePronoun() + " health to " + target.possessivePronoun() + " curse!");
 				target.battler.battle.damage(target, Move.percentageDamage(target, 1 / 4));
 			}
 		}
