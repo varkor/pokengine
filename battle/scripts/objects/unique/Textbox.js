@@ -111,8 +111,7 @@ Textbox = FunctionObject.new({
 	currentStyle : function () {
 		if (Textbox.dialogue.notEmpty()) {
 			return Textbox.styles._(Textbox.dialogue.first().style);
-		}
-		else {
+		} else {
 			return Textbox.styles._(Textbox.style);
 		}
 	},

@@ -2005,53 +2005,60 @@ function BattleContext (client) {
 			battleContext.fillEmptyPlaces(true); // Fill the player's empty places
 		},
 		fillEmptyPlaces : function (player) {
-			var emptyPlaces = [];
-			foreach(player ? battleContext.allies : battleContext.opponents, function (poke, i) {
-				if (poke === NoPokemon)
-					emptyPlaces.push(i);
-			});
-			if (player && battleContext.playerIsParticipating()) {
-				var trainer = Game.player, progress = false;
-				if (emptyPlaces.notEmpty()) {
-					var healthyEligiblePokemon = trainer.healthyEligiblePokemon(true);
-					if (healthyEligiblePokemon.length > emptyPlaces.length) {
-						var names = [], positions = [];
-						foreach(trainer.healthyEligiblePokemon(true), function (poke, i) {
-							names.push(poke.name());
-							positions.push(i);
-						});
-						if (names.empty()) {
-							progress = true;
+			if (player) {
+				if (battleContext.playerIsParticipating()) {
+					var trainer = Game.player, progress = false;
+					var emptyPlaces = [];
+					foreach(battleContext.allies, function (poke, i) {
+						if (poke === NoPokemon)
+							emptyPlaces.push(i);
+					});
+					if (emptyPlaces.notEmpty()) {
+						var healthyEligiblePokemon = trainer.healthyEligiblePokemon(true);
+						if (healthyEligiblePokemon.length > emptyPlaces.length) {
+							var names = [], positions = [];
+							foreach(trainer.healthyEligiblePokemon(true), function (poke, i) {
+								names.push(poke.name());
+								positions.push(i);
+							});
+							if (names.empty()) {
+								progress = true;
+							} else {
+								Textbox.ask("Which Pokémon do you want to send out?", names, function (response, i) {
+									battleContext.inputs.push({
+										action : "send",
+										which : i
+									});
+									battleContext.enter(trainer.healthyEligiblePokemon(true)[i], true, emptyPlaces.first());
+									battleContext.fillEmptyPlaces(true);
+								}, null, null, null, null, null, true);
+							}
 						} else {
-							Textbox.ask("Which Pokémon do you want to send out?", names, function (response, i) {
-								battleContext.inputs.push({
-									action : "send",
-									which : i
-								});
-								battleContext.enter(trainer.healthyEligiblePokemon(true)[i], true, emptyPlaces.first());
-								battleContext.fillEmptyPlaces(true);
-							}, null, null, null, null, null, true);
+							foreach(healthyEligiblePokemon, function (poke) {
+								battleContext.enter(poke, true, emptyPlaces.shift());
+							});
+							progress = true;
 						}
-					} else {
-						foreach(healthyEligiblePokemon, function (poke) {
-							battleContext.enter(poke, true, emptyPlaces.shift());
-						});
+					} else
 						progress = true;
+					if (progress) {
+						battleContext.flushInputs();
+						battleContext.fillEmptyPlaces(false); // Fill the NPCs' empty places
 					}
-				} else
-					progress = true;
-				if (progress) {
-					battleContext.flushInputs();
-					battleContext.fillEmptyPlaces(false); // Fill the opponent's empty places
+				} else {
+					battleContext.fillEmptyPlaces(false); // Fill the NPCs' empty places
 				}
 			} else {
-				var anyQueries = false;
+				var anyQueries = false, emptyPlaces;
 				// Queueing here is necessary so that the player can switch out their Pokémon before the opponent if the "switching chance" setting is on
-				if (emptyPlaces.notEmpty()) { // If the opponent needs to send out a Pokémon
-					if (battleContext.process === null || (!player && battleContext.opposingTrainers.length === 1 && battleContext.opposingTrainers.first().type === Trainers.type.NPC)) {
-						foreach(battleContext.opposingTrainers, function (trainer) {
-							if (!emptyPlaces.length)
-								return true;
+				foreach(battleContext.opposingTrainers, function (trainer) {
+					var emptyPlaces = [];
+					foreach(battleContext.alliedTrainers.contains(trainer) ? battleContext.allies : battleContext.opponents, function (poke, i) {
+						if (poke === NoPokemon)
+							emptyPlaces.push(i);
+					});
+					if (emptyPlaces.notEmpty()) { // If the opponent needs to send out a Pokémon
+						if (trainer.type === Trainers.type.NPC) {
 							var sendingOut = 0;
 							while (trainer.battlers().length + sendingOut < Math.min(battleContext.pokemonPerSide() / battleContext.opposingTrainers.length) && trainer.hasHealthyEligiblePokemon(true) && emptyPlaces.length) {
 								var poke = trainer.healthyEligiblePokemon(true).first(), immediatelyAfter;
@@ -2116,7 +2123,7 @@ function BattleContext (client) {
 									priority : 1,
 									action : function (which) {return function () {
 										battleContext.enter(which, true, emptyPlaces.shift());
-										if (pressureSpeech) {
+										if (!battleContext.process && pressureSpeech) {
 											Textbox.effect(function () {
 												trainer.display.visible = true;
 											}, battleContext.drawing.transition(poke.trainer.display.position, "x", -(battleContext.style === "double" ? 80 : 40), Settings._("switch transition duration") * Time.framerate));
@@ -2135,21 +2142,21 @@ function BattleContext (client) {
 								poke.battler.switching = true;
 								++ sendingOut;
 							}
-						});
-					} else {
-						var healthyEligiblePokemon = (!player ? battleContext.opposingTrainers : battleContext.alliedTrainers).first().healthyEligiblePokemon(true);
-						if (healthyEligiblePokemon.length > emptyPlaces.length) {
-							battleContext.waitForActions("send", function () {
-								battleContext.continueToNextTurn(true);
-							});
-							anyQueries = true;
-						} else {
-							foreach(healthyEligiblePokemon, function (poke, which) {
-								battleContext.enter(poke, true, emptyPlaces.shift());
-							});
+						} else if (trainer.type === Trainers.type.online) {
+							var healthyEligiblePokemon = trainer.healthyEligiblePokemon(true);
+							if (healthyEligiblePokemon.length > emptyPlaces.length) {
+								battleContext.waitForActions("send", function () {
+									battleContext.continueToNextTurn(true);
+								});
+								anyQueries = true;
+							} else {
+								foreach(healthyEligiblePokemon, function (poke, which) {
+									battleContext.enter(poke, true, emptyPlaces.shift());
+								});
+							}
 						}
 					}
-				}
+				});
 				if (!anyQueries)
 					battleContext.continueToNextTurn(false);
 			}

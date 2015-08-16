@@ -93,8 +93,9 @@ Supervisor = {
 					if (typeof data.data.teamA !== "object")
 						return unsuccessful("The parameter `data.data.teamB` should have been an object, but had type `" + (typeof data.data.teamB) + "`.");
 					// It would be good to validate teamA and teamB, but we're trusting the server anyway — the responses in `initialise` are really just to help out anyone debugging the function
-					var teamA = new trainer(data.data.teamA), teamB = new trainer(data.data.teamB);
-					teamA.type = teamB.type = Trainers.type.online;
+					var teamA = new trainer(data.data.teamA.trainer), teamB = new trainer(data.data.teamB.trainer);
+					teamA.type = data.data.teamA.type;
+					teamB.type = data.data.teamB.type;
 					var callback = function (flags, trainers) {
 						data.callback(flags, trainers);
 						delete Supervisor.processes[identifier];

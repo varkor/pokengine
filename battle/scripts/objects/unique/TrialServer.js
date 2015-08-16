@@ -54,8 +54,8 @@ TrialServer = {
 		}
 		
 	},
-	trigger : {
-		wildBattle : function () {
+	generate : {
+		playerTeam : function () {
 			Game.takePossessionOf(new trainer({
 				"name" : document.querySelector("#name").value,
 				"class" : "Pokémon Trainer",
@@ -67,18 +67,57 @@ TrialServer = {
 			Game.player.bag.add("Key Stones => Mega Bracelet");
 			Game.player.bag.add("Balls => Master");
 			Game.player.bag.add("Berries => Sitrus");
+			return {
+				type : Trainers.type.online,
+				trainer : Game.player.store()
+			};
+		},
+		wildTeam : function () {
+			return {
+				type : Trainers.type.NPC,
+				trainer : new trainer({
+					identification : 0, // Wild Pokémon
+					party : [new pokemon({
+						species : "Charizard (Nintendo)",
+						level : 45,
+						moves : [{ move : "Tackle" }]
+					})]
+				}).store()
+			};
+		},
+		NPCTeam : function () {
+			return {
+				type : Trainers.type.NPC,
+				trainer : new trainer({
+					"name" : "Roger",
+					"class" : "Ace Trainer",
+					"game" : "B2W2",
+					"pressure speech" : "You should never have gotten your hopes up!",
+					"defeat speech" : "So... this is what defeat tastes like...",
+					"party" : [
+						new pokemon({
+							species : "Charizard (Nintendo)",
+							level : 1,
+							shiny : true,
+							moves : [{
+								move : "Tackle"
+							}],
+						}), new pokemon({
+							species : "Charizard (Nintendo)",
+							level : 1
+						})
+					]
+				}).store()
+			};
+		}
+	},
+	trigger : {
+		battle : function (teamA, teamB) {
 			var response = Supervisor.receive("initiate", {
 				parties : [null],
 				data : {
-					teamA : Game.player.store(),
-					teamB : {
-						identification : 0, // Wild Pokémon
-						party : [new pokemon({
-							species : "Charizard (Nintendo)",
-							level : 45,
-							moves : [{ move : "Tackle" }]
-						})]
-					},
+					teamA : teamA,
+					teamB : teamB,
 					seed : 1,
 					parameters : Interface.buildSettings()
 				},
@@ -91,8 +130,19 @@ TrialServer = {
 			});
 			if (!response.success) {
 				TrialServer.warn("The Supervisor responded with an error:", response);
+				return false;
 			} else {
+				return true;
+			}
+		},
+		wildBattle : function () {
+			if (TrialServer.trigger.battle(TrialServer.generate.playerTeam(), TrialServer.generate.wildTeam())) {
 				TrialServer.print("Initialised a new server wild battle.");
+			}
+		},
+		trainerBattle : function () {
+			if (TrialServer.trigger.battle(TrialServer.generate.playerTeam(), TrialServer.generate.NPCTeam())) {
+				TrialServer.print("Initialised a new server trainer battle.");
 			}
 		}
 	}

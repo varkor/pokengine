@@ -33,19 +33,19 @@ Relay = {
 					battle : battle
 				};
 				battle.identifier = identifier;
+				var teamA = new trainer(data.data.teamA.trainer), teamB = new trainer(data.data.teamB.trainer);
+				teamA.type = data.data.teamA.type;
+				teamB.type = data.data.teamB.type;
 				var ally, opponent;
-				if (data.data.teamA.identification === Relay.identification) {
-					ally = new trainer(data.data.teamA);
-					opponent = new trainer(data.data.teamB);
+				if (data.data.teamA.trainer.identification === Relay.identification) {
+					ally = teamA;
+					opponent = teamB;
 					Game.takePossessionOf(ally);
-				} else if (data.data.teamB.identification === Relay.identification) {
-					ally = new trainer(data.data.teamB);
-					opponent = new trainer(data.data.teamA);
+				} else if (data.data.teamB.trainer.identification === Relay.identification) {
+					ally = teamB;
+					opponent = teamA;
 					Game.takePossessionOf(ally);
-				} else {
-					ally.type = Trainers.type.online;
 				}
-				opponent.type = Trainers.type.online;
 				ally.team = ally.identification;
 				opponent.team = opponent.identification;
 				battle.canvas.focus();
