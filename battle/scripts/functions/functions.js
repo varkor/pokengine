@@ -43,7 +43,7 @@ function _ (_object, _path, _newValue) {
 			throw "You can't both check for the existence of a property and set it at the same time.";
 		} else {
 			baseKey = path.split(/ ?[~\-=]> ?/g).last();
-			path = path.replace(/.* ?[~\-=]> ?/, "");
+			path = path.replace(/(.*) ?[~\-=]> ?.*?$/, "$1").trim();
 		}
 	}
 	var respond = function (property) {
@@ -74,7 +74,7 @@ function _ (_object, _path, _newValue) {
 				property = property.hasOwnProperty(specialCase.first().slice(0, -1));
 			} else {
 				if (property.hasOwnProperty(specialCase.first()))
-					property = respond(property[specialCase.first()]);
+					property = property[specialCase.first()];
 				else {
 					if (checkForProperty)
 						return false;

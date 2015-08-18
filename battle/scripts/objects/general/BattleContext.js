@@ -1314,10 +1314,11 @@ function BattleContext (client) {
 					issues.push("The property `" + property + "` was required but was not found.");
 					return false;
 				}
-			}, isNaturalNumber = function (variable, below) {
+			}, isNaturalNumber = function (action, property, below) {
+				var variable = _(action, property);
 				var isNatural = typeof variable === "number" && variable === Math.floor(variable) && variable >= 0 && variable < below;
 				if (!isNatural) {
-					issues.push("The property `" + property + "` should have been a natural number below " + below + " but was `" + variable + "`.");
+					issues.push("The property `action => " + property + "` should have been a natural number below " + below + " but was `" + variable + "`.");
 				}
 				return isNatural;
 			};
@@ -1355,7 +1356,7 @@ function BattleContext (client) {
 						if (["Fight", "Bag", "Pokémon"].contains(action.primary)) {
 							if (!requireProperty(action, "secondary"))
 								return true; // Checks it has a "secondary" property
-							if (!isNaturalNumber(action.secondary, action.primary === "Fight" ? currentBattler.usableMoves().length : action.primary === "Bag" ? character.bag.items.length : character.party.pokemon.length))
+							if (!isNaturalNumber(action, "secondary", action.primary === "Fight" ? currentBattler.usableMoves().length : action.primary === "Bag" ? character.bag.items.length : character.party.pokemon.length))
 								return true; // Check the "secondary" property is a valid integer
 							var isMultiBattle = battleContext.pokemonPerSide() > 1;
 							if (action.primary === "Fight") {
@@ -1368,7 +1369,7 @@ function BattleContext (client) {
 										return true;
 									if (!action.tertiary.hasOwnProperty("team") || action.tertiary.team !== character.team)
 										return true;
-									if (!action.tertiary.hasOwnProperty("position") || !isNaturalNumber(action.tertiary.position, character.party.pokemon.length) || !character.party.pokemon[action.tertiary.position].inBattle())
+									if (!action.tertiary.hasOwnProperty("position") || !isNaturalNumber(action, "tertiary => position", character.party.pokemon.length) || !character.party.pokemon[action.tertiary.position].inBattle())
 										return true;
 									var potentialTargets = battleContext.targetsForMove(currentBattler, Moves._(currentBattler.usableMoves()[action.secondary].move), false), actualTarget = battleContext.pokemonInPlace(action.tertiary);
 									if (!foreach(potentialTargets, function (target) {
@@ -1390,7 +1391,7 @@ function BattleContext (client) {
 									var trainerOfTeam = battleContext.trainerOfTeam(action.tertiary.team);
 									if (!action.tertiary.hasOwnProperty("team") || trainerOfTeam === null)
 										return true;
-									if (!action.tertiary.hasOwnProperty("position") || !isNaturalNumber(action.tertiary.position, trainerOfTeam.party.pokemon.length))
+									if (!action.tertiary.hasOwnProperty("position") || !isNaturalNumber(action, "tertiary => position", trainerOfTeam.party.pokemon.length))
 										return true;
 									var targettedPokemon = trainerOfTeam.party.pokemon[position];
 									if (!action.tertiary.hasOwnProperty("side")) {
@@ -1416,7 +1417,7 @@ function BattleContext (client) {
 								if (isMultiBattle) {
 									if (!requireProperty(action, "tertiary"))
 										return true;
-									if (!isNaturalNumber(action.tertiary, character.party.pokemon.length))
+									if (!isNaturalNumber(action, "tertiary", character.party.pokemon.length))
 										return true;
 									if (!character.party.pokemon[action.tertiary].conscious() || character.party.pokemon[action.tertiary].switching)
 										return true;
@@ -1429,7 +1430,7 @@ function BattleContext (client) {
 								}
 							}
 						}
-						if (action.primary === "Run" && (!battleContext.isWildBattle() || !currentBattler.battler.isTrapped()))
+						if (action.primary === "Run" && (!battleContext.isWildBattle() || currentBattler.battler.isTrapped())) 
 							return true; // Can only run in certain situations
 						if (action.hasOwnProperty("flags")) {
 							if (action.flags.length >= 2 || (action.flags.length === 1 && action.flags.first() !== "mega evolve"))
@@ -1443,7 +1444,7 @@ function BattleContext (client) {
 						} 
 						break;
 					case "send":
-						if (!requireProperty(action, "which") || !isNaturalNumber(action.which, character.healthyEligiblePokemon(true).length))
+						if (!requireProperty(action, "which") || !isNaturalNumber(action, "which", character.healthyEligiblePokemon(true).length))
 							return true;
 						// It has passed all the checks, so can be sent in
 						var poke = character.healthyEligiblePokemon(true)[action.which];
@@ -1451,7 +1452,7 @@ function BattleContext (client) {
 						poke.battler.switching = true;
 						break;
 					case "learn":
-						if (!requireProperty(action, "forget") || (action.forget !== null && isNaturalNumber(action.forget, battleContext.state.data.poke.moves.length)))
+						if (!requireProperty(action, "forget") || (action.forget !== null && isNaturalNumber(action, "forget", battleContext.state.data.poke.moves.length)))
 							return true;
 						break;
 					case "evolve":
@@ -2051,7 +2052,7 @@ function BattleContext (client) {
 			} else {
 				var anyQueries = false, emptyPlaces;
 				// Queueing here is necessary so that the player can switch out their Pokémon before the opponent if the "switching chance" setting is on
-				foreach(battleContext.opposingTrainers, function (trainer) {
+				foreach(battleContext.allTrainers(), function (trainer) {
 					var emptyPlaces = [];
 					foreach(battleContext.alliedTrainers.contains(trainer) ? battleContext.allies : battleContext.opponents, function (poke, i) {
 						if (poke === NoPokemon)
@@ -2179,15 +2180,15 @@ function BattleContext (client) {
 					if (trainer.type === Trainers.type.online) {
 						var ally = battleContext.alliedTrainers.contains(trainer), numberOfPokemonPerTrainer = battleContext.pokemonPerSide() / (ally ? battleContext.alliedTrainers : battleContext.opposingTrainers).length;
 						while (trainer.battlers().length < numberOfPokemonPerTrainer --) {
-							var action = null;
+							var actionNumber = null;
 							foreach(battleContext.communication, function (communication, j) {
 								if (communication.action === "send" && communication.trainer === trainer.identification) {
-									action = j;
+									actionNumber = j;
 									return true;
 								}
 							});
-							if (action !== null) {
-								action = battleContext.communication.remove(action);
+							if (actionNumber !== null) {
+								var action = battleContext.communication.remove(actionNumber);
 								battleContext.enter(trainer.healthyEligiblePokemon(true)[action.which], true, emptyPlaces[ally ? "near" : "far"].shift());
 							} else break;
 						}
@@ -2776,7 +2777,7 @@ function BattleContext (client) {
 					if (!battleContext.process) Textbox.state(poke.name() + " has become confused!");
 					poke.battler.confused = true;
 					battleContext.haveEffect(function (target) {
-						if (!battleContext.process) Textbox.state(target.name() + " broke out of " + target.possessivePronoun() + " confusion!");
+						if (!battleContext.process) Textbox.state(target.name() + " snapped out of " + target.possessivePronoun() + " confusion!");
 						target.battler.confused = false;
 					}, battleContext.random.int(1, 4), poke);
 				}

@@ -97,7 +97,7 @@ TrialServer = {
 					"party" : [
 						new pokemon({
 							species : "Charizard (Nintendo)",
-							level : 1,
+							level : 100,
 							shiny : true,
 							moves : [{
 								move : "Tackle"
@@ -140,7 +140,7 @@ TrialServer = {
 				TrialServer.print("Initialised a new server wild battle.");
 			}
 		},
-		trainerBattle : function () {
+		NPCBattle : function () {
 			if (TrialServer.trigger.battle(TrialServer.generate.playerTeam(), TrialServer.generate.NPCTeam())) {
 				TrialServer.print("Initialised a new server trainer battle.");
 			}

@@ -130,16 +130,16 @@ Moves = {
 							if (self.battler.battle.isWildBattle()) {
 								if (self.level > target.level) {
 									self.battler.battle.finish();
-									if (!self.battler.battle.process)
-										Textbox.state(self.name() + " blew " + target.name() + " away!", function () {
-											self.battler.battle.end({
-												"outcome" : "draw"
-											});
-										});
-									else
+									var after = function () {
 										self.battler.battle.end({
 											"outcome" : "draw"
 										});
+									};
+									if (!self.battler.battle.process) {
+										Textbox.state(self.name() + " blew " + target.name() + " away!", after);
+									} else {
+										after();
+									}
 								} else {
 									if (!self.battler.battle.process) Textbox.state(self.name() + "'s Roar doesn't scare " + target.name() + "!");
 									return {
