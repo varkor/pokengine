@@ -2871,7 +2871,7 @@ function BattleContext (client) {
 			});
 		},
 		inflict : function (poke, status, force) {
-			var types = poke.currentProperty(types);
+			var types = poke.currentProperty("types");
 			if ((poke.status === "none" || force) && (status !== "burned" || !types.contains("Fire")) && (status !== "paralysed" || !types.contains("Electric")) && (status !== "frozen" || !types.contains("Ice")) && ((status !== "poisoned" && status !== "badly poisoned") || (!types.contains("Poison") && !types.contains("Steel")))) {
 				if (!poke.fainted()) {
 					if (!battleContext.process) Textbox.state(poke.name() + " was " + (status !== "asleep" ? status : "put to sleep") + "!");

@@ -133,6 +133,12 @@ function trainer (data) {
 		return self.pokemon() > 0;
 	};
 
+	self.restorePokemon = function () {
+		foreach(self.party.pokemon, function (poke) {
+			poke.heal();
+		});
+	};
+
 	self.healthyPokemon = function (thatAreNotBattling, _excluding, style) {
 		if (!self.hasPokemon())
 			return [];
