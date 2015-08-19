@@ -45,6 +45,9 @@ Relay = {
 					ally = teamB;
 					opponent = teamA;
 					Game.takePossessionOf(ally);
+				} else {
+					ally = teamA;
+					opponent = teamB;
 				}
 				ally.team = ally.identification;
 				opponent.team = opponent.identification;

@@ -81,6 +81,7 @@ Supervisor = {
 						parameters : data.data,
 						rules : data.rules,
 						relay : [],
+						relayed : 0,
 						battle : battle
 					};
 					if (!data.data.hasOwnProperty("teamA"))
@@ -147,7 +148,7 @@ Supervisor = {
 						data : process.parameters
 					}, identifier);
 					// Bring the party up to date on all the actions taken so far
-					Supervisor.send(party, "actions", process.relay, identifier);
+					Supervisor.send(party, "actions", process.relay.slice(0, process.relayed), identifier);
 				});
 				return {
 					success : true
@@ -187,14 +188,14 @@ Supervisor = {
 					// Assumes that the correct number of actions will be sent at once (i.e. no split data packets)
 					var issues = [];
 					if (process.battle.communicationForTrainerIsValid(data.team, data.data, issues)) {
-						var relayed = process.relay.length;
 						process.relay = process.relay.concat(data.data);
-						var actionsToSend = process.relay.slice(relayed);
+						var actionsToSend = process.relay.slice(process.relayed);
 						if (process.battle.state.kind === "waiting" && process.battle.hasCommunicationForTrainers(process.battle.state.for, actionsToSend)) {
 							process.battle.receiveActions(actionsToSend);
 							foreach(process.parties, function (party) {
 								Supervisor.send(party, "actions", actionsToSend, identifier);
 							});
+							process.relayed = process.relay.length;
 						}
 					} else {
 						return {
