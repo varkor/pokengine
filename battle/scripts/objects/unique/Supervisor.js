@@ -10,16 +10,16 @@ Supervisor = {
 	},
 	receive : function (message, data, identifier) {
 		// Supervisor.receive, for the most part, does not guarantee that any function that is invoked directly by the server is validated (although it does do some checking for convenience).
-		if (arguments.length < 2 || arguments.length > 3) {
-			// This is actually an issue with the way Supervisor is invoked
-			return "Supervisor.receive() expects 2 or 3 arguments, but received " + arguments.length + ".";
-		}
 		var unsuccessful = function (reason) {
 			return {
 				success : false,
 				reason : reason
 			};
 		};
+		if (arguments.length < 2 || arguments.length > 3) {
+			// This is actually an issue with the way Supervisor is invoked
+			return unsuccessful("Supervisor.receive() expects 2 or 3 arguments, but received " + arguments.length + ".");
+		}
 		// Check the format of the arguments
 		if (typeof message !== "string")
 			return unsuccessful("The parameter `message` should have been a string, but had type `" + (typeof message) + "`.");
@@ -145,8 +145,8 @@ Supervisor = {
 					parties.push(party);
 					// Initiate the party's battle
 					var data = JSONCopy(process.parameters);
-					if (spectator.perspective !== data.teamA.identification) {
-						if (spectator.perspective !== data.teamB.identification) {
+					if (spectator.perspective !== data.teamA.trainer.identification) {
+						if (spectator.perspective === data.teamB.trainer.identification) {
 							var temp = data.teamA;
 							data.teamA = data.teamB;
 							data.teamB = temp;
@@ -256,12 +256,38 @@ Supervisor = {
 						success : true
 					};
 				}
+				break;
 			default:
 				// An invalid `message` value has been sent
 				return {
 					success : false,
 					reason : "The `message` parameter was not valid (" + message + ")."
 				};
+		}
+	},
+	record : function (identifier) {
+		var unsuccessful = function (reason) {
+			return {
+				success : false,
+				reason : reason
+			};
+		};
+		if (Supervisor.processes.hasOwnProperty(identifier)) {
+			var process = Supervisor.processes[process];
+			if (!process.battle.active) {
+				return {
+					success : true,
+					recording : JSONCopy({
+						parameters : process.parameters,
+						rules : process.rules,
+						relay : process.relay
+					})
+				};
+			} else {
+				return unsuccessful("The battle you tried to record has not finished yet.");
+			}
+		} else {
+			return unsuccessful("No battle existed with the provided identifier `" + identifier + "`.");
 		}
 	}
 };
