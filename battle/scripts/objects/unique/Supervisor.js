@@ -132,24 +132,36 @@ Supervisor = {
 						reason : "The parties did not conform to the battle rules."
 					};
 				}
-			case "join":
+			case "spectate":
 				// Another party joins a battle (as a spectator)
-				// data: parties
-				if (!data.hasOwnProperty("parties"))
-					return unsuccessful("The parameter `data` should have had a `parties` property.");
-				if (!Array.isArray(data.parties))
-					return unsuccessful("The parameter `data.parties` should have been an array.");
-				var process = Supervisor.processes[identifier];
-				process.parties = Supervisor.processes[identifier].parties.concat(data.parties);
-				foreach(data.parties, function (party) {
+				// data: spectators
+				if (!data.hasOwnProperty("spectators"))
+					return unsuccessful("The parameter `data` should have had a `spectators` property.");
+				if (!Array.isArray(data.spectators))
+					return unsuccessful("The parameter `data.spectators` should have been an array.");
+				var process = Supervisor.processes[identifier], parties = [];
+				foreach(data.spectators, function (spectator) {
+					var party = spectator.party;
+					parties.push(party);
 					// Initiate the party's battle
+					var data = JSONCopy(process.parameters);
+					if (spectator.perspective !== data.teamA.identification) {
+						if (spectator.perspective !== data.teamB.identification) {
+							var temp = data.teamA;
+							data.teamA = data.teamB;
+							data.teamB = temp;
+						} else {
+							return unsuccessful("One of the spectators was trying to observe from the perspective of a trainer who was not battling.");
+						}
+					}
 					Supervisor.send(party, "initiate", {
 						rules : process.rules,
-						data : process.parameters
+						data : data
 					}, identifier);
 					// Bring the party up to date on all the actions taken so far
 					Supervisor.send(party, "actions", process.relay.slice(0, process.relayed), identifier);
 				});
+				process.parties = process.parties.concat(parties);
 				return {
 					success : true
 				};

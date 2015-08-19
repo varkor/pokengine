@@ -1929,17 +1929,17 @@ function BattleContext (client) {
 					});
 				}
 				switch (poke.status) {
-					case Statuses.burn:
+					case "burned":
 						if (!battleContext.process) Textbox.state(poke.name() + " is hurt by " + poke.possessivePronoun() + " burn!");
-						battleContext.damage(poke, Move.percentageDamage(target, 1 / 8));
+						battleContext.damage(poke, Move.percentageDamage(poke, 1 / 8));
 						break;
 					case "poisoned":
 						if (!battleContext.process) Textbox.state(poke.name() + " is hurt by the poison!");
-						battleContext.damage(poke, Move.percentageDamage(target, 1 / 8));
+						battleContext.damage(poke, Move.percentageDamage(poke, 1 / 8));
 						break;
 					case "badly poisoned":
 						if (!battleContext.process) Textbox.state(poke.name() + " is hurt by the toxic poison!");
-						battleContext.damage(poke, Move.percentageDamage(target, poke.poison / 16));
+						battleContext.damage(poke, Move.percentageDamage(poke, poke.poison / 16));
 						++ poke.poison;
 						break;
 				}
