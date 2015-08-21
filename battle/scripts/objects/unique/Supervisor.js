@@ -260,6 +260,7 @@ Supervisor = {
 			case "replay":
 				// Plays a recorded battle for a player
 				// data: recording, spectators
+				//? Add a suffix to all identifiers (like "r") to distinguish them from active players so there is no issue with players who are watching replays of their own battles
 				if (!data.hasOwnProperty("spectators"))
 					return unsuccessful("The parameter `data` should have had a `spectators` property.");
 				if (!Array.isArray(data.spectators))

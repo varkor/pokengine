@@ -1947,6 +1947,8 @@ function BattleContext (client) {
 					++ poke.battler.recharging;
 				if (poke.battler.protected)
 					poke.battler.protected = false;
+				if (poke.battler.flinching)
+					poke.battler.flinching = false;
 				poke.battler.damaged[Move.category.physical] = 0;
 				poke.battler.damaged[Move.category.special] = 0;
 			});

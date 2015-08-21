@@ -655,6 +655,7 @@ Moves = {
 				{
 					effect : function (self, target) {
 						self.battler.battle.damage(target, Move.exactDamage(self, target, "Dragon Rage", 40));
+						self.battler.battle.flinch(target);
 					},
 					targets : true
 				}
