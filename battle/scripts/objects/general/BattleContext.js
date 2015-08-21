@@ -2665,7 +2665,7 @@ function BattleContext (client) {
 			}
 			if (!startOrEndOfTurn)
 				battleContext.triggerEvent(Triggers.entrance, {}, poke);
-			battleContext.recoverFromStatus(poke);
+			battleContext.recoverFromStatusInDueCourse(poke);
 		},
 		withdraw : function (poke, forced) {
 			if (!battleContext.process) {
@@ -2872,13 +2872,13 @@ function BattleContext (client) {
 					return true;
 			});
 		},
-		inflict : function (poke, status, force) {
+		inflict : function (poke, status, force, selfInflicted) {
 			var types = poke.currentProperty("types");
 			if ((poke.status === "none" || force) && (status !== "burned" || !types.contains("Fire")) && (status !== "paralysed" || !types.contains("Electric")) && (status !== "frozen" || !types.contains("Ice")) && ((status !== "poisoned" && status !== "badly poisoned") || (!types.contains("Poison") && !types.contains("Steel")))) {
 				if (!poke.fainted()) {
-					if (!battleContext.process) Textbox.state(poke.name() + " was " + (status !== "asleep" ? status : "put to sleep") + "!");
+					if (!battleContext.process && !selfInflicted) Textbox.state(poke.name() + " was " + (status !== "asleep" ? status : "put to sleep") + "!");
 					poke.status = status;
-					battleContext.recoverFromStatus(poke);
+					battleContext.recoverFromStatusInDueCourse(poke);
 				}
 				return true;
 			} else {
@@ -2888,7 +2888,7 @@ function BattleContext (client) {
 				return false;
 			}
 		},
-		recoverFromStatus : function (poke) {
+		recoverFromStatusInDueCourse : function (poke) {
 			if (poke.status === "asleep") {
 				battleContext.haveEffect(function (target) {
 					if (!battleContext.process) Textbox.state(target.name() + " woke up!");
