@@ -2785,11 +2785,11 @@ function BattleContext (client) {
 				}
 			}
 		},
-		infatuate : function (poke) {
+		infatuate : function (poke, objectOfPassion) {
 			if (!poke.fainted()) {
 				if (poke.battler.infatuated) {
 					if (!battleContext.process) Textbox.state(poke.name() + " is already infatuated!");
-				} else {
+				} else if ((poke.gender === "male" && objectOfPassion.gender === "female") || (poke.gender === "female" && objectOfPassion.gender === "male")) {
 					if (!battleContext.process) Textbox.state(poke.name() + " has become infatuated!");
 					poke.battler.infatuated = true;
 					battleContext.haveEffect(function (target) {
