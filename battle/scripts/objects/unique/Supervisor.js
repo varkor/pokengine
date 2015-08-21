@@ -228,22 +228,22 @@ Supervisor = {
 				// Checks the clients for the different parties are in sync with the main battle
 				// data: party, data : { state }
 				var process = Supervisor.processes[identifier], battle = process.battle, issues = [];
-				var assert = function (parameter, local, external) {
-					if (local !== external) {
+				var assert = function (parameter, server, client) {
+					if ((typeof server !== "object" && client !== server) || (typeof server === "object" && JSON.stringify(server) !== JSON.stringify(client))) {
 						issues.push({
 							"reason" : "desynchronised",
 							"party" : data.party,
 							"state" : parameter,
-							"local" : local,
-							"external" : external
+							"server" : server,
+							"client" : client
 						});
 					}
 				};
-				assert("turn", battle.turns, data.data.state.turn);
-				assert("seed", battle.random.seed, data.data.state.seed);
-				assert("weather", battle.weather, data.data.state.weather);
-				forevery(battle.allTrainers(), function (trainer) {
-					assert("trainer: " + trainer.identification, trainer.store(), data.data.state.trainers[trainer.identification]);
+				assert("turn", battle.turns, data.state.turn);
+				assert("seed", battle.random.seed, data.state.seed);
+				assert("weather", battle.weather, data.state.weather);
+				foreach(battle.allTrainers(), function (trainer) {
+					assert("trainer: " + trainer.identification, trainer.store(), data.state.trainers[trainer.identification]);
 				});
 				if (issues.notEmpty()) {
 					return {
@@ -256,7 +256,6 @@ Supervisor = {
 						success : true
 					};
 				}
-				break;
 			case "replay":
 				// Plays a recorded battle for a player
 				// data: recording, spectators

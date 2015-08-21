@@ -1188,18 +1188,16 @@ function BattleContext (client) {
 		},
 		sync : function () {
 			// Sends the current state of the battle to the server to make sure there haven't been any disruptions to the battle, especially of a... suspicious manner
-			if (battleContext.identifier !== null) {
+			if (battleContext.identifier !== null && battleContext.playerIsParticipating()) {
 				var trainers = {};
 				foreach(battleContext.allTrainers(), function (trainer) {
 					trainers[trainer.identification] = trainer.store();
 				});
 				Relay.pass("sync", {
-					state : {
-						turn : battleContext.turns,
-						seed : battleContext.random.seed,
-						weather : battleContext.weather,
-						trainers : trainers
-					}
+					turn : battleContext.turns,
+					seed : battleContext.random.seed,
+					weather : battleContext.weather,
+					trainers : trainers
 				}, battleContext.identifier);
 			}
 		},
@@ -1708,6 +1706,7 @@ function BattleContext (client) {
 				battleContext.advance();
 				return;
 			}
+			battleContext.sync();
 			if (battleContext.pokemonPerSide() > 1) {
 				currentBattler.battler.display.outlined = true;
 				var display = Display.state.save();
@@ -1856,7 +1855,6 @@ function BattleContext (client) {
 					});
 				}
 			});
-			battleContext.sync();
 			battleContext.endDelay();
 		},
 		endDelay : function () {

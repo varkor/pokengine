@@ -33,7 +33,15 @@ TrialServer = {
 			if (!response.success) {
 				TrialServer.warn("The Supervisor responded with an error: " + response.reason, response);
 			}
-		} else if (message !== "sync") {
+		} else if (message === "sync") {
+			var response = Supervisor.receive(message, {
+				party : null,
+				state : data
+			}, identifier);
+			if (!response.success) {
+				TrialServer.warn("The Supervisor responded with an error: " + response.reason, response);
+			}
+		} else {
 			TrialServer.warn("The client attempted to send a message with the `message` parameter equal to `" + message + "`.");
 		}
 	},
