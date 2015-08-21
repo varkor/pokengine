@@ -106,6 +106,11 @@ Move = {
 					}, mover, targetted).contains(true)) {
 						failed = true;
 						statedFailureReason = true;
+					} else if (targetted.effectiveness(move.type, move.classification, mover) === 0) {
+						if (!mover.battler.battle.process) Textbox.state("It doesn't affect " + targetted.name() + "!");
+						failed = true;
+						statedFailureReason = true;
+						missEffect = true;
 					} else {
 						if (!move.classification.contains("_")) {
 							accuracy = (mover.battler.statLevel.accuracy === 0 ? 1 : mover.battler.statLevel.accuracy > 0 ? 1 + (1 / 3) * mover.battler.statLevel.accuracy : 3 / (Math.abs(mover.battler.statLevel.accuracy) + 3));
