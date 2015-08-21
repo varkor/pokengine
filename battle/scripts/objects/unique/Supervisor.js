@@ -97,7 +97,7 @@ Supervisor = {
 					teamA.type = data.data.teamA.type;
 					teamB.type = data.data.teamB.type;
 					var callback = function (flags, trainers) {
-						data.callback(flags, trainers);
+						data.callback(flags, trainers, Supervisor.record(identifier));
 						delete Supervisor.processes[identifier];
 					};
 					if (!data.data.hasOwnProperty("seed"))
@@ -144,19 +144,19 @@ Supervisor = {
 					var party = spectator.party;
 					parties.push(party);
 					// Initiate the party's battle
-					var data = JSONCopy(process.parameters);
-					if (spectator.perspective !== data.teamA.trainer.identification) {
-						if (spectator.perspective === data.teamB.trainer.identification) {
-							var temp = data.teamA;
-							data.teamA = data.teamB;
-							data.teamB = temp;
+					var recording = JSONCopy(process.parameters);
+					if (spectator.perspective !== recording.teamA.trainer.identification) {
+						if (spectator.perspective === recording.teamB.trainer.identification) {
+							var temp = recording.teamA;
+							recording.teamA = recording.teamB;
+							recording.teamB = temp;
 						} else {
 							return unsuccessful("One of the spectators was trying to observe from the perspective of a trainer who was not battling.");
 						}
 					}
 					Supervisor.send(party, "initiate", {
 						rules : process.rules,
-						data : data
+						data : recording
 					}, identifier);
 					// Bring the party up to date on all the actions taken so far
 					Supervisor.send(party, "actions", process.relay.slice(0, process.relayed), identifier);
@@ -257,6 +257,43 @@ Supervisor = {
 					};
 				}
 				break;
+			case "replay":
+				// Plays a recorded battle for a player
+				// data: recording, spectators
+				if (!data.hasOwnProperty("spectators"))
+					return unsuccessful("The parameter `data` should have had a `spectators` property.");
+				if (!Array.isArray(data.spectators))
+					return unsuccessful("The parameter `data.spectators` should have been an array.");
+				if (!data.hasOwnProperty("recording"))
+					return unsuccessful("The parameter `data` should have had a `recording` property.");
+				if (typeof data.recording !== "object")
+					return unsuccessful("The parameter `data.recording` should been an object, but had type `" + (typeof data.recording) + "`.");
+				var process = data.recording, parties = [];
+				foreach(data.spectators, function (spectator) {
+					var party = spectator.party;
+					parties.push(party);
+					// Initiate the party's battle
+					var recording = JSONCopy(process.parameters);
+					if (spectator.perspective !== recording.teamA.trainer.identification) {
+						if (spectator.perspective === recording.teamB.trainer.identification) {
+							var temp = recording.teamA;
+							recording.teamA = recording.teamB;
+							recording.teamB = temp;
+						} else {
+							return unsuccessful("One of the spectators was trying to observe from the perspective of a trainer who was not battling.");
+						}
+					}
+					Supervisor.send(party, "initiate", {
+						rules : process.rules,
+						data : recording
+					}, identifier);
+					// Bring the party up to date on all the actions taken so far
+					Supervisor.send(party, "actions", process.relay, identifier);
+				});
+				process.parties = process.parties.concat(parties);
+				return {
+					success : true
+				};
 			default:
 				// An invalid `message` value has been sent
 				return {
@@ -265,7 +302,7 @@ Supervisor = {
 				};
 		}
 	},
-	record : function (identifier) {
+	record : function (identifier, recordUnfinishedBattle) {
 		var unsuccessful = function (reason) {
 			return {
 				success : false,
@@ -274,7 +311,7 @@ Supervisor = {
 		};
 		if (Supervisor.processes.hasOwnProperty(identifier)) {
 			var process = Supervisor.processes[process];
-			if (!process.battle.active) {
+			if (!process.battle.active || recordUnfinishedBattle) {
 				return {
 					success : true,
 					recording : JSONCopy({
