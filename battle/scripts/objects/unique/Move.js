@@ -330,7 +330,7 @@ Move = {
 			modifiers.critical = 1;
 		var min = (target.effectiveness(type, move.classification) > 0 ? 1 : 0);
 		return {
-			damage : Math.min(target.health, Math.max(1, Math.floor(Math.floor(Math.floor((Math.floor((2 * attacker.level * modifiers.critical) / 5 + 2) * power * (move.category === Move.category.physical ? attacker.stats.attack(true) : attacker.stats["special attack"](true))) / (move.category === Move.category.physical ? target.stats.defence(true) : target.stats["special defence"](true) * modifiers.sandstorm)) / 50 + 2) * modifiers.STAB * modifiers.weather * modifiers.multiTarget * modifiers.burn * target.effectiveness(type, move.classification) * (Math.floor(attacker.trainer.battle.random.number(85, 100)) / 100)))),
+			damage : Math.min(target.health, Math.max(1, Math.floor(Math.floor(Math.floor((Math.floor((2 * attacker.level * modifiers.critical) / 5 + 2) * power * (move.category === Move.category.physical ? attacker.stats.attack(modifiers.critical === 1 || attacker.battler.statLevel.attack >= 0) : attacker.stats["special attack"](modifiers.critical === 1 || attacker.battler.statLevel["special attack"] >= 0))) / (move.category === Move.category.physical ? target.stats.defence(modifiers.critical === 1 || target.battler.statLevel.defence <= 0) : target.stats["special defence"](modifiers.critical === 1 || target.battler.statLevel["special defence"] <= 0) * modifiers.sandstorm)) / 50 + 2) * modifiers.STAB * modifiers.weather * modifiers.multiTarget * modifiers.burn * target.effectiveness(type, move.classification) * (Math.floor(attacker.trainer.battle.random.number(85, 100)) / 100)))),
 			effectiveness : target.effectiveness(type, move.classification, attacker),
 			critical : (modifiers.critical > 1),
 			category : move.category,
