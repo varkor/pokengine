@@ -1455,6 +1455,7 @@ function BattleContext (client) {
 						if (action.primary === "Run" && (!battleContext.isWildBattle() || currentBattler.battler.isTrapped())) 
 							return true; // Can only run in certain situations
 						if (action.hasOwnProperty("flags")) {
+							properties.push("flags");
 							if (action.flags.length >= 2 || (action.flags.length === 1 && action.flags.first() !== "mega evolve"))
 								return true; // The only valid flag at the moment is "mega evolve"
 							// Mega Evolution Validation
@@ -1487,8 +1488,10 @@ function BattleContext (client) {
 						break;
 				}
 				// We've already ensured that every required property is in the keys, so if they're the same length, they must be equal
-				if (Object.keys(action).length !== properties.length)
+				if (Object.keys(action).length !== properties.length) {
+					issues.push("The communication contained more data than was expected.");
 					return true;
+				}
 			}));
 			// Restore preserved properties
 			forevery(preservation, function (preserved, key) {
@@ -1734,9 +1737,6 @@ function BattleContext (client) {
 				battleContext.advance();
 				return;
 			}
-			if (battleContext.selection === 0) {
-				battleContext.sync();
-			}
 			if (battleContext.pokemonPerSide() > 1) {
 				currentBattler.battler.display.outlined = true;
 				var display = Display.state.save();
@@ -1896,10 +1896,12 @@ function BattleContext (client) {
 					if (!battleContext.process) Textbox.effect(effect);
 					else effect();
 				} else {
-					if (battleContext.playerIsParticipating())
+					if (battleContext.playerIsParticipating()) {
+						battleContext.sync();
 						battleContext.prompt();
-					else
+					} else {
 						battleContext.advance();
+					}
 				}
 			}
 		},
