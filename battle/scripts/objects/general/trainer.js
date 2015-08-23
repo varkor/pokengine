@@ -50,6 +50,7 @@ function trainer (data) {
 
 	self.battle = null; // The BattleContext object representing the battle the trainer is currently in (null if they are participating in no battle currently).
 	self.megaEvolution = false; // Whether the trainer has Mega Evolved their Pokémon during the current battle, whether they intend to, or whether they haven't at all
+	self.mostRecentlyFaintedPokemon = null; // Self-explanatory — used for escape chances
 
 	self.store = function () {
 		// Returns an object that contains all the data for the trainer, without any methods

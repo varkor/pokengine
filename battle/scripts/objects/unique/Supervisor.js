@@ -310,7 +310,7 @@ Supervisor = {
 			};
 		};
 		if (Supervisor.processes.hasOwnProperty(identifier)) {
-			var process = Supervisor.processes[process];
+			var process = Supervisor.processes[identifier];
 			if (!process.battle.active || recordUnfinishedBattle) {
 				return {
 					success : true,

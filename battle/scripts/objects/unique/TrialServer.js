@@ -5,16 +5,20 @@ TrialServer = {
 	begin : function () {
 		// Initialise the Supervisor
 		Supervisor.send = function (party, message, data, identifier) {
-			TrialServer.send(party, message, data, identifier);
+			setTimeout(function () {
+				TrialServer.send(party, message, data, identifier); // We get emulation issues if we just assume we can directly invoke functions across the server-client gap
+			}, 0);
 		};
 		// Initialise the Relay
 		Relay.identification = 3;
 		Relay.pass = function (message, data, identifier) {
-			TrialServer.pass(message, data, identifier);
+			setTimeout(function () {
+				TrialServer.pass(message, data, identifier); // We get emulation issues if we just assume we can directly invoke functions across the server-client gap
+			}, 0);
 		};
 	},
 	send : function (party, message, data, identifier) {
-		TrialServer.print("Supervisor is sending a message (\"" + message + "\") to Relay.");
+		TrialServer.print("Supervisor is sending a message (\"" + message + "\") to Relay.", data);
 		if (message === "initiate") {
 			data.callback = function (flags, trainers) {
 				TrialServer.print("Relay battle ended with flags:", flags," and trainers:", trainers);
@@ -23,7 +27,7 @@ TrialServer = {
 		Relay.receive(message, data, identifier);
 	},
 	pass : function (message, data, identifier) {
-		TrialServer.print("Relay is sending a message (\"" + message + "\") to Supervisor.");
+		TrialServer.print("Relay is sending a message (\"" + message + "\") to Supervisor.", data);
 		if (message === "relay") {
 			var response = Supervisor.receive(message, {
 				party : null, // TrialServer only supports one client at the moment
@@ -46,7 +50,17 @@ TrialServer = {
 		}
 	},
 	print : function (message) {
-		console.log(message);
+		var args = [];
+		foreach(arguments, function (arg) {
+			args.push(arg);
+		});
+		if (args.length > 2) {
+			console.log(message, args.slice(1));
+		} else if (args.length === 2) {
+			console.log(message, args[1]);
+		} else {
+			console.log(message);
+		}
 	},
 	warn : function (message) {
 		var args = [];
@@ -133,7 +147,7 @@ TrialServer = {
 					clauses : []
 				},
 				callback : function (flags, trainers) {
-					TrialServer.print("Supervisor battle ended with flags:", flags," and trainers:", trainers);
+					TrialServer.print("Supervisor battle ended with flags:", flags, " and trainers:", trainers);
 				}
 			});
 			if (!response.success) {

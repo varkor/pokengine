@@ -65,7 +65,9 @@ Relay = {
 				}
 				break;
 			case "terminate": // A battle must be stopped
-				Relay.processes[identifier].battle.end(true);
+				Relay.processes[identifier].battle.end({
+					"outcome" : "termination"
+				});
 				Battle = null;
 				delete Relay.processes[identifier];
 				break;
