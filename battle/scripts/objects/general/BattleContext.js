@@ -1207,6 +1207,7 @@ function BattleContext (client) {
 		},
 		advance : function () {
 			if (!battleContext.playerIsParticipating() || ++ battleContext.selection === Game.player.battlers().length) {
+				battleContext.sync();
 				battleContext.queue = battleContext.queue.concat(battleContext.actions);
 				battleContext.actions = [];
 				if (!battleContext.process) {
@@ -1375,7 +1376,7 @@ function BattleContext (client) {
 										return true;
 									if (!action.tertiary.hasOwnProperty("side"))
 										return true;
-									if (!action.tertiary.hasOwnProperty("team") || action.tertiary.team !== character.team)
+									if (!action.tertiary.hasOwnProperty("team"))
 										return true;
 									if (!action.tertiary.hasOwnProperty("position") || !isNaturalNumber(action, "tertiary => position", character.party.pokemon.length) || !character.party.pokemon[action.tertiary.position].inBattle())
 										return true;
@@ -1430,22 +1431,25 @@ function BattleContext (client) {
 								}
 							} 
 							if  (action.primary === "Pokémon") {
-								if (!character.party.pokemon[action.secondary].conscious() || currentBattler.battler.isTrapped())
-									return true; // If the player is switching to use a Pokémon, it must be healthy, and the current Pokémon cannot be trapped
-								if (isMultiBattle) {
-									if (!requireProperty(action, "tertiary"))
-										return true;
-									if (!isNaturalNumber(action, "tertiary", character.party.pokemon.length))
-										return true;
-									if (!character.party.pokemon[action.tertiary].conscious() || character.party.pokemon[action.tertiary].switching)
-										return true;
-									// It has passed all the checks, so can be sent in
-									var poke = character.party.pokemon[action.secondary];
-									preservation.pokemon[battleContext.allTrainers().indexOf(poke.trainer) + " => party => pokemon => " + poke.trainer.party.pokemon.indexOf(poke) + " => battler => switching"] = false;
-									preservation.pokemon[battleContext.allTrainers().indexOf(currentBattler.trainer) + " => party => pokemon => " + currentBattler.trainer.party.pokemon.indexOf(currentBattler) + " => battler => switching"] = false;
-									poke.battler.switching = true;
-									currentBattler.battler.switching = true;
+								// If the player is switching to use a Pokémon, it must be healthy, and the current Pokémon cannot be trapped
+								if (!character.party.pokemon[action.secondary].conscious()) {
+									issues.push("The player tried to switch to a Pokémon that was not conscious.");
+									return true;
 								}
+								if (character.party.pokemon[action.secondary].battler.switching) {
+									issues.push("The player tried to switch to a Pokémon that was already switching out.");
+									return true;
+								}
+								if (currentBattler.battler.isTrapped()) {
+									issues.push("The player tried to switching out a Pokémon that was trapped.");
+									return true; 
+								}
+								// It has passed all the checks, so can be sent in
+								var poke = character.party.pokemon[action.secondary];
+								preservation.pokemon[battleContext.allTrainers().indexOf(poke.trainer) + " => party => pokemon => " + poke.trainer.party.pokemon.indexOf(poke) + " => battler => switching"] = false;
+								preservation.pokemon[battleContext.allTrainers().indexOf(currentBattler.trainer) + " => party => pokemon => " + currentBattler.trainer.party.pokemon.indexOf(currentBattler) + " => battler => switching"] = false;
+								poke.battler.switching = true;
+								currentBattler.battler.switching = true;
 							}
 						}
 						if (action.primary === "Run" && (!battleContext.isWildBattle() || currentBattler.battler.isTrapped())) 
@@ -1575,10 +1579,10 @@ function BattleContext (client) {
 			// Returns an array of all the Pokémon the user could use the item on
 			var targetedPokemon = item.targets, targets;
 			if (targetedPokemon === Move.targets.party) {
-				targets = character.party.pokemon;
+				targets = trainer.party.pokemon;
 			} else if (targetedPokemon === Move.targets.opponents) {
 				targets = [];
-				foreach(battleContext.opponents, function (opponent) {
+				foreach(battleContext.alliedTrainers.contains(trainer) ? battleContext.opponents : battleContext.allies, function (opponent) {
 					targets.push(opponent);
 				});
 				targets.reverse();
@@ -1730,7 +1734,6 @@ function BattleContext (client) {
 				battleContext.advance();
 				return;
 			}
-			battleContext.sync();
 			if (battleContext.pokemonPerSide() > 1) {
 				currentBattler.battler.display.outlined = true;
 				var display = Display.state.save();
