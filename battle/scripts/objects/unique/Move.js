@@ -87,7 +87,7 @@ Move = {
 			if (targetPokemon !== NoPokemon || affectsEntireSide) {
 				Move.renderAnimation(mover, move, stage, targetPokemon, constant);
 				var displayRendered = Display.state.save();
-				stateEffect = Textbox.effect(function () { Display.state.load(displayRendered); });
+				stateEffect = Textbox.effect(function (displayRendered) { return function () { Display.state.load(displayRendered); }; }(displayRendered));
 			}
 		}
 		if (move.effects.hasOwnProperty("constant") && (targetPokemon !== NoPokemon || affectsEntireSide)) {
@@ -200,7 +200,7 @@ Move = {
 					// 	battler.resetDisplay(targeted.battler);
 					// });
 					var displayRendered = Display.state.save();
-					Textbox.effect(function () { Display.state.load(displayRendered); });
+					Textbox.effect(function (displayRendered) { return function () { Display.state.load(displayRendered); }; }(displayRendered));
 				}
 			}
 		} else {
