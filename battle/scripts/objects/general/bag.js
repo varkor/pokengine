@@ -110,8 +110,9 @@ function bag (items) {
 	self.use = function (item, on, who) {
 		var index = self.indexOfItem(item), item = Items._(self.items[index].item);
 		-- self.items[index].intentToUse;
-		if (item.useMessage)
+		if (item.useMessage && !on.battler.battle.process) {
 			Textbox.state(who.pronoun(true) + " used the " + item.fullname + " on " + on.name() + "!");
+		}
 		item.effect(item, on, who);
 		self.remove(index);
 	};

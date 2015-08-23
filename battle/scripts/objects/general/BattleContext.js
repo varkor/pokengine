@@ -1207,7 +1207,6 @@ function BattleContext (client) {
 		},
 		advance : function () {
 			if (!battleContext.playerIsParticipating() || ++ battleContext.selection === Game.player.battlers().length) {
-				battleContext.sync();
 				battleContext.queue = battleContext.queue.concat(battleContext.actions);
 				battleContext.actions = [];
 				if (!battleContext.process) {
@@ -1216,8 +1215,9 @@ function BattleContext (client) {
 				}
 				battleContext.flushInputs();
 				battleContext.waitForActions("command", battleContext.giveTrainersActions);
-			} else
+			} else {
 				battleContext.prompt();
+			}
 		},
 		giveTrainersActions : function () {
 			foreach(battleContext.allTrainers(), function (trainer) {
@@ -1420,7 +1420,6 @@ function BattleContext (client) {
 										}
 									}
 									var potentialTargets = battleContext.targetsForItem(character, Items._(item.item));
-									console.log(item, potentialTargets, targetedPokemon);
 									if (!potentialTargets.contains(targetedPokemon)) {
 										issues.push("The possible targets for that item did not include the Pokémon that was actually targeted.");
 										return true;
@@ -1733,6 +1732,9 @@ function BattleContext (client) {
 			if (battleContext.pokemonForcedIntoAction(currentBattler)) {
 				battleContext.advance();
 				return;
+			}
+			if (battleContext.selection === 0) {
+				battleContext.sync();
 			}
 			if (battleContext.pokemonPerSide() > 1) {
 				currentBattler.battler.display.outlined = true;
