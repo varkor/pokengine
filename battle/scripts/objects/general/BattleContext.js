@@ -1369,7 +1369,8 @@ function BattleContext (client) {
 								return true; // Check the "secondary" property is a valid integer
 							var isMultiBattle = battleContext.pokemonPerSide() > 1;
 							if (action.primary === "Fight") {
-								if (isMultiBattle) {
+								var move = Moves._(currentBattler.usableMoves()[action.secondary].move);
+								if (isMultiBattle && move.targets !== Move.targets.opposingSide && move.targets !== Move.targets.alliedSide) {
 									if (!requireProperty(action, "tertiary"))
 										return true;
 									if (typeof action.tertiary !== "object")
