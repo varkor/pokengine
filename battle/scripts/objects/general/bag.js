@@ -2,7 +2,7 @@ function bag (items) {
 	var self = this;
 
 	if (arguments.length >= 1) {
-		self.items = items;
+		self.items = JSONCopy(items);
 		foreach(self.items, function (item) {
 			item.intentToUse = 0;
 		});
@@ -17,7 +17,7 @@ function bag (items) {
 				quantity : item.quantity
 			});
 		});
-		return store;
+		return JSONCopy(store);
 	};
 
 	self.usableItems = function (direct) {
@@ -103,6 +103,7 @@ function bag (items) {
 	self.intendToUse = function (item, quantity) {
 		if (arguments.length < 2)
 			quantity = 1;
+		console.log("intend to use", item);
 		self.items[self.indexOfItem(item)].intentToUse += quantity;
 	};
 

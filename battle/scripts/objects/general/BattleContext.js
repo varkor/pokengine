@@ -1383,14 +1383,17 @@ function BattleContext (client) {
 									if (!foreach(potentialTargets, function (target) {
 										return target.team === actualTarget.team && target.position === actualTarget.position;
 									})) {
+										issues.push("There was no Pokémon with the same position and team as the move attempted to target.");
 										return true; // The Pokémon that has been selected to attack cannot be targeted with the selected move
 									}
 								}
 							}
 							if (action.primary === "Bag") {
 								var item = character.bag.items[action.secondary];
-								if (!character.bag.usableItems(true).contains(item))
-									return true; // If the player is using an item, it must actually be a useable item, rather than, for example, a key item. Additionally, the player must not have decided to use it yet already (in a double battle, say).
+								if (!character.bag.usableItems(true).contains(item)) {
+									issues.push("The item the player tried to use was not a usable item.");
+									return true;
+								}
 								if (![Move.targets.opposingSide, Move.targets.alliedSide].contains(Items._(item.item).targets)) {
 									if (!requireProperty(action, "tertiary"))
 										return true;
@@ -1401,22 +1404,29 @@ function BattleContext (client) {
 										return true;
 									if (!action.tertiary.hasOwnProperty("position") || !isNaturalNumber(action, "tertiary => position", trainerOfTeam.party.pokemon.length))
 										return true;
-									var targetedPokemon = trainerOfTeam.party.pokemon[position];
+									var targetedPokemon = trainerOfTeam.party.pokemon[action.tertiary.position];
 									if (!action.tertiary.hasOwnProperty("side")) {
 										// The item is being used on a Pokémon that is not currently battling
-										if (targetedPokemon.inBattle())
+										if (targetedPokemon.inBattle()) {
+											issues.push("An item was attempted to be used on a Pokémon that is not battling as if it were.");
 											return true; // Tried to use an item on a Pokémon that is not battling as if it were
+										}
 									} else {
 										// The item is being used on a Pokémon that is battling
-										if (!targetedPokemon.inBattle())
+										if (!targetedPokemon.inBattle()) {
+											issues.push("An item was attempted to be used on a Pokémon that is battling as if it were not.");
 											return true; // Tried to use an item on a Pokémon that is battling as if it was not
+										}
 									}
 									var potentialTargets = battleContext.targetsForItem(character, Items._(item.item));
-									if (!potentialTargets.contains(targetedPokemon))
+									console.log(item, potentialTargets, targetedPokemon);
+									if (!potentialTargets.contains(targetedPokemon)) {
+										issues.push("The possible targets for that item did not include the Pokémon that was actually targeted.");
 										return true;
+									}
 									// It has passed all the checks, so can be used
-									preservation.character["bag => items => " + character.bag.indexOfItem(secondary) + " => intentToUse"] = character.bag.items[character.bag.indexOfItem(item)].intentToUse;
-									character.bag.intendToUse(secondary);
+									preservation.character["bag => items => " + action.secondary + " => intentToUse"] = character.bag.items[action.secondary].intentToUse;
+									character.bag.intendToUse(action.secondary);
 								}
 							} 
 							if  (action.primary === "Pokémon") {

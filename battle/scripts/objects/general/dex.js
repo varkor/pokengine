@@ -1,6 +1,11 @@
 function dex (data) {
 	var self = this;
 
+	if (arguments.length < 1)
+		data = {};
+	else
+		data = JSONCopy(data);
+
 	self.seen = arguments.length >= 1 && data.hasOwnProperty("seen") ? data.seen : [];
 	self.caught = arguments.length >= 1 && data.hasOwnProperty("caught") ? data.caught : [];
 

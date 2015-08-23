@@ -14,6 +14,7 @@ function pokemon (data, validate) {
 
 	if (arguments.length < 1)
 		data = {};
+
 	var setProperty = function (property, value) {
 		if (data.hasOwnProperty(property)) {
 			self[property] = data[property];
