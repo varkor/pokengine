@@ -1,6 +1,10 @@
 var q;
 
-Stats = ["health", "attack", "defence", "special attack", "special defence", "speed", "accuracy", "evasion", "critical"];
+Stats = {
+	permanent : ["health", "attack", "defence", "special attack", "special defence", "speed"],
+	transient : ["accuracy", "evasion", "critical"],
+};
+Stats.all = [].concat(Stats.permanent, Stats.transient);
 
 Experiences = ["erratic", "fast", "medium fast", "medium slow", "slow", "fluctuating"];
 

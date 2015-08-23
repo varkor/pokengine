@@ -2648,7 +2648,7 @@ function BattleContext (client) {
 			});
 			if (initial) {
 				var OPowers = 0, takeEffect = {};
-				foreach(Stats, function (stat) {
+				foreach(Stats.all, function (stat) {
 					if (poke.trainer.OPowers[stat] !== 0) {
 						++ OPowers;
 						takeEffect[stat] = poke.trainer.OPowers[stat];

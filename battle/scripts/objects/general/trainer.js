@@ -44,7 +44,7 @@ function trainer (data) {
 		"Prize Money" : 0,
 		"Capture" : 0
 	};
-	foreach(Stats, function (stat) {
+	foreach(Stats.all, function (stat) {
 		self.OPowers[stat] = 0;
 	});
 

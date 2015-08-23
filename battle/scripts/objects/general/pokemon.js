@@ -86,14 +86,14 @@ function pokemon (data, validate) {
 	setProperty("status", "none");
 	setProperty("IVs", function () {
 		var IVs = {};
-		foreach(Stats, function (stat) {
+		foreach(Stats.permanent, function (stat) {
 			IVs[stat] = random.int(0, 31);
 		});
 		return IVs;
 	});
 	setProperty("EVs", function () {
 		var EVs = {};
-		foreach(Stats, function (stat) {
+		foreach(Stats.permanent, function (stat) {
 			EVs[stat] = 0;
 		});
 		return EVs;
@@ -145,7 +145,7 @@ function pokemon (data, validate) {
 
 	setProperty("health", self.maximumHealth());
 
-	foreach(Stats, function (stat) {
+	foreach(Stats.permanent, function (stat) {
 		if (stat === "health")
 			return;
 		self.stats[stat] = function (stageModifier) {

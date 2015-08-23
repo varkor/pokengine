@@ -22,7 +22,7 @@ function battler (pokemon) {
 		self.side = null;
 		self.statLevel = [];
 		self.statLevel = {};
-		foreach(Stats, function (stat) {
+		foreach(Stats.all, function (stat) {
 			self.statLevel[stat] = 0;
 		});
 		self.opponents = []; // Which Pokémon have been battling whilst this Pokémon also has (used to work out which Pokémon gain experience from this one's defeat)
