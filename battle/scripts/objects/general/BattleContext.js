@@ -1325,9 +1325,9 @@ function BattleContext (client) {
 				}
 			}, isNaturalNumber = function (action, property, below) {
 				var variable = _(action, property);
-				var isNatural = typeof variable === "number" && variable === Math.floor(variable) && variable >= 0 && variable < below;
+				var isNatural = typeof variable === "number" && variable === Math.floor(variable) && variable >= 0 && (arguments.length < 3 || variable < below);
 				if (!isNatural) {
-					issues.push("The property `action => " + property + "` should have been a natural number below " + below + " but was `" + variable + "`.");
+					issues.push("The property `action => " + property + "` should have been a natural number" + (arguments.length < 3 ? "" : " below " + below )+ " but was `" + variable + "`.");
 				}
 				return isNatural;
 			};
@@ -1381,11 +1381,21 @@ function BattleContext (client) {
 										issues.push("The property `action.tertiary.side` was required but was not found.");
 										return true;
 									}
+									if (typeof action.tertiary.side !== "object") {
+										issues.push("The property `action.tertiary.side` should have been an object, but was actually a `" + typeof action.tertiary.side + "`.");
+										return true;
+									}
 									if (!action.tertiary.hasOwnProperty("team")) {
 										issues.push("The property `action.tertiary.team` was required but was not found.");
 										return true;
 									}
-									if (!action.tertiary.hasOwnProperty("position") || !isNaturalNumber(action, "tertiary => position", character.party.pokemon.length) || !character.party.pokemon[action.tertiary.position].inBattle()) {
+									if (!isNaturalNumber(action, "tertiary => team"))
+										return true;
+									if (battleContext.trainerOfTeam(action.tertiary.team) === null) {
+										issues.push("There was no trainer with the specified team, `" + ation.tertiary.team + "`.");
+										return true;
+									}
+									if (!action.tertiary.hasOwnProperty("position") || !isNaturalNumber(action, "tertiary => position", battleContext.pokemonPerSide())) {
 										issues.push("The value of the property `action.tertiary.position` was invalid.");
 										return true;
 									}
@@ -1411,15 +1421,22 @@ function BattleContext (client) {
 										issues.push("The property `action.tertiary` should have been an object, but was actually a `" + typeof action.tertiary + "`.");
 										return true;
 									}
-									var trainerOfTeam = battleContext.trainerOfTeam(action.tertiary.team);
-									if (!action.tertiary.hasOwnProperty("team") || trainerOfTeam === null) {
-										issues.push("The property `action.tertiary.team` was invalid.");
+									if (!action.tertiary.hasOwnProperty("team")) {
+										issues.push("The property `action.tertiary.team` was required but was not found.");
 										return true;
 									}
-									if (!action.tertiary.hasOwnProperty("position") || !isNaturalNumber(action, "tertiary => position", trainerOfTeam.party.pokemon.length))
+									if (battleContext.trainerOfTeam(action.tertiary.team) === null) {
+										issues.push("There was no trainer with the specified team, `" + ation.tertiary.team + "`.");
 										return true;
-									var targetedPokemon = trainerOfTeam.party.pokemon[action.tertiary.position];
+									}
+									if (!action.tertiary.hasOwnProperty("position") || !isNaturalNumber(action, "tertiary => position", battleContext.pokemonPerSide()))
+										return true;
+									var targetedPokemon = battleContext.pokemonInPlace(action.tertiary);
 									if (!action.tertiary.hasOwnProperty("side")) {
+										if (typeof action.tertiary.side !== "object") {
+											issues.push("The property `action.tertiary.side` should have been an object, but was actually a `" + typeof action.tertiary.side + "`.");
+											return true;
+										}
 										// The item is being used on a Pokémon that is not currently battling
 										if (targetedPokemon.inBattle()) {
 											issues.push("An item was attempted to be used on a Pokémon that is not battling as if it were.");
