@@ -249,7 +249,7 @@ Supervisor = {
 					return {
 						success : false,
 						reason : "Not every process was in sync.",
-						issues : issues 
+						issues : issues
 					};
 				} else {
 					return {

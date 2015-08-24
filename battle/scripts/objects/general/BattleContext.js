@@ -1356,7 +1356,7 @@ function BattleContext (client) {
 					}
 					currentBattler = inBattle[selection ++];
 				}
-				if (!requireProperty(action, "trainer") || !requireProperty(action, "action")) // The `trainer` parameter is effectively guaranteed because Supervisor adds it itself, so we don't need to check that they all match up 
+				if (!requireProperty(action, "trainer") || !requireProperty(action, "action")) // The `trainer` parameter is effectively guaranteed because Supervisor adds it itself, so we don't need to check that they all match up
 					return true;
 				switch (battleContext.state.for) {
 					case "command":
@@ -1373,14 +1373,22 @@ function BattleContext (client) {
 								if (isMultiBattle && move.targets !== Move.targets.opposingSide && move.targets !== Move.targets.alliedSide) {
 									if (!requireProperty(action, "tertiary"))
 										return true;
-									if (typeof action.tertiary !== "object")
+									if (typeof action.tertiary !== "object") {
+										issues.push("The property `action.tertiary` should have been an object, but was actually a `" + typeof action.tertiary + "`.");
 										return true;
-									if (!action.tertiary.hasOwnProperty("side"))
+									}
+									if (!action.tertiary.hasOwnProperty("side")) {
+										issues.push("The property `action.tertiary.side` was required but was not found.");
 										return true;
-									if (!action.tertiary.hasOwnProperty("team"))
+									}
+									if (!action.tertiary.hasOwnProperty("team")) {
+										issues.push("The property `action.tertiary.team` was required but was not found.");
 										return true;
-									if (!action.tertiary.hasOwnProperty("position") || !isNaturalNumber(action, "tertiary => position", character.party.pokemon.length) || !character.party.pokemon[action.tertiary.position].inBattle())
+									}
+									if (!action.tertiary.hasOwnProperty("position") || !isNaturalNumber(action, "tertiary => position", character.party.pokemon.length) || !character.party.pokemon[action.tertiary.position].inBattle()) {
+										issues.push("The value of the property `action.tertiary.position` was invalid.");
 										return true;
+									}
 									var potentialTargets = battleContext.targetsForMove(currentBattler, Moves._(currentBattler.usableMoves()[action.secondary].move), false), actualTarget = battleContext.pokemonInPlace(action.tertiary);
 									if (!foreach(potentialTargets, function (target) {
 										return target.team === actualTarget.team && target.position === actualTarget.position;
@@ -1399,11 +1407,15 @@ function BattleContext (client) {
 								if (![Move.targets.opposingSide, Move.targets.alliedSide].contains(Items._(item.item).targets)) {
 									if (!requireProperty(action, "tertiary"))
 										return true;
-									if (typeof action.tertiary !== "object")
-										return true; 
-									var trainerOfTeam = battleContext.trainerOfTeam(action.tertiary.team);
-									if (!action.tertiary.hasOwnProperty("team") || trainerOfTeam === null)
+									if (typeof action.tertiary !== "object") {
+										issues.push("The property `action.tertiary` should have been an object, but was actually a `" + typeof action.tertiary + "`.");
 										return true;
+									}
+									var trainerOfTeam = battleContext.trainerOfTeam(action.tertiary.team);
+									if (!action.tertiary.hasOwnProperty("team") || trainerOfTeam === null) {
+										issues.push("The property `action.tertiary.team` was invalid.");
+										return true;
+									}
 									if (!action.tertiary.hasOwnProperty("position") || !isNaturalNumber(action, "tertiary => position", trainerOfTeam.party.pokemon.length))
 										return true;
 									var targetedPokemon = trainerOfTeam.party.pokemon[action.tertiary.position];
@@ -1452,15 +1464,21 @@ function BattleContext (client) {
 								currentBattler.battler.switching = true;
 							}
 						}
-						if (action.primary === "Run" && (!battleContext.isWildBattle() || currentBattler.battler.isTrapped())) 
+						if (action.primary === "Run" && (!battleContext.isWildBattle() || currentBattler.battler.isTrapped())) {
+							issues.push("The player tried to run in a context in which running is disallowed.");
 							return true; // Can only run in certain situations
+						}
 						if (action.hasOwnProperty("flags")) {
 							properties.push("flags");
-							if (action.flags.length >= 2 || (action.flags.length === 1 && action.flags.first() !== "mega evolve"))
+							if (action.flags.length >= 2 || (action.flags.length === 1 && action.flags.first() !== "mega evolve")) {
+								issues.push("Flags were included which were not valid.");
 								return true; // The only valid flag at the moment is "mega evolve"
+							}
 							// Mega Evolution Validation
-							if (currentBattler.potentialMegaEvolution(character.megaEvolution === currentBattler) === null)
+							if (currentBattler.potentialMegaEvolution(character.megaEvolution === currentBattler) === null) {
+								issues.push("The player tried to mega evolve, which is not possible with the current Pokémon.");
 								return null;
+							}
 							// It has passed all the checks, so can be Mega Evolved
 							preservation.character.megaEvolution = character.megaEvolution;
 							character.megaEvolution = currentBattler;
@@ -1479,12 +1497,16 @@ function BattleContext (client) {
 							return true;
 						break;
 					case "evolve":
-						if (!requireProperty(action, "prevent") || typeof action.prevent !== "boolean")
+						if (!requireProperty(action, "prevent") || typeof action.prevent !== "boolean") {
+							issues.push("The value of the property `action.prevent` was invalid.");
 							return true;
+						}
 						break;
 					case "flee":
-						if (!requireProperty(action, "attempted") || typeof action.attempted !== "boolean")
+						if (!requireProperty(action, "attempted") || typeof action.attempted !== "boolean") {
+							issues.push("The value of the property `action.attempted` was invalid.");
 							return true;
+						}
 						break;
 				}
 				// We've already ensured that every required property is in the keys, so if they're the same length, they must be equal
