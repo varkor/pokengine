@@ -104,7 +104,7 @@ function pokemon (data, validate) {
 	setProperty("item", null);
 	setProperty("friendship", species("friendship"));
 	setProperty("shiny", function () {
-		return random.chance(8192);
+		return random.chance(4096);
 	});
 	setProperty("egg", null); // Number of egg cycles, or null (for not an egg)
 	setProperty("caught", null);
