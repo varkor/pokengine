@@ -56,6 +56,14 @@ function srandom (seed) {
 	self.chooseFromArray = function (array) {
 		return array[self.int(array.length - 1)];
 	};
+
+	self.chooseDistinctSelectionFromArray = function (array, number) {
+		var subarray = array.slice(0), selection = [];
+		for (var i = 0, j; i < number; ++ i) {
+			selection = selection.concat(subarray.splice(self.int(subarray.length - 1), 1));
+		}
+		return selection;
+	};
 	
 	self.chooseWeighted = function () {
 		var r = self.point(), accumulator = 0;
