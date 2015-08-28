@@ -118,7 +118,7 @@ function trainer (data) {
 			self.party.add(poke);
 		else {
 			var placement = self.storage.add(poke);
-			if (!self.inBattle() || !self.battlers().first().battler.battle.process)
+			if (!self.inBattle() || !self.battlee.process)
 				Textbox.say(poke.name() + " has been placed in <colour:cyan>" + placement.box + "<colour:>.");
 		}
 	};
@@ -179,7 +179,7 @@ function trainer (data) {
 	};
 
 	self.inBattle = function () {
-		return self.battlers().notEmpty();
+		return self.battle !== null;
 	};
 
 	self.holdsControlOverPokemonUpToLevel = function () {
