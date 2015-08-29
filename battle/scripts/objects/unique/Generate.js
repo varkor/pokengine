@@ -10,6 +10,11 @@ Generate = {
 				forevery(moveset, function (moves) {
 					potentialMoves = potentialMoves.concat(moves);
 				});
+				potentialMoves = potentialMoves.map(function (move) {
+					return {
+						move : move
+					};
+				});
 				competitors.push(new pokemon({
 					species : particularSpecies,
 					moves : Generate.random.chooseDistinctSelectionFromArray(potentialMoves, 4),
