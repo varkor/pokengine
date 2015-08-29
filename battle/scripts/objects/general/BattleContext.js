@@ -3061,7 +3061,7 @@ function BattleContext (client) {
 				battleContext.haveEffect(function (target) {
 					if (!battleContext.process) Textbox.state(target.name() + " woke up!");
 					target.status = "none";
-				}, battleContext.random.int(1, 5), poke);
+				}, battleContext.random.int(0, 3), poke);
 			}
 			if (poke.status === "frozen") {
 				battleContext.haveEffect(function (target) {
