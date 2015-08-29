@@ -17,7 +17,7 @@ Generate = {
 				});
 				competitors.push(new pokemon({
 					species : particularSpecies,
-					moves : Generate.random.chooseDistinctSelectionFromArray(potentialMoves, 4),
+					moves : Generate.random.chooseDistinctSelectionFromArray(potentialMoves.removeDuplicates(), 4),
 					level : arguments.length >- 2 ? level : 100
 				}));
 			});
