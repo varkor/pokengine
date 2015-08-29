@@ -26,9 +26,93 @@ Evolution = {
 Natures = {
 	"Hardy" : {
 	},
+	"Docile" : {
+	},
+	"Bashful" : {
+	},
+	"Quirky" : {
+	},
+	"Serious" : {
+	},
 	"Lonely" : {
 		"increased" : "attack",
 		"decreased" : "defence"
+	},
+	"Adamant" : {
+		"increased" : "attack",
+		"decreased" : "special attack"
+	},
+	"Naughty" : {
+		"increased" : "attack",
+		"decreased" : "special defence"
+	},
+	"Brave" : {
+		"increased" : "attack",
+		"decreased" : "speed"
+	},
+	"Bold" : {
+		"increased" : "defence",
+		"decreased" : "attack"
+	},
+	"Impish" : {
+		"increased" : "defence",
+		"decreased" : "special attack"
+	},
+	"Lax" : {
+		"increased" : "defence",
+		"decreased" : "special defence"
+	},
+	"Relaxed" : {
+		"increased" : "defence",
+		"decreased" : "speed"
+	},
+	"Modest" : {
+		"increased" : "special attack",
+		"decreased" : "attack"
+	},
+	"Mild" : {
+		"increased" : "special attack",
+		"decreased" : "defence"
+	},
+	"Rash" : {
+		"increased" : "special attack",
+		"decreased" : "special defence"
+	},
+	"Quiet" : {
+		"increased" : "special attack",
+		"decreased" : "speed"
+	},
+	"Calm" : {
+		"increased" : "special defence",
+		"decreased" : "attack"
+	},
+	"Gentle" : {
+		"increased" : "special defence",
+		"decreased" : "defence"
+	},
+	"Careful" : {
+		"increased" : "special defence",
+		"decreased" : "special attack"
+	},
+	"Sassy" : {
+		"increased" : "special defence",
+		"decreased" : "speed"
+	},
+	"Timid" : {
+		"increased" : "speed",
+		"decreased" : "attack"
+	},
+	"Hasty" : {
+		"increased" : "speed",
+		"decreased" : "defence"
+	},
+	"Jolly" : {
+		"increased" : "speed",
+		"decreased" : "special attack"
+	},
+	"Naïve" : {
+		"increased" : "speed",
+		"decreased" : "special defence"
 	}
 };
 
