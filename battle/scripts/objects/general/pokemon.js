@@ -304,6 +304,9 @@ function pokemon (data, validate) {
 		sprite : function (which, includeFiletype) {
 			return self.paths.convert(Settings._("paths => Pokemon => image"), includeFiletype, which);
 		},
+		icon : function (includeFiletype) {
+			return self.paths.convert(Settings._("paths => Pokemon => image"), includeFiletype, "icon");
+		},
 		cry : function (includeFiletype) {
 			return self.paths.convert(Settings._("paths => Pokemon => sound"), includeFiletype);
 		}

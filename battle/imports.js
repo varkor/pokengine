@@ -35,7 +35,13 @@ var paths = [
 	"scripts/objects/unique/TrialServer.js",
 	"scripts/objects/general/BattleContext.js",
 	"scripts/objects/unique/Debugger.js",
-	"scripts/processing/process.js"
+	"scripts/processing/process.js",
+
+	// Dependancies
+	"../../FlowGrid/FlowGrid.js",
+
+	// Scripts that depend on the dependancies
+	"scripts/objects/unique/Widgets.js"
 ];
 var loadScript = function () {
 	if (paths.notEmpty()) {
@@ -50,4 +56,4 @@ var loadScript = function () {
 		Interface.initialise();
 	}
 };
-window.addEventListener("DOMContentLoaded", loadScript);
+document.addEventListener("DOMContentLoaded", loadScript);

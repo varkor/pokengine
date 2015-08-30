@@ -11,6 +11,15 @@ Game = {
 	takePossessionOf : function (entity) {
 		Game.player = entity;
 		entity.type = Trainers.type.local;
+		foreach(entity.party.pokemon, function (poke, index) {
+			var icon = Sprite.load(poke.paths.icon(true));
+			if (icon === null) {
+				Sprite.load(poke.paths.icon(true), function () {
+					Widgets.Party.interface.redrawCellAtIndex(index);
+				});
+			}
+		});
+		Widgets.Party.interface.refreshDataFromSource(entity.party.pokemon);
 	},
 	changeZoomLevel : function (zoom) {
 		Game.zoom = zoom;
