@@ -21,18 +21,16 @@ File = {
 		};
 		if (store.hasOwnProperty(path)) {
 			if (!store[path].hasOwnProperty("uponLoad")) {
-				var uponLoadObject = null;
-				if (uponLoad)
-					uponLoadObject = { uponLoad : uponLoad };
-				successful(store[path], uponLoadObject);
+				successful(store[path], uponLoad ? { uponLoad : uponLoad } : null);
 				return store[path];
 			} else { // A file is already scheduled to be loaded, but hasn't finished loading yet
-				store[path].uponLoad = function (oldUponLoad) { return function (data) {
-					if (oldUponLoad)
-						oldUponLoad(data);
-					if (uponLoad)
+				if (uponLoad) {
+					store[path].uponLoad = function (oldUponLoad) { return function (data) {
+						if (oldUponLoad)
+							oldUponLoad(data);
 						uponLoad(data);
-				}; }(store[path].uponLoad);
+					}; }(store[path].uponLoad);
+				}
 				return null;
 			}
 		}
@@ -50,7 +48,7 @@ File = {
 			errorResponse("Nonexistent file-path: " + path);
 		} else {
 			var file = new object(), uponLoadObject = {
-				uponLoad : uponLoad
+				uponLoad : uponLoad ? uponLoad : null
 			};
 			file.addEventListener(loadEvent, function (event) {
 				successful(dataForFile(event, file, store, path), uponLoadObject);
