@@ -826,7 +826,11 @@ function pokemon (data, validate) {
 		var effects = property.effects, responses = [], response;
 		foreach(effects, function (effect) {
 			if (!forevery(effect, function (value, key) {
-				if (typeof value !== "function" && data[key] !== value) {
+				if (Array.isArray(data[key])) {
+					if (!data[key].contains(value)) {
+						return true;
+					}
+				} else if (typeof value !== "function" && data[key] !== value) {
 					return true;
 				}
 			})) {

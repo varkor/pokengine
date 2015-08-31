@@ -185,11 +185,28 @@ Triggers = {
 	effectiveness : ++ q,
 
 	/*
+		Triggered when damage is being calculated and can modify the resulting value. This is from the attacking Pokémon's perspective.
+		data:
+		returns:
+			A value to multiply the damage by
+	*/
+	damage : ++ q,
+
+	/*
 		Triggered when a Pokémon is gaining experience, and can modify the amount of experience gained.
 		returns:
 			What to multiply the experience by.
 	*/
-	experience : ++ q
+	experience : ++ q,
+
+	/*
+		Triggered when a Pokémon's status is about to be changed
+		data:
+			status : the status condition being inflicted
+		returns:
+			Whether to prevent the status effect
+	*/
+	status : ++ q
 };
 
 Genders = ["male", "female", "neuter"];

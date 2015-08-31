@@ -2898,8 +2898,10 @@ function BattleContext (client) {
 			subjects = wrapArray(subjects);
 			var responses = [];
 			foreach(subjects, function (poke) {
+				// The Pokémon being targeted are checked for responses to the ability
 				responses = responses.concat(poke.respondToEvent(event, data, cause));
 				data.oneself = (cause === poke);
+				// Any effects that might be in effect (e.g. Light Screen) are checked for responses to the ability
 				foreach((poke.battler.side === Battles.side.near ? battleContext.effects.near : battleContext.effects.far), function (effect) {
 					if (effect.type.uponTrigger.event === event)
 						if (!effect.type.uponTrigger.hasOwnProperty("oneself") || effect.type.uponTrigger.oneself === data.oneself)
