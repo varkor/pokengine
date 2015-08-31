@@ -55,6 +55,12 @@ Widgets.FlowGrid = {
 					context.imageSmoothingEnabled = false;
 					context.copyImageHD(icon.image, false, true, position.x + (size.width - icon.width) / 2, position.y + (size.height - icon.height) / 2);
 					context.imageSmoothingEnabled = true;
+				} else {
+					Sprite.load(poke.paths.icon(true), function () {
+						if (Widgets.Party.interface.cells.indexOf(poke) !== -1) {
+							Widgets.Party.interface.redrawCell(poke);
+						}
+					});
 				}
 				// Send-out banner
 				var clickedPoke = Display.original(poke);
