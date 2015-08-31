@@ -268,38 +268,7 @@ function BattleContext (client) {
 		state : {
 			kind : "inactive"
 		},
-		delegates : {
-			Fight : {
-				shouldDisplayMenuOption : function () {
-					return true;
-				}
-			},
-			Pokémon : {
-				shouldDisplayMenuOption : function () {
-					return true;
-				}
-			},
-			Bag : {
-				shouldDisplayMenuOption : function () {
-					return true;
-				}
-			},
-			Run : {
-				shouldDisplayMenuOption : function () {
-					return true;
-				}
-			},
-			Back : {
-				shouldDisplayMenuOption : function () {
-					return true;
-				}
-			},
-			"Mega Evolve" : {
-				shouldDisplayMenuOption : function () {
-					return true;
-				}
-			}
-		},
+		delegates : BattleContext.defaultDelegates,
 		style : null,
 		flags : [],
 		allies : [],
@@ -570,6 +539,13 @@ function BattleContext (client) {
 				return battleContext.allies.filter(onlyPokemon);
 			return [];
 		},
+		notifyDelegates : function (message) {
+			forevery(battleContext.delegates, function (delegate) {
+				if (delegate.hasOwnProperty(message)) {
+					delegate[message](battleContext);
+				}
+			});
+		},
 		load : function (alliedTrainers, opposingTrainers, settings) {
 			battleContext.state = {
 				kind : "loading",
@@ -722,6 +698,7 @@ function BattleContext (client) {
 			battleContext.state = {
 				kind : "running"
 			};
+			battleContext.notifyDelegates("battleIsBeginning");
 			if (!battleContext.process) {
 				Display.state.load(Display.state.save());
 				var names = [], number = 0;
@@ -866,6 +843,7 @@ function BattleContext (client) {
 				*/
 				battleContext.callback(battleContext.endingFlags, stored);
 			}
+			battleContext.notifyDelegates("battleIsEnding");
 			battleContext.identifier = null;
 		},
 		continueEvolutions : function (preventCurrentEvolution) {
@@ -1172,9 +1150,11 @@ function BattleContext (client) {
 					if (flags.notEmpty())
 						action.flags = flags;
 					battleContext.inputs.push(action);
+					battleContext.delegates.Pokémon.disallowPlayerToSwitchPokemon(battleContext);
 					battleContext.advance();
-				} else if (reprompt)
+				} else if (reprompt) {
 					battleContext.prompt();
+				}
 			}
 		},
 		playerIsParticipating : function () {
@@ -1785,13 +1765,13 @@ function BattleContext (client) {
 				currentBattler.battler.display.outlined = false;
 			}
 			var actions = [], hotkeys = {};
-			if (battleContext.delegates.Pokémon.shouldDisplayMenuOption()) {
+			if (battleContext.delegates.Pokémon.shouldDisplayMenuOption(battleContext)) {
 				actions = ["Pokémon"].concat(actions);
 			}
-			if (battleContext.rules.items === "allowed" && battleContext.delegates.Bag.shouldDisplayMenuOption()) {
+			if (battleContext.rules.items === "allowed" && battleContext.delegates.Bag.shouldDisplayMenuOption(battleContext)) {
 				actions.push("Bag");
 			}
-			if (battleContext.isWildBattle() && battleContext.delegates.Run.shouldDisplayMenuOption()) {
+			if (battleContext.isWildBattle() && battleContext.delegates.Run.shouldDisplayMenuOption(battleContext)) {
 				actions.push("Run");
 				hotkeys[Settings._("keys => secondary")] = "Run";
 			}
@@ -1799,10 +1779,16 @@ function BattleContext (client) {
 			foreach(currentBattler.usableMoves(), function (move) {
 				moves.push(move.move);
 			});
-			if (battleContext.pokemonPerSide() > 1 && battleContext.selection > 0 && battleContext.delegates.Back.shouldDisplayMenuOption())
+			if (battleContext.pokemonPerSide() > 1 && battleContext.selection > 0 && battleContext.delegates.Back.shouldDisplayMenuOption(battleContext))
 				actions.insert(2, "Back");
-			if (currentBattler.potentialMegaEvolution(currentBattler.trainer.megaEvolution === currentBattler) !== null && battleContext.delegates["Mega Evolve"].shouldDisplayMenuOption())
+			if (currentBattler.potentialMegaEvolution(currentBattler.trainer.megaEvolution === currentBattler) !== null && battleContext.delegates["Mega Evolve"].shouldDisplayMenuOption(battleContext))
 				actions.insert(2, currentBattler.trainer.megaEvolution === false ? "Mega Evolve" : "Mega Evolve ✓");
+			Textbox.effect(function () {
+				battleContext.delegates.Pokémon.allowPlayerToSwitchPokemon(battleContext, function (switchIn) {
+					Textbox.clear();
+					battleContext.input("Pokémon", switchIn);
+				});
+			});
 			Textbox.ask("What do you want " + currentBattler.name() + " to do?", moves, function (response, i, major) {
 				Textbox.details = null;
 				if (major) {
@@ -2097,21 +2083,31 @@ function BattleContext (client) {
 							if (names.empty()) {
 								progress = true;
 							} else {
-								Textbox.ask("Which Pokémon do you want to send out?", names, function (response, i) {
-									if (response !== "Run") {
-										if (battleContext.isWildBattle() && !alreadyAttemptedToEscape) {
-											battleContext.inputs.push({
-												action : "flee",
-												attempted : false
-											});
-										}
+								var chooseToSendOut = function (which) {
+									if (battleContext.isWildBattle() && !alreadyAttemptedToEscape) {
 										battleContext.inputs.push({
-											action : "send",
-											which : i
+											action : "flee",
+											attempted : false
 										});
-										battleContext.flushInputs();
-										battleContext.enter(trainer.healthyEligiblePokemon(true)[i], true, emptyPlaces.first());
-										battleContext.fillEmptyPlaces(true, true);
+									}
+									battleContext.inputs.push({
+										action : "send",
+										which : which
+									});
+									battleContext.flushInputs();
+									battleContext.enter(trainer.healthyEligiblePokemon(true)[which], true, emptyPlaces.first());
+									battleContext.fillEmptyPlaces(true, true);
+								};
+								if (!battleContext.delegates.Pokémon.shouldDisplayMenuOption(battleContext)) {
+									names = [];
+									battleContext.delegates.Pokémon.allowPlayerToSwitchPokemon(battleContext, function (switchIn) {
+										Textbox.clear();
+										chooseToSendOut(trainer.healthyEligiblePokemon(true).indexOf(trainer.party.pokemon[switchIn]));
+									});
+								}
+								Textbox.ask("Which Pokémon do you want to send out?", names, function (response, i, major) {
+									if (major) {
+										chooseToSendOut(i);
 									} else {
 										battleContext.inputs.push({
 											action : "flee",
@@ -3083,3 +3079,51 @@ function BattleContext (client) {
 	
 	return battleContext;
 }
+
+/*
+	All delegates:
+		shouldDislayMenuOption(battle)
+		[battleIsBeginning(battle)]
+		[battleIsEnding(battle)]
+*/
+BattleContext.defaultDelegates = {
+	Fight : {
+		shouldDisplayMenuOption : function () {
+			return true;
+		}
+	},
+	Pokémon : {
+		/*
+			allowPlayerToSwitchPokemon(battle, callback(switchIn))
+			disallowPlayerToSwitchPokemon(battle)
+			[pokemonHaveUpdated(pokes)]
+		*/
+		allowPlayerToSwitchPokemon : function (callback) {
+		},
+		disallowPlayerToSwitchPokemon : function () {
+		},
+		shouldDisplayMenuOption : function () {
+			return true;
+		}
+	},
+	Bag : {
+		shouldDisplayMenuOption : function () {
+			return true;
+		}
+	},
+	Run : {
+		shouldDisplayMenuOption : function () {
+			return true;
+		}
+	},
+	Back : {
+		shouldDisplayMenuOption : function () {
+			return true;
+		}
+	},
+	"Mega Evolve" : {
+		shouldDisplayMenuOption : function () {
+			return true;
+		}
+	}
+};

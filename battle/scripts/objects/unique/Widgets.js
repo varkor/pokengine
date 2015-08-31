@@ -7,17 +7,18 @@ Widgets.FlowGrid = {
 				width : 80,
 				height : 80
 			},
-			draw : function (context, poke, position, size, state) {
-				switch (state) {
-					case "drag":
-					case "action":
-					case "hover":
-						context.fillStyle = "hsl(0, 0%, 35%)";
-						break;
-					default:
-						context.fillStyle = "hsl(0, 0%, 30%)";
-						break;
+			draw : function (context, poke, position, size, states) {
+				var lightness = 25;
+				for (var i = 0; i < states.length; ++ i) {
+					switch (states[i]) {
+						case "hover":
+							if (Widgets.Party.state.kind === "overworld" || (Widgets.Party.state.kind === "switch" && !poke.inBattle())) {
+								lightness += 5;
+							}
+							break;
+					}
 				}
+				context.fillStyle = "hsl(0, 0%, " + lightness + "%)";
 				context.fillRoundedRectHD(Math.round(position.x), Math.round(position.y), size.width, size.height, 4);
 				context.fillStyle = "hsl(0, 0%, 60%)";
 				context.textAlign = "center";
@@ -55,12 +56,25 @@ Widgets.FlowGrid = {
 					context.copyImageHD(icon.image, false, true, position.x + (size.width - icon.width) / 2, position.y + (size.height - icon.height) / 2);
 					context.imageSmoothingEnabled = true;
 				}
+				// Send-out banner
+				if (Widgets.Party.state.kind === "switch" && states.contains("hover") && poke.trainer.healthyEligiblePokemon(true).contains(poke)) {
+					var bannerHeight = 32;
+					context.fillStyle = "hsl(0, 60%, 40%)";
+					context.fillRectHD(position.x, position.y + (size.height - bannerHeight) / 2, size.width, bannerHeight);
+					context.fillStyle = "hsl(0, 0%, 100%)";
+					context.textBaseline = "middle";
+					context.setFontHD("Arial", 12);
+					context.fillTextHD("Send out", position.x + size.width / 2, position.y + size.height / 2);
+				}
 			}
 		})
 	}
 };
 
 Widgets.Party = {
+	state : {
+		kind : "overworld"
+	},
 	interface : FlowGrid({
 		template : Widgets.FlowGrid.templates.pokemon,
 		datasource : [],
@@ -77,12 +91,46 @@ Widgets.Party = {
 			y : 8
 		},
 		events : {
+			"cell:click" : function (index, poke) {
+				if (Widgets.Party.state.kind === "switch" && poke.trainer.healthyEligiblePokemon(true).contains(poke)) {
+					Widgets.Party.state.callback(index);
+				}
+			}
 		},
 		draw : function (context, size, region) {
 			context.fillStyle = "hsl(0, 0%, 20%)";
 			context.fillRoundedRectHD(region.origin.x, region.origin.y, region.size.width, region.size.height, 4);
 		}
-	})
+	}),
+	// BattleContext delegate methods
+	BattleContextDelegate : {
+		battleIsBeginning : function (battle) {
+			Widgets.Party.state.kind = "battle";
+			Widgets.Party.interface.lock();
+		},
+		battleIsEnding : function (battle) {
+			Widgets.Party.state.kind = "overworld";
+			Widgets.Party.interface.unlock();
+		},
+		shouldDisplayMenuOption : function (battle) {
+			return false;
+		},
+		allowPlayerToSwitchPokemon : function (battle, callback) {
+			Widgets.Party.state = {
+				kind : "switch",
+				callback : callback
+			};
+			Widgets.Party.interface.unlock(["hover"]);
+		},
+		disallowPlayerToSwitchPokemon : function (battle) {
+			Widgets.Party.state.kind = "battle";
+			Widgets.Party.interface.lock(["hover"]);
+		},
+		pokemonHaveUpdated : function (pokes) {
+			foreach(pokes, function (poke) {
+				Widgets.Party.interface.redrawCell(poke);
+			});
+		}
+	}
 };
-
-document.body.appendChild(Widgets.Party.interface.canvas);
+BattleContext.defaultDelegates.Pokémon = Widgets.Party.BattleContextDelegate;

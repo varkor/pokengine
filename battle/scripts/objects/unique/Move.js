@@ -320,7 +320,7 @@ Move = {
 			sandstorm : (attacker.trainer.battle.weather === "sandstorm" && target.ofType("Rock") ? 1.5 : 1),
 			STAB : (attacker.ofType(type) ? 1.5 : 1),
 			burn : (type === Move.category.physical && attacker.status === "burned" ? 0.5 : 1),
-			abilities :  product(attacker.battler.battle.triggerEvent(Triggers.damage, {
+			abilities :  product(attacker.trainer.battle.triggerEvent(Triggers.damage, {
 				classification : move.classification,
 				type : type,
 				contact : move.contact
