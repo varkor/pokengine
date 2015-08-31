@@ -28,12 +28,12 @@ Items = {
 			direct : true,
 			useMessage : false,
 			"catch rate" : 1,
-			effect : function (self, poke, trainer) {
+			effect : function (self, poke, character) {
 				if (poke.battler.battle.isWildBattle()) {
-					if (!poke.battler.battle.process) Textbox.state(trainer.pronoun(true) + " threw a " + self.fullname + " at " + poke.name() + "!");
-					poke.battler.battle.attemptCapture(poke, self, trainer);
+					if (!poke.battler.battle.process) Textbox.state(character.pronoun(true) + " threw a " + self.fullname + " at " + poke.name() + "!");
+					poke.battler.battle.attemptCapture(poke, self, character);
 				} else {
-					if (!poke.battler.battle.process) Textbox.state(poke.trainer.pronoun(true) + " blocked " + trainer.possessivePronoun() + " " + self.fullname + "! " + (trainer === Game.player ? "You can't catch other people's Pokémon!" : trainer.pronoun(true) + " tried to capture your Pokémon!"));
+					if (!poke.battler.battle.process) Textbox.state(poke.trainer.pronoun(true) + " blocked " + character.possessivePronoun() + " " + self.fullname + "! " + (character === Game.player ? "You can't catch other people's Pokémon!" : character.pronoun(true) + " tried to capture your Pokémon!"));
 				}
 			}
 		},
@@ -46,13 +46,13 @@ Items = {
 		},
 		"Clone" : {
 			"catch rate" : 255,
-			effect : function (self, poke, trainer) {
+			effect : function (self, poke, character) {
 				var thrownByPlayer = (poke.trainer !== poke.battler.battle.alliedTrainers[0]);
 				if (!poke.battler.battle.process) Textbox.state((thrownByPlayer ? poke.battler.battle.alliedTrainers[0] : poke.battler.battle.opposingTrainers[0]).pronoun(true) + " threw a " + self.fullname + " at " + poke.name() + "!");
 				if (poke.battler.battle.situation !== Battles.situation.wild) {
 					if (!poke.battler.battle.process) Textbox.state((thrownByPlayer ? poke.battler.battle.opposingTrainers[0] : poke.battler.battle.alliedTrainers[0]).pronoun(true) + " look" + (thrownByPlayer ? "s" : "") + " on helplessly as " + (thrownByPlayer ? poke.battler.battle.alliedTrainers[0] : poke.battler.battle.opposingTrainers[0]).possessivePronoun() + " " + self.fullname + " closes in!");
 				}
-				poke.battler.battle.attemptCapture(poke, self, trainer);
+				poke.battler.battle.attemptCapture(poke, self, character);
 			}
 		}
 	},

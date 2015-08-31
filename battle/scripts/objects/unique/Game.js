@@ -19,7 +19,7 @@ Game = {
 				});
 			}
 		});
-		Widgets.Party.interface.refreshDataFromSource(entity.party.pokemon);
+		Widgets.Party.BattleContextDelegate.pokemonHaveUpdated(entity.party.pokemon);
 	},
 	changeZoomLevel : function (zoom) {
 		Game.zoom = zoom;

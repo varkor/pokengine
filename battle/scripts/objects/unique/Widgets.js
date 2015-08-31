@@ -57,7 +57,8 @@ Widgets.FlowGrid = {
 					context.imageSmoothingEnabled = true;
 				}
 				// Send-out banner
-				if (Widgets.Party.state.kind === "switch" && states.contains("hover") && poke.trainer.healthyEligiblePokemon(true).contains(poke)) {
+				var clickedPoke = Display.original(poke);
+				if (Widgets.Party.state.kind === "switch" && states.contains("hover") && clickedPoke.trainer.healthyEligiblePokemon(true).contains(clickedPoke)) {
 					var bannerHeight = 32;
 					context.fillStyle = "hsl(0, 60%, 40%)";
 					context.fillRectHD(position.x, position.y + (size.height - bannerHeight) / 2, size.width, bannerHeight);
@@ -92,7 +93,8 @@ Widgets.Party = {
 		},
 		events : {
 			"cell:click" : function (index, poke) {
-				if (Widgets.Party.state.kind === "switch" && poke.trainer.healthyEligiblePokemon(true).contains(poke)) {
+				var clickedPoke = Display.original(poke);
+				if (Widgets.Party.state.kind === "switch" && clickedPoke.trainer.healthyEligiblePokemon(true).contains(clickedPoke)) {
 					Widgets.Party.state.callback(index);
 				}
 			}
@@ -127,9 +129,8 @@ Widgets.Party = {
 			Widgets.Party.interface.lock(["hover"]);
 		},
 		pokemonHaveUpdated : function (pokes) {
-			foreach(pokes, function (poke) {
-				Widgets.Party.interface.redrawCell(poke);
-			});
+			// Note this is usually *not* the actual player's Pokémon, but stored Pokémon from the Display object
+			Widgets.Party.interface.refreshDataFromSource(pokes);
 		}
 	}
 };

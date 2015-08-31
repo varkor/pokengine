@@ -1,18 +1,37 @@
 Display = {
-	store : function (poke) {
-		if (poke === NoPokemon)
-			return NoPokemon;
-		var newPoke = new pokemon(poke.store());
-		if (poke.hasOwnProperty("original"))
-			newPoke.original = poke.original;
-		else
-			newPoke.original = poke;
-		newPoke.battler.side = poke.battler.side;
-		newPoke.battler.display = JSONCopy(poke.battler.display);
-		newPoke.battler.battle = poke.battler.battle;
-		newPoke.mega = poke.mega;
-		newPoke.battler.transform = poke.battler.transform;
-		return newPoke;
+	store : {
+		pokemon : function (poke) {
+			if (poke === NoPokemon)
+				return NoPokemon;
+			var newPoke = new pokemon(poke.store());
+			if (poke.hasOwnProperty("original")) {
+				newPoke.original = poke.original;
+			} else {
+				newPoke.original = poke;
+			}
+			newPoke.battler.side = poke.battler.side;
+			newPoke.battler.display = JSONCopy(poke.battler.display);
+			newPoke.battler.battle = poke.battler.battle;
+			newPoke.mega = poke.mega;
+			newPoke.battler.transform = poke.battler.transform;
+			newPoke.trainer = poke.trainer;
+			return newPoke;
+		},
+		trainer : function (character) {
+			var newTrainer = new trainer(character.store());
+			if (character.hasOwnProperty("original")) {
+				newTrainer.original = character.original;
+			} else {
+				newTrainer.original = character;
+			}
+			var pokes = [];
+			foreach(character.party.pokemon, function (poke) {
+				pokes.push(Display.store.pokemon(poke));
+			});
+			newTrainer.party = new party();
+			newTrainer.party.pokemon = pokes;
+			return newTrainer;
+		}
 	},
 	pokemonInState : function (poke, _state) {
 		state = _state;
@@ -29,18 +48,60 @@ Display = {
 		});
 		return match;
 	},
+	original : function (poke) {
+		return poke.hasOwnProperty("original") ? poke.original : poke;
+	},
+	refreshWidgetsFromState : function (state) {
+		if (Battle.playerIsParticipating()) {
+			foreach(state.alliedTrainers, function (character) {
+				if (character.identification === Game.player.identification) {
+					Widgets.Party.BattleContextDelegate.pokemonHaveUpdated(character.party.pokemon);
+					return true;
+				}
+			});
+		}
+	},
 	state : {
 		save : function (state) {
 			var self = Display, cloneState = (arguments.length > 0 ? state : Battle), newState = {
 				allies : [],
 				opponents : [],
+				alliedTrainers : [],
+				opposingTrainers : [],
 				flags : {}
 			};
+			var trainerParties = {};
+			foreach(cloneState.alliedTrainers, function (trainer) {
+				var storedTrainer = Display.store.trainer(trainer);
+				trainerParties[storedTrainer.identification] = storedTrainer.party.pokemon;
+				newState.alliedTrainers.push(storedTrainer);
+			});
+			foreach(cloneState.opposingTrainers, function (trainer) {
+				var storedTrainer = Display.store.trainer(trainer);
+				trainerParties[storedTrainer.identification] = storedTrainer.party.pokemon;
+				newState.opposingTrainers.push(storedTrainer);
+			});
 			foreach(cloneState.allies, function (poke) {
-				newState.allies.push(Display.store(poke));
+				var storedPoke = Display.store.pokemon(poke);
+				if (storedPoke !== NoPokemon) {
+					foreach(trainerParties[storedPoke.trainer.identification], function (trainerPoke, i) {
+						if (trainerPoke.identification === storedPoke.identification) {
+							trainerParties[storedPoke.trainer.identification][i] = storedPoke;
+						}
+					});
+				}
+				newState.allies.push(storedPoke);
 			});
 			foreach(cloneState.opponents, function (poke) {
-				newState.opponents.push(Display.store(poke));
+				var storedPoke = Display.store.pokemon(poke);
+				if (storedPoke !== NoPokemon) {
+					foreach(trainerParties[storedPoke.trainer.identification], function (trainerPoke, i) {
+						if (trainerPoke.identification === storedPoke.identification) {
+							trainerParties[storedPoke.trainer.identification][i] = storedPoke;
+						}
+					});
+				}
+				newState.opponents.push(Display.store.pokemon(storedPoke));
 			});
 			forevery((arguments.length > 0 ? state.flags : Battle.display), function (value, flag) {
 				newState.flags[flag] = value;
@@ -55,6 +116,7 @@ Display = {
 			if (self.states[state] === null)
 				throw "You've tried to load an older state than the current one! (State " + state + ")";
 			self.state.current = self.states[state];
+			self.refreshWidgetsFromState(self.state.current);
 			Battle.cache = null;
 		},
 		transition : function (state, track, original) {
@@ -93,11 +155,15 @@ Display = {
 						fromAll[i].battler.display[property] = toAll[i].battler.display[property];
 				});
 			}
+			self.refreshWidgetsFromState(from);
 			if (completed) {
 				self.state.load(state);
 				track.completed = true;
-			} else
-				setTimeout(function () { self.state.transition(state, track, original); }, Time.refresh);
+			} else {
+				setTimeout(function () {
+					self.state.transition(state, track, original);
+				}, Time.refresh);
+			}
 			Battle.cache = null;
 			return track;
 		},
