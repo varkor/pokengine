@@ -4,6 +4,7 @@
 		<meta charset="utf-8" />
 		<title>Battle Engine</title>
 		<script src="scripts/functions/functions.js"></script>
+		<script src="scripts/functions/random.js"></script>
 		<script src="imports.js"></script>
 		<link href="Battle.css" rel="stylesheet" type="text/css">
 		<link href="http://fonts.googleapis.com/css?family=Open+Sans:300italic,600italic,300,600&subset=latin-ext,latin" rel="stylesheet" type="text/css">
@@ -89,6 +90,7 @@
 		Battle = null;
 
 		Interface = {
+			random : new srandom(2),
 			initialise : function () {
 				document.querySelector("#connect").addEventListener("mousedown", function (event) {
 					if (event.button !== 0)
@@ -307,7 +309,7 @@
 						option.value = name;
 						select.appendChild(option);
 					});
-					select.selectedIndex = randomInt(0, select.childNodes.length - 1);
+					select.selectedIndex = Interface.random.int(0, select.childNodes.length - 1);
 					li.appendChild(select);
 					li.appendChild(document.createTextNode(", level "));
 					var level = document.createElement("input");
@@ -337,7 +339,7 @@
 						moveSelect.addEventListener("change", function (event) {
 							disableMoves(group);
 						});
-						moveSelect.selectedIndex = range(0, moveSelect.options.length - 1).filter(function (index) { return !moveSelect.options[index].disabled; }).choose();
+						moveSelect.selectedIndex = Interface.random.chooseFromArray(range(0, moveSelect.options.length - 1).filter(function (index) { return !moveSelect.options[index].disabled; }));
 						disableMoves(group);
 					});
 					team.appendChild(li);
@@ -397,20 +399,6 @@
 					}
 					Interface.clearIssues();
 				});
-
-				var character = new trainer({
-					"name" : document.querySelector("#name").value,
-					"class" : "Pokémon Trainer",
-					"individual" : true,
-					"game" : "B2W2",
-					"party" : Interface.buildParty(),
-					"money" : 10000
-				});
-				foreach(character.party.pokemon, function (poke) {
-					poke.health = Math.round(Math.random() * poke.maximumHealth());
-					poke.experience = Math.round(Math.random() * poke.experienceFromLevelToNextLevel());
-				});
-				Game.takePossessionOf(character);
 			}
 		};
 		</script>

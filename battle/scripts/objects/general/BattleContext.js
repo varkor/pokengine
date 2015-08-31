@@ -1762,7 +1762,7 @@ function BattleContext (client) {
 				return true;
 			}
 		},
-		prompt : function () {
+		prompt : function (firstPromptOfTurn) {
 			// Get the player to submit an action, such as Fight, or Run, etc.
 			if (battleContext.finished)
 				return;
@@ -1775,6 +1775,8 @@ function BattleContext (client) {
 			if (battleContext.pokemonForcedIntoAction(currentBattler)) {
 				battleContext.advance();
 				return;
+			} else if (firstPromptOfTurn) {
+				battleContext.sync();
 			}
 			if (battleContext.pokemonPerSide() > 1) {
 				currentBattler.battler.display.outlined = true;
@@ -1936,8 +1938,7 @@ function BattleContext (client) {
 					else effect();
 				} else {
 					if (battleContext.playerIsParticipating()) {
-						battleContext.sync();
-						battleContext.prompt();
+						battleContext.prompt(true);
 					} else {
 						battleContext.advance();
 					}
@@ -3063,7 +3064,7 @@ function BattleContext (client) {
 				battleContext.haveEffect(function (target) {
 					if (!battleContext.process) Textbox.state(target.name() + " woke up!");
 					target.status = "none";
-				}, battleContext.random.int(0, 3), poke);
+				}, battleContext.random.int(1, 3), poke);
 			}
 			if (poke.status === "frozen") {
 				battleContext.haveEffect(function (target) {

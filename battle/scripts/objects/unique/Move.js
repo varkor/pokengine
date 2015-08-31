@@ -326,7 +326,6 @@ Move = {
 				contact : move.contact
 			}, attacker, attacker))
 		};
-		console.log("mod ab", modifiers.abilities);
 		if (noCritical)
 			modifiers.critical = 1;
 		var min = (target.effectiveness(type, move.classification) > 0 ? 1 : 0);
