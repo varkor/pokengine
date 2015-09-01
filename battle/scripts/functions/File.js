@@ -231,7 +231,7 @@ Sprite = FunctionObject.new({
 									for (var i = 0, newPixel, excludeBlankPixels = true; i < pixels.length; i += 4) {
 										if (pixels[i + 3] === 0 && excludeBlankPixels)
 											continue;
-										newPixel = filterFn(i % 4, [pixels[i + 0], pixels[i + 1], pixels[i + 2], pixels[i + 3]], data);
+										newPixel = filterFn(Math.floor(i / 4), [pixels[i + 0], pixels[i + 1], pixels[i + 2], pixels[i + 3]], data);
 										pixels[i + 0] = Math.floor(newPixel[0]);
 										pixels[i + 1] = Math.floor(newPixel[1]);
 										pixels[i + 2] = Math.floor(newPixel[2]);

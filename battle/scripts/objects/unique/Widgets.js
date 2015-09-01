@@ -103,6 +103,9 @@ Widgets.Party = {
 				if (Widgets.Party.state.kind === "switch" && clickedPoke.trainer.healthyEligiblePokemon(true).contains(clickedPoke)) {
 					Widgets.Party.state.callback(index);
 				}
+			},
+			"cells:drop" : function (index, cells) {
+				var fromIndex = cells[0].index;
 			}
 		},
 		draw : function (context, size, region) {
