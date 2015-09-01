@@ -1202,7 +1202,7 @@ Moves = {
 				}
 			],
 			hazard : function (target, stack) {
-				if (target.effectiveness(Moves._("Spikes").type, Moves._("Spikes").classification) > 0) {
+				if (target.effectiveness(Moves._("Spikes").type, Moves._("Spikes").classification, null, Move.category.physical) > 0) {
 					if (!target.battler.battle.process) Textbox.state("The sharp spikes hurt " + target.name() + "!");
 					self.battler.battle.damage(target, { damage : Math.floor(target.stats.health() / (8 - 2 * (stack - 1))) });
 				}

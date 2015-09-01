@@ -628,23 +628,28 @@ function pokemon (data, validate) {
 		return self.personalPronoun(capitalised) + "self";
 	};
 
-	self.effectiveness = function (attackType, classification, byWhom) {
-		var multiplier = 1, current;
+	self.effectiveness = function (attackType, classification, byWhom, category) {
+		var multiplier = 1, current, statusMove = category === Move.category.status;
 		foreach(self.currentProperty("types"), function (type) {
-			if (attackType === "Ground" && type === "Flying" && self.battler.grounded)
+			if (!statusMove && attackType === "Ground" && type === "Flying" && self.battler.grounded)
 				return;
-			if (classification.contains("Powder") && type === "Grass") {
+			if (statusMove && classification.contains("Powder") && type === "Grass") {
 				multiplier = 0;
 				return true;
 			}
-			multiplier *= Move.effectiveness(attackType, type, self.battler.battle.flags);
+			if (!statusMove) {
+				multiplier *= Move.effectiveness(attackType, type, self.battler.battle.flags);
+			}
 		});
-		var modification = self.battler.battle.triggerEvent(Triggers.effectiveness, {
-			type : attackType,
-			multiplier : multiplier
-		}, byWhom, self);
-		if (modification.notEmpty())
-			multiplier = product(modification);
+		if (!statusMove) {
+			var modification = self.battler.battle.triggerEvent(Triggers.effectiveness, {
+				type : attackType,
+				multiplier : multiplier,
+				category : category
+			}, byWhom, self);
+			if (modification.notEmpty())
+				multiplier = product(modification);
+		}
 		return multiplier;
 	};
 
