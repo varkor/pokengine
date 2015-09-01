@@ -107,8 +107,44 @@ Moves = {
 					target.display.angle = target.from.angle + (0 - target.from.angle) * progress;
 				}
 			}
-			]]
+		]]
+	},
+	"Attract" : {
+		"description" : "If it is the opposite gender of the user, the target becomes infatuated and less likely to attack.",
+		"type" : "Normal",
+		"category" : Move.category.status,
+		"PP" : 15,
+		"accuracy" : 1,
+		"contact" : false,
+		"piercing" : false,
+		"infiltrating" : true,
+		"snatchable" : false,
+		"copyable" : true,
+		"critratio" : 0,
+		"priority" : 0,
+		"affects" : Move.targets.directTarget,
+		"targets" : Move.targets.adjacentToUser,
+		"effects" : {
+			"use" : [
+				{
+					"effect" : function (self, target, constant, repetitions) {
+						if (!self.battler.battle.infatuate(target, self)) {
+							return {
+								failed : true
+							};
+						}
+					},
+					"targets" : true
+				}
+			]
 		},
+		"despite" : [],
+		"classification" : ["Mental", "Normal"],
+		"notes" : "",
+		"animation" : [
+			[]
+		]
+	},
 	"Roar" : {
 		status : "incomplete",
 		description : "",

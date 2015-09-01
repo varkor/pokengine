@@ -2956,6 +2956,7 @@ function BattleContext (client) {
 			if (!poke.fainted()) {
 				if (poke.battler.infatuated) {
 					if (!battleContext.process) Textbox.state(poke.name() + " is already infatuated!");
+					return true;
 				} else if ((poke.gender === "male" && objectOfPassion.gender === "female") || (poke.gender === "female" && objectOfPassion.gender === "male")) {
 					if (!battleContext.process) Textbox.state(poke.name() + " has become infatuated!");
 					poke.battler.infatuated = true;
@@ -2963,8 +2964,12 @@ function BattleContext (client) {
 						if (!battleContext.process) Textbox.state(target.name() + " broke out of " + target.possessivePronoun() + " infatuation!");
 						target.battler.infatuated = false;
 					}, battleContext.random.int(1, 4), poke);
+					return true;
+				} else {
+					return false;
 				}
 			}
+			return true;
 		},
 		placeHazard : function (hazard, maximum, side) {
 			var hazardSide = (side === Battles.side.near ? battleContext.hazards.near : battleContext.hazards.far), maxedOut = false;
