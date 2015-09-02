@@ -36,33 +36,35 @@ function BattleContext (client) {
 				var originalCanvas = _canvas, originalContext = originalCanvas.getContext("2d"), drawAfterwards = [];
 				var canvas = battleContext.sketching[0], context = canvas.getContext("2d"), display = Display.state.current, now = performance.now();
 				var shadowCanvas = battleContext.sketching[1], shadowContext = shadowCanvas.getContext("2d"), shadowOpacity = Lighting.shadows.opacity();
+				var pixelRatio = window.devicePixelRatio;
+				var originalCanvasWidth = originalCanvas.width / pixelRatio, originalCanvasHeight = originalCanvas.height / pixelRatio, canvasWidth = canvas.width, canvasHeight = canvas.height;
 				shadowContext.textAlign = "center";
 				shadowContext.textBaseline = "bottom";
 				for (var i = 0; i < battleContext.sketching.length; ++ i)
-					battleContext.sketching[i].getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+					battleContext.sketching[i].getContext("2d").clearRectHD(0, 0, canvasWidth, canvasHeight);
 				originalContext.fillStyle = context.fillStyle = "black";
-				originalContext.fillRect(0, 0, originalCanvas.width, originalCanvas.height);
+				originalContext.fillRectHD(0, 0, originalCanvasWidth, originalCanvasHeight);
 				if (battleContext.state.kind !== "inactive") {
 					if (battleContext.state.kind === "loading") {
 						originalContext.fillStyle = "hsl(0, 0%, 20%)";
-						originalContext.fillRect(40 * Game.zoom, originalCanvas.height / 2 - 10 * Game.zoom, originalCanvas.width - 80 * Game.zoom, 20 * Game.zoom);
+						originalContext.fillRectHD(40 * Game.zoom, originalCanvasHeight / 2 - 10 * Game.zoom, originalCanvasWidth - 80 * Game.zoom, 20 * Game.zoom);
 						originalContext.fillStyle = "hsl(0, 0%, 90%)";
-						originalContext.fillRect(40 * Game.zoom, originalCanvas.height / 2 - 10 * Game.zoom, (originalCanvas.width - 80 * Game.zoom) * battleContext.state.progress, 20 * Game.zoom);
+						originalContext.fillRectHD(40 * Game.zoom, originalCanvasHeight / 2 - 10 * Game.zoom, (originalCanvasWidth - 80 * Game.zoom) * battleContext.state.progress, 20 * Game.zoom);
 						originalContext.textAlign = "center";
 						originalContext.textBaseline = "middle";
 						originalContext.font = Font.load(12 * Game.zoom);
 						originalContext.strokeStyle = "hsl(0, 0%, 90%)";
 						originalContext.lineWidth = 5;
-						originalContext.strokeText((battleContext.state.progress * 100).toFixed(0) + "%", originalCanvas.width / 2, originalCanvas.height / 2);
+						originalContext.strokeTextHD((battleContext.state.progress * 100).toFixed(0) + "%", originalCanvasWidth / 2, originalCanvasHeight / 2);
 						originalContext.fillStyle = "black";
-						originalContext.fillText((battleContext.state.progress * 100).toFixed(0) + "%", originalCanvas.width / 2, originalCanvas.height / 2);
+						originalContext.fillTextHD((battleContext.state.progress * 100).toFixed(0) + "%", originalCanvasWidth / 2, originalCanvasHeight / 2);
 						if (battleContext.state.failed.notEmpty()) {
 							originalContext.textBaseline = "top";
 							originalContext.fillStyle = "hsl(0, 0%, 90%)";
-							originalContext.fillText("Failed to load " + battleContext.state.failed.length + " file" + (battleContext.state.failed.length !== 1 ? "s" : "") + ":", originalCanvas.width / 2, originalCanvas.height / 2 + (20 + 6) * Game.zoom);
+							originalContext.fillTextHD("Failed to load " + battleContext.state.failed.length + " file" + (battleContext.state.failed.length !== 1 ? "s" : "") + ":", originalCanvasWidth / 2, originalCanvasHeight / 2 + (20 + 6) * Game.zoom);
 							originalContext.fillStyle = "hsl(0, 0%, 50%)";
 							foreach(battleContext.state.failed, function (failed, i) {
-								originalContext.fillText(failed, originalCanvas.width / 2, originalCanvas.height / 2 + (20 + 6 + 16 * (i + 1)) * Game.zoom);
+								originalContext.fillTextHD(failed, originalCanvasWidth / 2, originalCanvasHeight / 2 + (20 + 6 + 16 * (i + 1)) * Game.zoom);
 							});
 						}
 					} else if (battleContext.state.kind === "evolution") {
@@ -71,18 +73,18 @@ function BattleContext (client) {
 							j = i - pan;
 							context.fillStyle = "hsl(" + Math.min(50, ((j / (strips)) * 50)) + ", 100%, " + (35 + (j / (strips)) * (60 - 35)) + "%)";
 							context.beginPath();
-							context.moveTo(0, canvas.height);
-							context.lineTo(0, Math.round((canvas.height / strips) * j));
-							context.quadraticCurveTo(canvas.width / 2, Math.round((canvas.height / strips) * j) - (j - strips / 2) * 10 * distortion, canvas.width, Math.round((canvas.height / strips) * j));
-							context.lineTo(canvas.width, canvas.height);
+							context.moveToHD(0, canvasHeight);
+							context.lineToHD(0, Math.round((canvasHeight / strips) * j));
+							context.quadraticCurveToHD(canvasWidth / 2, Math.round((canvasHeight / strips) * j) - (j - strips / 2) * 10 * distortion, canvasWidth, Math.round((canvasHeight / strips) * j));
+							context.lineToHD(canvasWidth, canvasHeight);
 							context.fill();
 						}
 						context.textAlign = "center";
 						context.textBaseline = "middle";
 						if (battleContext.state.stage === "before" || battleContext.state.stage === "preparation" || battleContext.state.stage === "stopped")
-							Sprite.draw(canvas, battleContext.state.evolving.paths.sprite("front", true), canvas.width / 2, canvas.height / 2, true, null, null, now);
+							Sprite.draw(canvas, battleContext.state.evolving.paths.sprite("front", true), canvasWidth / 2, canvasHeight / 2, true, null, null, now);
 						if (battleContext.state.stage === "finishing" || battleContext.state.stage === "after")
-							Sprite.draw(canvas, battleContext.state.into.paths.sprite("front", true), canvas.width / 2, canvas.height / 2, true, null, null, now);
+							Sprite.draw(canvas, battleContext.state.into.paths.sprite("front", true), canvasWidth / 2, canvasHeight / 2, true, null, null, now);
 						if (battleContext.state.stage === "preparation")
 							battleContext.state.transition += 0.05;
 						if (battleContext.state.stage === "evolving")
@@ -125,7 +127,7 @@ function BattleContext (client) {
 								fade = Math.sin(battleContext.state.transition * (transformationRate / 2) + Math.PI * 0.25) >= 0 ? 1 : 0;
 								scale = 1 + Math.sin(battleContext.state.transition * transformationRate) * 0.5;
 							}
-							Sprite.draw(canvas, battleContext.state.evolving.paths.sprite("front", true), canvas.width / 2, canvas.height / 2, true, [{ type : "fill", colour : "white" }, { type : "opacity", value : fade }], new Matrix().scale(scale), now);
+							Sprite.draw(canvas, battleContext.state.evolving.paths.sprite("front", true), canvasWidth / 2, canvasHeight / 2, true, [{ type : "fill", colour : "white" }, { type : "opacity", value : fade }], new Matrix().scale(scale), now);
 						}
 						if (battleContext.state.stage !== "before" && battleContext.state.stage !== "preparation") {
 							var scale = 1, fade = 0;
@@ -135,15 +137,15 @@ function BattleContext (client) {
 								fade = Math.sin(battleContext.state.transition * (transformationRate / 2) + Math.PI * 1.25) > 0 ? 1 : 0;
 								scale = 1 + Math.sin(battleContext.state.transition * transformationRate) * 0.5;
 							}
-							Sprite.draw(canvas, battleContext.state.into.paths.sprite("front", true), canvas.width / 2, canvas.height / 2, true, [{ type : "fill", colour : "white" }, { type : "opacity", value : fade }], new Matrix().scale(scale), now);
+							Sprite.draw(canvas, battleContext.state.into.paths.sprite("front", true), canvasWidth / 2, canvasHeight / 2, true, [{ type : "fill", colour : "white" }, { type : "opacity", value : fade }], new Matrix().scale(scale), now);
 						}
 						if (battleContext.state.stage !== "before" && battleContext.state.stage !== "after" && battleContext.state.stage !== "stopped") {
 							context.fillStyle = "black";
 							var enclose = 1;
 							if (battleContext.state.stage === "preparation" || battleContext.state.stage === "finishing")
 								enclose = Math.clamp(0, battleContext.state.transition, 1);
-							context.fillRect(0, 0, canvas.width, canvas.height / 6 * enclose);
-							context.fillRect(0, canvas.height, canvas.width, - canvas.height / 6 * enclose);
+							context.fillRectHD(0, 0, canvasWidth, canvasHeight / 6 * enclose);
+							context.fillRectHD(0, canvasHeight, canvasWidth, - canvasHeight / 6 * enclose);
 						}
 					} else {
 						Sprite.draw(battleContext.sketching[2], Scenes._(battleContext.scene).paths.sprite(true), 0, 0);
@@ -166,7 +168,7 @@ function BattleContext (client) {
 							generalMatrix = matrix.scale(position.scale * transition).rotate(poke.battler.display.angle);
 							context.globalAlpha = poke.battler.display.opacity;
 							// Shadow
-							Sprite.draw(shadowCanvas, poke.paths.sprite(side, true), position.x, battleContext.drawing.positions[poke.battler.side === Battles.side.near ? "sideNear" : "sideFar"].y - position.z, true, [{ type : "fill", colour : "hsla(0, 0%, 0%, " + (1 - Math.min(1, position.height / (canvas.height / Game.zoom / 2))) * poke.battler.display.opacity + ")" }, { type : "crop", heightRatio : poke.battler.display.height }], generalMatrix.multiply(shadowMatrix).scale(Math.pow(2, - position.height / (canvas.height / Game.zoom / 4))), now, true);
+							Sprite.draw(shadowCanvas, poke.paths.sprite(side, true), position.x, battleContext.drawing.positions[poke.battler.side === Battles.side.near ? "sideNear" : "sideFar"].y - position.z, true, [{ type : "fill", colour : "hsla(0, 0%, 0%, " + (1 - Math.min(1, position.height / (canvasHeight / Game.zoom / 2))) * poke.battler.display.opacity + ")" }, { type : "crop", heightRatio : poke.battler.display.height }], generalMatrix.multiply(shadowMatrix).scale(Math.pow(2, - position.height / (canvasHeight / Game.zoom / 4))), now, true);
 							// Outline
 							if (poke.battler.display.outlined) {
 								for (var angle = 0; angle < Math.PI * 2; angle += Math.PI / 2) {
@@ -232,7 +234,7 @@ function BattleContext (client) {
 						if (battleContext.state.kind === "opening") {
 							drawAfterwards.push(function (canvas) {
 								context.fillStyle = "hsla(0, 0%, 0%, " + (1 - Math.clamp(0, battleContext.state.transition, 1)).toFixed(3) + ")";
-								context.fillRect(0, 0, canvas.width, canvas.height);
+								context.fillRectHD(0, 0, canvasWidth, canvasHeight);
 							});
 						}
 					}
@@ -241,11 +243,11 @@ function BattleContext (client) {
 				}
 				var smallContext = battleContext.sketching[3].getContext("2d");
 				smallContext.save();
-				smallContext.translate(canvas.width / 2, canvas.height / 2);
+				smallContext.translate(canvasWidth / 2, canvasHeight / 2);
 				var transformation = new Matrix().rotate(View.angle);
 				transformation.applyToContext(smallContext);
 				var drawSketchingCanvas = function (i) {
-					smallContext.drawImage(battleContext.sketching[i], - (View.position.x + canvas.width * (View.zoom - 1) / 2) - canvas.width / 2, - (View.position.y + canvas.height * (View.zoom - 1) / 2) - canvas.height / 2, canvas.width * View.zoom, canvas.height * View.zoom);
+					smallContext.drawImage(battleContext.sketching[i], - (View.position.x + canvasWidth * (View.zoom - 1) / 2) - canvasWidth / 2, - (View.position.y + canvasHeight * (View.zoom - 1) / 2) - canvasHeight / 2, canvasWidth * View.zoom, canvasHeight * View.zoom);
 				};
 				drawSketchingCanvas(2);
 				smallContext.globalAlpha = shadowOpacity;
@@ -253,7 +255,7 @@ function BattleContext (client) {
 				smallContext.globalAlpha = 1;
 				drawSketchingCanvas(0);
 				smallContext.restore();
-				originalContext.drawImage(battleContext.sketching[3], (originalCanvas.width - canvas.width * Game.zoom) / 2, (originalCanvas.height - canvas.height * Game.zoom) / 2, canvas.width * Game.zoom, canvas.height * Game.zoom);
+				originalContext.copyImageHD(battleContext.sketching[3], false, true, (originalCanvasWidth - canvasWidth * Game.zoom) / 2, (originalCanvasHeight - canvasHeight * Game.zoom) / 2, canvasWidth * Game.zoom, canvasHeight * Game.zoom);
 				foreach(drawAfterwards, function (drawing) {
 					drawing(originalCanvas);
 				});
@@ -349,7 +351,7 @@ function BattleContext (client) {
 								current.x = point.x;
 							if (point.hasOwnProperty("y"))
 								current.y = point.y;
-							context.lineTo(canvas.width * (right ? 1 : 0) + ((current.x - (width * (1 - shift))) * Game.zoom) * (right ? -1 : 1), (y + current.y) * Game.zoom);
+							context.lineToHD(canvas.width / window.devicePixelRatio * (right ? 1 : 0) + ((current.x - (width * (1 - shift))) * Game.zoom) * (right ? -1 : 1), (y + current.y) * Game.zoom);
 						});
 						context.fill();
 					}
@@ -357,7 +359,7 @@ function BattleContext (client) {
 						context.font = shape.font;
 						context.textAlign = shape.align.x;
 						context.textBaseline = shape.align.y;
-						context.fillText(shape.text, canvas.width * (right ? 1 : 0) + ((shape.position.x - (width * (1 - shift))) * Game.zoom) * (right ? -1 : 1), (y + shape.position.y) * Game.zoom);
+						context.fillTextHD(shape.text, canvas.width / window.devicePixelRatio * (right ? 1 : 0) + ((shape.position.x - (width * (1 - shift))) * Game.zoom) * (right ? -1 : 1), (y + shape.position.y) * Game.zoom);
 					}
 				});
 			},
@@ -372,32 +374,32 @@ function BattleContext (client) {
 				var transition = 1 - character.display.position.x / -200;
 				battleContext.drawing.complexShape(canvas, shapes, right, y, transition);
 				for (var i = 0, pos; i < character.party.pokemon.length; ++ i) {
-					pos = (!right ? 0 : canvas.width) + (12 + i * 16 - 118 * (1 - transition)) * Game.zoom * (!right ? 1 : -1);
+					pos = (!right ? 0 : canvas.width / window.devicePixelRatio) + (12 + i * 16 - 118 * (1 - transition)) * Game.zoom * (!right ? 1 : -1);
 					context.fillStyle = !character.party.pokemon[right ? character.party.pokemon.length - (i + 1) : i].fainted() ? "red" : "grey";
-					context.fillCircle(pos, y * Game.zoom, 4 * Game.zoom);
+					context.fillCircleHD(pos, y * Game.zoom, 4 * Game.zoom);
 					context.fillStyle = "white";
-					context.fillCircle(pos, y * Game.zoom, 4 * Game.zoom, Math.PI);
+					context.fillCircleHD(pos, y * Game.zoom, 4 * Game.zoom, Math.PI);
 					context.fillStyle = context.strokeStyle = "black";
 					context.beginPath();
-					context.moveTo(pos - 4 * Game.zoom, y * Game.zoom);
-					context.lineTo(pos + 4 * Game.zoom, y * Game.zoom);
+					context.moveToHD(pos - 4 * Game.zoom, y * Game.zoom);
+					context.lineToHD(pos + 4 * Game.zoom, y * Game.zoom);
 					context.lineWidth = 0.75;
 					context.stroke();
-					context.fillCircle(pos, y * Game.zoom, 1.75 * Game.zoom);
+					context.fillCircleHD(pos, y * Game.zoom, 1.75 * Game.zoom);
 					context.fillStyle = "white";
-					context.fillCircle(pos, y * Game.zoom, 1 * Game.zoom);
+					context.fillCircleHD(pos, y * Game.zoom, 1 * Game.zoom);
 					if (character.party.pokemon[right ? character.party.pokemon.length - (i + 1) : i].fainted()) {
 						context.fillStyle = "hsla(0, 0%, 0%, 0.3)";
-						context.fillCircle(pos, y * Game.zoom, 4 * Game.zoom);
+						context.fillCircleHD(pos, y * Game.zoom, 4 * Game.zoom);
 					}
 				}
 			},
 			bar : function (canvas, poke, right, y, detailed) {
 				var context = canvas.getContext("2d"), pixelWidth = 16, percentageHealth = poke.health / poke.maximumHealth(), percentageExperience = poke.experience / poke.experienceFromLevelToNextLevel();
 				do {
-					context.font = pixelWidth + "px " + Settings._("font").typeface;
+					context.font = Font.load(pixelWidth);
 					pixelWidth -= 1;
-				} while (context.measureText(poke.name()).width > 60);
+				} while (context.measureTextHD(poke.name()).width > 60);
 				var shapes = [
 					{
 						points : [{ x : 0, y : -16 }, { x : 82 }, { x : 98, y : 0 }, { x : 162 }, { x : 146, y : 16 }, { x : 0 }],
@@ -1803,28 +1805,28 @@ function BattleContext (client) {
 							vertical : 24
 						};
 						context.fillStyle = "hsla(0, 0%, 0%, 0.9)";
-						context.fillRect(left * Game.zoom, top * Game.zoom, width * Game.zoom, height * Game.zoom);
+						context.fillRectHD(left * Game.zoom, top * Game.zoom, width * Game.zoom, height * Game.zoom);
 						context.fillStyle = "white";
 						context.textBaseline = "top";
 						context.textAlign = "left";
 						context.font = Font.load(24 * Game.zoom);
-						context.fillText(move.move, (left + padding.horizontal) * Game.zoom, (top + padding.vertical) * Game.zoom);
+						context.fillTextHD(move.move, (left + padding.horizontal) * Game.zoom, (top + padding.vertical) * Game.zoom);
 						context.textAlign = "right";
-						context.fillText(move.PP + "/" + Move.maximumPP(move.move, move.PPUps), (left + width - padding.horizontal) * Game.zoom, (top + padding.vertical) * Game.zoom);
+						context.fillTextHD(move.PP + "/" + Move.maximumPP(move.move, move.PPUps), (left + width - padding.horizontal) * Game.zoom, (top + padding.vertical) * Game.zoom);
 						context.textAlign = "left";
 						context.font = Font.load(18 * Game.zoom);
-						context.fillText(stats.type, (left + padding.horizontal) * Game.zoom, (top + padding.vertical + 44) * Game.zoom);
+						context.fillTextHD(stats.type, (left + padding.horizontal) * Game.zoom, (top + padding.vertical + 44) * Game.zoom);
 						if (stats.hasOwnProperty("power"))
-							context.fillText("Power: " + stats.power, (left + padding.horizontal) * Game.zoom, (top + padding.vertical + 70) * Game.zoom);
+							context.fillTextHD("Power: " + stats.power, (left + padding.horizontal) * Game.zoom, (top + padding.vertical + 70) * Game.zoom);
 						context.textAlign = "right";
-						context.fillText(stats.category === Move.category.physical ? "Physical" : stats.category === Move.category.special ? "Special" : stats.category === Move.category.status ? "Status" : "", (left + width - padding.horizontal) * Game.zoom, (top + padding.vertical + 44) * Game.zoom);
+						context.fillTextHD(stats.category === Move.category.physical ? "Physical" : stats.category === Move.category.special ? "Special" : stats.category === Move.category.status ? "Status" : "", (left + width - padding.horizontal) * Game.zoom, (top + padding.vertical + 44) * Game.zoom);
 						if (stats.hasOwnProperty("accuracy"))
-							context.fillText("Accuracy: " + Math.round(stats.accuracy * 100) + "%", (left + width - padding.horizontal) * Game.zoom, (top + padding.vertical + 70) * Game.zoom);
+							context.fillTextHD("Accuracy: " + Math.round(stats.accuracy * 100) + "%", (left + width - padding.horizontal) * Game.zoom, (top + padding.vertical + 70) * Game.zoom);
 						context.textAlign = "left";
 						context.font = Font.load(14 * Game.zoom);
 						var lines = Textbox.wrap(stats.description, Textbox.newStyleContext(), [], (width - padding.horizontal * 2) * Game.zoom).split("\n");
 						foreach(lines, function (line, i) {
-							context.fillText(line, (left + padding.horizontal) * Game.zoom, (top + 128 + 16 * i) * Game.zoom);
+							context.fillTextHD(line, (left + padding.horizontal) * Game.zoom, (top + 128 + 16 * i) * Game.zoom);
 						});
 					};
 				} else {

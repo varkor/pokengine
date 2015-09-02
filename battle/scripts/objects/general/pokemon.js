@@ -451,6 +451,8 @@ function pokemon (data, validate) {
 		if (self.trainer === null || self.trainer.isAnNPC())
 			return;
 		sharedBetween = sharedBetween || 1;
+		if (self.level === 100)
+			return false;
 		var eventModifiers = product(defeated.battler.battle.triggerEvent(Triggers.experience, {}, defeated, self)), OPower = self.trainer.OPowers["Exp. Point"];
 		var gain = Math.ceil((((!defeated.battler.battle.isWildBattle() ? 1.5 : 1) * defeated.currentProperty("yield").experience * defeated.level) / (5 * (participated ? 1 : 2)) * Math.pow((2 * defeated.level + 10) / (defeated.level + self.level + 10), 2.5) + 1) * (self.caught && self.trainer.identification === self.caught.trainer ? 1 : self.trainer.nationality === self.nationality ? 1.5 : 1.7) * (OPower === 1 ? 1.2 : OPower === 2 ? 1.5 : OPower === 3 ? 2 : 1) * eventModifiers / sharedBetween);
 		if (defeated.battler.battle.active && !defeated.battler.battle.process)

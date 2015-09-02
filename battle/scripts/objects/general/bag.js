@@ -103,7 +103,6 @@ function bag (items) {
 	self.intendToUse = function (item, quantity) {
 		if (arguments.length < 2)
 			quantity = 1;
-		console.log("intend to use", item);
 		self.items[self.indexOfItem(item)].intentToUse += quantity;
 	};
 

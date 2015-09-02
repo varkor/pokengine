@@ -76,8 +76,10 @@ FunctionObject = {
 						canvas.className = details.drawing.canvas.className;
 					if (details.drawing.canvas.hasOwnProperty("focusable") && details.drawing.canvas.focusable)
 						canvas.tabIndex = 0;
-					canvas.width = details.drawing.canvas.width;
-					canvas.height = details.drawing.canvas.height;
+					canvas.width = details.drawing.canvas.width * window.devicePixelRatio;
+					canvas.height = details.drawing.canvas.height * window.devicePixelRatio;
+					canvas.style.width = details.drawing.canvas.width + "px";
+					canvas.style.height = details.drawing.canvas.height + "px";
 					if (details.drawing.canvas.hasOwnProperty("smoothing") && !details.drawing.canvas.smoothing)
 						canvas.getContext("2d").imageSmoothingEnabled = false;
 					object.canvas = canvas;

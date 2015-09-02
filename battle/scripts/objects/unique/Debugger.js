@@ -66,7 +66,8 @@ Debugger = FunctionObject.new({
 			context.fillStyle = gradient;
 			context.fill();
 			context.fillStyle = "white";
-			var fontSize = Math.min(canvas.width / 6, canvas.height / 2);
+			var scale = window.devicePixelRatio;
+			var fontSize = Math.min(canvas.width / scale / 6, canvas.height / scale / 2);
 			context.font = Font.load(fontSize);
 			context.fillText("fps: " + fps.toFixed(1), Math.min(fontSize, 16), canvas.height / 2);
 		}

@@ -420,7 +420,7 @@ Textbox = FunctionObject.new({
 				Textbox.updateStyleContext(styleContext, styling, i, style);
 				context.font = Font.loadFromStyle(styleContext);
 			}
-			width += context.measureText(text[i]).width;
+			width += context.measureTextHD(text[i]).width;
 			if (width > boundsWidth) {
 				if (breakpoint) {
 					text = text.substr(0, breakpoint) + "\n" + text.substr(breakpoint + 1);
@@ -433,7 +433,7 @@ Textbox = FunctionObject.new({
 					breakpoint = softBreakpoint = null;
 					width = 0;
 				}
-			} else if (width + context.measureText("-").width <= boundsWidth) {
+			} else if (width + context.measureTextHD("-").width <= boundsWidth) {
 				softBreakpoint = i;
 			}
 		}
@@ -684,15 +684,15 @@ Textbox = FunctionObject.new({
 		draw : function (canvas) {
 			var context = canvas.getContext("2d");
 			// Clear the canvas
-			context.clearRect(0, 0, canvas.width, canvas.height);
+			context.clearRectHD(0, 0, canvas.width, canvas.height);
 			if (Textbox.slide > 0) {
 				// Draw the textbox
 				var style = Textbox.currentStyle(), metrics = Textbox.metrics();
 				context.fillStyle = "hsla(0, 0%, 0%, 0.8)";
-				context.fillRect(metrics.left * Game.zoom, metrics.top * Game.zoom, metrics.width * Game.zoom, metrics.height * Game.zoom);
+				context.fillRectHD(metrics.left * Game.zoom, metrics.top * Game.zoom, metrics.width * Game.zoom, metrics.height * Game.zoom);
 				if (Settings._("debug mode")) {
 					context.fillStyle = "hsla(0, 0%, 100%, 0.2)";
-					context.fillRect(metrics.inner.left * Game.zoom, metrics.inner.top * Game.zoom, metrics.inner.width * Game.zoom, metrics.inner.height * Game.zoom);
+					context.fillRectHD(metrics.inner.left * Game.zoom, metrics.inner.top * Game.zoom, metrics.inner.width * Game.zoom, metrics.inner.height * Game.zoom);
 				}
 				// Draw the text
 				if (Textbox.dialogue.notEmpty() && Textbox.dialogue.first().text !== null) {
@@ -723,7 +723,7 @@ Textbox = FunctionObject.new({
 							var partitionWidth, verticalPosition = metrics.top + metrics.height - (style.padding.vertical + currentLineStatistics.totalHeight + (currentLineStatistics.totalHeight < metrics.inner.height ? metrics.inner.height - currentLineStatistics.cumulativeHeight : 0)) + sum(lineHeights, lineNumber + 1);
 							Textbox.updateStyleContext(styleContext, Textbox.dialogue.first().styling, characters);
 							context.font = Font.loadFromStyle(styleContext);
-							partitionWidth = context.measureText(part).width;
+							partitionWidth = context.measureTextHD(part).width;
 							if (entities.notEmpty() && entities.first().position === characters) {
 								if (Sprite.draw(Textbox.canvas, entities.first().entity, style.margin.horizontal + style.padding.horizontal + position.x, verticalPosition, true)) {
 									position.x += Sprite.load(entities.first().entity).width;
@@ -732,15 +732,15 @@ Textbox = FunctionObject.new({
 							}
 							context.font = Font.loadFromStyle(styleContext, Game.zoom);
 							context.fillStyle = styleContext.colour;
-							context.fillText(part, (style.margin.horizontal + style.padding.horizontal + position.x) * Game.zoom, verticalPosition * Game.zoom);
+							context.fillTextHD(part, (style.margin.horizontal + style.padding.horizontal + position.x) * Game.zoom, verticalPosition * Game.zoom);
 							position.x += partitionWidth;
 							characters += part.length;
 						});
 						position.x = 0;
 						characters += 1; // The newline character, which has been removed.
 					});
-					context.clearRect(0, 0, canvas.width, metrics.top * Game.zoom);
-					context.clearRect(0, (metrics.top + metrics.height) * Game.zoom, canvas.width, canvas.height - (metrics.top - metrics.height) * Game.zoom);
+					context.clearRectHD(0, 0, canvas.width, metrics.top * Game.zoom);
+					context.clearRectHD(0, (metrics.top + metrics.height) * Game.zoom, canvas.width, canvas.height - (metrics.top - metrics.height) * Game.zoom);
 					if (Textbox.displayed.length === dialogue.text.length) {
 						context.textAlign = "center";
 						context.textBaseline = "middle";
@@ -763,14 +763,14 @@ Textbox = FunctionObject.new({
 							responseMetrics.height = (isMajor ? metrics.response.major : metrics.response.minor).height;
 							selected = (hovered = Cursor.inArea(canvas, responseMetrics.x * Game.zoom, responseMetrics.y * Game.zoom, responseMetrics.width * Game.zoom, responseMetrics.height * Game.zoom) && Input.priority === "mouse") || (Input.controlScheme === "keyboard" && Textbox.response === response && (!cursorIsOverAResponse || Input.priority === "keyboard"));
 							context.fillStyle = (selected ? "hsla(0, 0%, 100%, 0.8)" : "hsla(0, 0%, 0%, 0.6)");
-							context.fillRect(responseMetrics.x * Game.zoom, responseMetrics.y * Game.zoom, responseMetrics.width * Game.zoom, responseMetrics.height * Game.zoom);
+							context.fillRectHD(responseMetrics.x * Game.zoom, responseMetrics.y * Game.zoom, responseMetrics.width * Game.zoom, responseMetrics.height * Game.zoom);
 							var pixelDeficit = 0;
 							do {
 								context.font = Font.load((isMajor ? metrics.response.major : metrics.response.minor).height * 0.8 * Game.zoom - pixelDeficit);
 								pixelDeficit += 1;
-							} while (context.measureText(dialogue.responses[response]).width > (responseMetrics.width - 4) * Game.zoom);
+							} while (context.measureTextHD(dialogue.responses[response]).width > (responseMetrics.width - 4) * Game.zoom);
 							context.fillStyle = (selected ? "black" : "white");
-							context.fillText(dialogue.responses[response], (responseMetrics.x + responseMetrics.width / 2) * Game.zoom, (responseMetrics.y + responseMetrics.height / 2) * Game.zoom);
+							context.fillTextHD(dialogue.responses[response], (responseMetrics.x + responseMetrics.width / 2) * Game.zoom, (responseMetrics.y + responseMetrics.height / 2) * Game.zoom);
 							if (selected) {
 								if (hovered)
 									Textbox.hoverResponse = response;
@@ -785,7 +785,7 @@ Textbox = FunctionObject.new({
 						}
 					} else if (responses > 0) {
 						context.fillStyle = "hsla(0, 0%, 0%, 0.6)";
-						context.fillRect(0, (metrics.top + metrics.height) * Game.zoom, canvas.width, canvas.height - (metrics.top + metrics.height) * Game.zoom);
+						context.fillRectHD(0, (metrics.top + metrics.height) * Game.zoom, canvas.width, canvas.height - (metrics.top + metrics.height) * Game.zoom);
 					}
 					if (Textbox.details) {
 						// The drawing function provided is expected to handle differing zoom levels (Game.zoom)

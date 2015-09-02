@@ -18,8 +18,11 @@ Game = {
 		foreach([Battle, Textbox], function (object) {
 			if (typeof object === "object" && object !== null) {
 				var imageSmoothingEnabled = object.canvas.getContext("2d").imageSmoothingEnabled;
-				object.canvas.width = Settings._("screen dimensions => width") * Game.zoom;
-				object.canvas.height = Settings._("screen dimensions => height") * Game.zoom;
+				var width = Settings._("screen dimensions => width") * Game.zoom, height = Settings._("screen dimensions => height") * Game.zoom;
+				object.canvas.width = width * window.devicePixelRatio;
+				object.canvas.height = height * window.devicePixelRatio;
+				object.canvas.style.width = width + "px";
+				object.canvas.style.height = height + "px";
 				object.canvas.getContext("2d").imageSmoothingEnabled = imageSmoothingEnabled;
 				if (typeof object.requestRedraw !== undefined)
 					object.requestRedraw = true;
