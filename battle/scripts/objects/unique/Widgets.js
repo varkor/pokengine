@@ -108,7 +108,7 @@ Widgets.FlowGrid = {
 					// Health
 					var percentageHealth = poke.health / poke.maximumHealth();
 					context.fillStyle = (percentageHealth > 0.5 ? "hsl(110, 100%, 40%)" : percentageHealth > 0.2 ? "hsl(40, 100%, 50%)" : "hsl(0, 100%, 50%)");
-					context.fillRoundedRectHD(position.x + 3, position.y + size.height - 6, (percentageHealth * size.width - 6), 2, 1);
+					context.fillRoundedRectHD(position.x + 3, position.y + size.height - 6, percentageHealth * (size.width - 6), 2, 1);
 				}
 				// Icon
 				var icon = Sprite.load(poke.paths.icon(true));
@@ -153,14 +153,14 @@ Widgets.Party = {
 			flowGrid.rows = 1;
 			flowGrid.columns = 6;
 			flowGrid.margin = {
-				left : 4,
-				right : 4,
-				top : 4,
-				bottom : 4
+				left : 5,
+				right : 5,
+				top : 5,
+				bottom : 5
 			};
 			flowGrid.spacing = {
-				x : 4,
-				y : 4
+				x : 5,
+				y : 5
 			};
 		}
 		flowGrid.size = {
@@ -177,18 +177,12 @@ Widgets.Party = {
 		template : Widgets.FlowGrid.templates.tinyPokemon,
 		datasource : [],
 		rows : 1,
-		columns : 6,
+		columns : 1,
 		contrainToBounds : true,
 		selection : "none",
-		margin : {
-			x : 4,
-			y : 4
-		},
-		spacing : {
-			x : 4,
-			y : 4
-		},
-		events : {
+		margin : 0,
+		spacing : 0,
+		listeners : {
 			"cell:click" : function (index, poke) {
 				var clickedPoke = Display.original(poke);
 				if (Widgets.Party.state.kind === "switch" && clickedPoke.trainer.healthyEligiblePokemon(true).contains(clickedPoke)) {
@@ -234,4 +228,5 @@ Widgets.Party = {
 		}
 	}
 };
+Widgets.Party.switchSize(true);
 BattleContext.defaultDelegates.Pokémon = Widgets.Party.BattleContextDelegate;
