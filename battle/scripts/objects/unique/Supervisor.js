@@ -171,9 +171,28 @@ Supervisor = {
 				if (!data.hasOwnProperty("reason"))
 					return unsuccessful("The parameter `data` should have had a `reason` property.");
 				var process = Supervisor.processes[identifier];
-				process.battle.end(true);
+				process.battle.end({
+					"outcome" : "termination"
+				}, true);
 				foreach(process.parties, function (party) {
 					Supervisor.send(party, "terminate", data.reason, identifier);
+				});
+				delete Supervisor.processes[identifier];
+				return {
+					success : true,
+					process : process
+				};
+			case "force":
+				// Forces a particular outcome during a battle
+				// There is very little good reason to use this, apart from for testing reasons. It can be easily abused.
+				var process = Supervisor.processes[identifier];
+				process.battle.end({
+					outcome : data.winner === null ? "draw" : (data.winner === process.battle.alliedTrainers.first().identification ? "allied victory" : (data.winner === process.battle.opposingTrainers.first().identification ? "opposing victory" : "termination"))
+				}, true);
+				foreach(process.parties, function (party) {
+					Supervisor.send(party, "force", {
+						winner : data.winner
+					}, identifier);
 				});
 				delete Supervisor.processes[identifier];
 				return {

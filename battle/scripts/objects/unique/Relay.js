@@ -67,7 +67,14 @@ Relay = {
 			case "terminate": // A battle must be stopped
 				Relay.processes[identifier].battle.end({
 					"outcome" : "termination"
-				});
+				}, true);
+				Battle = null;
+				delete Relay.processes[identifier];
+				break;
+			case "force": // The Supervisor has decided... against most people's better judgement, that the result of the battle must be faked
+				Relay.processes[identifier].battle.end({
+					"outcome" : data.winner === null ? "draw" : (data.winner === Relay.processes[identifier].battle.alliedTrainers.first().identification ? "allied victory" : (data.winner === Relay.processes[identifier].battle.opposingTrainers.first().identification ? "opposing victory" : "termination"))
+				}, true);
 				Battle = null;
 				delete Relay.processes[identifier];
 				break;

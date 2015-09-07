@@ -737,13 +737,12 @@ function BattleContext (client) {
 		finish : function () {
 			battleContext.finished = true;
 		},
-		end : function (flags) {
+		end : function (flags, forcefully) {
 			if (battleContext.active) {
 				battleContext.active = false;
 				if (flags) {
 					battleContext.endingFlags = flags;
 				}
-				var forcefully = arguments.length === 0;
 				if (!battleContext.process && forcefully)
 					Textbox.clear();
 				if (!battleContext.process) Textbox.setStyle("standard");
