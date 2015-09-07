@@ -86,6 +86,20 @@ Abilities = {
 			}
 		]
 	},
+	"Overcoat" : {
+		effects : [
+			{
+				event : Triggers.move,
+				affected : true,
+				action : function (data, self, other) {
+					if (data.move.classification.contains("Powder")) {
+						if (!self.battler.battle.process) Textbox.state(self.name() + "'s Powder protects " + self.personalPronoun() + " from " + other.name() + "'s powder-based attack!");
+						return true;
+					}
+				}
+			}
+		]
+	},
 	"Soundproof" : {
 		effects : [
 			{
@@ -112,6 +126,63 @@ Abilities = {
 			}
 		]
 	},
+	"Equilibrium" : {
+		effects : [
+			{
+				event : Triggers.effectiveness,
+				type : "Fairy",
+				action : function (data, self, other) {
+					return 0.5;
+				}
+			}
+		]
+	},
+	"Flash Fire" : {
+		effects : [
+			{
+				event : Triggers.effectiveness,
+				type : "Fire",
+				action : function (data, self, other) {
+					if (!self.battler.battle.process) Textbox.state(self.name() + "'s Flash Fire protects " + self.personalPronoun() + " from " + other.name() + "'s Fire-type attack!");
+					return 0;
+				}
+			}
+		]
+	},
+	"Heatproof" : {
+		effects : [
+			{
+				event : Triggers.effectiveness,
+				type : "Fire",
+				action : function (data, self, other) {
+					return 0.5;
+				}
+			}
+		]
+	},
+	"Holy Guard" : {
+		effects : [
+			{
+				event : Triggers.effectiveness,
+				type : "Dragon",
+				action : function (data, self, other) {
+					return 0.5;
+				}
+			}
+		]
+	},
+	"Ignition" : {
+		effects : [
+			{
+				event : Triggers.effectiveness,
+				type : "Fire",
+				action : function (data, self, other) {
+					if (!self.battler.battle.process) Textbox.state(self.name() + "'s Ignition protects " + self.personalPronoun() + " from " + other.name() + "'s Fire-type attack!");
+					return 0;
+				}
+			}
+		]
+	},
 	"Levitate" : {
 		effects : [
 			{
@@ -127,11 +198,185 @@ Abilities = {
 			}
 		]
 	},
+	"Lightningrod" : {
+		effects : [
+			{
+				event : Triggers.effectiveness,
+				type : "Electric",
+				action : function (data, self, other) {
+					if (!self.battler.battle.process) Textbox.state(self.name() + "'s Lightningrod protects " + self.personalPronoun() + " from " + other.name() + "'s Electric-type attack!");
+					return 0;
+				}
+			}
+		]
+	},
+	"Motor Drive" : {
+		effects : [
+			{
+				event : Triggers.effectiveness,
+				type : "Electric",
+				action : function (data, self, other) {
+					if (!self.battler.battle.process) Textbox.state(self.name() + "'s Motor Drive protects " + self.personalPronoun() + " from " + other.name() + "'s Electric-type attack!");
+					return 0;
+				}
+			}
+		]
+	},
+	"Mountaineer" : {
+		effects : [
+			{
+				event : Triggers.effectiveness,
+				type : "Rock",
+				action : function (data, self, other) {
+					if (!self.battler.battle.process) Textbox.state(self.name() + "'s Mountaineer protects " + self.personalPronoun() + " from " + other.name() + "'s Rock-type attack!");
+					return 0;
+				}
+			}
+		]
+	},
+	"Pinwheel" : {
+		effects : [
+			{
+				event : Triggers.effectiveness,
+				type : "Flying",
+				action : function (data, self, other) {
+					if (!self.battler.battle.process) Textbox.state(self.name() + "'s Pinwheel protects " + self.personalPronoun() + " from " + other.name() + "'s Flying-type attack!");
+					return 0;
+				}
+			}
+		]
+	},
+	"Sap Sipper" : {
+		effects : [
+			{
+				event : Triggers.effectiveness,
+				type : "Grass",
+				action : function (data, self, other) {
+					if (!self.battler.battle.process) Textbox.state(self.name() + "'s Sap Sipper protects " + self.personalPronoun() + " from " + other.name() + "'s Grass-type attack!");
+					return 0;
+				}
+			}
+		]
+	},
+	"Storm Drain" : {
+		effects : [
+			{
+				event : Triggers.effectiveness,
+				type : "Water",
+				action : function (data, self, other) {
+					if (!self.battler.battle.process) Textbox.state(self.name() + "'s Storm Drain protects " + self.personalPronoun() + " from " + other.name() + "'s Water-type attack!");
+					return 0;
+				}
+			}
+		]
+	},
+	"Thick Fat" : {
+		effects : [
+			{
+				event : Triggers.effectiveness,
+				type : "Fire",
+				action : function (data, self, other) {
+					return 0.5;
+				}
+			}
+		]
+	},
+	"Updraft" : {
+		effects : [
+			{
+				event : Triggers.effectiveness,
+				type : "Flying",
+				action : function (data, self, other) {
+					if (!self.battler.battle.process) Textbox.state(self.name() + "'s Updraft protects " + self.personalPronoun() + " from " + other.name() + "'s Flying-type attack!");
+					return 0;
+				}
+			}
+		]
+	},
+	"Volt Absorb" : {
+		effects : [
+			{
+				event : Triggers.effectiveness,
+				type : "Electric",
+				action : function (data, self, other) {
+					if (!self.battler.battle.process) Textbox.state(self.name() + "'s Volt Absorb protects " + self.personalPronoun() + " from " + other.name() + "'s Electric-type attack!");
+					return 0;
+				}
+			}
+		]
+	},
+	"Water Absorb" : {
+		effects : [
+			{
+				event : Triggers.effectiveness,
+				type : "Water",
+				action : function (data, self, other) {
+					if (!self.battler.battle.process) Textbox.state(self.name() + "'s Water Absorb protects " + self.personalPronoun() + " from " + other.name() + "'s Water-type attack!");
+					return 0;
+				}
+			}
+		]
+	},
+	"Cacophony" : {
+		effects : [
+			{
+				event : Triggers.damage,
+				classification : "Sound",
+				action : function (data, self, other) {
+					return 1.2;
+				}
+			}
+		]
+	},
 	"Iron Fist" : {
 		effects : [
 			{
 				event : Triggers.damage,
 				classification : "Punch",
+				action : function (data, self, other) {
+					return 1.2;
+				}
+			}
+		]
+	},
+	"Mega Launcher" : {
+		effects : [
+			{
+				event : Triggers.damage,
+				classification : "Pulse",
+				action : function (data, self, other) {
+					return 1.5;
+				}
+			}
+		]
+	},
+	"Power Leech" : {
+		effects : [
+			{
+				event : Triggers.damage,
+				classification : "Draining",
+				action : function (data, self, other) {
+					return 1.2;
+				}
+			}
+		]
+	},
+	"Strong Jaw" : {
+		effects : [
+			{
+				event : Triggers.damage,
+				classification : "Jaw",
+				action : function (data, self, other) {
+					return 1.5;
+				}
+			}
+		]
+	},
+	"Sharpshooter" : {
+		effects : [
+			{
+				event : Triggers.damage,
+				classification : "Ballistics",
 				action : function (data, self, other) {
 					return 1.2;
 				}
