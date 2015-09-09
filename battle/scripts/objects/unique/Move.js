@@ -369,7 +369,7 @@ Move = {
 		};
 	},
 	percentageDamage : function (poke, fraction) {
-		return Move.exactDamage(Math.max(1, poke.stats.health() * fraction));
+		return Move.exactDamage(Math.max(1, Math.ceil(poke.stats.health() * fraction)));
 	},
 	effectiveness : function (attacking, defending, flags) {
 		var types = Types;

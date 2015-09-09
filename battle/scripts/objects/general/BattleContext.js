@@ -1996,8 +1996,8 @@ function BattleContext (client) {
 						break;
 					case "badly poisoned":
 						if (!battleContext.process) Textbox.state(poke.name() + " is hurt by the toxic poison!");
-						battleContext.damage(poke, Move.percentageDamage(poke, poke.poison / 16));
-						++ poke.poison;
+						battleContext.damage(poke, Move.percentageDamage(poke, poke.battler.poison / 16));
+						++ poke.battler.poison;
 						break;
 				}
 				if (poke.battler.recharging)
