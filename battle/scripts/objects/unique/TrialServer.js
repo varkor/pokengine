@@ -144,7 +144,8 @@ TrialServer = {
 					parameters : Interface.buildSettings()
 				},
 				rules : {
-					clauses : []
+					clauses : [],
+					timer : null
 				},
 				callback : function (flags, trainers) {
 					TrialServer.print("Supervisor battle ended with flags:", flags, " and trainers:", trainers);

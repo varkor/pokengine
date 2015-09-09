@@ -50,6 +50,8 @@ Supervisor = {
 					return unsuccessful("The parameter `data.rules` should have had a `clauses` property.");
 				if (!Array.isArray(data.rules.clauses))
 					return unsuccessful("The parameter `data.rules.clauses` should have been an array.");
+				if (typeof data.rules.timer !== "number")
+					return unsuccessful("The parameter `data.rules.timer` should have been a number, but had type `" + (typeof data.rules.timer) + "`.");
 				if (foreach(data.rules.clauses, function (clause) {
 					if (typeof clause !== "object")
 						return true;
@@ -82,7 +84,8 @@ Supervisor = {
 						rules : data.rules,
 						relay : [],
 						relayed : 0,
-						battle : battle
+						battle : battle,
+						timer : null
 					};
 					if (!data.data.hasOwnProperty("teamA"))
 						return unsuccessful("The parameter `data.data` should have had a `teamA` property.");
@@ -97,6 +100,8 @@ Supervisor = {
 					teamA.type = data.data.teamA.type;
 					teamB.type = data.data.teamB.type;
 					var callback = function (flags, trainers) {
+						Supervisor.countdown(identifier, true);
+						var timer = Supervisor.processes[identifier].timer;
 						data.callback(flags, trainers, Supervisor.record(identifier));
 						delete Supervisor.processes[identifier];
 					};
@@ -122,6 +127,7 @@ Supervisor = {
 							data : data.data
 						}, identifier);
 					});
+					Supervisor.countdown(identifier);
 					return {
 						success : true,
 						identification : Supervisor.identification ++
@@ -186,13 +192,18 @@ Supervisor = {
 				// Forces a particular outcome during a battle
 				// There is very little good reason to use this, apart from for testing reasons. It can be easily abused.
 				var process = Supervisor.processes[identifier];
+				var alliedVictory = null;
+				if (data !== null) {
+					if ((data.hasOwnProperty("winner") && data.winner === Relay.processes[identifier].battle.alliedTrainers.first().identification) || (data.hasOwnProperty("loser") && data.loser === Relay.processes[identifier].battle.opposingTrainers.first().identification))
+						alliedVictory = true;
+					else if ((data.hasOwnProperty("winner") && data.winner === Relay.processes[identifier].battle.opposingTrainers.first().identification) || (data.hasOwnProperty("loser") && data.loser === Relay.processes[identifier].battle.alliedTrainers.first().identification))
+						alliedVictory = false;
+				}
 				process.battle.end({
-					outcome : data.winner === null ? "draw" : (data.winner === process.battle.alliedTrainers.first().identification ? "allied victory" : (data.winner === process.battle.opposingTrainers.first().identification ? "opposing victory" : "termination"))
+					"outcome" : alliedVictory === null ? "draw" : (alliedVictory === true ? "allied victory" : (alliedVictory === false ? "opposing victory" : "termination"))
 				}, true);
 				foreach(process.parties, function (party) {
-					Supervisor.send(party, "force", {
-						winner : data.winner
-					}, identifier);
+					Supervisor.send(party, "force", data, identifier);
 				});
 				delete Supervisor.processes[identifier];
 				return {
@@ -226,6 +237,7 @@ Supervisor = {
 							foreach(process.parties, function (party) {
 								Supervisor.send(party, "actions", actionsToSend, identifier);
 							});
+							Supervisor.countdown(identifier);
 							process.relayed = process.relay.length;
 						}
 					} else {
@@ -278,7 +290,6 @@ Supervisor = {
 			case "replay":
 				// Plays a recorded battle for a player
 				// data: recording, spectators
-				//? Add a suffix to all identifiers (like "r") to distinguish them from active players so there is no issue with players who are watching replays of their own battles
 				if (!data.hasOwnProperty("spectators"))
 					return unsuccessful("The parameter `data` should have had a `spectators` property.");
 				if (!Array.isArray(data.spectators))
@@ -319,6 +330,33 @@ Supervisor = {
 					success : false,
 					reason : "The `message` parameter was not valid (" + message + ")."
 				};
+		}
+	},
+	countdown : function (identifier, cancel) {
+		if (Supervisor.processes.hasOwnProperty(identifier)) {
+			var process = Supervisor.processes[identifier];
+			if (process.timer !== null) {
+				clearTimeout(process.timer);
+				process.timer = null;
+			}
+			if (!cancel && process.rules.timer !== null) {
+				process.timer = setTimeout(function () {
+					var waitingFor = process.battle.trainersWaitingFor(process.battle.state.for);
+					if (waitingFor.notEmpty()) {
+						Supervisor.receive("force", waitingFor.length === 1 ? {
+							loser : waitingFor.first()
+						} : null, identifier);
+					}
+				}, process.rules.timer);
+				foreach(process.parties, function (party) {
+					Supervisor.send(party, "countdown", {
+						correction : 0, // Should be some estimation of the time it takes to send a message to the party
+						duration : process.rules.timer
+					});
+				});
+			}
+		} else {
+			return unsuccessful("No battle existed with the provided identifier `" + identifier + "`.");
 		}
 	},
 	record : function (identifier, recordUnfinishedBattle) {

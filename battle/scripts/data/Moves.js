@@ -542,8 +542,10 @@ Moves = {
 							move.PP = 5;
 							move.PPUps = 0;
 						});
-						var display = Display.state.save(), speciesName = target.currentSpecies().replace(/ \(\w+\)$/, "");
-						if (!self.battler.battle.process) Textbox.state(self.name() + " transformed itself into " + article(speciesName) + " " + speciesName + ".", /*transform animation, has finishing transforming, */function () { Display.state.load(display); });
+						if (!self.battler.battle.process) {
+							var display = Display.state.save(), speciesName = target.currentSpecies().replace(/ \(\w+\)$/, "");
+							Textbox.state(self.name() + " transformed itself into " + article(speciesName) + " " + speciesName + ".", /*transform animation, has finishing transforming, */function () { Display.state.load(display); });
+						}
 					},
 					targets : true
 				}

@@ -259,6 +259,21 @@ function BattleContext (client) {
 				foreach(drawAfterwards, function (drawing) {
 					drawing(originalCanvas);
 				});
+				if (battleContext.timer !== null) {
+					var timeLeft = battleContext.timer.end - now, pulsate = 2 * Math.sin(Math.max(0, 3 * 1000 - timeLeft) / 80), radius = { outer : 15 + pulsate, inner : 10 }, padding = 8, centre = { x : originalCanvasWidth - padding - radius.outer + pulsate, y : padding + radius.outer - pulsate }, startAngle = Math.PI / 2, endAngle = startAngle - (now - battleContext.timer.start) / (battleContext.timer.end - battleContext.timer.start) * 2 * Math.PI;
+					originalContext.fillStyle = "hsla(0, 0%, 100%, 0.75)";
+					originalContext.fillCircleHD(centre.x, centre.y, radius.outer);
+					originalContext.fillStyle = "hsla(0, 50%, 50%, 0.75)";
+					originalContext.beginPath();
+					originalContext.arcHD(centre.x, centre.y, radius.inner, 2 * Math.PI - startAngle, 2 * Math.PI - endAngle, false);
+					originalContext.arcHD(centre.x, centre.y, radius.outer, 2 * Math.PI - endAngle, 2 * Math.PI - startAngle, true);
+					originalContext.fill();
+					originalContext.fillStyle = "hsla(0, 0%, 0%, 1)";
+					originalContext.textAlign = "center";
+					originalContext.textBaseline = "middle";
+					originalContext.font = Font.load(16, "bold");
+					originalContext.fillTextHD(Math.ceil(Math.max(0, timeLeft / 1000)), centre.x, centre.y);
+				}
 			}
 		}
 	} : {});
@@ -281,6 +296,7 @@ function BattleContext (client) {
 		levelUppers : [],
 		weather : null,
 		turns : 0,
+		timer : null,
 		callback : null,
 		encounterTile : null,
 		selection : 0,
@@ -1245,9 +1261,12 @@ function BattleContext (client) {
 			battleContext.processTurn();
 		},
 		hasCommunicationForTrainers : function (kind, waitingActions) {
-			if (arguments.length < 2)
+			return battleContext.trainersWaitingFor(kind, waitingActions).empty();
+		},
+		trainersWaitingFor : function (kind, waitingActions) {
+			if (typeof waitingActions === "undefined")
 				waitingActions = battleContext.communication;
-			var requiredActions = {};
+			var requiredActions = {}, communicationIdentifications = {};
 			foreach(battleContext.allTrainers(), function (character) {
 				if (character.type === Trainers.type.online) {
 					var requiredActionsForTrainer = 0;
@@ -1277,22 +1296,28 @@ function BattleContext (client) {
 								++ requiredActionsForTrainer;
 							break;
 					}
-					if (requiredActionsForTrainer)
+					if (requiredActionsForTrainer) {
 						requiredActions[character.identification] = requiredActionsForTrainer;
+						communicationIdentifications[character.identification] = character.identification;
+					}
 				}
 			});
 			var actionsForTrainers = {};
 			foreach(waitingActions, function (communication) {
 				if (communication.action === kind) {
-					if (!actionsForTrainers.hasOwnProperty(communication.trainer))
+					if (!actionsForTrainers.hasOwnProperty(communication.trainer)) {
 						actionsForTrainers[communication.trainer] = 0;
+					}
 					++ actionsForTrainers[communication.trainer];
 				}
 			});
-			return !forevery(requiredActions, function (number, character) {
-				if (!actionsForTrainers.hasOwnProperty(character) || actionsForTrainers[character] < number)
-					return true;
+			var waitingFor = [];
+			forevery(requiredActions, function (number, character) {
+				if (!actionsForTrainers.hasOwnProperty(character) || actionsForTrainers[character] < number) {
+					waitingFor.push(communicationIdentifications[character]);
+				}
 			});
+			return waitingFor;
 		},
 		communicationForTrainerIsValid : function (team, actions, issues) {
 			// This function assumes that all the actions required for this point are sent — i.e. split data packets are not allowed as it makes it difficult to determine the current Pokémon
@@ -2545,7 +2570,7 @@ function BattleContext (client) {
 						maxSpeed = poke.stats.speed(true);
 				});
 				var escapeChance = (currentBattler.stats.speed(true) * 32) / ((maxSpeed / 4) % 256) + 30 * (battleContext.escapeAttempts ++);
-				if (escapeChance > 255 || battleContext.random.randomInt(255) < escapeChance) {
+				if (escapeChance > 255 || battleContext.random.int(255) < escapeChance) {
 					battleContext.queue.push({
 						priority : 6,
 						action : function () {

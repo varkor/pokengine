@@ -71,9 +71,16 @@ Relay = {
 				Battle = null;
 				delete Relay.processes[identifier];
 				break;
-			case "force": // The Supervisor has decided... against most people's better judgement, that the result of the battle must be faked
+			case "force": // The Supervisor has decided that the result of the battle must be forced (for example, in a time-limited battle)
+				var alliedVictory = null;
+				if (data !== null) {
+					if ((data.hasOwnProperty("winner") && data.winner === Relay.processes[identifier].battle.alliedTrainers.first().identification) || (data.hasOwnProperty("loser") && data.loser === Relay.processes[identifier].battle.opposingTrainers.first().identification))
+						alliedVictory = true;
+					else if ((data.hasOwnProperty("winner") && data.winner === Relay.processes[identifier].battle.opposingTrainers.first().identification) || (data.hasOwnProperty("loser") && data.loser === Relay.processes[identifier].battle.alliedTrainers.first().identification))
+						alliedVictory = false;
+				}
 				Relay.processes[identifier].battle.end({
-					"outcome" : data.winner === null ? "draw" : (data.winner === Relay.processes[identifier].battle.alliedTrainers.first().identification ? "allied victory" : (data.winner === Relay.processes[identifier].battle.opposingTrainers.first().identification ? "opposing victory" : "termination"))
+					"outcome" : alliedVictory === null ? "draw" : (alliedVictory === true ? "allied victory" : (alliedVictory === false ? "opposing victory" : "termination"))
 				}, true);
 				Battle = null;
 				delete Relay.processes[identifier];
@@ -82,6 +89,13 @@ Relay = {
 				Relay.processes[identifier].battle.receiveActions(data.filter(function (action) {
 					return action.trainer !== Relay.identification;
 				}));
+				break;
+			case "countdown":
+				var start = performance.now() - data.correction;
+				Battle.timer = {
+					start: start,
+					end: start + data.duration
+				};
 				break;
 		}
 	}
