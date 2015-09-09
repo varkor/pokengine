@@ -24,7 +24,7 @@ function pokemon (data, validate) {
 		}
 	};
 
-	var random = new srandom();
+	var initialisingRandom = new srandom();
 
 	setProperty("species", "Missingno. (Nintendo)");
 	var species = function (property) {
@@ -36,11 +36,11 @@ function pokemon (data, validate) {
 	setProperty("nickname", null);
 	setProperty("identification", typeof Game === "object" ? Game.unique() : null);
 	setProperty("nature", function () {
-		return random.chooseFromArray(Object.keys(Natures));
+		return initialisingRandom.chooseFromArray(Object.keys(Natures));
 	});
 	setProperty("gender", function () {
 		var genderRatio = species("gender ratio");
-		return genderRatio !== null ? (random.point() < genderRatio ? "male" : "female") : "neuter";
+		return genderRatio !== null ? (initialisingRandom.point() < genderRatio ? "male" : "female") : "neuter";
 	});
 	setProperty("form(e)", function () {
 		if (Pokedex._(self.species)["form(e)s"] !== null) {
@@ -82,13 +82,13 @@ function pokemon (data, validate) {
 		}
 	});
 	setProperty("ability", function () {
-		return random.chooseFromArray(species("abilities").normal);
+		return initialisingRandom.chooseFromArray(species("abilities").normal);
 	});
 	setProperty("status", "none");
 	setProperty("IVs", function () {
 		var IVs = {};
 		foreach(Stats.permanent, function (stat) {
-			IVs[stat] = random.int(0, 31);
+			IVs[stat] = initialisingRandom.int(0, 31);
 		});
 		return IVs;
 	});
@@ -104,13 +104,13 @@ function pokemon (data, validate) {
 	setProperty("item", null);
 	setProperty("friendship", species("friendship"));
 	setProperty("shiny", function () {
-		return random.chance(4096);
+		return initialisingRandom.chance(4096);
 	});
 	setProperty("egg", null); // Number of egg cycles, or null (for not an egg)
 	setProperty("caught", null);
 	setProperty("ribbons", []);
 	setProperty("Pokerus", function () {
-		return random.chance(3, 65536) ? "infected" : "uninfected";
+		return initialisingRandom.chance(3, 65536) ? "infected" : "uninfected";
 	});
 
 	self.trainer = null;
@@ -686,7 +686,7 @@ function pokemon (data, validate) {
 			if (!self.battler.battle.process) Textbox.state(self.name() + " is frozen solid.");
 			return false;
 		}
-		if (self.status === "paralysed" && random.chance(4)) {
+		if (self.status === "paralysed" && self.battler.battle.random.chance(4)) {
 			if (!self.battler.battle.process) Textbox.state(self.name() + " was paralysed and couldn't move!");
 			return false;
 		}
@@ -696,14 +696,14 @@ function pokemon (data, validate) {
 		}
 		if (self.battler.confused) {
 			if (!self.battler.battle.process) Textbox.state(self.name() + " is confused.");
-			if (random.chance(2)) {
+			if (self.battler.battle.random.chance(2)) {
 				self.hurtInConfusion();
 				return false;
 			}
 		}
 		if (self.battler.infatuated) {
 			if (!self.battler.battle.process) Textbox.state(self.name() + " is infatuated.");
-			if (random.chance(2)) {
+			if (self.battler.battle.random.chance(2)) {
 				if (!self.battler.battle.process) Textbox.state(self.name() + " couldn't move due to infatuation.");
 				return false;
 			}
@@ -764,10 +764,11 @@ function pokemon (data, validate) {
 	};
 
 	self.disobey = function () {
-		if (self.trainer !== null && (self.trainer.identification !== self.caught.trainer && self.trainer.holdsControlOverPokemonUpToLevel() < self.level && random.chance(2))) {
-			return random.choose(
+		if (self.trainer !== null && (self.trainer.identification !== self.caught.trainer && self.trainer.holdsControlOverPokemonUpToLevel() < self.level && self.battler.battle.random.chance(2))) {
+			return self.battler.battle.random.choose(
 				function (poke) {
-					if (!self.battler.battle.process) Textbox.state(poke.name() + random.choose(" is loafing around!", " turned away!", " won't obey!"));
+					var choiceOfWords = self.battler.battle.random.choose(" is loafing around!", " turned away!", " won't obey!");
+					if (!self.battler.battle.process) Textbox.state(poke.name() + choiceOfWords);
 				},
 				function (poke) {
 					if (!self.battler.battle.process) Textbox.state(poke.name() + " began to nap!");

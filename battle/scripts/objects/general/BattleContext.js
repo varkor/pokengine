@@ -2537,7 +2537,7 @@ function BattleContext (client) {
 						maxSpeed = poke.stats.speed(true);
 				});
 				var escapeChance = (currentBattler.stats.speed(true) * 32) / ((maxSpeed / 4) % 256) + 30 * (battleContext.escapeAttempts ++);
-				if (escapeChance > 255 || randomInt(255) < escapeChance) {
+				if (escapeChance > 255 || battleContext.random.randomInt(255) < escapeChance) {
 					battleContext.queue.push({
 						priority : 6,
 						action : function () {
