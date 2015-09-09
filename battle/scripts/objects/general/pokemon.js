@@ -683,8 +683,13 @@ function pokemon (data, validate) {
 			return false;
 		}
 		if (self.status === "frozen") {
-			if (!self.battler.battle.process) Textbox.state(self.name() + " is frozen solid.");
-			return false;
+			if (self.battler.battle.random.percentage(20)) {
+				if (!self.battler.battle.process) Textbox.state(self.name() + " thawed!");
+				self.status = "none";
+			} else {
+				if (!self.battler.battle.process) Textbox.state(self.name() + " is frozen solid.");
+				return false;
+			}
 		}
 		if (self.status === "paralysed" && self.battler.battle.random.chance(4)) {
 			if (!self.battler.battle.process) Textbox.state(self.name() + " was paralysed and couldn't move!");

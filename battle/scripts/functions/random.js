@@ -46,7 +46,7 @@ function srandom (seed) {
 	};
 	
 	self.percentage = function (x) {
-		return self.int(0, 100) <= x;
+		return self.point() * 100 <= x;
 	};
 	
 	self.choose = function () {

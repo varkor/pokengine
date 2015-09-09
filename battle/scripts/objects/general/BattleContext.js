@@ -1864,7 +1864,7 @@ function BattleContext (client) {
 			});
 			var all = battleContext.all(true);
 			foreach(all, function (poke) {
-				if (poke.battler.recharging) {
+				if (poke.status !== "frozen" && poke.battler.recharging) {
 					if (poke.battler.recharging > 1)
 						poke.battler.recharging = 0;
 				}
@@ -3075,12 +3075,6 @@ function BattleContext (client) {
 					if (!battleContext.process) Textbox.state(target.name() + " woke up!");
 					target.status = "none";
 				}, battleContext.random.int(1, 3), poke);
-			}
-			if (poke.status === "frozen") {
-				battleContext.haveEffect(function (target) {
-					if (!battleContext.process) Textbox.state(target.name() + " thawed!");
-					target.status = "none";
-				}, battleContext.random.int(1, 5), poke);
 			}
 		},
 		isWildBattle : function () {
