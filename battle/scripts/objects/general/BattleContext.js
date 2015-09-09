@@ -1442,6 +1442,10 @@ function BattleContext (client) {
 							} 
 							if  (action.primary === "Pokémon") {
 								// If the player is switching to use a Pokémon, it must be healthy, and the current Pokémon cannot be trapped
+								if (character.party.pokemon[action.secondary].battler.battling) {
+									issues.push("The player tried to switch to a Pokémon that was already battling.");
+									return true;
+								}
 								if (!character.party.pokemon[action.secondary].conscious()) {
 									issues.push("The player tried to switch to a Pokémon that was not conscious.");
 									return true;
@@ -1452,6 +1456,10 @@ function BattleContext (client) {
 								}
 								if (currentBattler.battler.isTrapped()) {
 									issues.push("The player tried to switching out a Pokémon that was trapped.");
+									return true; 
+								}
+								if (!character.healthyEligiblePokemon(true).contains(character.party.pokemon[action.secondary])) {
+									issues.push("The player tried to switching out a Pokémon that was not a valid choice.");
 									return true; 
 								}
 								// It has passed all the checks, so can be sent in
