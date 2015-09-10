@@ -50,8 +50,8 @@ Supervisor = {
 					return unsuccessful("The parameter `data.rules` should have had a `clauses` property.");
 				if (!Array.isArray(data.rules.clauses))
 					return unsuccessful("The parameter `data.rules.clauses` should have been an array.");
-				if (typeof data.rules.timer !== "number")
-					return unsuccessful("The parameter `data.rules.timer` should have been a number, but had type `" + (typeof data.rules.timer) + "`.");
+				if (data.rules.timer !== null && typeof data.rules.timer !== "number")
+					return unsuccessful("The parameter `data.rules.timer` should have been a number or null, but had type `" + (typeof data.rules.timer) + "`.");
 				if (foreach(data.rules.clauses, function (clause) {
 					if (typeof clause !== "object")
 						return true;
@@ -333,6 +333,12 @@ Supervisor = {
 		}
 	},
 	countdown : function (identifier, cancel) {
+		var unsuccessful = function (reason) {
+			return {
+				success : false,
+				reason : reason
+			};
+		};
 		if (Supervisor.processes.hasOwnProperty(identifier)) {
 			var process = Supervisor.processes[identifier];
 			if (process.timer !== null) {
@@ -352,7 +358,7 @@ Supervisor = {
 					Supervisor.send(party, "countdown", {
 						correction : 0, // Should be some estimation of the time it takes to send a message to the party
 						duration : process.rules.timer
-					});
+					}, identifier);
 				});
 			}
 		} else {

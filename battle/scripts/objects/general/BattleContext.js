@@ -260,7 +260,7 @@ function BattleContext (client) {
 					drawing(originalCanvas);
 				});
 				if (battleContext.timer !== null) {
-					var timeLeft = battleContext.timer.end - now, pulsate = 2 * Math.sin(Math.max(0, 3 * 1000 - timeLeft) / 80), radius = { outer : 15 + pulsate, inner : 10 }, padding = 8, centre = { x : originalCanvasWidth - padding - radius.outer + pulsate, y : padding + radius.outer - pulsate }, startAngle = Math.PI / 2, endAngle = startAngle - (now - battleContext.timer.start) / (battleContext.timer.end - battleContext.timer.start) * 2 * Math.PI;
+					var timeLeft = battleContext.timer.end - now, pulsate = 2 * Math.sin(Math.max(0, 3 * 1000 - timeLeft) / 80) * Game.zoom, radius = { outer : (15 + pulsate) * Game.zoom, inner : 10 * Game.zoom }, padding = 8 * Game.zoom, centre = { x : originalCanvasWidth - padding - radius.outer + pulsate, y : padding + radius.outer - pulsate }, startAngle = Math.PI / 2, endAngle = startAngle - (now - battleContext.timer.start) / (battleContext.timer.end - battleContext.timer.start) * 2 * Math.PI;
 					originalContext.fillStyle = "hsla(0, 0%, 100%, 0.75)";
 					originalContext.fillCircleHD(centre.x, centre.y, radius.outer);
 					originalContext.fillStyle = "hsla(0, 50%, 50%, 0.75)";
@@ -271,7 +271,7 @@ function BattleContext (client) {
 					originalContext.fillStyle = "hsla(0, 0%, 0%, 1)";
 					originalContext.textAlign = "center";
 					originalContext.textBaseline = "middle";
-					originalContext.font = Font.load(16, "bold");
+					originalContext.font = Font.load(16 * Game.zoom, "bold");
 					originalContext.fillTextHD(Math.ceil(Math.max(0, timeLeft / 1000)), centre.x, centre.y);
 				}
 			}
