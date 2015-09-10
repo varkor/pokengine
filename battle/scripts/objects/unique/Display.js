@@ -56,6 +56,7 @@ Display = {
 			foreach(state.alliedTrainers, function (character) {
 				if (character.identification === Game.player.identification) {
 					Widgets.Party.BattleContextDelegate.pokemonHaveUpdated(character.party.pokemon);
+					Widgets.Bag.BattleContextDelegate.itemsHaveUpdated(character.bag.items);
 					return true;
 				}
 			});

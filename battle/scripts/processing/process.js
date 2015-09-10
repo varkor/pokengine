@@ -79,6 +79,17 @@ forevery(Items, function (category) {
 			if (!item.hasOwnProperty(key))
 				item[key] = value;
 		});
+		item.paths = {
+			convert (contracted, includeFiletype) {
+				contracted = contracted.replace("{name}", item.fullname);
+				contracted = contracted.replace(/\{filetype=[a-z0-9]+\}/, (includeFiletype ? "." + contracted.match(/\{filetype=([a-z0-9]+)\}/)[1] : ""));
+				contracted = contracted.replace("{animation}", Sprite.shouldAnimate(contracted) ? "animated" : "static");
+				return contracted;
+			},
+			icon (includeFiletype) {
+				return item.paths.convert(Settings._("paths => items => image"), includeFiletype, "icon");
+			}
+		};
 		item.fullname = name + (["Berry", "Ball"].contains(item.category) ? " " + item.category : "");
 		if (!item.hasOwnProperty("effects"))
 			item.effects = [];

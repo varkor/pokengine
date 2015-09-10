@@ -7,7 +7,7 @@ Widgets.FlowGrid = {
 				width : 80,
 				height : 80
 			},
-			draw : function (context, poke, position, size, states) {
+			draw (context, poke, position, size, states) {
 				var lightness = 25;
 				for (var i = 0; i < states.length; ++ i) {
 					switch (states[i]) {
@@ -80,7 +80,7 @@ Widgets.FlowGrid = {
 				width : 38,
 				height : 38
 			},
-			draw : function (context, poke, position, size, states) {
+			draw (context, poke, position, size, states) {
 				var lightness = 25;
 				for (var i = 0; i < states.length; ++ i) {
 					switch (states[i]) {
@@ -124,6 +124,44 @@ Widgets.FlowGrid = {
 					});
 				}
 			}
+		}),
+		item : FlowCellTemplate({
+			size : {
+				width : 40,
+				height : 40
+			},
+			draw (context, data, position, size, states) {
+				var lightness = 25;
+				for (var i = 0; i < states.length; ++ i) {
+					switch (states[i]) {
+						case "drag":
+							lightness += 25;
+							break;
+						case "select":
+							lightness += 15;
+							break;
+						case "hover":
+							lightness += 5;
+							break;
+					}
+				}
+				context.fillStyle = "hsl(0, 0%, " + lightness + "%)";
+				context.fillRoundedRectHD(Math.round(position.x), Math.round(position.y), size.width, size.height, 4);
+				// Icon
+				var item = Items._(data.item);
+				var icon = Sprite.load(item.paths.icon(true));
+				if (icon) {
+					context.imageSmoothingEnabled = false;
+					context.copyImageHD(icon.image, false, true, position.x + (size.width - icon.width) / 2, position.y + (size.height - icon.height) / 2 - 2);
+					context.imageSmoothingEnabled = true;
+				} else {
+					Sprite.load(item.paths.icon(true), function () {
+						if (Widgets.Bag.interface.cells.indexOf(data) !== -1) {
+							Widgets.Bag.interface.redrawCell(data);
+						}
+					});
+				}
+			}
 		})
 	}
 };
@@ -132,7 +170,7 @@ Widgets.Party = {
 	state : {
 		kind : "overworld"
 	},
-	switchSize : function (maximise) {
+	switchSize (maximise) {
 		var flowGrid = Widgets.Party.interface;
 		if (maximise) {
 			flowGrid.template = Widgets.FlowGrid.templates.pokemon;
@@ -193,36 +231,34 @@ Widgets.Party = {
 				var fromIndex = cells[0].index;
 			}
 		},
-		draw : function (context, size, region) {
+		draw (context, size, region) {
 			context.fillStyle = "hsl(0, 0%, 20%)";
 			context.fillRoundedRectHD(region.origin.x, region.origin.y, region.size.width, region.size.height, 4);
 		}
 	}),
 	// BattleContext delegate methods
 	BattleContextDelegate : {
-		battleIsBeginning : function (battle) {
+		battleIsBeginning (battle) {
 			Widgets.Party.state.kind = "battle";
 			Widgets.Party.interface.lock();
 		},
-		battleIsEnding : function (battle) {
+		battleIsEnding (battle) {
 			Widgets.Party.state.kind = "overworld";
 			Widgets.Party.interface.unlock();
 		},
-		shouldDisplayMenuOption : function (battle) {
-			return false;
-		},
-		allowPlayerToSwitchPokemon : function (battle, callback) {
+		shouldDisplayMenuOption : (battle) => false,
+		allowPlayerToSwitchPokemon (battle, callback) {
 			Widgets.Party.state = {
 				kind : "switch",
 				callback : callback
 			};
 			Widgets.Party.interface.unlock(["hover"]);
 		},
-		disallowPlayerToSwitchPokemon : function (battle) {
+		disallowPlayerToSwitchPokemon (battle) {
 			Widgets.Party.state.kind = "battle";
 			Widgets.Party.interface.lock(["hover"]);
 		},
-		pokemonHaveUpdated : function (pokes) {
+		pokemonHaveUpdated (pokes) {
 			// Note this is usually *not* the actual player's Pokémon, but stored Pokémon from the Display object
 			Widgets.Party.interface.refreshDataFromSource(pokes);
 		}
@@ -230,3 +266,34 @@ Widgets.Party = {
 };
 Widgets.Party.switchSize(true);
 BattleContext.defaultDelegates.Pokémon = Widgets.Party.BattleContextDelegate;
+
+Widgets.Bag = {
+	interface : FlowGrid({
+		template : Widgets.FlowGrid.templates.item,
+		datasource : [],
+		rows : 4,
+		columns : 4,
+		contrainToBounds : false,
+		selection : "multiple",
+		margin : 8,
+		spacing : 8,
+		listeners : {
+		},
+		draw (context, size, region) {
+			context.fillStyle = "hsl(0, 0%, 20%)";
+			context.fillRoundedRectHD(region.origin.x, region.origin.y, region.size.width, region.size.height, 4);
+		}
+	}),
+	// BattleContext delegate methods
+	BattleContextDelegate : {
+		shouldDisplayMenuOption : (battle) => true,
+		allowPlayerToUseItem (battle, callback) {
+		},
+		disallowPlayerToUseItem (battle) {
+		},
+		itemsHaveUpdated(items) {
+			Widgets.Bag.interface.refreshDataFromSource(items);
+		}
+	}
+};
+BattleContext.defaultDelegates.Bag = Widgets.Bag.BattleContextDelegate;

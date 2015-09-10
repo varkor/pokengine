@@ -225,6 +225,11 @@ caption span {
 	background: hsl(0, 0%, 90%);
 }
 
+.flow-grid {
+	display: inline-block;
+	margin: 4pt;
+}
+
 @font-face {
 	font-family: "HGSS";
 	src: url("images/typefaces/HGSS.ttf");

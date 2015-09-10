@@ -30,6 +30,9 @@ Settings.addData({
 		},
 		"scenes" : {
 			"image" : "scenes/{name}{filetype=png}"
+		},
+		"items" : {
+			"image" : "items/{name}{filetype=png}"
 		}
 	}
 }, true);

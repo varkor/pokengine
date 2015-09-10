@@ -12,6 +12,7 @@ Game = {
 		Game.player = entity;
 		entity.type = Trainers.type.local;
 		Widgets.Party.BattleContextDelegate.pokemonHaveUpdated(entity.party.pokemon);
+		Widgets.Bag.BattleContextDelegate.itemsHaveUpdated(entity.bag.items);
 	},
 	changeZoomLevel : function (zoom) {
 		Game.zoom = zoom;

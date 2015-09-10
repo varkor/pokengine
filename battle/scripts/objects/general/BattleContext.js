@@ -1168,6 +1168,7 @@ function BattleContext (client) {
 						action.flags = flags;
 					battleContext.inputs.push(action);
 					battleContext.delegates.Pokémon.disallowPlayerToSwitchPokemon(battleContext);
+					battleContext.delegates.Bag.disallowPlayerToUseItem(battleContext);
 					battleContext.advance();
 				} else if (reprompt) {
 					battleContext.prompt();
@@ -1821,6 +1822,8 @@ function BattleContext (client) {
 				battleContext.delegates.Pokémon.allowPlayerToSwitchPokemon(battleContext, function (switchIn) {
 					Textbox.clear();
 					battleContext.input("Pokémon", switchIn);
+				});
+				battleContext.delegates.Bag.allowPlayerToUseItem(battleContext, function () {
 				});
 			});
 			Textbox.ask("What do you want " + currentBattler.name() + " to do?", moves, function (response, i, major) {
@@ -3124,9 +3127,7 @@ function BattleContext (client) {
 */
 BattleContext.defaultDelegates = {
 	Fight : {
-		shouldDisplayMenuOption : function () {
-			return true;
-		}
+		shouldDisplayMenuOption : (battle) => true
 	},
 	Pokémon : {
 		/*
@@ -3134,32 +3135,31 @@ BattleContext.defaultDelegates = {
 			disallowPlayerToSwitchPokemon(battle)
 			[pokemonHaveUpdated(pokes)]
 		*/
-		allowPlayerToSwitchPokemon : function (callback) {
+		shouldDisplayMenuOption : (battle) => true,
+		allowPlayerToSwitchPokemon (battle, callback) {
 		},
-		disallowPlayerToSwitchPokemon : function () {
-		},
-		shouldDisplayMenuOption : function () {
-			return true;
+		disallowPlayerToSwitchPokemon (battle) {
 		}
 	},
 	Bag : {
-		shouldDisplayMenuOption : function () {
-			return true;
+		/*
+			allowPlayerToUseItem(battle, callback(item))
+			disallowPlayerToUseItem(battle)
+			[itemsHaveUpdated(items)]
+		*/
+		shouldDisplayMenuOption : (battle) => true,
+		allowPlayerToUseItem (battle, callback) {
+		},
+		disallowPlayerToUseItem (battle, callback) {
 		}
 	},
 	Run : {
-		shouldDisplayMenuOption : function () {
-			return true;
-		}
+		shouldDisplayMenuOption : (battle) => true
 	},
 	Back : {
-		shouldDisplayMenuOption : function () {
-			return true;
-		}
+		shouldDisplayMenuOption : (battle) => true
 	},
 	"Mega Evolve" : {
-		shouldDisplayMenuOption : function () {
-			return true;
-		}
+		shouldDisplayMenuOption : (battle) => true
 	}
 };
