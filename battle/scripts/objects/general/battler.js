@@ -44,6 +44,7 @@ function battler (pokemon) {
 		self.trapped = []; // By what moves or abilities the Pokémon is trapped
 		self.disobeying = false; // Whether the Pokémon is about to disobey their trainer
 		self.damaged = [];
+		self.damaged[Move.category.all] = 0;
 		self.damaged[Move.category.physical] = 0;
 		self.damaged[Move.category.special] = 0;
 		battler.resetDisplay(self);

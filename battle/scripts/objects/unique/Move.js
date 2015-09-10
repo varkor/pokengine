@@ -3,7 +3,8 @@ Move = {
 		physical : q = 0,
 		special : ++ q,
 		status : ++ q,
-		none : ++ q
+		none : ++ q,
+		all : ++ q
 	},
 	target : {
 		self : q = 0,
@@ -307,7 +308,7 @@ Move = {
 			from : JSONCopy(View)
 		}, constant, Math.min(1, progress));
 		if (progress < 1)
-			setTimeout(function () { Move.transition(mover, move, stage, target, constant, start, progress + 1 / frames, from); }, Time.refresh)
+			setTimeout(function () { Move.transition(mover, move, stage, target, constant, start, progress + 1 / frames, from); }, Time.refresh);
 		else {
 			View.reset();
 		}
