@@ -344,6 +344,9 @@ Supervisor = {
 			if (process.timer !== null) {
 				clearTimeout(process.timer);
 				process.timer = null;
+				foreach(process.parties, function (party) {
+					Supervisor.send(party, "countdown", null, identifier);
+				});
 			}
 			if (!cancel && process.rules.timer !== null) {
 				process.timer = setTimeout(function () {

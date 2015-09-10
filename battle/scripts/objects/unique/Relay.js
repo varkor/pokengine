@@ -91,11 +91,15 @@ Relay = {
 				}));
 				break;
 			case "countdown":
-				var start = performance.now() - data.correction;
-				Battle.timer = {
-					start: start,
-					end: start + data.duration
-				};
+				if (data !== null) {
+					var start = performance.now() - data.correction;
+					Battle.timer = {
+						start: start,
+						end: start + data.duration
+					};
+				} else {
+					Battle.timer = null;
+				}
 				break;
 		}
 	}

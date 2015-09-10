@@ -145,7 +145,7 @@ TrialServer = {
 				},
 				rules : {
 					clauses : [],
-					timer : 5 * 10000
+					timer : 90 * 1000
 				},
 				callback : function (flags, trainers) {
 					TrialServer.print("Supervisor battle ended with flags:", flags, " and trainers:", trainers);
