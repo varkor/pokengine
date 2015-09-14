@@ -127,8 +127,8 @@ Widgets.FlowGrid = {
 		}),
 		item : FlowCellTemplate({
 			size : {
-				width : 40,
-				height : 40
+				width : 46,
+				height : 46
 			},
 			draw (context, data, position, size, states) {
 				var lightness = 25;
@@ -161,6 +161,29 @@ Widgets.FlowGrid = {
 						}
 					});
 				}
+				// Quantity
+				if (data.quantity !== 1) {
+					context.beginPath();
+					context.moveToHD(position.x + size.width / 2, position.y);
+					for (var angle = 0, offset = 3, cornerRadius = 4; angle <= 1; angle += 1 / 8) {
+						context.lineToHD(
+							position.x + size.width / 2 + (size.width / 2 - cornerRadius) * Math.sign(Math.cos((offset + 0.5) * Math.PI / 2)) + cornerRadius * Math.cos((angle + offset) * Math.PI / 2),
+							position.y + size.height / 2 + (size.height / 2 - cornerRadius) * Math.sign(Math.sin((offset + 0.5) * Math.PI / 2)) + cornerRadius * Math.sin((angle + offset) * Math.PI / 2)
+						);
+					}
+					context.lineToHD(position.x + size.width, position.y + size.height / 2);
+					context.fillStyle = "hsl(0, 0%, " + (lightness + 20) + "%)";
+					context.fill();
+					context.save();
+					context.translateHD(position.x + 3 * size.width / 4, position.y + size.height / 4);
+					context.rotate(Math.PI / 4);
+					context.fillStyle = "hsl(0, 0%, " + (lightness - 25) + "%)";
+					context.textAlign = "center";
+					context.textBaseline = "bottom";
+					context.setFontHD("Arial", 10);
+					context.fillTextHD(data.quantity < 100 ? data.quantity : "99+", 0, 0);
+					context.restore();
+				}
 			}
 		})
 	}
@@ -177,14 +200,14 @@ Widgets.Party = {
 			flowGrid.rows = 2;
 			flowGrid.columns = 3;
 			flowGrid.margin = {
-				left : 8,
-				right : 8,
-				top : 8,
-				bottom : 8
+				left : 6,
+				right : 6,
+				top : 6,
+				bottom : 6
 			};
 			flowGrid.spacing = {
-				x : 8,
-				y : 8
+				x : 6,
+				y : 6
 			};
 		} else {
 			flowGrid.template = Widgets.FlowGrid.templates.tinyPokemon;
@@ -272,11 +295,11 @@ Widgets.Bag = {
 		template : Widgets.FlowGrid.templates.item,
 		datasource : [],
 		rows : 4,
-		columns : 4,
+		columns : 5,
 		contrainToBounds : false,
 		selection : "multiple",
-		margin : 8,
-		spacing : 8,
+		margin : 5,
+		spacing : 6,
 		listeners : {
 		},
 		draw (context, size, region) {

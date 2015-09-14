@@ -82,6 +82,7 @@ forevery(Items, function (category) {
 		item.paths = {
 			convert (contracted, includeFiletype) {
 				contracted = contracted.replace("{name}", item.fullname);
+				contracted = contracted.replace("{id}", item.id); // Compatibility with pokéngine
 				contracted = contracted.replace(/\{filetype=[a-z0-9]+\}/, (includeFiletype ? "." + contracted.match(/\{filetype=([a-z0-9]+)\}/)[1] : ""));
 				contracted = contracted.replace("{animation}", Sprite.shouldAnimate(contracted) ? "animated" : "static");
 				return contracted;
