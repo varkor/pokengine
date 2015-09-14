@@ -161,6 +161,14 @@ Widgets.FlowGrid = {
 						}
 					});
 				}
+				// Name
+				if (states.contains("hover")) {
+					context.textAlign = "center";
+					context.textBaseline = "bottom";
+					context.setFontHD("Arial", 6);
+					context.fillStyle = "hsl(0, 0%, " + (lightness + 65) + "%)";
+					context.fillTextHD(item.fullname, position.x + size.width / 2, position.y + size.height - 2);
+				}
 				// Quantity
 				if (data.quantity !== 1) {
 					context.beginPath();
@@ -249,9 +257,6 @@ Widgets.Party = {
 				if (Widgets.Party.state.kind === "switch" && clickedPoke.trainer.healthyEligiblePokemon(true).contains(clickedPoke)) {
 					Widgets.Party.state.callback(index);
 				}
-			},
-			"cells:drop" : function (index, cells) {
-				var fromIndex = cells[0].index;
 			}
 		},
 		draw (context, size, region) {
@@ -294,7 +299,7 @@ Widgets.Bag = {
 	interface : FlowGrid({
 		template : Widgets.FlowGrid.templates.item,
 		datasource : [],
-		rows : 4,
+		rows : 3,
 		columns : 5,
 		contrainToBounds : false,
 		selection : "multiple",
