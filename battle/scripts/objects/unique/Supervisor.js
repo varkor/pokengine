@@ -194,9 +194,9 @@ Supervisor = {
 				var process = Supervisor.processes[identifier];
 				var alliedVictory = null;
 				if (data !== null) {
-					if ((data.hasOwnProperty("winner") && data.winner === Relay.processes[identifier].battle.alliedTrainers.first().identification) || (data.hasOwnProperty("loser") && data.loser === Relay.processes[identifier].battle.opposingTrainers.first().identification))
+					if ((data.hasOwnProperty("winner") && data.winner === process.battle.alliedTrainers.first().identification) || (data.hasOwnProperty("loser") && data.loser === process.battle.opposingTrainers.first().identification))
 						alliedVictory = true;
-					else if ((data.hasOwnProperty("winner") && data.winner === Relay.processes[identifier].battle.opposingTrainers.first().identification) || (data.hasOwnProperty("loser") && data.loser === Relay.processes[identifier].battle.alliedTrainers.first().identification))
+					else if ((data.hasOwnProperty("winner") && data.winner === process.battle.opposingTrainers.first().identification) || (data.hasOwnProperty("loser") && data.loser === process.battle.alliedTrainers.first().identification))
 						alliedVictory = false;
 				}
 				process.battle.end({
@@ -350,7 +350,7 @@ Supervisor = {
 			}
 			if (!cancel && process.rules.timer !== null) {
 				process.timer = setTimeout(function () {
-					var waitingFor = process.battle.trainersWaitingFor(process.battle.state.for);
+					var waitingFor = process.battle.trainersWaitingFor(process.battle.state.for, process.relay);
 					if (waitingFor.notEmpty()) {
 						Supervisor.receive("force", waitingFor.length === 1 ? {
 							loser : waitingFor.first()
