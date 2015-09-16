@@ -546,18 +546,23 @@ function pokemon (data, validate) {
 
 	self.evolve = function (evolution) {
 		var fromName = self.species.replace(/ \(\w+\)$/, ""), intoName = evolution.replace(/ \(\w+\)$/, "");
-		if (!self.battler.battle.process) {
+		if (!self.trainer.battle.process) {
 			if (self.name() !== fromName)
 				Textbox.state("Congratulations! " + self.name() + " evolved from " + article(fromName) + " " + fromName + " into " + article(intoName) + " " + intoName + "!");
 			else
 				Textbox.state("Congratulations! " + self.name() + " evolved into " + article(intoName) + " " + intoName + "!");
 		}
+		var previousMaximumHealth = self.maximumHealth();
 		self.species = evolution;
 		var evolutionData = Pokedex._(evolution);
 		if (evolutionData["form(e)s"] === null)
 			self["form(e)"] = null;
 		else if (!evolutionData["form(e)s"].hasOwnProperty(self["form(e)"]))
 			self["form(e)"] = Object.keys(Pokedex._(self.species)["form(e)s"]).first();
+		self.health = Math.min(self.maximumHealth(), self.health + self.maximumHealth() - previousMaximumHealth);
+		if (!self.trainer.battle.process) {
+			Display.state.load(Display.state.save());
+		}
 		if (evolutionData.moveset.hasOwnProperty(self.level)) {
 			foreach(evolutionData.moveset[self.level], function (move) {
 				self.learn(move);

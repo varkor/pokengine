@@ -73,18 +73,18 @@ function BattleContext (client) {
 							j = i - pan;
 							context.fillStyle = "hsl(" + Math.min(50, ((j / (strips)) * 50)) + ", 100%, " + (35 + (j / (strips)) * (60 - 35)) + "%)";
 							context.beginPath();
-							context.moveToHD(0, canvasHeight);
-							context.lineToHD(0, Math.round((canvasHeight / strips) * j));
-							context.quadraticCurveToHD(canvasWidth / 2, Math.round((canvasHeight / strips) * j) - (j - strips / 2) * 10 * distortion, canvasWidth, Math.round((canvasHeight / strips) * j));
-							context.lineToHD(canvasWidth, canvasHeight);
+							context.moveTo(0, canvas.height);
+							context.lineTo(0, Math.round((canvas.height / strips) * j));
+							context.quadraticCurveTo(canvas.width / 2, Math.round((canvas.height / strips) * j) - (j - strips / 2) * 10 * distortion, canvas.width, Math.round((canvas.height / strips) * j));
+							context.lineTo(canvas.width, canvas.height);
 							context.fill();
 						}
 						context.textAlign = "center";
 						context.textBaseline = "middle";
 						if (battleContext.state.stage === "before" || battleContext.state.stage === "preparation" || battleContext.state.stage === "stopped")
-							Sprite.draw(canvas, battleContext.state.evolving.paths.sprite("front", true), canvasWidth / 2, canvasHeight / 2, true, null, null, now);
+							Sprite.draw(canvas, battleContext.state.evolving.paths.sprite("front", true), canvas.width / 2, canvas.height / 2, true, null, null, now);
 						if (battleContext.state.stage === "finishing" || battleContext.state.stage === "after")
-							Sprite.draw(canvas, battleContext.state.into.paths.sprite("front", true), canvasWidth / 2, canvasHeight / 2, true, null, null, now);
+							Sprite.draw(canvas, battleContext.state.into.paths.sprite("front", true), canvas.width / 2, canvas.height / 2, true, null, null, now);
 						if (battleContext.state.stage === "preparation")
 							battleContext.state.transition += 0.05;
 						if (battleContext.state.stage === "evolving")
@@ -127,7 +127,7 @@ function BattleContext (client) {
 								fade = Math.sin(battleContext.state.transition * (transformationRate / 2) + Math.PI * 0.25) >= 0 ? 1 : 0;
 								scale = 1 + Math.sin(battleContext.state.transition * transformationRate) * 0.5;
 							}
-							Sprite.draw(canvas, battleContext.state.evolving.paths.sprite("front", true), canvasWidth / 2, canvasHeight / 2, true, [{ type : "fill", colour : "white" }, { type : "opacity", value : fade }], new Matrix().scale(scale), now);
+							Sprite.draw(canvas, battleContext.state.evolving.paths.sprite("front", true), canvas.width / 2, canvas.height / 2, true, [{ type : "fill", colour : "white" }, { type : "opacity", value : fade }], new Matrix().scale(scale), now);
 						}
 						if (battleContext.state.stage !== "before" && battleContext.state.stage !== "preparation") {
 							var scale = 1, fade = 0;
@@ -137,15 +137,15 @@ function BattleContext (client) {
 								fade = Math.sin(battleContext.state.transition * (transformationRate / 2) + Math.PI * 1.25) > 0 ? 1 : 0;
 								scale = 1 + Math.sin(battleContext.state.transition * transformationRate) * 0.5;
 							}
-							Sprite.draw(canvas, battleContext.state.into.paths.sprite("front", true), canvasWidth / 2, canvasHeight / 2, true, [{ type : "fill", colour : "white" }, { type : "opacity", value : fade }], new Matrix().scale(scale), now);
+							Sprite.draw(canvas, battleContext.state.into.paths.sprite("front", true), canvas.width / 2, canvas.height / 2, true, [{ type : "fill", colour : "white" }, { type : "opacity", value : fade }], new Matrix().scale(scale), now);
 						}
 						if (battleContext.state.stage !== "before" && battleContext.state.stage !== "after" && battleContext.state.stage !== "stopped") {
 							context.fillStyle = "black";
 							var enclose = 1;
 							if (battleContext.state.stage === "preparation" || battleContext.state.stage === "finishing")
 								enclose = Math.clamp(0, battleContext.state.transition, 1);
-							context.fillRectHD(0, 0, canvasWidth, canvasHeight / 6 * enclose);
-							context.fillRectHD(0, canvasHeight, canvasWidth, - canvasHeight / 6 * enclose);
+							context.fillRect(0, 0, canvas.width, canvas.height / 6 * enclose);
+							context.fillRect(0, canvas.height, canvas.width, - canvas.height / 6 * enclose);
 						}
 					} else {
 						Sprite.draw(battleContext.sketching[2], Scenes._(battleContext.scene).paths.sprite(true), 0, 0);
@@ -781,7 +781,6 @@ function BattleContext (client) {
 					foreach(participant.bag, function (item) {
 						item.intentToUse = 0;
 					});
-					participant.battle = null;
 					participant.megaEvolution = false;
 					participant.mostRecentlyFaintedPokemon = null;
 				});
@@ -801,7 +800,7 @@ function BattleContext (client) {
 						foreach(battleContext.evolving, function (evolving) {
 							var action = null;
 							foreach(battleContext.communication, function (communication, j) {
-								if (communication.action === "evolve" && communication.trainer === character.identification) {
+								if (communication.action === "evolve" && communication.trainer === evolving.from.trainer.identification) {
 									action = j;
 									return true;
 								}
@@ -836,6 +835,7 @@ function BattleContext (client) {
 			battleContext.opponents = [];
 			var stored = [];
 			foreach(battleContext.allTrainers(), function (character) {
+				character.battle = null;
 				stored.push(character.store());
 			});
 			battleContext.alliedTrainers = [];
