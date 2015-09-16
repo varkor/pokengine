@@ -350,7 +350,7 @@ Supervisor = {
 			}
 			if (!cancel && process.rules.timer !== null) {
 				process.timer = setTimeout(function () {
-					var waitingFor = process.battle.trainersWaitingFor(process.battle.state.for, process.relay);
+					var waitingFor = process.battle.trainersWaitingFor(process.battle.state.for, process.relay.slice(process.relayed));
 					if (waitingFor.notEmpty()) {
 						Supervisor.receive("force", waitingFor.length === 1 ? {
 							loser : waitingFor.first()
