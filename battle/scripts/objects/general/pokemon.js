@@ -27,6 +27,9 @@ function pokemon (data, validate) {
 	var initialisingRandom = new srandom();
 
 	setProperty("species", "Missingno. (Nintendo)");
+	if (!Pokedex._(self.species + "?")) {
+		throw "There exists no Pokémon in the Pokédex object with the species name \"" + self.species + "\".";
+	}
 	var species = function (property) {
 		if (self["form(e)"] === null)
 			return Pokedex._(self.species)[property];
@@ -434,7 +437,7 @@ function pokemon (data, validate) {
 			}
 		})) {
 			if (!initial)
-				if (!self.battler.battle.process) Textbox.state(self.name() + " forgot " + move + "!");
+				if (!self.trainer.battle.process) Textbox.state(self.name() + " forgot " + move + "!");
 			return true;
 		}
 	};
