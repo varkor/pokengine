@@ -349,7 +349,7 @@ function pokemon (data, validate) {
 			return false;
 		if (self.moves.length < 4) {
 			if (!initial)
-				if (!self.battler.battle.process) Textbox.state(self.name() + " learnt " + move + "!");
+				if (!self.trainer.battle.process) Textbox.state(self.name() + " learnt " + move + "!");
 			self.moves.push({
 				move : move,
 				number : self.moves.length,
@@ -357,7 +357,7 @@ function pokemon (data, validate) {
 				PPUps : 0
 			});
 		} else {
-			var battleContext = self.battler.battle, immediatelyProceeding, resumeNormalProceedings = null, learnNewMove = function (replacing) {
+			var battleContext = self.trainer.battle, immediatelyProceeding, resumeNormalProceedings = null, learnNewMove = function (replacing) {
 				if (self.inBattle()) {
 					battleContext.inputs.push({
 						"action" : "learn",
