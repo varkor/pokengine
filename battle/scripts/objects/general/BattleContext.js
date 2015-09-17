@@ -1525,7 +1525,7 @@ function BattleContext (client) {
 						poke.battler.switching = true;
 						break;
 					case "learn":
-						if (!requireProperty(action, "forget") || (action.forget !== null && isNaturalNumber(action, "forget", battleContext.state.data.poke.moves.length)))
+						if (!requireProperty(action, "forget") || (action.forget !== null && !isNaturalNumber(action, "forget", battleContext.state.data.poke.moves.length)))
 							return true;
 						break;
 					case "evolve":
@@ -1580,7 +1580,7 @@ function BattleContext (client) {
 							if (!battleContext.process) Textbox.update();
 							response();
 						},
-						"data" : arguments.length >= 3 ? data : null
+						"data" : typeof data !== "undefined" ? data : null
 					};
 					if (!battleContext.process) Textbox.stateUntil("Waiting for " + (battleContext.playerIsParticipating() ? "the other player" : "both players") + " to make a decision...", function () {
 						return battleContext.state.kind !== "waiting" && Textbox.dialogue.length > 1;
