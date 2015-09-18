@@ -270,8 +270,14 @@ Widgets.Party = {
 			}
 		},
 		draw (context, size, region) {
+			var padding = 0;
+			if (Widgets.Party && Widgets.Party.state.kind === "switch") {
+				padding = 1;
+				context.fillStyle = "hsl(190, 100%, 50%)";
+				context.fillRoundedRectHD(region.origin.x, region.origin.y, region.size.width, region.size.height, 4);
+			}
 			context.fillStyle = "hsl(0, 0%, 20%)";
-			context.fillRoundedRectHD(region.origin.x, region.origin.y, region.size.width, region.size.height, 4);
+			context.fillRoundedRectHD(region.origin.x + padding, region.origin.y + padding, region.size.width - 2 * padding, region.size.height - 2 * padding, 4);
 		}
 	}),
 	// BattleContext delegate methods
@@ -291,10 +297,12 @@ Widgets.Party = {
 				callback : callback
 			};
 			Widgets.Party.interface.unlock(["hover"]);
+			Widgets.Party.interface.refreshDataFromSource();
 		},
 		disallowPlayerToSwitchPokemon (battle) {
 			Widgets.Party.state.kind = "battle";
 			Widgets.Party.interface.lock(["hover"]);
+			Widgets.Party.interface.refreshDataFromSource();
 		},
 		pokemonHaveUpdated (pokes) {
 			// Note this is usually *not* the actual player's Pokémon, but stored Pokémon from the Display object
@@ -327,8 +335,14 @@ Widgets.Bag = {
 			}
 		},
 		draw (context, size, region) {
+			var padding = 0;
+			if (Widgets.Bag && Widgets.Bag.state.kind === "use") {
+				padding = 1;
+				context.fillStyle = "hsl(190, 100%, 50%)";
+				context.fillRoundedRectHD(region.origin.x, region.origin.y, region.size.width, region.size.height, 4);
+			}
 			context.fillStyle = "hsl(0, 0%, 20%)";
-			context.fillRoundedRectHD(region.origin.x, region.origin.y, region.size.width, region.size.height, 4);
+			context.fillRoundedRectHD(region.origin.x + padding, region.origin.y + padding, region.size.width - 2 * padding, region.size.height - 2 * padding, 4);
 		}
 	}),
 	// BattleContext delegate methods
@@ -349,10 +363,12 @@ Widgets.Bag = {
 				callback : callback
 			};
 			Widgets.Bag.interface.unlock(["hover"]);
+			Widgets.Bag.interface.refreshDataFromSource();
 		},
 		disallowPlayerToUseItem (battle) {
 			Widgets.Bag.state.kind = "battle";
 			Widgets.Bag.interface.lock(["hover"]);
+			Widgets.Bag.interface.refreshDataFromSource();
 		},
 		itemsHaveUpdated(items) {
 			Widgets.Bag.interface.refreshDataFromSource(items);

@@ -2136,16 +2136,19 @@ function BattleContext (client) {
 										which : which
 									});
 									battleContext.flushInputs();
+									battleContext.delegates.Pokémon.disallowPlayerToSwitchPokemon(battleContext);
 									battleContext.enter(character.healthyEligiblePokemon(true)[which], true, emptyPlaces.first());
 									battleContext.fillEmptyPlaces(true, true);
 								};
 								if (!battleContext.delegates.Pokémon.shouldDisplayMenuOption(battleContext)) {
 									names = [];
+								}
+								Textbox.effect(function () {
 									battleContext.delegates.Pokémon.allowPlayerToSwitchPokemon(battleContext, function (switchIn) {
 										Textbox.clear();
 										chooseToSendOut(character.healthyEligiblePokemon(true).indexOf(character.party.pokemon[switchIn]));
 									});
-								}
+								});
 								Textbox.ask("Which Pokémon do you want to send out?", names, function (response, i, major) {
 									if (major) {
 										chooseToSendOut(i);
