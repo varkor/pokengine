@@ -1570,21 +1570,30 @@ function BattleContext (client) {
 				if (battleContext.hasCommunicationForTrainers(kind)) {
 					response();
 				} else {
-					battleContext.state = {
-						"kind" : "waiting",
-						"for" : kind,
-						"response" : function () {
-							battleContext.state = {
-								kind : "running"
-							};
-							if (!battleContext.process) Textbox.update();
-							response();
-						},
-						"data" : typeof data !== "undefined" ? data : null
-					};
-					if (!battleContext.process) Textbox.stateUntil("Waiting for " + (battleContext.playerIsParticipating() ? "the other player" : "both players") + " to make a decision...", function () {
-						return battleContext.state.kind !== "waiting" && Textbox.dialogue.length > 1;
-					});
+					if (battleContext.state.kind === "waiting") {
+						// If the battle is already waiting for some action, then simply queue this one
+						var previousResponse = battleContext.state.response;
+						battleContext.state.response = function () {
+							previousResponse();
+							battleContext.waitForActions(kind, response, data);
+						};
+					} else {
+						battleContext.state = {
+							"kind" : "waiting",
+							"for" : kind,
+							"response" : function () {
+								battleContext.state = {
+									kind : "running"
+								};
+								if (!battleContext.process) Textbox.update();
+								response();
+							},
+							"data" : typeof data !== "undefined" ? data : null
+						};
+						if (!battleContext.process) Textbox.stateUntil("Waiting for " + (battleContext.playerIsParticipating() ? "the other player" : "both players") + " to make a decision...", function () {
+							return battleContext.state.kind !== "waiting" && Textbox.dialogue.length > 1;
+						});
+					}
 				}
 			};
 			if (battleContext.process)

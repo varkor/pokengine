@@ -367,6 +367,7 @@ function pokemon (data, validate) {
 						"forget" : replacing
 					});
 				}
+				battleContext.flushInputs();
 				if (!battleContext.process) Textbox.insertAfter(Textbox.state(self.name() + " forgot " + self.moves[replacing].move + " and learnt " + move + "!", resumeNormalProceedings), immediatelyProceeding);
 				self.moves[replacing] = {
 					move : move,
@@ -383,13 +384,13 @@ function pokemon (data, validate) {
 						"forget" : null
 					});
 				}
+				battleContext.flushInputs();
 				if (!battleContext.process) Textbox.insertAfter(Textbox.state(self.name() + " didn't learn " + move + ".", resumeNormalProceedings), immediatelyProceeding);
 				else
 					resumeNormalProceedings();
 			};
 			if (self.inBattle()) {
 				resumeNormalProceedings = function () {
-					battleContext.flushInputs();
 					-- battleContext.delayForInput;
 					battleContext.endDelay();
 				};
