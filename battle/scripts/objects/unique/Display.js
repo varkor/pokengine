@@ -17,6 +17,15 @@ Display = {
 			newPoke.trainer = poke.trainer;
 			return newPoke;
 		},
+		item : function (item) {
+			var newItem = JSONCopy(item, false, ["trainer", "original"]);
+			if (item.hasOwnProperty("original")) {
+				newItem.original = item.original;
+			} else {
+				newItem.original = item;
+			}
+			return newItem;
+		},
 		trainer : function (character) {
 			var newTrainer = new trainer(character.store());
 			if (character.hasOwnProperty("original")) {
@@ -30,6 +39,14 @@ Display = {
 			});
 			newTrainer.party = new party();
 			newTrainer.party.pokemon = pokes;
+			var items = [];
+			foreach(character.bag.items, function (item) {
+				var storedItem = Display.store.item(item);
+				storedItem.trainer = newTrainer;
+				items.push(storedItem);
+			});
+			newTrainer.bag = new bag();
+			newTrainer.bag.items = items;
 			return newTrainer;
 		}
 	},
@@ -48,8 +65,8 @@ Display = {
 		});
 		return match;
 	},
-	original : function (poke) {
-		return poke.hasOwnProperty("original") ? poke.original : poke;
+	original : function (entity) {
+		return entity.hasOwnProperty("original") ? entity.original : entity;
 	},
 	refreshWidgetsFromState : function (state) {
 		if (Battle.playerIsParticipating()) {

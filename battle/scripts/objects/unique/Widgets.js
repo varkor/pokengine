@@ -63,8 +63,8 @@ Widgets.FlowGrid = {
 					});
 				}
 				// Send-out banner
-				var clickedPoke = Display.original(poke);
-				if (Widgets.Party.state.kind === "switch" && states.contains("hover") && clickedPoke.trainer.healthyEligiblePokemon(true).contains(clickedPoke)) {
+				var hoveredPoke = Display.original(poke);
+				if (Widgets.Party.state.kind === "switch" && states.contains("hover") && hoveredPoke.trainer.healthyEligiblePokemon(true).contains(hoveredPoke)) {
 					var bannerHeight = 32;
 					context.fillStyle = "hsl(0, 60%, 40%)";
 					context.fillRectHD(position.x, position.y + (size.height - bannerHeight) / 2, size.width, bannerHeight);
@@ -192,6 +192,16 @@ Widgets.FlowGrid = {
 					context.fillTextHD(data.quantity < 100 ? data.quantity : "99+", 0, 0);
 					context.restore();
 				}
+				// Use banner
+				if (Widgets.Bag.state.kind === "use" && states.contains("hover") && Display.original(data.trainer).bag.usableItems(true).contains(Display.original(data))) {
+					var bannerHeight = 20;
+					context.fillStyle = "hsl(0, 60%, 40%)";
+					context.fillRectHD(position.x, position.y + (size.height - bannerHeight) / 2, size.width, bannerHeight);
+					context.fillStyle = "hsl(0, 0%, 100%)";
+					context.textBaseline = "middle";
+					context.setFontHD("Arial", 12);
+					context.fillTextHD("Use", position.x + size.width / 2, position.y + size.height / 2);
+				}
 			}
 		})
 	}
@@ -296,6 +306,9 @@ Widgets.Party.switchSize(true);
 BattleContext.defaultDelegates.Pokémon = Widgets.Party.BattleContextDelegate;
 
 Widgets.Bag = {
+	state : {
+		kind : "overworld"
+	},
 	interface : FlowGrid({
 		template : Widgets.FlowGrid.templates.item,
 		datasource : [],
@@ -306,6 +319,12 @@ Widgets.Bag = {
 		margin : 5,
 		spacing : 6,
 		listeners : {
+			"cell:click" : function (index, data) {
+				var originalBag = Display.original(data.trainer).bag;
+				if (Widgets.Bag.state.kind === "use" && originalBag.usableItems(true).contains(Display.original(data))) {
+					Widgets.Bag.state.callback(originalBag.indexOfItem(data.item));
+				}
+			}
 		},
 		draw (context, size, region) {
 			context.fillStyle = "hsl(0, 0%, 20%)";
@@ -314,10 +333,26 @@ Widgets.Bag = {
 	}),
 	// BattleContext delegate methods
 	BattleContextDelegate : {
-		shouldDisplayMenuOption : (battle) => true,
+		battleIsBeginning (battle) {
+			Widgets.Bag.state.kind = "battle";
+			Widgets.Bag.interface.lock();
+			Widgets.Bag.interface.deselectAll();
+		},
+		battleIsEnding (battle) {
+			Widgets.Bag.state.kind = "overworld";
+			Widgets.Bag.interface.unlock();
+		},
+		shouldDisplayMenuOption : (battle) => false,
 		allowPlayerToUseItem (battle, callback) {
+			Widgets.Bag.state = {
+				kind : "use",
+				callback : callback
+			};
+			Widgets.Bag.interface.unlock(["hover"]);
 		},
 		disallowPlayerToUseItem (battle) {
+			Widgets.Bag.state.kind = "battle";
+			Widgets.Bag.interface.lock(["hover"]);
 		},
 		itemsHaveUpdated(items) {
 			Widgets.Bag.interface.refreshDataFromSource(items);

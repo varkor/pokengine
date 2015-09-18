@@ -1823,7 +1823,10 @@ function BattleContext (client) {
 					Textbox.clear();
 					battleContext.input("Pokémon", switchIn);
 				});
-				battleContext.delegates.Bag.allowPlayerToUseItem(battleContext, function () {
+				battleContext.delegates.Bag.allowPlayerToUseItem(battleContext, function (useWhich) {
+					Textbox.clear();
+					battleContext.delegates.Bag.disallowPlayerToUseItem(battleContext);
+					battleContext.input("Bag", useWhich);
 				});
 			});
 			Textbox.ask("What do you want " + currentBattler.name() + " to do?", moves, function (response, i, major) {

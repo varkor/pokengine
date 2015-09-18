@@ -316,8 +316,8 @@ Array.prototype.last = function () {
 	return this[this.length - 1];
 };
 
-function JSONCopy (object, copyFunctionsToo) {
-	var data = JSON.parse(JSON.stringify(object));
+function JSONCopy (object, copyFunctionsToo, excluding) {
+	var data = JSON.parse(JSON.stringify(object, (key, value) => typeof excluding === "undefined" || !excluding.contains(key) ? value : undefined));
 	if (copyFunctionsToo) {
 		var dig = function (obj, datum) {
 			forevery(obj, function (value, key) {
