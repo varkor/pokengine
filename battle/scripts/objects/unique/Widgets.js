@@ -7,7 +7,8 @@ Widgets.FlowGrid = {
 				width : 80,
 				height : 80
 			},
-			draw (context, poke, position, size, states) {
+			interacts : [],
+			draw (context, poke, position, size, states, interacting) {
 				var lightness = 25;
 				for (var i = 0; i < states.length; ++ i) {
 					switch (states[i]) {
@@ -16,6 +17,14 @@ Widgets.FlowGrid = {
 								lightness += 5;
 							}
 							break;
+					}
+				}
+				var interactable = false;
+				if (states.contains("interact")) {
+					var originalBag = Display.original(interacting.trainer).bag, interactedPoke = Display.original(poke), targets = interactedPoke.trainer.battle.targetsForItem(interactedPoke.trainer, Items._(interacting.item));
+					if (originalBag.usableItems(true).contains(Display.original(interacting)) && targets.contains(interactedPoke)) {
+						interactable = true;
+						lightness += 5;
 					}
 				}
 				context.fillStyle = "hsl(0, 0%, " + lightness + "%)";
@@ -62,16 +71,23 @@ Widgets.FlowGrid = {
 						}
 					});
 				}
-				// Send-out banner
-				var hoveredPoke = Display.original(poke);
-				if (Widgets.Party.state.kind === "switch" && states.contains("hover") && hoveredPoke.trainer.healthyEligiblePokemon(true).contains(hoveredPoke)) {
+				var drawBanner = (text) => {
 					var bannerHeight = 32;
 					context.fillStyle = "hsl(0, 60%, 40%)";
 					context.fillRectHD(position.x, position.y + (size.height - bannerHeight) / 2, size.width, bannerHeight);
 					context.fillStyle = "hsl(0, 0%, 100%)";
 					context.textBaseline = "middle";
 					context.setFontHD("Arial", 12);
-					context.fillTextHD("Send out", position.x + size.width / 2, position.y + size.height / 2);
+					context.fillTextHD(text, position.x + size.width / 2, position.y + size.height / 2);
+				};
+				// Send-out banner
+				var hoveredPoke = Display.original(poke);
+				if (Widgets.Party.state.kind === "switch" && states.contains("hover") && hoveredPoke.trainer.healthyEligiblePokemon(true).contains(hoveredPoke)) {
+					drawBanner("Send out");
+				}
+				// Item interaction
+				if (interactable) {
+					drawBanner("Use");
 				}
 			}
 		}),
@@ -80,8 +96,17 @@ Widgets.FlowGrid = {
 				width : 38,
 				height : 38
 			},
-			draw (context, poke, position, size, states) {
+			interacts : [],
+			draw (context, poke, position, size, states, interacting) {
 				var lightness = 25;
+				var interactable = false;
+				if (states.contains("interact")) {
+					var originalBag = Display.original(interacting.trainer).bag, interactedPoke = Display.original(poke), targets = interactedPoke.trainer.battle.targetsForItem(interactedPoke.trainer, Items._(interacting.item));
+					if (originalBag.usableItems(true).contains(Display.original(interacting)) && targets.contains(interactedPoke)) {
+						interactable = true;
+						lightness += 5;
+					}
+				}
 				for (var i = 0; i < states.length; ++ i) {
 					switch (states[i]) {
 						case "hover":
@@ -93,9 +118,7 @@ Widgets.FlowGrid = {
 				}
 				context.fillStyle = "hsl(0, 0%, " + lightness + "%)";
 				context.fillRoundedRectHD(Math.round(position.x), Math.round(position.y), size.width, size.height, 4);
-				// Send-out banner
-				var clickedPoke = Display.original(poke);
-				if (Widgets.Party.state.kind === "switch" && states.contains("hover") && clickedPoke.trainer.healthyEligiblePokemon(true).contains(clickedPoke)) {
+				var drawBanner = (text) => {
 					var bannerHeight = 32;
 					context.fillStyle = "hsl(0, 60%, 40%)";
 					context.fillRoundedRectHD(Math.round(position.x), Math.round(position.y), size.width, size.height, 4);
@@ -103,7 +126,14 @@ Widgets.FlowGrid = {
 					context.textAlign = "center";
 					context.textBaseline = "bottom";
 					context.setFontHD("Arial", 8);
-					context.fillTextHD("Send", position.x + size.width / 2, position.y + size.height - 2);
+					context.fillTextHD(text, position.x + size.width / 2, position.y + size.height - 2);
+				};
+				// Send-out banner
+				var clickedPoke = Display.original(poke);
+				if (Widgets.Party.state.kind === "switch" && states.contains("hover") && clickedPoke.trainer.healthyEligiblePokemon(true).contains(clickedPoke)) {
+					drawBanner("Send");
+				} else if (interactable) {
+					drawBanner("Use");
 				} else {
 					// Health
 					var percentageHealth = poke.health / poke.maximumHealth();
@@ -130,6 +160,7 @@ Widgets.FlowGrid = {
 				width : 46,
 				height : 46
 			},
+			interacts : [],
 			draw (context, data, position, size, states) {
 				var lightness = 25;
 				for (var i = 0; i < states.length; ++ i) {
@@ -145,8 +176,10 @@ Widgets.FlowGrid = {
 							break;
 					}
 				}
-				context.fillStyle = "hsl(0, 0%, " + lightness + "%)";
-				context.fillRoundedRectHD(Math.round(position.x), Math.round(position.y), size.width, size.height, 4);
+				if (!states.contains("drag")) {
+					context.fillStyle = "hsl(0, 0%, " + lightness + "%)";
+					context.fillRoundedRectHD(Math.round(position.x), Math.round(position.y), size.width, size.height, 4);
+				}
 				// Icon
 				var item = Items._(data.item);
 				var icon = Sprite.load(item.paths.icon(true));
@@ -206,6 +239,10 @@ Widgets.FlowGrid = {
 		})
 	}
 };
+Widgets.FlowGrid.templates.pokemon.interacts = Widgets.FlowGrid.templates.tinyPokemon.interacts = [{
+	template : Widgets.FlowGrid.templates.item,
+	cardinality : "single"
+}];
 
 Widgets.Party = {
 	state : {
@@ -244,7 +281,7 @@ Widgets.Party = {
 		}
 		flowGrid.size = {
 			width : flowGrid.columns * flowGrid.template.size.width + (flowGrid.columns - 1) * flowGrid.spacing.x + flowGrid.margin.left + flowGrid.margin.right,
-			height : flowGrid.rows * flowGrid.template.size.height + (flowGrid.rows - 1) * flowGrid.spacing.y + flowGrid.margin.top + flowGrid.margin.bottom,
+			height : flowGrid.rows * flowGrid.template.size.height + (flowGrid.rows - 1) * flowGrid.spacing.y + flowGrid.margin.top + flowGrid.margin.bottom
 		};
 		flowGrid.canvas.width = flowGrid.size.width * window.devicePixelRatio;
 		flowGrid.canvas.height = flowGrid.size.height * window.devicePixelRatio;
@@ -262,16 +299,26 @@ Widgets.Party = {
 		margin : 0,
 		spacing : 0,
 		listeners : {
-			"cell:click" : function (index, poke) {
-				var clickedPoke = Display.original(poke);
-				if (Widgets.Party.state.kind === "switch" && clickedPoke.trainer.healthyEligiblePokemon(true).contains(clickedPoke)) {
-					Widgets.Party.state.callback(index);
+			"cell:click" (index, poke) {
+				if (Widgets.Party.state.kind === "switch") {
+					var clickedPoke = Display.original(poke);
+					if (clickedPoke.trainer.healthyEligiblePokemon(true).contains(clickedPoke)) {
+						Widgets.Party.state.callback(index);
+					}
+				}
+			},
+			"cell:interact" (index, poke, data) {
+				if (Widgets.Bag.state.kind === "use") {
+					var originalBag = Display.original(data.trainer).bag, interactedPoke = Display.original(poke), targets = interactedPoke.trainer.battle.targetsForItem(interactedPoke.trainer, Items._(data.item));
+					if (originalBag.usableItems(true).contains(Display.original(data)) && targets.contains(interactedPoke)) {
+						Widgets.Bag.state.callback(originalBag.indexOfItem(data.item), interactedPoke.trainer.battle.placeOfPokemon(interactedPoke));
+					}
 				}
 			}
 		},
 		draw (context, size, region) {
 			var padding = 0;
-			if (Widgets.Party && Widgets.Party.state.kind === "switch") {
+			if (Widgets.Party && Widgets.Party.state.kind === "switch" && size.width === region.size.width && size.height === region.size.height) {
 				padding = 1;
 				context.fillStyle = "hsl(190, 100%, 50%)";
 				context.fillRoundedRectHD(region.origin.x, region.origin.y, region.size.width, region.size.height, 4);
@@ -327,16 +374,29 @@ Widgets.Bag = {
 		margin : 5,
 		spacing : 6,
 		listeners : {
-			"cell:click" : function (index, data) {
-				var originalBag = Display.original(data.trainer).bag;
-				if (Widgets.Bag.state.kind === "use" && originalBag.usableItems(true).contains(Display.original(data))) {
-					Widgets.Bag.state.callback(originalBag.indexOfItem(data.item));
+			"cell:click" (index, data) {
+				if (Widgets.Bag.state.kind === "use") {
+					var originalBag = Display.original(data.trainer).bag;
+					if (originalBag.usableItems(true).contains(Display.original(data))) {
+						Widgets.Bag.state.callback(originalBag.indexOfItem(data.item));
+					}
+				} 
+			},
+			"cell:drag" (index, cells) {
+				if (Widgets.Bag.state.kind !== "use") {
+					return true;
 				}
+				return foreach(cells, cell => {
+					var originalBag = Display.original(cell.data.trainer).bag;
+					if (!originalBag.usableItems(true).contains(Display.original(cell.data))) {
+						return true; // Block the drag one of the item cannot be used
+					}
+				});
 			}
 		},
 		draw (context, size, region) {
 			var padding = 0;
-			if (Widgets.Bag && Widgets.Bag.state.kind === "use") {
+			if (Widgets.Bag && Widgets.Bag.state.kind === "use" && size.width === region.size.width && size.height === region.size.height) {
 				padding = 1;
 				context.fillStyle = "hsl(190, 100%, 50%)";
 				context.fillRoundedRectHD(region.origin.x, region.origin.y, region.size.width, region.size.height, 4);
@@ -362,12 +422,12 @@ Widgets.Bag = {
 				kind : "use",
 				callback : callback
 			};
-			Widgets.Bag.interface.unlock(["hover"]);
+			Widgets.Bag.interface.unlock(["hover", "drag"]);
 			Widgets.Bag.interface.refreshDataFromSource();
 		},
 		disallowPlayerToUseItem (battle) {
 			Widgets.Bag.state.kind = "battle";
-			Widgets.Bag.interface.lock(["hover"]);
+			Widgets.Bag.interface.lock(["hover", "drag"]);
 			Widgets.Bag.interface.refreshDataFromSource();
 		},
 		itemsHaveUpdated(items) {

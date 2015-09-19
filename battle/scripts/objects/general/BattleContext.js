@@ -1028,7 +1028,7 @@ function BattleContext (client) {
 							}, ["Cancel"], null, hotkeys, "Item", null, true);
 						}
 					} else {
-						if (arguments.length === 2) {
+						if (arguments.length === 2 || typeof tertiary === "undefined") {
 							var targets = battleContext.targetsForItem(character, Items._(character.bag.items[secondary].item));
 							names = [];
 							positions = [];
@@ -1832,10 +1832,11 @@ function BattleContext (client) {
 					Textbox.clear();
 					battleContext.input("Pokémon", switchIn);
 				});
-				battleContext.delegates.Bag.allowPlayerToUseItem(battleContext, function (useWhich) {
+				battleContext.delegates.Bag.allowPlayerToUseItem(battleContext, function (useWhich, onWhom) {
 					Textbox.clear();
 					battleContext.delegates.Bag.disallowPlayerToUseItem(battleContext);
-					battleContext.input("Bag", useWhich);
+					battleContext.delegates.Pokémon.disallowPlayerToSwitchPokemon(battleContext);
+					battleContext.input("Bag", useWhich, onWhom);
 				});
 			});
 			Textbox.ask("What do you want " + currentBattler.name() + " to do?", moves, function (response, i, major) {
@@ -3158,7 +3159,7 @@ BattleContext.defaultDelegates = {
 	},
 	Bag : {
 		/*
-			allowPlayerToUseItem(battle, callback(item))
+			allowPlayerToUseItem(battle, callback(item, poke))
 			disallowPlayerToUseItem(battle)
 			[itemsHaveUpdated(items)]
 		*/
