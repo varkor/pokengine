@@ -65,6 +65,34 @@ Items = {
 			direct : true, // Whether you can use it as a trainer, directly (rather than just being a held item)
 			useMessage : true
 		},
+		"Leppa" : {
+			effect : function (self, poke) {
+				poke.trainer.battle.healPercentage(poke, 0.10, Items._("Berries => Leppa"));
+			},
+			effects : [
+				{
+					event : Triggers.PP,
+					action : function (data, self, other) {
+						if (data.change < 0 && self.PP <= self.maximumPP() / 2)
+							return true;
+					}
+				}
+			]
+		}
+		"Oran" : {
+			effect : function (self, poke) {
+				poke.trainer.battle.healPercentage(poke, 0.10, Items._("Berries => Oran"));
+			},
+			effects : [
+				{
+					event : Triggers.health,
+					action : function (data, self, other) {
+						if (data.change < 0 && self.health <= self.maximumHealth() / 2)
+							return true;
+					}
+				}
+			]
+		}
 		"Sitrus" : {
 			effect : function (self, poke) {
 				poke.trainer.battle.healPercentage(poke, 0.25, Items._("Berries => Sitrus"));
