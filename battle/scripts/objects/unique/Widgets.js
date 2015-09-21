@@ -383,6 +383,9 @@ Widgets.Bag = {
 				} 
 			},
 			"cell:drag" (index, cells) {
+				if (Widgets.Bag.state.kind === "overworld") {
+					return false;
+				}
 				if (Widgets.Bag.state.kind !== "use") {
 					return true;
 				}
