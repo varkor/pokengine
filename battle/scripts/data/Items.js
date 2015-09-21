@@ -10,22 +10,22 @@ Items = {
 		"Potion" : {
 			effect : function (self, poke) {
 				poke.trainer.battle.heal(poke, 20, Items._("Medicines => Potion"));
-			},
-		}
+			}
+		},
 		"Super Potion" : {
 			effect : function (self, poke) {
 				poke.trainer.battle.heal(poke, 50, Items._("Medicines => Super Potion"));
-			},
-		}
+			}
+		},
 		"Hyper Potion" : {
 			effect : function (self, poke) {
 				poke.trainer.battle.heal(poke, 200, Items._("Medicines => Hyper Potion"));
-			},
-		}
+			}
+		},
 		"Max Potion" : {
 			effect : function (self, poke) {
 				poke.trainer.battle.healPercentage(poke, 1, Items._("Medicines => Max Potion"));
-			},
+			}
 		}
 	},
 	"Other" : {
@@ -107,7 +107,7 @@ Items = {
 					}
 				}
 			]
-		}
+		},
 		"Sitrus" : {
 			effect : function (self, poke) {
 				poke.trainer.battle.healPercentage(poke, 0.25, Items._("Berries => Sitrus"));
