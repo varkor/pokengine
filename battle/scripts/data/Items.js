@@ -14,17 +14,17 @@ Items = {
 		}
 		"Super Potion" : {
 			effect : function (self, poke) {
-				poke.trainer.battle.heal(poke, 50, Items._("Medicines => Potion"));
+				poke.trainer.battle.heal(poke, 50, Items._("Medicines => Super Potion"));
 			},
 		}
 		"Hyper Potion" : {
 			effect : function (self, poke) {
-				poke.trainer.battle.heal(poke, 200, Items._("Medicines => Potion"));
+				poke.trainer.battle.heal(poke, 200, Items._("Medicines => Hyper Potion"));
 			},
 		}
 		"Max Potion" : {
 			effect : function (self, poke) {
-				poke.trainer.battle.healPercentage(poke, 1, Items._("Medicines => Potion"));
+				poke.trainer.battle.healPercentage(poke, 1, Items._("Medicines => Max Potion"));
 			},
 		}
 	},
