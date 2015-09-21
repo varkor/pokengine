@@ -1,4 +1,33 @@
 Items = {
+	"Medicines" : {
+		standard : {
+			use : "healing",
+			targets : Move.targets.party,
+			onetime : true, // Whether the item is used up after its effect has occurred
+			direct : true, // Whether you can use it as a trainer, directly (rather than just being a held item)
+			useMessage : true
+		},
+		"Potion" : {
+			effect : function (self, poke) {
+				poke.trainer.battle.heal(poke, 20, Items._("Medicines => Potion"));
+			}
+		},
+		"Super Potion" : {
+			effect : function (self, poke) {
+				poke.trainer.battle.heal(poke, 50, Items._("Medicines => Super Potion"));
+			}
+		},
+		"Hyper Potion" : {
+			effect : function (self, poke) {
+				poke.trainer.battle.heal(poke, 200, Items._("Medicines => Hyper Potion"));
+			}
+		},
+		"Max Potion" : {
+			effect : function (self, poke) {
+				poke.trainer.battle.healPercentage(poke, 1, Items._("Medicines => Max Potion"));
+			}
+		}
+	},
 	"Other" : {
 		"Lucky Egg" : {
 			use : "experience",
@@ -64,6 +93,20 @@ Items = {
 			onetime : true, // Whether the item is used up after its effect has occurred
 			direct : true, // Whether you can use it as a trainer, directly (rather than just being a held item)
 			useMessage : true
+		},
+		"Oran" : {
+			effect : function (self, poke) {
+				poke.trainer.battle.heal(poke, 10, Items._("Berries => Oran"));
+			},
+			effects : [
+				{
+					event : Triggers.health,
+					action : function (data, self, other) {
+						if (data.change < 0 && self.health <= self.maximumHealth() / 2)
+							return true;
+					}
+				}
+			]
 		},
 		"Sitrus" : {
 			effect : function (self, poke) {
