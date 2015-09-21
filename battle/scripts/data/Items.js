@@ -97,7 +97,7 @@ Items = {
 		},
 		"Oran" : {
 			effect : function (self, poke) {
-				poke.trainer.battle.heal(poke, 0.1, Items._("Berries => Oran"));
+				poke.trainer.battle.heal(poke, 10, Items._("Berries => Oran"));
 			},
 			effects : [
 				{
@@ -111,7 +111,7 @@ Items = {
 		}
 		"Sitrus" : {
 			effect : function (self, poke) {
-				poke.trainer.battle.heale(poke, 0.25, Items._("Berries => Sitrus"));
+				poke.trainer.battle.heal(poke, 25, Items._("Berries => Sitrus"));
 			},
 			effects : [
 				{
