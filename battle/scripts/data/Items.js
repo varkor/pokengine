@@ -1,7 +1,7 @@
 Items = {
 	"Medicines" : {
 		standard : {
-			category : "Medicine",
+			category : "Potion",
 			use : "healing",
 			targets : Move.targets.party,
 			onetime : true, // Whether the item is used up after its effect has occurred
@@ -10,45 +10,23 @@ Items = {
 		},
 		"Potion" : {
 			effect : function (self, poke) {
-				poke.trainer.battle.healPercentage(poke, 0.20, Items._("Medicines => Potion"));
+				poke.trainer.battle.heal(poke, 0.2, Items._());
 			},
-			effects : [
-				{
-					event : Triggers.health,
-					action : function (data, self, other) {
-						if (data.change < 0 && self.health <= self.maximumHealth() / 2)
-							return true;
-					}
-				}
-			]
 		}
-		"Super Potion" : {
+		"Super" : {
 			effect : function (self, poke) {
-				poke.trainer.battle.healPercentage(poke, 0.50, Items._("Medicines => Super Potion"));
+				poke.trainer.battle.heal(poke, 0.5, Items._("Medicines => Super"));
 			},
-			effects : [
-				{
-					event : Triggers.health,
-					action : function (data, self, other) {
-						if (data.change < 0 && self.health <= self.maximumHealth() / 2)
-							return true;
-					}
-				}
-			]
 		}
-		"Hyper Potion" : {
+		"Hyper" : {
 			effect : function (self, poke) {
-				poke.trainer.battle.healPercentage(poke, 2.00, Items._("Medicines => Hyper Potion"));
+				poke.trainer.battle.heal(poke, 2, Items._("Medicines => Hyper"));
 			},
-			effects : [
-				{
-					event : Triggers.health,
-					action : function (data, self, other) {
-						if (data.change < 0 && self.health <= self.maximumHealth() / 2)
-							return true;
-					}
-				}
-			]
+		}
+		"Max" : {
+			effect : function (self, poke) {
+				poke.trainer.battle.healPercentage(poke, 1, Items._("Medicinesn => Max"));
+			},
 		}
 	},
 	"Other" : {
@@ -117,23 +95,9 @@ Items = {
 			direct : true, // Whether you can use it as a trainer, directly (rather than just being a held item)
 			useMessage : true
 		},
-		"Leppa" : {
-			effect : function (self, poke) {
-				poke.trainer.battle.healPercentage(poke, 0.10, Items._("Berries => Leppa"));
-			},
-			effects : [
-				{
-					event : Triggers.PP,
-					action : function (data, self, other) {
-						if (data.change < 0 && self.PP <= self.maximumPP() / 2)
-							return true;
-					}
-				}
-			]
-		}
 		"Oran" : {
 			effect : function (self, poke) {
-				poke.trainer.battle.healPercentage(poke, 0.10, Items._("Berries => Oran"));
+				poke.trainer.battle.heal(poke, 0.1, Items._("Berries => Oran"));
 			},
 			effects : [
 				{
@@ -147,7 +111,7 @@ Items = {
 		}
 		"Sitrus" : {
 			effect : function (self, poke) {
-				poke.trainer.battle.healPercentage(poke, 0.25, Items._("Berries => Sitrus"));
+				poke.trainer.battle.heale(poke, 0.25, Items._("Berries => Sitrus"));
 			},
 			effects : [
 				{
