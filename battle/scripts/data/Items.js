@@ -1,7 +1,6 @@
 Items = {
 	"Medicines" : {
 		standard : {
-			category : "Potion",
 			use : "healing",
 			targets : Move.targets.party,
 			onetime : true, // Whether the item is used up after its effect has occurred
@@ -10,22 +9,22 @@ Items = {
 		},
 		"Potion" : {
 			effect : function (self, poke) {
-				poke.trainer.battle.heal(poke, 20, Items._());
+				poke.trainer.battle.heal(poke, 20, Items._("Medicines => Potion"));
 			},
 		}
-		"Super" : {
+		"Super Potion" : {
 			effect : function (self, poke) {
-				poke.trainer.battle.heal(poke, 50, Items._("Medicines => Super"));
+				poke.trainer.battle.heal(poke, 50, Items._("Medicines => Potion"));
 			},
 		}
-		"Hyper" : {
+		"Hyper Potion" : {
 			effect : function (self, poke) {
-				poke.trainer.battle.heal(poke, 200, Items._("Medicines => Hyper"));
+				poke.trainer.battle.heal(poke, 200, Items._("Medicines => Potion"));
 			},
 		}
-		"Max" : {
+		"Max Potion" : {
 			effect : function (self, poke) {
-				poke.trainer.battle.healPercentage(poke, 1, Items._("Medicines => Max"));
+				poke.trainer.battle.healPercentage(poke, 1, Items._("Medicines => Potion"));
 			},
 		}
 	},
@@ -111,7 +110,7 @@ Items = {
 		}
 		"Sitrus" : {
 			effect : function (self, poke) {
-				poke.trainer.battle.heal(poke, 25, Items._("Berries => Sitrus"));
+				poke.trainer.battle.healPercentage(poke, 0.25, Items._("Berries => Sitrus"));
 			},
 			effects : [
 				{
