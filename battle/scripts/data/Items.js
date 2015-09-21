@@ -1,4 +1,56 @@
 Items = {
+	"Medicines" : {
+		standard : {
+			category : "Medicine",
+			use : "healing",
+			targets : Move.targets.party,
+			onetime : true, // Whether the item is used up after its effect has occurred
+			direct : true, // Whether you can use it as a trainer, directly (rather than just being a held item)
+			useMessage : true
+		},
+		"Potion" : {
+			effect : function (self, poke) {
+				poke.trainer.battle.healPercentage(poke, 0.20, Items._("Medicines => Potion"));
+			},
+			effects : [
+				{
+					event : Triggers.health,
+					action : function (data, self, other) {
+						if (data.change < 0 && self.health <= self.maximumHealth() / 2)
+							return true;
+					}
+				}
+			]
+		}
+		"Super Potion" : {
+			effect : function (self, poke) {
+				poke.trainer.battle.healPercentage(poke, 0.50, Items._("Medicines => Super Potion"));
+			},
+			effects : [
+				{
+					event : Triggers.health,
+					action : function (data, self, other) {
+						if (data.change < 0 && self.health <= self.maximumHealth() / 2)
+							return true;
+					}
+				}
+			]
+		}
+		"Hyper Potion" : {
+			effect : function (self, poke) {
+				poke.trainer.battle.healPercentage(poke, 2.00, Items._("Medicines => Hyper Potion"));
+			},
+			effects : [
+				{
+					event : Triggers.health,
+					action : function (data, self, other) {
+						if (data.change < 0 && self.health <= self.maximumHealth() / 2)
+							return true;
+					}
+				}
+			]
+		}
+	},
 	"Other" : {
 		"Lucky Egg" : {
 			use : "experience",
