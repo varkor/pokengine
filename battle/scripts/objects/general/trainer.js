@@ -118,7 +118,7 @@ function trainer (data) {
 			self.party.add(poke);
 		else {
 			var placement = self.storage.add(poke);
-			if (!self.inBattle() || !self.battlee.process)
+			if (!self.inBattle() || !self.battle.process)
 				Textbox.say(poke.name() + " has been placed in <colour:cyan>" + placement.box + "<colour:>.");
 		}
 	};

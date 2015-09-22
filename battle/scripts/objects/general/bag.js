@@ -107,20 +107,20 @@ function bag (items) {
 	};
 
 	self.use = function (item, on, who) {
-		var index = self.indexOfItem(item), item = Items._(self.items[index].item);
+		var index = self.indexOfItem(item), item = Items._(self.items[index].item), process = on.trainer.battle.process;
 		-- self.items[index].intentToUse;
-		if (item.useMessage && !on.trainer.battle.process) {
+		if (item.useMessage && !process) {
 			Textbox.state(who.pronoun(true) + " used the " + item.fullname + " on " + on.name() + "!");
 		}
 		self.remove(index);
-		if (!on.trainer.battle.process) {
+		if (!process) {
 			var displayBefore = Display.state.save();
 			Textbox.effect(function () {
 				Display.state.load(displayBefore);
 			});
 		}
 		item.effect(item, on, who);
-		if (!on.trainer.battle.process) {
+		if (!process) {
 			var displayAfter= Display.state.save();
 			Textbox.effect(function () {
 				Display.state.load(displayAfter);
