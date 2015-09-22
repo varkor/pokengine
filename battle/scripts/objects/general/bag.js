@@ -114,12 +114,18 @@ function bag (items) {
 		}
 		self.remove(index);
 		if (!on.trainer.battle.process) {
-			var display = Display.state.save();
+			var displayBefore = Display.state.save();
 			Textbox.effect(function () {
-				Display.state.load(display);
+				Display.state.load(displayBefore);
 			});
 		}
 		item.effect(item, on, who);
+		if (!on.trainer.battle.process) {
+			var displayAfter= Display.state.save();
+			Textbox.effect(function () {
+				Display.state.load(displayAfter);
+			});
+		}
 	};
 
 	self.empty = function () {
