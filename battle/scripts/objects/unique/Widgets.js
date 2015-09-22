@@ -20,7 +20,7 @@ Widgets.FlowGrid = {
 					}
 				}
 				var interactable = false;
-				if (states.contains("interact")) {
+				if (states.contains("interact") && Widgets.Bag.state.kind === "use") {
 					var originalBag = Display.original(interacting.trainer).bag, interactedPoke = Display.original(poke), targets = interactedPoke.trainer.battle.targetsForItem(interactedPoke.trainer, Items._(interacting.item));
 					if (originalBag.usableItems(true).contains(Display.original(interacting)) && targets.contains(interactedPoke)) {
 						interactable = true;
@@ -100,7 +100,7 @@ Widgets.FlowGrid = {
 			draw (context, poke, position, size, states, interacting) {
 				var lightness = 25;
 				var interactable = false;
-				if (states.contains("interact")) {
+				if (states.contains("interact") && Widgets.Bag.state.kind === "use") {
 					var originalBag = Display.original(interacting.trainer).bag, interactedPoke = Display.original(poke), targets = interactedPoke.trainer.battle.targetsForItem(interactedPoke.trainer, Items._(interacting.item));
 					if (originalBag.usableItems(true).contains(Display.original(interacting)) && targets.contains(interactedPoke)) {
 						interactable = true;
