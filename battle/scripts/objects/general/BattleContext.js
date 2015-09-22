@@ -294,7 +294,10 @@ function BattleContext (client) {
 		opposingTrainers : [],
 		participants : [],
 		levelUppers : [],
-		weather : null,
+		weather : {
+			current: "clear skies",
+			lasting: null
+		},
 		turns : 0,
 		timer : null,
 		callback : null,
@@ -635,7 +638,7 @@ function BattleContext (client) {
 				if (!settings.hasOwnProperty("style"))
 					settings.style = "normal";
 				if (!settings.hasOwnProperty("weather"))
-					settings.weather = "clear";
+					settings.weather = "clear skies";
 				battleContext.finished = false;
 				if (arguments.length >= 4)
 					battleContext.callback = callback;
@@ -646,7 +649,7 @@ function BattleContext (client) {
 				battleContext.style = settings.style;
 				battleContext.flags = settings.flags;
 				battleContext.encounterTile = settings.tile;
-				battleContext.changeWeather(settings.weather);
+				battleContext.changeWeather(settings.weather, null);
 				alliedTrainers = wrapArray(alliedTrainers);
 				opposingTrainers = wrapArray(opposingTrainers);
 				battleContext.alliedTrainers = alliedTrainers;
@@ -1436,20 +1439,24 @@ function BattleContext (client) {
 										issues.push("There was no trainer with the specified team, `" + ation.tertiary.team + "`.");
 										return true;
 									}
-									if (!action.tertiary.hasOwnProperty("position") || !isNaturalNumber(action, "tertiary => position", battleContext.pokemonPerSide()))
+									if (!action.tertiary.hasOwnProperty("position") || !isNaturalNumber(action, "tertiary => position", 6)) // The actual number of position gets checked in the next statements, 6 is really just a placeholder here
 										return true;
 									var targetedPokemon = battleContext.pokemonInPlace(action.tertiary);
+									if (targetedPokemon === null) {
+										issues.push("There was no Pokémon in that position.");
+										return true;
+									}
 									if (!action.tertiary.hasOwnProperty("side")) {
-										if (typeof action.tertiary.side !== "object") {
-											issues.push("The property `action.tertiary.side` should have been an object, but was actually a `" + typeof action.tertiary.side + "`.");
-											return true;
-										}
 										// The item is being used on a Pokémon that is not currently battling
 										if (targetedPokemon.inBattle()) {
 											issues.push("An item was attempted to be used on a Pokémon that is not battling as if it were.");
 											return true; // Tried to use an item on a Pokémon that is not battling as if it were
 										}
 									} else {
+										if (typeof action.tertiary.side !== "object") {
+											issues.push("The property `action.tertiary.side` should have been an object, but was actually a `" + typeof action.tertiary.side + "`.");
+											return true;
+										}
 										// The item is being used on a Pokémon that is battling
 										if (!targetedPokemon.inBattle()) {
 											issues.push("An item was attempted to be used on a Pokémon that is battling as if it were not.");
@@ -1610,9 +1617,12 @@ function BattleContext (client) {
 				}
 			}
 		},
-		changeWeather : function (weather) {
-			battleContext.weather = weather;
-			Weather.weather = battleContext.weather;
+		changeWeather : function (weather, lasting) {
+			battleContext.weather = {
+				current: weather,
+				lasting: lasting
+			};
+			Weather.weather = battleContext.weather.current;
 			Weather.time = 1;
 		},
 		pokemonOnSameSide : function (pokeA, pokeB) {
@@ -1728,7 +1738,17 @@ function BattleContext (client) {
 			}
 		},
 		pokemonInPlace : function (place) {
-			return (place.hasOwnProperty("side") ? (place.team === battleContext.alliedTrainers.first().team ? battleContext.allies : battleContext.opponents)[place.position] : battleContext.trainerOfTeam(place.team).party.pokemon[place.position]);
+			var pokes;
+			if (place.hasOwnProperty("side")) {
+				pokes = place.team === battleContext.alliedTrainers.first().team ? battleContext.allies : battleContext.opponents;
+			} else {
+				pokes = battleContext.trainerOfTeam(place.team).party.pokemon;
+			}
+			if (place.position < pokes.length) {
+				return pokes[place.position];
+			} else {
+				return null;
+			}
 		},
 		trainerOfTeam : function (team) {
 			var trainerOfTeam = null, all = battleContext.allTrainers();
@@ -2066,8 +2086,8 @@ function BattleContext (client) {
 				Textbox.effect(function () { Display.state.load(displayWeather); });
 			}
 			var all = battleContext.all(true);
-			switch (battleContext.weather) {
-				case "intenseSunlight":
+			switch (battleContext.weather.current) {
+				case "intense sunlight":
 					if (!battleContext.process && !Settings._("visual weather effects"))
 						Textbox.state("The sun is blazing fiercely in the sky!");
 					break;

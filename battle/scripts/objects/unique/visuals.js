@@ -2,10 +2,10 @@ Lighting = {
 	shadows : {
 		opacity : function () {
 			switch (Weather.weather) {
-				case "clear":
-				case "diamondDust":
+				case "clear skies":
+				case "diamond dust":
 					return 0.3;
-				case "intenseSunlight":
+				case "intense sunlight":
 					return 0.5;
 				case "rain":
 				case "hail":
@@ -13,7 +13,7 @@ Lighting = {
 					return 0.15;
 				case "fog":
 					return 0.1;
-				case "shadowyAura":
+				case "shadowy aura":
 					return 0.4;
 			}
 		}
@@ -21,7 +21,7 @@ Lighting = {
 };
 
 Weather = {
-	weather : "clear",
+	weather : "clear skies",
 	time : 1,
 	skyHeight : 64,
 	particles : {
@@ -60,7 +60,7 @@ Weather = {
 					};
 					appearFromTop = false;
 					break;
-				case "diamondDust":
+				case "diamond dust":
 					particle.size = random(4, 8);
 					particle.velocity.speed = random(1, 2);
 					break;
@@ -142,7 +142,7 @@ Weather = {
 						context.fillStyle = "hsla(" + randomInt(30, 50) + ", " + randomInt(20, 50) + "%, " + randomInt(35, 50) + "%, " + random(0.6, 1) + ")";
 						context.fillCircle(particle.position.x, particle.position.y, particle.size);
 						break;
-					case "diamondDust":
+					case "diamond dust":
 						context.beginPath();
 						context.moveTo(particle.position.x, particle.position.y);
 						var points = 4, size = particle.size / 2 + (Math.sin(particle.position.y / 3) + 1) / 2 * particle.size / 2;
@@ -158,14 +158,14 @@ Weather = {
 	draw : function (context, weather) {
 		if (arguments.length < 2)
 			weather = Weather.weather;
-		if (["rain", "hail", "sandstorm", "diamondDust"].contains(Weather.weather)) {
+		if (["rain", "hail", "sandstorm", "diamond dust"].contains(Weather.weather)) {
 			while (Weather.particles.all.length < Weather.particles.maximum && (1 / Weather.time < random()))
 				Weather.particles.add();
 		}
 		Weather.particles.draw(context);
 		var overlay;
 		switch (weather) {
-			case "intenseSunlight":
+			case "intense sunlight":
 				overlay = "hsla(55, 100%, 60%, 0.15)";
 				break;
 			case "rain":
@@ -175,7 +175,7 @@ Weather = {
 			case "sandstorm":
 				overlay = "hsla(45, 60%, 50%, 0.4)";
 				break;
-			case "diamondDust":
+			case "diamond dust":
 				overlay = "hsla(215, 0%, 100%, 0.5)";
 				break;
 			case "fog":
@@ -184,7 +184,7 @@ Weather = {
 				gradient.addColorStop(1, "hsla(215, 5%, 60%, 0.8)");
 				overlay = gradient;
 				break;
-			case "shadowyAura":
+			case "shadowy aura":
 				var gradient = context.createRadialGradient(Battle.canvas.width / 2, Battle.canvas.height / 4, 0, Battle.canvas.width / 2, Battle.canvas.height / 4, Math.min(Battle.canvas.width, Battle.canvas.height) * 0.65);
 				gradient.addColorStop(0, "hsla(280, 60%, 30%, 0.4)");
 				gradient.addColorStop(1, "hsla(280, 0%, 0%, 0.80)");

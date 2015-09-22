@@ -34,14 +34,14 @@
 				<tr class="hidden-">
 					<td>weather</td>
 					<td><div class="select"><select id="weather">
-						<option value="clear">clear skies</option>
-						<option value="intenseSunlight">sun</option>
+						<option value="clear skies">clear skies</option>
+						<option value="intense sunlight">sun</option>
 						<option value="rain">rain</option>
 						<option value="hail">hail</option>
 						<option value="sandstorm">sandstorm</option>
 						<option value="fog">fog</option>
-						<option value="diamondDust">diamond dust</option>
-						<option value="shadowyAura">shadowy aura</option>
+						<option value="diamond dust">diamond dust</option>
+						<option value="shadowy aura">shadowy aura</option>
 					</select></div></td>
 				</tr>
 				<tr class="hidden-">
@@ -374,7 +374,7 @@
 					var settings = {
 						style : (["double", "sky"].contains(document.querySelector("#style").value) ? document.querySelector("#style").value : "normal"),
 						flags : document.querySelector("#inverse").checked ? ["inverse"] : [],
-						weather : (Weathers.contains(document.querySelector("#weather").value) ? document.querySelector("#weather").value : "clear"),
+						weather : (Weathers.contains(document.querySelector("#weather").value) ? document.querySelector("#weather").value : "clear skies"),
 						scene : (Scenes._(document.querySelector("#scene").value + "?") ? document.querySelector("#scene").value : "Field Clearing"),
 						rules : {
 							levels : document.querySelector("#rule-levels").value,

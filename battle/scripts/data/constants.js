@@ -116,7 +116,7 @@ Natures = {
 	}
 };
 
-Weathers = ["clear", "intenseSunlight", "rain", "sandstorm", "hail", "diamondDust", "shadowyAura", "fog"];
+Weathers = ["clear skies", "intense sunlight", "extremely harsh sunlight", "rain", "heavy rain", "sandstorm", "hail", "diamond dust", "shadowy aura", "fog", "strong winds"];
 
 Development = ["complete", "incomplete", "unstarted"];
 

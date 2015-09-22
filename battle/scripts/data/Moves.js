@@ -429,7 +429,7 @@ Moves = {
 			use : [
 				{
 					effect : function (self) {
-						self.battler.battle.healPercentage(self, (self.battler.battle.weather === "clear" ? 0.5 : self.battler.battle.weather === "intenseSunlight" ? 2 / 3 : 0.25), self);
+						self.battler.battle.healPercentage(self, (self.battler.battle.weather.current === "clear skies" ? 0.5 : self.battler.battle.weather.current === "intense sunlight" ? 2 / 3 : 0.25), self);
 					},
 					targets : true
 				}
@@ -913,7 +913,7 @@ Moves = {
 			use : [
 				{
 					effect : function (self, target) {
-						if (self.battler.battle.weather === "intenseSunlight") {
+						if (self.battler.battle.weather.current === "intense sunlight") {
 							Move.use("Solar Beam", ++ self.battler.moveStage, self, target, true);
 							return;
 						}

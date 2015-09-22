@@ -315,15 +315,15 @@ Move = {
 	},
 	damage : function (attacker, target, move, power, type, noCritical) {
 		move = Moves._(move);
-		var weather = attacker.trainer.battle.weather, multiTarget = (attacker.trainer.battle.style === "double");
+		var weather = attacker.trainer.battle.weather.current, multiTarget = (attacker.trainer.battle.style === "double");
 		power = power || move.power;
 		if (arguments.length < 5)
 			type = move.type;
 		var modifiers = {
 			critical : (attacker.trainer.battle.random.chance(attacker.battler.statLevel.critical <= 0 ? 16 : attacker.battler.statLevel.critical === 1 ? 8 : attacker.battler.statLevel.critical === 2 ? 2 : 1) ? 1.5 : 1),
 			multiTarget : (multiTarget ? 0.75 : 1),
-			weather : ((attacker.trainer.battle.weather === "intenseSunlight" && type === "Fire") || (attacker.trainer.battle.weather === "rain" && type === "Water") ? 1.5 : (attacker.trainer.battle.weather === "intenseSunlight" && type === "Water") || (attacker.trainer.battle.weather === "rain" && type === "Fire") ? 0.5 : 1),
-			sandstorm : (attacker.trainer.battle.weather === "sandstorm" && target.ofType("Rock") ? 1.5 : 1),
+			weather : ((weather === "intense sunlight" && type === "Fire") || (weather === "rain" && type === "Water") ? 1.5 : (weather === "intense sunlight" && type === "Water") || (weather === "rain" && type === "Fire") ? 0.5 : 1),
+			sandstorm : (weather === "sandstorm" && target.ofType("Rock") ? 1.5 : 1),
 			STAB : (attacker.ofType(type) ? 1.5 : 1),
 			burn : (type === Move.category.physical && attacker.status === "burned" ? 0.5 : 1),
 			abilities :  product(attacker.trainer.battle.triggerEvent(Triggers.damage, {
