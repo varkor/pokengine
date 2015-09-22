@@ -2718,6 +2718,10 @@ function BattleContext (client) {
 				var previousTrainer = poke.trainer;
 				poke.caught.ball = ball;
 				character.give(poke);
+				if (!battleContext.process) {
+					var displayAfterCaught = Display.state.save();
+					Textbox.effect(() => {Display.state.load(displayAfterCaught); console.log("h")});
+				}
 				poke.trainer = previousTrainer;
 				battleContext.removeFromBattle(poke, false);
 				poke.trainer = character;
