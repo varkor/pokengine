@@ -260,7 +260,7 @@ function BattleContext (client) {
 					drawing(originalCanvas);
 				});
 				if (battleContext.timer !== null) {
-					var timeLeft = battleContext.timer.end - now, pulsate = 2 * Math.sin(Math.max(0, 3 * 1000 - timeLeft) / 80) * Game.zoom, radius = { outer : (15 + pulsate) * Game.zoom, inner : 10 * Game.zoom }, padding = 8 * Game.zoom, centre = { x : originalCanvasWidth - padding - radius.outer + pulsate, y : padding + radius.outer - pulsate }, startAngle = Math.PI / 2, endAngle = startAngle - (now - battleContext.timer.start) / (battleContext.timer.end - battleContext.timer.start) * 2 * Math.PI;
+					var timeLeft = battleContext.timer.end - now, pulsate = 2 * Math.sin(Math.max(0, 10 * 1000 - timeLeft) / 80) * Game.zoom, radius = { outer : (15 + pulsate) * Game.zoom, inner : 10 * Game.zoom }, padding = 8 * Game.zoom, centre = { x : originalCanvasWidth - padding - radius.outer + pulsate, y : padding + radius.outer - pulsate }, startAngle = Math.PI / 2, endAngle = startAngle - (now - battleContext.timer.start) / (battleContext.timer.end - battleContext.timer.start) * 2 * Math.PI;
 					originalContext.fillStyle = "hsla(0, 0%, 100%, 0.75)";
 					originalContext.fillCircleHD(centre.x, centre.y, radius.outer);
 					originalContext.fillStyle = "hsla(0, 50%, 50%, 0.75)";
@@ -295,8 +295,8 @@ function BattleContext (client) {
 		participants : [],
 		levelUppers : [],
 		weather : {
-			current: "clear skies",
-			lasting: null
+			current : "clear skies",
+			lasting : null
 		},
 		turns : 0,
 		timer : null,
@@ -922,7 +922,7 @@ function BattleContext (client) {
 					if (typeof tertiary !== "undefined" && tertiary !== null) {
 						who = tertiary;
 					} else {
-						if (chosenActualMove.targets !== Move.targets.opposingSide && chosenActualMove.targets !== Move.targets.alliedSide) {
+						if (![Move.targets.opposingSide, Move.targets.alliedSide, Move.targets.bothSides].contains(chosenActualMove.targets)) {
 							var targets = [], targetNames = [], place, affected, partOfTarget, names, all = battleContext.all(true);
 							foreach(all, function (poke) {
 								place = battleContext.placeOfPokemon(poke);
@@ -988,7 +988,7 @@ function BattleContext (client) {
 						} else {
 							// The move targets an entire side
 							var ally = battleContext.allies.contains(currentBattler);
-							who = Battles.side[(chosenActualMove.targets === Move.targets.opposingSide && ally) || (chosenActualMove.targets === Move.targets.alliedSide && !ally) ? "far" : "near"];
+							who = Battles.side[chosenActualMove.targets === Move.targets.bothSides ? "both" : ((chosenActualMove.targets === Move.targets.opposingSide && ally) || (chosenActualMove.targets === Move.targets.alliedSide && !ally) ? "far" : "near")];
 						}
 					}
 					if (who !== null) {
@@ -1380,7 +1380,7 @@ function BattleContext (client) {
 							var isMultiBattle = battleContext.pokemonPerSide() > 1;
 							if (action.primary === "Fight") {
 								var move = Moves._(currentBattler.usableMoves()[action.secondary].move);
-								if (isMultiBattle && move.targets !== Move.targets.opposingSide && move.targets !== Move.targets.alliedSide) {
+								if (isMultiBattle && ![Move.targets.opposingSide, Move.targets.alliedSide, Move.targets.bothSides].contains(move.targets)) {
 									if (!requireProperty(action, "tertiary"))
 										return true;
 									if (typeof action.tertiary !== "object") {
@@ -1424,7 +1424,7 @@ function BattleContext (client) {
 									issues.push("The item the player tried to use was not a usable item.");
 									return true;
 								}
-								if (![Move.targets.opposingSide, Move.targets.alliedSide].contains(Items._(item.item).targets)) {
+								if (![Move.targets.opposingSide, Move.targets.alliedSide, Move.targets.bothSides].contains(Items._(item.item).targets)) {
 									if (!requireProperty(action, "tertiary"))
 										return true;
 									if (typeof action.tertiary !== "object") {
@@ -1622,8 +1622,12 @@ function BattleContext (client) {
 				current: weather,
 				lasting: lasting
 			};
-			Weather.weather = battleContext.weather.current;
-			Weather.time = 1;
+			if (!battleContext.process) {
+				Textbox.effect(() => {
+					Weather.weather = battleContext.weather.current;
+					Weather.time = 1;
+				});
+			}
 		},
 		pokemonOnSameSide : function (pokeA, pokeB) {
 			return pokeA.battler.side === pokeB.battler.side;
@@ -1667,7 +1671,7 @@ function BattleContext (client) {
 		},
 		targetsForMove : function (user, move, excludeAlliesIfPossible) {
 			// Returns an array of all the Pokémon that the user could target with the move
-			if (move.targets !== Move.targets.opposingSide && move.targets !== Move.targets.alliedSide) {
+			if (![Move.targets.opposingSide, Move.targets.alliedSide, Move.targets.bothSides].contains(move.targets)) {
 				var inRange = {
 					allies : [],
 					opponents : []
@@ -1685,7 +1689,7 @@ function BattleContext (client) {
 				var ally = battleContext.allies.contains(user);
 				return [{
 					poke : NoPokemon,
-					place : (move.targets === Move.targets.opposingSide && ally) || (move.targets === Move.targets.alliedSide && !ally) ? Battles.side.far : Battles.side.near
+					place : move.targets === Move.targets.bothSides ? Battles.side.both : ((move.targets === Move.targets.opposingSide && ally) || (move.targets === Move.targets.alliedSide && !ally) ? Battles.side.far : Battles.side.near)
 				}];
 			}
 		},
@@ -2086,6 +2090,14 @@ function BattleContext (client) {
 				Textbox.effect(function () { Display.state.load(displayWeather); });
 			}
 			var all = battleContext.all(true);
+			if (battleContext.weather.lasting !== null) {
+				if (-- battleContext.weather.lasting === 0) {
+					if (!battleContext.process) {
+						Textbox.state("The sky cleared up!");
+						battleContext.changeWeather("clear skies", null);
+					}
+				}
+			}
 			switch (battleContext.weather.current) {
 				case "intense sunlight":
 					if (!battleContext.process && !Settings._("visual weather effects"))
@@ -2720,7 +2732,7 @@ function BattleContext (client) {
 				character.give(poke);
 				if (!battleContext.process) {
 					var displayAfterCaught = Display.state.save();
-					Textbox.effect(() => {Display.state.load(displayAfterCaught); console.log("h")});
+					Textbox.effect(() => Display.state.load(displayAfterCaught));
 				}
 				poke.trainer = previousTrainer;
 				battleContext.removeFromBattle(poke, false);

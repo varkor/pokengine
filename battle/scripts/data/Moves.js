@@ -377,6 +377,30 @@ Moves = {
 			]
 		}
 	},
+	"Rain Dance" : {
+		status : "complete",
+		description : "The user summons a heavy rain that falls for five turns, powering up Water-type moves.",
+		type : "Water",
+		category : Move.category.status,
+		PP : 5,
+		priority : 0,
+		contact: false,
+		affects : Move.targets.bothSides,
+		targets : Move.targets.bothSides,
+		effects : {
+			use : [
+				{
+					effect : function (self, target) {
+						if (!self.battler.battle.process) {
+							Textbox.state(self.name() + " brought down a rainstorm!");
+						}
+						self.battler.battle.changeWeather("rain", 5);
+					},
+					targets : true
+				}
+			]
+		}
+	},
 	"Magnitude" : {
 		status : "incomplete",
 		description : "",

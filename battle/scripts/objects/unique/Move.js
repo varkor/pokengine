@@ -58,8 +58,8 @@ Move = {
 		if (target instanceof pokemon)
 			target = mover.trainer.battle.placeOfPokemon(target);
 		var constant = {},
-			affectsEntireSide = (target === Battles.side.far || target === Battles.side.near),
-			targetPokemon = (target !== NoPokemon && !affectsEntireSide ? mover.trainer.battle.pokemonInPlace(target) : NoPokemon),
+			affectsEntireSideOrBothSides = [Battles.side.near, Battles.side.far, Battles.side.both].contains(target),
+			targetPokemon = (target !== NoPokemon && !affectsEntireSideOrBothSides ? mover.trainer.battle.pokemonInPlace(target) : NoPokemon),
 			affected = (targetPokemon !== NoPokemon ? mover.trainer.battle.affectedByMove(mover, targetPokemon, move).filter(onlyPokemon) : []),
 			completelyFailed = true,
 			statedFailureReason = false,
@@ -68,7 +68,7 @@ Move = {
 			stateEffect = null,
 			modifiedMove = false;
 		// If the move won't hit anything, try aiming for a different target
-		if (!affectsEntireSide && stage === 0 && affected.empty()) {
+		if (!affectsEntireSideOrBothSides && stage === 0 && affected.empty()) {
 			var newTarget = mover.trainer.battle.targetsForMove(mover, move, true);
 			if (newTarget.notEmpty()) {
 				target = newTarget[0].place;
@@ -78,20 +78,20 @@ Move = {
 		}
 		if (!mover.trainer.battle.process) {
 			if (finalStage && (!move.classification.contains("_") || moveName === "Struggle")) {
-				if (affected.notEmpty() || affectsEntireSide)
-					animationEffect = Textbox.state(mover.name() + " used " + moveName + (!affectsEntireSide && move.affects === Move.targets.directTarget && affected.notEmpty() ? " on " + (targetPokemon !== mover ? targetPokemon.name() : mover.selfPronoun()) : "") + "!", function () { return Move.animate(mover, move, stage, targetPokemon, constant); });
+				if (affected.notEmpty() || affectsEntireSideOrBothSides)
+					animationEffect = Textbox.state(mover.name() + " used " + moveName + (!affectsEntireSideOrBothSides && move.affects === Move.targets.directTarget && affected.notEmpty() ? " on " + (targetPokemon !== mover ? targetPokemon.name() : mover.selfPronoun()) : "") + "!", function () { return Move.animate(mover, move, stage, targetPokemon, constant); });
 				else
 					Textbox.state(mover.name() + " tried to use " + moveName + "...");
 			} else
 				animationEffect = Textbox.effect(function () { return Move.animate(mover, move, stage, targetPokemon, constant); });
 			// Makes sure any Display states after the move has been used takes into consideration any movements by any of the Pokémon
-			if (targetPokemon !== NoPokemon || affectsEntireSide) {
+			if (targetPokemon !== NoPokemon || affectsEntireSideOrBothSides) {
 				Move.renderAnimation(mover, move, stage, targetPokemon, constant);
 				var displayRendered = Display.state.save();
 				stateEffect = Textbox.effect(function (displayRendered) { return function () { Display.state.load(displayRendered); }; }(displayRendered));
 			}
 		}
-		if (move.effects.hasOwnProperty("constant") && (targetPokemon !== NoPokemon || affectsEntireSide)) {
+		if (move.effects.hasOwnProperty("constant") && (targetPokemon !== NoPokemon || affectsEntireSideOrBothSides)) {
 			var constantData = move.effects.constant(mover, targetPokemon !== NoPokemon ? targetPokemon : target);
 			if (typeof constantData === "object")
 				constant = constantData;
@@ -167,7 +167,7 @@ Move = {
 					} else
 						completelyFailed = false;
 				});
-			} else if (affectsEntireSide) {
+			} else if (affectsEntireSideOrBothSides) {
 				var response = move.effects.use[stage].effect(mover, target, constant), failed = false;
 				if (response) {
 					if (response.hasOwnProperty("failed") && response.failed)
@@ -216,7 +216,7 @@ Move = {
 		if (move.animation.length - 1 < stage || move.animation[stage].length === 0)
 			return;
 		var events = JSONCopy(move.animation[stage], true), from = Display.state.save();
-		var affectsEntireSide = (target === Battles.side.far || target === Battles.side.near);
+		var affectsEntireSideOrBothSides = (target === Battles.side.far || target === Battles.side.near);
 		foreach(events.sort(function (a, b) {
 			if (a.hasOwnProperty("time"))
 				aLast = a.time;
@@ -231,7 +231,7 @@ Move = {
 			if (event.hasOwnProperty("time")) {
 				event.animation({
 					display : mover.battler.display
-				}, !affectsEntireSide ? {
+				}, !affectsEntireSideOrBothSides ? {
 					display : target.battler.display
 				} : null, {
 					display : View
@@ -240,7 +240,7 @@ Move = {
 				event.transition({
 					display : mover.battler.display,
 					from : Display.pokemonInState(mover, from).battler.display
-				}, !affectsEntireSide ? {
+				}, !affectsEntireSideOrBothSides ? {
 					display : target.battler.display,
 					from : Display.pokemonInState(target, from).battler.display
 				} : null, {
@@ -263,7 +263,7 @@ Move = {
 			}
 			last = 0; // The shortest length an animation can be (100 = 1 second)
 		}
-		var affectsEntireSide = (target === Battles.side.far || target === Battles.side.near);
+		var affectsEntireSideOrBothSides = (target === Battles.side.far || target === Battles.side.near);
 		var start = move.animation[stage][track.progress].hasOwnProperty("time") ? move.animation[stage][track.progress].time : move.animation[stage][track.progress].from;
 		if (arguments.length < 6 && start > 0) {
 			setTimeout(function () { Move.animate(mover, move, stage, target, constant, track, last); }, Time.second * start / 100);
@@ -273,7 +273,7 @@ Move = {
 			last = Math.max(move.animation[stage][track.progress].time, last);
 			move.animation[stage][track.progress].animation({
 				display : Display.pokemonInState(mover).battler.display
-			}, !affectsEntireSide ? {
+			}, !affectsEntireSideOrBothSides ? {
 				display : Display.pokemonInState(target).battler.display
 			} : null, {
 				display : View
@@ -294,13 +294,13 @@ Move = {
 		return track;
 	},
 	transition : function (mover, move, stage, target, constant, start, progress, from) {
-		var affectsEntireSide = (target === Battles.side.far || target === Battles.side.near);
+		var affectsEntireSideOrBothSides = (target === Battles.side.far || target === Battles.side.near);
 		// There are 100 "duration steps" for every second
 		var duration = (move.animation[stage][start].to - move.animation[stage][start].from) / 100, frames = duration * Time.framerate;
 		move.animation[stage][start].transition({
 			display : Display.pokemonInState(mover).battler.display,
 			from : Display.pokemonInState(mover, from).battler.display
-		}, !affectsEntireSide ? {
+		}, !affectsEntireSideOrBothSides ? {
 			display : Display.pokemonInState(target).battler.display,
 			from : Display.pokemonInState(target, from).battler.display
 		} : null, {
@@ -405,5 +405,6 @@ Move.targets = {
 	 // Special constants
 	party : {},
 	opposingSide : {},
-	alliedSide : {}
+	alliedSide : {},
+	bothSides : {}
 };
