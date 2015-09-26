@@ -1623,8 +1623,9 @@ function BattleContext (client) {
 				lasting: lasting
 			};
 			if (!battleContext.process) {
+				var currentWeather = battleContext.weather.current;
 				Textbox.effect(() => {
-					Weather.weather = battleContext.weather.current;
+					Weather.weather = currentWeather;
 					Weather.time = 1;
 				});
 			}

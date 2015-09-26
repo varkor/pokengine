@@ -13,6 +13,18 @@ Abilities = {
 			}
 		]
 	},
+	"Sand Stream" : {
+		effects : [
+			{
+				event : Triggers.entrance,
+				oneself : true,
+				action : function (data, self, other) {
+					if (!self.battler.battle.process) Textbox.state(self.name() + "'s Sand Stream whipped up a sandstorm!");
+					self.battler.battle.changeWeather("sandstorm", 5);
+				}
+			}
+		]
+	},
 	"Teary-Eyed" : {
 		effects : [
 			{
