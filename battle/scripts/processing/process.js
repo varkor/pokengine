@@ -92,6 +92,16 @@ forevery(Items, function (category) {
 			}
 		};
 		item.fullname = name + (["Berry", "Ball"].contains(item.category) ? " " + item.category : "");
+		try {
+			if (item.hasOwnProperty("effect") && typeof item.effect === "string") {
+				item.effect = eval(item.effect);
+			}
+			if (item.hasOwnProperty("targets") && typeof item.targets === "string") {
+				item.targets = eval(item.targets);
+			}
+		} catch (syntaxError) {
+			console.warn(`The item ${item.fullname} had an invalid effect or targets property.`);
+		}
 		if (!item.hasOwnProperty("effects"))
 			item.effects = [];
 	});

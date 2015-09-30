@@ -449,6 +449,7 @@ Moves = {
 		PP : 5,
 		contact: false,
 		affects : Move.targets.self,
+		targets : Move.targets.self,
 		effects : {
 			use : [
 				{
