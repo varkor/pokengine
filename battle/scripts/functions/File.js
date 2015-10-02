@@ -39,7 +39,7 @@ File = {
 			delete store[path];
 			redirectedPaths.push(path);
 			if (paths.notEmpty()) {
-				File.load(substore, object, loadEvent, dataForFile, directory, filetype, paths, uponLoad, uponError, redirectedPaths);
+				File.loadFileOfType(substore, object, loadEvent, dataForFile, directory, filetype, paths, uponLoad, uponError, redirectedPaths);
 				return true;
 			} else
 				return uponError ? uponError(redirectedPaths, message) : false;
@@ -66,7 +66,10 @@ File = {
 		var paths = wrapArray(_paths);
 		var filetype = paths[0].match(/\.(\w+)$/);
 		if (filetype === null) {
-			uponError(paths[0], "The supplied file (" + paths[0] + ") had no filtype.");
+			if (typeof uponError !== "undefined") {
+				console.log(uponError, typeof uponError);
+				uponError(paths[0], "The supplied file (" + paths[0] + ") had no filtype.");
+			}
 			return null;
 		}
 		switch (filetype[1]) {
