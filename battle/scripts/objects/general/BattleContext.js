@@ -167,29 +167,39 @@ function BattleContext (client) {
 							transition = (poke.fainted() ? 1 : poke.battler.display.transition);
 							generalMatrix = matrix.scale(position.scale * transition).rotate(poke.battler.display.angle);
 							context.globalAlpha = poke.battler.display.opacity;
-							// Shadow
-							Sprite.draw(shadowCanvas, poke.paths.sprite(side, true), position.x, battleContext.drawing.positions[poke.battler.side === Battles.side.near ? "sideNear" : "sideFar"].y - position.z, true, [{ type : "fill", colour : "hsla(0, 0%, 0%, " + (1 - Math.min(1, position.height / (canvasHeight / Game.zoom / 2))) * poke.battler.display.opacity + ")" }, { type : "crop", heightRatio : poke.battler.display.height }], generalMatrix.multiply(shadowMatrix).scale(Math.pow(2, - position.height / (canvasHeight / Game.zoom / 4))), now, true);
-							// Outline
-							if (poke.battler.display.outlined) {
-								for (var angle = 0; angle < Math.PI * 2; angle += Math.PI / 2) {
-									Sprite.draw(canvas, poke.paths.sprite(side, true), position.x + Math.cos(angle) * context.lineWidth, position.y - position.z + Math.sin(angle) * context.lineWidth, true, [{ type : "fill", colour : context.strokeStyle }, { type : "crop", heightRatio : poke.battler.display.height }], generalMatrix, now);
+							var path = poke.paths.sprite(side, true);
+							var sprite = Sprite.load(path);
+							if (sprite) {
+								var ratio = position.height / (position.height + sprite.image.height);
+								var heightRatio = Math.min(1, poke.battler.display.height / (1 - ratio));
+								var positionRatio = Math.max(0, 1 - (1 - poke.battler.display.height) / ratio);
+								if (poke.battler.display.height !== 1) {
+									position = battleContext.drawing.position(poke, now, positionRatio);
 								}
+								// Shadow
+								Sprite.draw(shadowCanvas, path, position.x, battleContext.drawing.positions[poke.battler.side === Battles.side.near ? "sideNear" : "sideFar"].y - position.z, true, [{ type : "fill", colour : "hsla(0, 0%, 0%, " + (1 - Math.min(1, position.height / (canvasHeight / Game.zoom / 2))) * poke.battler.display.opacity + ")" }, { type : "crop", heightRatio }], generalMatrix.multiply(shadowMatrix).scale(Math.pow(2, - position.height / (canvasHeight / Game.zoom / 4))), now, true);
+								// Outline
+								if (poke.battler.display.outlined) {
+									for (var angle = 0; angle < Math.PI * 2; angle += Math.PI / 2) {
+										Sprite.draw(canvas, path, position.x + Math.cos(angle) * context.lineWidth, position.y - position.z + Math.sin(angle) * context.lineWidth, true, [{ type : "fill", colour : context.strokeStyle }, { type : "crop", heightRatio }], generalMatrix, now);
+									}
+								}
+								// Pokémon
+								var filters = [];
+								if (poke._("shiny"))
+									filters.push({ type : "filter", kind : "shiny", pokemon : poke });
+								filters.push({ type : "crop", heightRatio });
+								Sprite.draw(canvas, path, position.x, position.y - position.z, true, filters, generalMatrix, now);
+								// Overlay
+								if (poke.battler.display.overlay !== null)
+									Sprite.draw(canvas, path, position.x, position.y - position.z, true, [{ type : "fill", colour : poke.battler.display.overlay }, { type : "crop", heightRatio }], generalMatrix, now);
+								// Lighting
+								if (Scenes._(battleContext.scene).hasOwnProperty("lighting"))
+									Sprite.draw(canvas, path, position.x, position.y - position.z, true, [{ type : "fill", colour : Scenes._(battleContext.scene).lighting }, { type : "crop", heightRatio }], generalMatrix, now);
+								// Glow / Fade
+								if (transition > 0 && transition < 1)
+									Sprite.draw(canvas, path, position.x, position.y - position.z, true, [{ type : "fill", colour : "white" }, { type : "opacity", value : Math.pow(1 - transition, 0.4) }, { type : "crop", heightRatio }], generalMatrix, now);
 							}
-							// Pokémon
-							var filters = [];
-							if (poke._("shiny"))
-								filters.push({ type : "filter", kind : "shiny", pokemon : poke });
-							filters.push({ type : "crop", heightRatio : poke.battler.display.height });
-							Sprite.draw(canvas, poke.paths.sprite(side, true), position.x, position.y - position.z, true, filters, generalMatrix, now);
-							// Overlay
-							if (poke.battler.display.overlay !== null)
-								Sprite.draw(canvas, poke.paths.sprite(side, true), position.x, position.y - position.z, true, [{ type : "fill", colour : poke.battler.display.overlay }, { type : "crop", heightRatio : poke.battler.display.height }], generalMatrix, now);
-							// Lighting
-							if (Scenes._(battleContext.scene).hasOwnProperty("lighting"))
-								Sprite.draw(canvas, poke.paths.sprite(side, true), position.x, position.y - position.z, true, [{ type : "fill", colour : Scenes._(battleContext.scene).lighting }, { type : "crop", heightRatio : poke.battler.display.height }], generalMatrix, now);
-							// Glow / Fade
-							if (transition > 0 && transition < 1)
-								Sprite.draw(canvas, poke.paths.sprite(side, true), position.x, position.y - position.z, true, [{ type : "fill", colour : "white" }, { type : "opacity", value : Math.pow(1 - transition, 0.4) }, { type : "crop", heightRatio : poke.battler.display.height }], generalMatrix, now);
 							context.globalAlpha = 1;
 						});
 						// Trainers
@@ -494,8 +504,11 @@ function BattleContext (client) {
 				}
 				battleContext.drawing.complexShape(canvas, shapes, right, y, poke.battler.display.transition);
 			},
-			position : function (entity, time) {
+			position : function (entity, time, positionRatio) {
 				var position = {};
+				if (arguments.length < 3) {
+					positionRatio = 1;
+				}
 				if (entity instanceof pokemon) {
 					var poke = entity, display = Display.state.current, attributes = poke.currentProperty("attributes"), floating = (attributes.hasOwnProperty("floating") ? attributes.floating.height + (attributes.floating.hasOwnProperty("deviation") && attributes.floating.hasOwnProperty("period") && poke.battler.display.position.y === 0 ? Math.sin(time * (2 * Math.PI) / (attributes.floating.period * Time.second)) * attributes.floating.deviation : 0) : 0);
 					var ally = display.allies.contains(entity), place, count = battleContext.pokemonPerSide();
@@ -504,14 +517,14 @@ function BattleContext (client) {
 						position.z = battleContext.drawing.positions.sideNear.z + poke.battler.display.position.z;
 						position.scale = 2 / Math.pow(2, position.z / (battleContext.drawing.positions.sideFar.z - battleContext.drawing.positions.sideNear.z));
 						position.x = battleContext.drawing.positions.sideNear.x + poke.battler.display.position.x * position.scale + place * 100 - (count - 1) * 40;
-						position.height = poke.battler.display.position.y + floating;
+						position.height = (poke.battler.display.position.y + floating) * positionRatio;
 						position.y = battleContext.drawing.positions.sideNear.y - position.height * position.scale;
 					} else {
 						place = display.opponents.indexOf(poke);
 						position.z = battleContext.drawing.positions.sideFar.z - poke.battler.display.position.z;
 						position.scale = 2 / Math.pow(2, position.z / (battleContext.drawing.positions.sideFar.z - battleContext.drawing.positions.sideNear.z));
 						position.x = battleContext.drawing.positions.sideFar.x - poke.battler.display.position.x * position.scale - place * 80 + (count - 1) * 40;
-						position.height = poke.battler.display.position.y + floating;
+						position.height = (poke.battler.display.position.y + floating) * positionRatio;
 						position.y = battleContext.drawing.positions.sideFar.y - position.height * position.scale;
 					}
 				} else {

@@ -9,7 +9,7 @@ Settings.addData({
 	"debug mode" : false, // Whether debug mode is enabled, which shows extra details for some objects
 	"stat transition duration" : 0, // How many seconds should health / experience, etc. transitions take? [0.5]
 	"switch transition duration" : 0, // How many seconds should Pokémon being sent out, fainting, etc. take? [0.2]
-	"segue transition duration" : 0, // How many seconds should Pokémon being sent out, fainting, etc. take? [0.5]
+	"segue transition duration" : 0, // How many seconds should the battle fade in animation take? [0.5]
 	"status transition duration" : 0, // How many seconds should the damage / healing, etc. animation take? [0.5]
 	"ignore missing files" : false, // Whether the battle should start even if some of the required files were not loaded successfully
 	"text replacements" : {
