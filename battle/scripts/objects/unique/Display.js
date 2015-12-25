@@ -57,7 +57,7 @@ Display = {
 		else
 			state = Display.states[state];
 		if (state === null)
-			throw "You've tried to find a Pokémon in a state that no longer exists!";
+			throw new Error("You've tried to find a Pokémon in a state that no longer exists!");
 		var match = null;
 		foreach([].concat(state.allies, state.opponents), function (compare) {
 			if (poke.hasOwnProperty("original") ? poke.original === compare.original : poke === compare.original)
@@ -132,7 +132,7 @@ Display = {
 			for (var i = 0; i < state; ++ i)
 				self.states[i] = null;
 			if (self.states[state] === null)
-				throw "You've tried to load an older state than the current one! (State " + state + ")";
+				throw new Error("You've tried to load an older state than the current one! (State " + state + ")");
 			self.state.current = self.states[state];
 			self.refreshWidgetsFromState(self.state.current);
 			Battle.cache = null;
@@ -140,7 +140,7 @@ Display = {
 		transition : function (state, track, original) {
 			var self = Display, from = self.state.current, to = self.states[state], fromAll, toAll, originalAll, completed = true;
 			if (to === null)
-				throw "You've tried to transition to an older state than the current one! (State " + state + ")";
+				throw new Error("You've tried to transition to an older state than the current one! (State " + state + ")");
 			if (arguments.length < 2) {
 				track = {
 					completed : false

@@ -726,7 +726,7 @@ function BattleContext (client) {
 					battleContext.begin();
 				}
 			} else
-				throw "You've tried to start a battle when one is already in progress!";
+				throw new Error("You've tried to start a battle when one is already in progress!");
 		},
 		begin : function () {
 			battleContext.state = {

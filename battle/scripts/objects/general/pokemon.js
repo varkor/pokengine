@@ -28,7 +28,7 @@ function pokemon (data, validate) {
 
 	setProperty("species", "Missingno. (Nintendo)");
 	if (!Pokedex._(self.species + "?")) {
-		throw "There exists no Pokémon in the Pokédex object with the species name \"" + self.species + "\".";
+		throw new Error("There exists no Pokémon in the Pokédex object with the species name \"" + self.species + "\".");
 	}
 	var species = function (property) {
 		if (self["form(e)"] === null)

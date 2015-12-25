@@ -38,7 +38,7 @@ DataObject = {
 					if (!object.hasOwnProperty(key))
 						object[key] = methods[key];
 					else
-						throw "That object already has a property with the name: " + key;
+						throw new Error("That object already has a property with the name: " + key);
 				}
 			}
 		};

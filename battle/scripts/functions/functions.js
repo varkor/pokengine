@@ -40,7 +40,7 @@ function _ (_object, _path, _newValue) {
 	var checkForProperty = path.slice(-1) === "?", setNew = arguments.length >= 3, baseKey = null;
 	if (setNew) {
 		if (checkForProperty) {
-			throw "You can't both check for the existence of a property and set it at the same time.";
+			throw new Error("You can't both check for the existence of a property and set it at the same time.");
 		} else {
 			baseKey = path.split(/ ?[~\-=]> ?/g).last();
 			path = path.replace(/(.*) ?[~\-=]> ?.*?$/, "$1").trim();
@@ -63,7 +63,7 @@ function _ (_object, _path, _newValue) {
 		} else {
 			if (object.object.hasOwnProperty(specialCase[1]))
 				return respond(object.object[specialCase[1]]);
-			else throw "That object has no property with the path: " + path;
+			else throw new Error("That object has no property with the path: " + path);
 		}
 	}
 	var oSpecialCase = path.split(/ ?[~\-]> ?/g);
@@ -79,7 +79,7 @@ function _ (_object, _path, _newValue) {
 					if (checkForProperty)
 						return false;
 					else
-						throw "That object has no property with the path: " + path;
+						throw new Error("That object has no property with the path: " + path);
 				}
 			}
 		}
@@ -134,7 +134,7 @@ function _ (_object, _path, _newValue) {
 	if (checkForProperty)
 		return false;
 	else
-		throw "That object has no property with the path: " + path;
+		throw new Error("That object has no property with the path: " + path);
 }
 
 function _method (object) {
