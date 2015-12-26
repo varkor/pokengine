@@ -678,9 +678,7 @@ function pokemon (data, validate) {
 	};
 
 	self.belong = function (who) {
-		if (self.trainer)
-			self.trainer.release(self);
-		if (!self.caught) {
+		if (self.caught === null || self.isWild()) {
 			self.caught = {
 				ball : null,
 				location : null,
@@ -688,6 +686,8 @@ function pokemon (data, validate) {
 				trainer : who.identification
 			};
 		}
+		if (self.trainer)
+			self.trainer.release(self);
 		self.trainer = who;
 	};
 
