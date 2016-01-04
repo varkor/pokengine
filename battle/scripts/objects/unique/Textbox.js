@@ -28,6 +28,23 @@ Textbox = FunctionObject.new({
 			lineHeight : 16,
 			lineSpacing : 0.44,
 			responsesPerRow : 3,
+			maxRows : 4,
+			buttonProportion : 0.8,
+			padding : {
+				horizontal : 12,
+				vertical : 8
+			},
+			margin : {
+				horizontal : 0,
+				vertical : 10
+			}
+		},
+		"standard (list)": {
+			height : 64,
+			lineHeight : 16,
+			lineSpacing : 0.44,
+			responsesPerRow : 1,
+			maxRows : 4,
 			buttonProportion : 0.8,
 			padding : {
 				horizontal : 12,
@@ -56,6 +73,7 @@ Textbox = FunctionObject.new({
 			lineHeight : 10,
 			lineSpacing : 0.7,
 			responsesPerRow : 2,
+			maxRows : 2,
 			buttonProportion : 0.6,
 			padding : {
 				horizontal : 12,
@@ -140,7 +158,7 @@ Textbox = FunctionObject.new({
 					height : Math.round((styleForMetrics.lineHeight + styleForMetrics.padding.vertical * 2) * styleForMetrics.buttonProportion * (2 / 3))
 				}
 			};
-			metrics.top -= (Math.ceil(Textbox.dialogue.first().minorResponses / styleForMetrics.responsesPerRow) * metrics.response.major.height + Math.ceil((Textbox.dialogue.first().responses.length - Textbox.dialogue.first().minorResponses) / styleForMetrics.responsesPerRow) * metrics.response.minor.height) * Textbox.slide;
+			metrics.top -= (Math.ceil(Math.min(Textbox.dialogue.first().minorResponses, styleForMetrics.maxRows * styleForMetrics.responsesPerRow) / styleForMetrics.responsesPerRow) * metrics.response.major.height + Math.ceil((Textbox.dialogue.first().responses.length - Textbox.dialogue.first().minorResponses) / styleForMetrics.responsesPerRow) * metrics.response.minor.height) * Textbox.slide;
 		}
 		metrics.inner.top = metrics.top + styleForMetrics.padding.vertical;
 		return metrics;
@@ -306,9 +324,11 @@ Textbox = FunctionObject.new({
 		return Textbox.say(null, Textbox.standardInterval, trigger, pause, after);
 	},
 	ask : function (query, responses, callback, minors, defaultResponse, hotkeys, name, hover, showTextImmediately) {
-		Textbox.style = Textbox.style.replace(/ \(question\)$/, "") + " (question)";
+		if (!/ \((question|list)\)$/.test(Textbox.style)) {
+			Textbox.style += " (question)";
+		}
 		var latest = Textbox.messageWithId(Textbox.say(query, null, null, null, null, true));
-		Textbox.style = Textbox.style.replace(/ \(question\)$/, "");
+		Textbox.style = Textbox.style.replace(/ \((question|list)\)$/, "");
 		responses = wrapArray(responses);
 		if (arguments.length >= 4 && minors !== null && typeof minors !== "undefined")
 			latest.responses = responses.concat(wrapArray(minors));
@@ -357,6 +377,13 @@ Textbox = FunctionObject.new({
 			latest.showTextImmediately = showTextImmediately;
 		Textbox.prepareNextMessage();
 		return latest.id;
+	},
+	list : function (query, responses, callback, minors, defaultResponse, hotkeys, name, hover, showTextImmediately) {
+		var newStyle = Textbox.style.replace(/ \((question|list)\)$/, "") + " (list)";
+		if (Textbox.styles.hasOwnProperty(newStyle)) {
+			Textbox.style = newStyle;
+		}
+		return Textbox.ask(query, responses, callback, minors, defaultResponse, hotkeys, name, hover, showTextImmediately);
 	},
 	confirm : function (query, callback, defaultResponse, name, hover, showTextImmediately) {
 		var hotkeys = {};
@@ -753,10 +780,14 @@ Textbox = FunctionObject.new({
 							if (dialogue.hasOwnProperty("hover"))
 								dialogue.hover(null, null);
 						}
-						for (var response = 0, responsesOfKind, relativeResponse, selected, hovered, isMajor; response < responses; ++ response) {
+						var responseOffset = 0, maxResponses = style.maxRows * style.responsesPerRow;
+						if (responses > maxResponses) {
+							responseOffset = Math.max(0, Math.ceil(Math.min(responses - maxResponses, Math.floor(Textbox.response - maxResponses / 2)) / style.responsesPerRow) * style.responsesPerRow);
+						}
+						for (var response = responseOffset, responsesOfKind, relativeResponse, selected, hovered, isMajor; response - responseOffset < maxResponses && response < responses; ++ response) {
 							isMajor = response < majorResponses;
 							responsesOfKind = isMajor ? majorResponses : minorResponses;
-							relativeResponse = response - (isMajor ? 0 : majorResponses);
+							relativeResponse = (response - responseOffset) - (isMajor ? 0 : majorResponses);
 							responseMetrics.width = Math.ceil(metrics.width / (responsesOfKind % style.responsesPerRow !== 0 && relativeResponse >= responsesOfKind - (responsesOfKind % style.responsesPerRow) ? responsesOfKind % style.responsesPerRow : style.responsesPerRow));
 							responseMetrics.x = Math.ceil(metrics.left + (relativeResponse % style.responsesPerRow) * responseMetrics.width);
 							responseMetrics.y = metrics.top + metrics.height + (isMajor ? Math.floor(relativeResponse / style.responsesPerRow) * metrics.response.major.height : Math.ceil(majorResponses / style.responsesPerRow) * metrics.response.major.height + Math.floor(relativeResponse / style.responsesPerRow) * metrics.response.minor.height);
@@ -776,6 +807,26 @@ Textbox = FunctionObject.new({
 									Textbox.hoverResponse = response;
 								if (dialogue.hasOwnProperty("hover"))
 									dialogue.hover(response, isMajor);
+							}
+						}
+						if (responses > 0) {
+							var bob = 0; // Math.sin((performance.now() % 500) / 500 * 2 * Math.PI) * 2.5
+							var triangleWidth = 10, triangleHeight = 5;
+							context.fillStyle = "hsla(0, 0%, 100%, 0.8)";
+							if (responseOffset > 0) {
+								context.beginPath();
+								context.moveToHD((metrics.left + metrics.width / 2) * Game.zoom, (metrics.top + metrics.height - triangleHeight / 2 + bob) * Game.zoom);
+								context.lineToHD((metrics.left + metrics.width / 2 + triangleWidth / 2) * Game.zoom, (metrics.top + metrics.height + triangleHeight / 2 + bob) * Game.zoom);
+								context.lineToHD((metrics.left + metrics.width / 2 - triangleWidth / 2) * Game.zoom, (metrics.top + metrics.height + triangleHeight / 2 + bob) * Game.zoom);
+								context.fill();
+							}
+							if (responseOffset + maxResponses < responses) {
+								var responseHeight = Math.ceil(Math.min(majorResponses, style.maxRows * style.responsesPerRow) / style.responsesPerRow) * metrics.response.major.height + Math.ceil(minorResponses / style.responsesPerRow) * metrics.response.minor.height;
+								context.beginPath();
+								context.moveToHD((metrics.left + metrics.width / 2) * Game.zoom, (metrics.top + metrics.height + responseHeight + triangleHeight / 2 - bob) * Game.zoom);
+								context.lineToHD((metrics.left + metrics.width / 2 + triangleWidth / 2) * Game.zoom, (metrics.top + metrics.height + responseHeight - triangleHeight / 2 - bob) * Game.zoom);
+								context.lineToHD((metrics.left + metrics.width / 2 - triangleWidth / 2) * Game.zoom, (metrics.top + metrics.height + responseHeight - triangleHeight / 2 - bob) * Game.zoom);
+								context.fill();
 							}
 						}
 						if (Settings._("debug mode")) {
