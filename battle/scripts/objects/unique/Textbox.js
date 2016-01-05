@@ -781,10 +781,10 @@ Textbox = FunctionObject.new({
 								dialogue.hover(null, null);
 						}
 						var responseOffset = 0, maxResponses = style.maxRows * style.responsesPerRow;
-						if (responses > maxResponses) {
-							responseOffset = Math.max(0, Math.ceil(Math.min(responses - maxResponses, Math.floor(Textbox.response - maxResponses / 2)) / style.responsesPerRow) * style.responsesPerRow);
+						if (majorResponses > maxResponses) {
+							responseOffset = Math.max(0, Math.ceil(Math.min(majorResponses - maxResponses, Math.floor(Textbox.response - maxResponses / 2)) / style.responsesPerRow) * style.responsesPerRow);
 						}
-						for (var response = responseOffset, responsesOfKind, relativeResponse, selected, hovered, isMajor; response - responseOffset < maxResponses && response < responses; ++ response) {
+						for (var response = responseOffset, responsesOfKind, relativeResponse, selected, hovered, isMajor; (response - responseOffset < maxResponses || response >= majorResponses) && response < responses; ++ response) {
 							isMajor = response < majorResponses;
 							responsesOfKind = isMajor ? majorResponses : minorResponses;
 							relativeResponse = (response - responseOffset) - (isMajor ? 0 : majorResponses);
@@ -820,7 +820,7 @@ Textbox = FunctionObject.new({
 								context.lineToHD((metrics.left + metrics.width / 2 - triangleWidth / 2) * Game.zoom, (metrics.top + metrics.height + triangleHeight / 2 + bob) * Game.zoom);
 								context.fill();
 							}
-							if (responseOffset + maxResponses < responses) {
+							if (responseOffset + maxResponses < majorResponses) {
 								var responseHeight = Math.ceil(Math.min(majorResponses, style.maxRows * style.responsesPerRow) / style.responsesPerRow) * metrics.response.major.height + Math.ceil(minorResponses / style.responsesPerRow) * metrics.response.minor.height;
 								context.beginPath();
 								context.moveToHD((metrics.left + metrics.width / 2) * Game.zoom, (metrics.top + metrics.height + responseHeight + triangleHeight / 2 - bob) * Game.zoom);
