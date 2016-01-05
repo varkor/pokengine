@@ -1152,6 +1152,11 @@ function BattleContext (client) {
 					if (battleContext.escape(currentBattler))
 						advance = false;
 					break;
+				case "Forfeit":
+					battleContext.forfeitBattle();
+					advance = false;
+					reprompt = false;
+					break;
 				case "Back":
 					var previous = battleContext.actions.pop();
 					if (previous.hasOwnProperty("undo"))
@@ -1326,6 +1331,8 @@ function BattleContext (client) {
 						actionsForTrainers[communication.trainer] = 0;
 					}
 					++ actionsForTrainers[communication.trainer];
+				} else if (communication.action === "forfeit") {
+					actionsForTrainers[communication.trainer] = requiredActions[communication.trainer];
 				}
 			});
 			var waitingFor = [];
@@ -1371,7 +1378,12 @@ function BattleContext (client) {
 				character : {}, // Relative to `character`
 				pokemon : {} // Relative to `battleContext.allTrainers()`
 			};
+			var skipOtherActions = false;
 			var isValid = (battleContext.state.kind === "waiting" && !foreach(actions, function (action) {
+				if (skipOtherActions) {
+					issues.push("Too many actions have been sent.");
+					return true; // We've received too many actions!
+				}
 				if (["command"].contains(battleContext.state.for)) {
 					if (selection >= inBattle.length) {
 						issues.push("Too many actions have been sent.");
@@ -1381,6 +1393,15 @@ function BattleContext (client) {
 				}
 				if (!requireProperty(action, "trainer") || !requireProperty(action, "action")) // The `trainer` parameter is effectively guaranteed because Supervisor adds it itself, so we don't need to check that they all match up
 					return true;
+				if (action.action === "forfeit") {
+					if (!battleContext.isCompetitiveBattle()) {
+						issues.push("The player tried to forfeit a non-PvP battle.");
+						return true; // Can only forfeit in certain situations
+					} else {
+						skipOtherActions = true;
+						return false;
+					}
+				}	
 				switch (battleContext.state.for) {
 					case "command":
 						if (!requireProperty(action, "primary") || typeof action.primary !== "string" || !["Fight", "Bag", "Pokémon", "Run"].contains(action.primary))
@@ -1534,7 +1555,7 @@ function BattleContext (client) {
 							// It has passed all the checks, so can be Mega Evolved
 							preservation.character.megaEvolution = character.megaEvolution;
 							character.megaEvolution = currentBattler;
-						} 
+						}
 						break;
 					case "send":
 						if (!requireProperty(action, "which") || !isNaturalNumber(action, "which", character.healthyEligiblePokemon(true).length))
@@ -1624,9 +1645,47 @@ function BattleContext (client) {
 		receiveActions : function (actions) {
 			// Receive the opponent's actions, in an online battle
 			if (actions.notEmpty()) {
-				battleContext.communication = battleContext.communication.concat(actions);
-				if (battleContext.state.kind === "waiting" && battleContext.hasCommunicationForTrainers(battleContext.state.for)) {
-					battleContext.state.response();
+				var forfeiters = [];
+				foreach(actions, action => {
+					if (action.action === "forfeit") {
+						forfeiters.push(action.trainer);
+					}
+				});
+				if (forfeiters.empty()) {
+					battleContext.communication = battleContext.communication.concat(actions);
+					if (battleContext.state.kind === "waiting" && battleContext.hasCommunicationForTrainers(battleContext.state.for)) {
+						battleContext.state.response();
+					}
+				} else {
+					var endBattleFlags;
+					if (forfeiters.length === 1 && forfeiters.first() === battleContext.opposingTrainers.first().identification) {
+						if (!battleContext.process) {
+							var opponents = [];
+							foreach(battleContext.opposingTrainers, function (opposer) {
+								opponents.push(opposer.fullname());
+							});
+							Textbox.state(opponents + " forfeited the battle!");
+						}
+						endBattleFlags = {
+							"outcome" : "allied victory"
+						};
+					} else if (forfeiters.length === 1 && forfeiters.first() === battleContext.alliedTrainers.first().identification) {
+						if (!battleContext.process) {
+							var playerName = !battleContext.process ? battleContext.alliedTrainers.first().pronoun(true) : null;
+							Textbox.state(playerName + " forfeited the battle!");
+						}
+						endBattleFlags = {
+							"outcome" : "opposing victory"
+						};
+					} else {
+						Textbos.state("Everyone forfeited the battel!");
+						endBattleFlags = {
+							"outcome" : "draw"
+						};
+					}
+					battleContext.endingFlags = endBattleFlags;
+					battleContext.finish();
+					battleContext.endDelay();
 				}
 			}
 		},
@@ -1856,6 +1915,9 @@ function BattleContext (client) {
 			if (battleContext.isWildBattle() && battleContext.delegates.Run.shouldDisplayMenuOption(battleContext)) {
 				actions.push("Run");
 				hotkeys[Settings._("keys => secondary")] = "Run";
+			}
+			if (battleContext.isCompetitiveBattle() && battleContext.delegates.Forfeit.shouldDisplayMenuOption(battleContext)) {
+				actions.push("Forfeit");
 			}
 			var moves = [];
 			foreach(currentBattler.usableMoves(), function (move) {
@@ -2209,24 +2271,28 @@ function BattleContext (client) {
 									if (major) {
 										chooseToSendOut(i);
 									} else {
-										battleContext.inputs.push({
-											action : "flee",
-											attempted : true
-										});
-										battleContext.flushInputs();
-										battleContext.escape(character.mostRecentlyFaintedPokemon);
-										battleContext.queue.push({
-											priority : 0,
-											action : function () {
-												if (!battleContext.finished) {
-													battleContext.fillEmptyPlaces(true, true);
+										if (response === "Run") {
+											battleContext.inputs.push({
+												action : "flee",
+												attempted : true
+											});
+											battleContext.flushInputs();
+											battleContext.escape(character.mostRecentlyFaintedPokemon);
+											battleContext.queue.push({
+												priority : 0,
+												action : function () {
+													if (!battleContext.finished) {
+														battleContext.fillEmptyPlaces(true, true);
+													}
 												}
-											}
-										});
-										battleContext.race(battleContext.queue);
-										battleContext.queue = [];
+											});
+											battleContext.race(battleContext.queue);
+											battleContext.queue = [];
+										} else {
+											battleContext.forfeitBattle();
+										}
 									}
-								}, battleContext.isWildBattle() && !alreadyAttemptedToEscape ? ["Run"] : [], null, null, null, null, true);
+								}, battleContext.isWildBattle() && !alreadyAttemptedToEscape ? ["Run"] : (battleContext.isCompetitiveBattle() ? ["Forfeit"] : []), null, null, null, null, true);
 							}
 						} else {
 							var sendOutRemainingPokemon = function () {
@@ -2658,6 +2724,13 @@ function BattleContext (client) {
 					}});
 				}
 			}
+		},
+		forfeitBattle : function () {
+			battleContext.inputs.push({
+				action : "forfeit"
+			});
+			battleContext.flushInputs();
+			battleContext.waitForActions("command", () => Textbox.state(null));
 		},
 		attemptCapture : function (poke, ball, character) {
 			if (arguments.length < 3)
@@ -3220,6 +3293,9 @@ BattleContext.defaultDelegates = {
 		}
 	},
 	Run : {
+		shouldDisplayMenuOption : (battle) => true
+	},
+	Forfeit : {
 		shouldDisplayMenuOption : (battle) => true
 	},
 	Back : {

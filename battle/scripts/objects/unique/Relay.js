@@ -87,7 +87,7 @@ Relay = {
 				break;
 			case "actions": // Actions from one of the parties has been received
 				Relay.processes[identifier].battle.receiveActions(data.filter(function (action) {
-					return action.trainer !== Relay.identification;
+					return action.trainer !== Relay.identification || action.action === "forfeit";
 				}));
 				break;
 			case "countdown":

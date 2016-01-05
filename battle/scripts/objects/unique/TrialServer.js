@@ -1,5 +1,8 @@
 /*
 	An object used to test out multiplayer battles, locally
+	To use:
+		TrialServer.begin();
+		TrialServer.NPCBattle();
 */
 TrialServer = {
 	begin : function () {
