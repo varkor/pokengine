@@ -1678,7 +1678,9 @@ function BattleContext (client) {
 							"outcome" : "opposing victory"
 						};
 					} else {
-						Textbos.state("Everyone forfeited the battel!");
+						if (!battleContext.process) {
+							Textbox.state("Everyone forfeited the battel!");
+						}
 						endBattleFlags = {
 							"outcome" : "draw"
 						};
