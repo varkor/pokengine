@@ -1393,7 +1393,7 @@ function BattleContext (client) {
 				}
 				if (!requireProperty(action, "trainer") || !requireProperty(action, "action")) // The `trainer` parameter is effectively guaranteed because Supervisor adds it itself, so we don't need to check that they all match up
 					return true;
-				if (action.action === "forfeit") {
+				if (action.action === "forfeit" && battleContext.state.for === "command") {
 					if (!battleContext.isCompetitiveBattle()) {
 						issues.push("The player tried to forfeit a non-PvP battle.");
 						return true; // Can only forfeit in certain situations
@@ -1679,11 +1679,17 @@ function BattleContext (client) {
 						};
 					} else {
 						if (!battleContext.process) {
-							Textbox.state("Everyone forfeited the battel!");
+							Textbox.state("Everyone forfeited the battle!");
 						}
 						endBattleFlags = {
 							"outcome" : "draw"
 						};
+					}
+					if (battleContext.state.kind === "waiting") {
+						battleContext.state = {
+							kind : "running"
+						};
+						if (!battleContext.process) Textbox.update();
 					}
 					battleContext.endingFlags = endBattleFlags;
 					battleContext.finish();
@@ -2732,7 +2738,7 @@ function BattleContext (client) {
 				action : "forfeit"
 			});
 			battleContext.flushInputs();
-			battleContext.waitForActions("command", () => Textbox.state(null));
+			battleContext.waitForActions("command", () => Textbox.stateUntil("", () => battleContext.state.kind !== "waiting" && Textbox.dialogue.length > 1));
 		},
 		attemptCapture : function (poke, ball, character) {
 			if (arguments.length < 3)
