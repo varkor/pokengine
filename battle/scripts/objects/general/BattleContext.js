@@ -1631,7 +1631,7 @@ function BattleContext (client) {
 							},
 							"data" : typeof data !== "undefined" ? data : null
 						};
-						if (!battleContext.process) Textbox.stateUntil("Waiting for " + (battleContext.playerIsParticipating() ? "the other player" : "both players") + " to make a decision...", function () {
+						if (!battleContext.process) Textbox.stateUntil("Waiting for " + (battleContext.playerIsParticipating() ? "the other player" : (!battleContext.isWildBattle() ? "both players" : battleContext.alliedTrainers.first().pronoun(false))) + " to make a decision...", function () {
 							return battleContext.state.kind !== "waiting" && Textbox.dialogue.length > 1;
 						});
 					}
