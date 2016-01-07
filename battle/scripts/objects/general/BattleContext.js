@@ -1381,7 +1381,7 @@ function BattleContext (client) {
 			});
 			return waitingFor;
 		},
-		communicationForTrainerIsValid : function (team, actions, issues) {
+		communicationForTrainerIsValid : function (team, actions, selection, issues) {
 			// This function assumes that all the actions required for this point are sent — i.e. split data packets are not allowed as it makes it difficult to determine the current Pokémon
 			var properties = [], requireProperty = function (action, property) {
 				if (action.hasOwnProperty(property)) {
@@ -1404,7 +1404,7 @@ function BattleContext (client) {
 				issues.push("There was no trainer with a team equal to `" + team + "`.");
 				return false; // This should never be true, as we receive the trainer data from the Supervisor, who is assumed trustworhy
 			}
-			var inBattle = [], currentBattler, selection = 0;
+			var inBattle = [], currentBattler;
 			foreach(battleContext.all(true), function (poke) {
 				if (poke.trainer === character)
 					inBattle.push(poke);

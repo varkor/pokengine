@@ -234,7 +234,7 @@ Cursor = {
 	click : function () {
 		Input.controlScheme = "mouse";
 		var bubble = true;
-		if (bubble && typeof Battle === "object" && Battle.canvas) {
+		if (bubble && typeof Battle === "object" && Battle !== null && Battle.canvas) {
 			if (Cursor.inArea(Battle.canvas, 0, 0, Battle.canvas.width, Battle.canvas.height)) {
 				if (Battle.drawing.respondToClick()) {
 					bubble = false;

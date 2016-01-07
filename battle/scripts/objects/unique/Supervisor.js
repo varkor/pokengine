@@ -244,7 +244,8 @@ Supervisor = {
 					});
 					// Assumes that the correct number of actions will be sent at once (i.e. no split data packets)
 					var issues = [];
-					if (process.battle.communicationForTrainerIsValid(data.team, data.data, issues)) {
+					var selection = process.relay.slice(process.relayed).filter(action => action.action === "command" && action.trainer === data.team).length;
+					if (process.battle.communicationForTrainerIsValid(data.team, data.data, selection, issues)) {
 						process.relay = process.relay.concat(data.data);
 						var actionsToSend = process.relay.slice(process.relayed);
 						if (process.battle.state.kind === "waiting" && process.battle.hasCommunicationForTrainers(process.battle.state.for, actionsToSend)) {
