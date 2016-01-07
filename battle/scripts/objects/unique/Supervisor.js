@@ -171,6 +171,21 @@ Supervisor = {
 				return {
 					success : true
 				};
+			case "leave":
+				// A party stops spectating a battle
+				// data: parties
+				if (!data.hasOwnProperty("parties"))
+					return unsuccessful("The parameter `data` should have had a `parties` property.");
+				if (!Array.isArray(data.parties))
+					return unsuccessful("The parameter `data.parties` should have been an array.");
+				var process = Supervisor.processes[identifier];
+				foreach(data.parties, function (party) {
+					process.parties.removeElementsOfValue(party);
+					Supervisor.send(party, "terminate", "stopped spectating", identifier);
+				});
+				return {
+					success: true
+				};
 			case "terminate":
 				// Terminates a battle that is in progress
 				// data: reason

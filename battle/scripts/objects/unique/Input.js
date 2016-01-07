@@ -233,7 +233,15 @@ Cursor = {
 	},
 	click : function () {
 		Input.controlScheme = "mouse";
-		if (typeof Textbox === "object" && Textbox.canvas) {
+		var bubble = true;
+		if (bubble && typeof Battle === "object" && Battle.canvas) {
+			if (Cursor.inArea(Battle.canvas, 0, 0, Battle.canvas.width, Battle.canvas.height)) {
+				if (Battle.drawing.respondToClick()) {
+					bubble = false;
+				}
+			}
+		}
+		if (bubble && typeof Textbox === "object" && Textbox.canvas) {
 			if (Cursor.inArea(Textbox.canvas, 0, 0, Textbox.canvas.width, Textbox.canvas.height)) {
 				Textbox.draw(); // Redraws the textbox so that the hovered response is updated on touchscreen devices
 				Textbox.progress();

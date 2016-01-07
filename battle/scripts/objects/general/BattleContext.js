@@ -284,6 +284,26 @@ function BattleContext (client) {
 					originalContext.font = Font.load(16 * Game.zoom, "bold");
 					originalContext.fillTextHD(Math.ceil(Math.max(0, timeLeft / 1000)), centre.x, centre.y);
 				}
+				if (battleContext.playerIsSpectating()) {
+					var position = battleContext.drawing.spectatingBar();
+					originalContext.fillStyle = "hsla(0, 0%, 0%, 0.8)";
+					originalContext.fillRectHD(position.x, position.y, position.width, position.height);
+					originalContext.fillStyle = "hsla(0, 0%, 100%, 1)";
+					originalContext.textAlign = "center";
+					originalContext.textBaseline = "middle";
+					originalContext.font = Font.load(10 * Game.zoom);
+					if (!Cursor.inArea(originalCanvas, position.x, position.y, position.width, position.height)) {
+						originalContext.fillTextHD("Spectating", (originalCanvasWidth / 2 + 10) * Game.zoom, position.y + position.height / 2);
+						if (Math.floor(now / 1000) % 2) {
+							originalContext.fillStyle = "hsl(0, 100%, 50%)";
+							originalContext.fillCircleHD(position.x + 15 * Game.zoom, position.y + position.height / 2, 3 * Game.zoom);
+						}
+						originalCanvas.classList.remove("hover");
+					} else {
+						originalContext.fillTextHD("Leave battle?", position.x + position.width / 2, position.y + position.height / 2);
+						originalCanvas.classList.add("hover");
+					}
+				}
 			}
 		}
 	} : {});
@@ -541,6 +561,28 @@ function BattleContext (client) {
 					position.scale = 1;
 				}
 				return position;
+			},
+			spectatingBar : function () {
+				var width = 80 * Game.zoom;
+				return {
+					x : (battleContext.canvas.width / window.devicePixelRatio * Game.zoom - width) / 2,
+					y : 0,
+					width,
+					height : 14 * Game.zoom
+				};
+			},
+			respondToClick : function () {
+				if (battleContext.playerIsSpectating()) {
+					var position = battleContext.drawing.spectatingBar();
+					if (Cursor.inArea(battleContext.canvas, position.x, position.y, position.x + position.width, position.y + position.height)) {
+						Relay.pass("leave", null, battleContext.identifier);
+						battleContext.end({
+							"outcome" : "termination"
+						}, true);
+						battleContext.canvas.classList.remove("hover");
+						return true;
+					}
+				}
 			}
 		},
 		all : function (excludeNoPokemon) {
@@ -1191,6 +1233,9 @@ function BattleContext (client) {
 		},
 		playerIsParticipating : function () {
 			return !battleContext.process && Game.player !== null && battleContext.alliedTrainers.contains(Game.player);
+		},
+		playerIsSpectating : function () {
+			return !battleContext.playerIsParticipating();
 		},
 		flushInputs : function () {
 			// Sends any inputs the player has made since the inputs were last flushed, to the server
