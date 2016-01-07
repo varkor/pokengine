@@ -464,15 +464,8 @@ function BattleContext (client) {
 				if (gender !== "neuter")
 					shapes = shapes.concat([
 						{
-							points : [{ x : 82, y : -16 }, { x : 106 }, { x : 122, y : 0 }, { x : 98 }],
+							points : [{ x : 82, y : -16 }, { x : 86 }, { x : 102, y : 0 }, { x : 98 }],
 							colour : (gender === "male" ? "hsl(195, 100%, 45%)" : "hsl(325, 100%, 80%)")
-						},
-						{
-							text :  (gender === "male" ? "♂" : "♀"),
-							position : { x : (82 + 122) / 2, y : (-16 + 0) / 2 },
-							align : { x : "center", y : "middle" },
-							colour : (gender === "male" ? "hsl(195, 100%, 5%)" : "hsl(325, 100%, 40%)"),
-							font : Font.load(12 * Game.zoom)
 						}
 					]);
 				if (right) {
