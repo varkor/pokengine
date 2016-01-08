@@ -1705,7 +1705,8 @@ function BattleContext (client) {
 							Textbox.state(opponents + " forfeited the battle!");
 						}
 						endBattleFlags = {
-							"outcome" : "allied victory"
+							"outcome" : "allied victory",
+							"forfeit" : true
 						};
 					} else if (forfeiters.length === 1 && forfeiters.first() === battleContext.alliedTrainers.first().identification) {
 						if (!battleContext.process) {
@@ -1713,14 +1714,16 @@ function BattleContext (client) {
 							Textbox.state(playerName + " forfeited the battle!");
 						}
 						endBattleFlags = {
-							"outcome" : "opposing victory"
+							"outcome" : "opposing victory",
+							"forfeit" : true
 						};
 					} else {
 						if (!battleContext.process) {
 							Textbox.state("Everyone forfeited the battle!");
 						}
 						endBattleFlags = {
-							"outcome" : "draw"
+							"outcome" : "draw",
+							"forfeit" : true
 						};
 					}
 					if (battleContext.state.kind === "waiting") {
@@ -2698,7 +2701,8 @@ function BattleContext (client) {
 					}
 					var effect = function () {
 						battleContext.end({
-							"outcome" : "draw"
+							"outcome" : "draw",
+							"forfeit" : false
 						});
 					};
 					if (!battleContext.process)
@@ -2940,7 +2944,8 @@ function BattleContext (client) {
 								if (!battleContext.process) Textbox.state(playerName + " blacked out!");
 						}
 						endBattleFlags = {
-							"outcome" : "opposing victory"
+							"outcome" : "opposing victory",
+							"forfeit" : false
 						};
 					} else {
 						if (!battleContext.process) Textbox.state(playerName + " " + (battleContext.alliedTrainers.first() !== Game.player ? "has" : "have") + " defeated " + (trainerBattle ? opponents : "the wild Pokémon") + "!");
@@ -2969,7 +2974,8 @@ function BattleContext (client) {
 							}
 						}
 						endBattleFlags = {
-							"outcome" : "allied victory"
+							"outcome" : "allied victory",
+							"forfeit" : false
 						};
 					}
 					battleContext.endingFlags = endBattleFlags;
