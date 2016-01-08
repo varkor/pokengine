@@ -62,6 +62,7 @@ function trainer (data) {
 		store.party = self.party.store();
 		store.storage = self.storage.store();
 		store.bag = self.bag.store();
+		store.dex = self.dex.store();
 		return JSONCopy(store);
 	};
 

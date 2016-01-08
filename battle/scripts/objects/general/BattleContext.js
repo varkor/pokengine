@@ -3007,7 +3007,9 @@ function BattleContext (client) {
 				else
 					battleContext.opponents[place] = poke;
 			}
-			// The start of the battle
+			foreach(battleContext.allTrainers(), function (character) {
+				character.dex.see(poke.species);
+			});
 			if (!battleContext.process) {
 				if (!poke.trainer.isWild()) {
 					poke.battler.display.transition = 0;
@@ -3037,6 +3039,7 @@ function BattleContext (client) {
 			foreach((poke.battler.side === Battles.side.near ? battleContext.hazards.near : battleContext.hazards.far), function (hazard) {
 				hazard.type.effects.hazard(poke, hazard.stack);
 			});
+			// The start of the battle
 			if (initial) {
 				var OPowers = 0, takeEffect = {};
 				foreach(Stats.all, function (stat) {
