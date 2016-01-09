@@ -293,7 +293,7 @@ function BattleContext (client) {
 					originalContext.textBaseline = "middle";
 					originalContext.font = Font.load(10 * Game.zoom);
 					if (!Cursor.inArea(originalCanvas, position.x, position.y, position.width, position.height)) {
-						originalContext.fillTextHD("Spectating", (originalCanvasWidth / 2 + 10) * Game.zoom, position.y + position.height / 2);
+						originalContext.fillTextHD("Spectating", (originalCanvasWidth / 2 + 10 * Game.zoom), position.y + position.height / 2);
 						if (Math.floor(now / 1000) % 2) {
 							originalContext.fillStyle = "hsl(0, 100%, 50%)";
 							originalContext.fillCircleHD(position.x + 15 * Game.zoom, position.y + position.height / 2, 3 * Game.zoom);
@@ -565,7 +565,7 @@ function BattleContext (client) {
 			spectatingBar : function () {
 				var width = 80 * Game.zoom;
 				return {
-					x : (battleContext.canvas.width / window.devicePixelRatio * Game.zoom - width) / 2,
+					x : (battleContext.canvas.width / window.devicePixelRatio - width) / 2,
 					y : 0,
 					width,
 					height : 14 * Game.zoom
