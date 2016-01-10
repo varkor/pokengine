@@ -909,6 +909,9 @@ function BattleContext (client) {
 					"escape" [the allies escaped from a wild battle]
 					"illegal battle" [the trainers did not have Pokémon matching the battle requirements]
 				*/
+				if (!battleContext.endingFlags.hasOwnProperty("forced")) {
+					battleContext.endingFlags.forced = false;
+				}
 				battleContext.callback(battleContext.endingFlags, stored);
 			}
 			battleContext.notifyDelegates("battleIsEnding");

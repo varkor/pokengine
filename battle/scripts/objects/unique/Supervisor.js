@@ -215,7 +215,8 @@ Supervisor = {
 						alliedVictory = false;
 				}
 				process.battle.end({
-					"outcome" : alliedVictory === null ? "draw" : (alliedVictory === true ? "allied victory" : (alliedVictory === false ? "opposing victory" : "termination"))
+					"outcome" : alliedVictory === null ? "draw" : (alliedVictory === true ? "allied victory" : (alliedVictory === false ? "opposing victory" : "termination")),
+					"forced" : true
 				}, true);
 				foreach(process.parties, function (party) {
 					Supervisor.send(party, "force", data, identifier);
