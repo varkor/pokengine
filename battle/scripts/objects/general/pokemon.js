@@ -909,12 +909,14 @@ function pokemon (data, validate) {
 			self.mega = form;
 			if (self.trainer !== null)
 				self.trainer.megaEvolution = true;
-			var display = Display.state.save();
-			Textbox.effect(function () {
-				Display.state.load(display);
-				self.cry();
-			});
-			if (!self.battler.battle.process) Textbox.state(self.name() + " Mega Evolved!");
+			if (!self.battler.battle.process) {
+				var display = Display.state.save();
+				Textbox.effect(function () {
+					Display.state.load(display);
+					self.cry();
+				});
+				Textbox.state(self.name() + " Mega Evolved!");
+			}
 		}
 	};
 

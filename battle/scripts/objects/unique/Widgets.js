@@ -74,19 +74,33 @@ Widgets.FlowGrid = {
 					context.fill();
 				}
 				// Icon
-				var icon = Sprite.load(poke.paths.icon(true));
+				var redrawOnceLoaded = path => {
+					Sprite.load(path, function () {
+						if (Widgets.Party.interface.cells.indexOf(poke) !== -1) {
+							Widgets.Party.interface.redrawCell(poke);
+						}
+					});
+				};
+				var icon;
+				icon = Sprite.load(poke.paths.icon(true));
 				if (icon) {
 					context.imageSmoothingEnabled = false;
 					context.copyImageHD(icon.image, false, true, position.x + (size.width - icon.width) / 2, position.y + (size.height - icon.height) / 2);
 					context.imageSmoothingEnabled = true;
 				} else {
-					Sprite.load(poke.paths.icon(true), function () {
-						if (Widgets.Party.interface.cells.indexOf(poke) !== -1) {
-							Widgets.Party.interface.redrawCell(poke);
-						}
-					});
+					redrawOnceLoaded(poke.paths.icon(true));
 				}
-				var drawBanner = (text) => {
+				// Item
+				if (poke.item !== null) {
+					var item = Items._(poke.item);
+					icon = Sprite.load(item.paths.icon(true));
+					if (icon) {
+						context.copyImageHD(icon.image, false, true, position.x + (size.width - icon.width / 2) / 2 + 8, position.y + (size.height - icon.height / 2) / 2 + 8, icon.width / 2, icon.height / 2);
+					} else {
+						redrawOnceLoaded(item.paths.icon(true));
+					}
+				}
+				var drawBanner = text => {
 					var bannerHeight = 32;
 					context.fillStyle = "hsl(0, 60%, 40%)";
 					context.fillRectHD(position.x, position.y + (size.height - bannerHeight) / 2, size.width, bannerHeight);

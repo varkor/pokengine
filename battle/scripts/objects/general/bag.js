@@ -79,6 +79,17 @@ function bag (items) {
 		self.items.remove(index);
 	};
 
+	self.give = function (index, poke) {
+		var item = self.items[index], taken = null;
+		self.items.remove(index);
+		if (poke.item !== null) {
+			taken = self.add(poke.item);
+			poke.item = null;
+		}
+		poke.item = item.item;
+		return taken;
+	};
+
 	self.has = function (item) {
 		return foreach(self.items, function (which) {
 			if (which.item === item || (Items._(which.item + " => category?") && Items._(which.item + " => category") === item)) // Whether the exact item was in possession, or an item in the same category
