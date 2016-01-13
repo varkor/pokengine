@@ -634,7 +634,8 @@ function pokemon (data, validate) {
 	};
 
 	self.pronoun = function (capitalised) {
-		return (self.gender === "male" ? "he" : self.gender === "female" ? "she" : "it");
+		var word = (self.gender === "male" ? "he" : self.gender === "female" ? "she" : "it");
+		return (capitalised ? capitalise(word) : word);
 	};
 	self.possessivePronoun = function (capitalised) {
 		var word = (self.gender === "male" ? "his" : self.gender === "female" ? "her" : "its");

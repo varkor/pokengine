@@ -81,7 +81,7 @@ function bag (items) {
 
 	self.give = function (index, poke) {
 		var item = self.items[index], taken = null;
-		self.items.remove(index);
+		self.remove(index);
 		if (poke.item !== null) {
 			taken = self.add(poke.item);
 			poke.item = null;
