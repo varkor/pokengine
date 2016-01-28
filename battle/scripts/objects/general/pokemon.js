@@ -326,7 +326,7 @@ function pokemon (data, validate) {
 			if (new RegExp(disallowed).test(nickname))
 				return true;
 		}))) {
-			self.name = nickname;
+			self.nickname = nickname;
 			return true;
 		}
 		return false;
