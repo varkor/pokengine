@@ -110,30 +110,28 @@ FunctionObject = {
 				object.canvas.parentElement.removeChild(object.canvas);
 			FunctionObject.objects.removeElementsOfValue(entry);
 		};
-		if (FunctionObject.initialised)
-			FunctionObject.initialise(entry);
+		if (FunctionObject.initialised && entry.initialise) {
+			entry.object.initialise();
+		}
 		return object;
 	},
-	initialise : function (objects) {
-		if (arguments.length < 1) {
-			objects = FunctionObject.objects;
-			FunctionObject.initialised = true;
-		} else {
-			objects = wrapArray(objects);
-		}
-		foreach(objects, function (object) {
+	initialise : function () {
+		if (FunctionObject.initialised)
+			return;
+		FunctionObject.initialised = true;
+		foreach(FunctionObject.objects, function (object) {
 			if (object.initialise)
 				object.object.initialise();
 		});
 		window.setInterval(function () {
-			foreach(objects, function (object) {
+			foreach(FunctionObject.objects, function (object) {
 				if (object.update)
 					object.object.update();
 			});
 		}, Time.refresh);
 		var draw = function () {
 			window.requestAnimationFrame(function () {
-				foreach(objects, function (object) {
+				foreach(FunctionObject.objects, function (object) {
 					if (object.draw && object.object.draw) {
 						object.object.draw(true);
 					}
