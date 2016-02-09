@@ -2,7 +2,7 @@
 	An object used to test out multiplayer battles, locally
 	To use:
 		TrialServer.begin();
-		TrialServer.NPCBattle();
+		TrialServer.trigger.NPCBattle();
 */
 TrialServer = {
 	begin : function () {
@@ -13,7 +13,6 @@ TrialServer = {
 			}, 0);
 		};
 		// Initialise the Relay
-		Relay.identification = 3;
 		Relay.pass = function (message, data, identifier) {
 			setTimeout(function () {
 				TrialServer.pass(message, data, identifier); // We get emulation issues if we just assume we can directly invoke functions across the server-client gap
@@ -34,7 +33,7 @@ TrialServer = {
 		if (message === "relay") {
 			var response = Supervisor.receive(message, {
 				party : null, // TrialServer only supports one client at the moment
-				team : 3,
+				team : Game.player.identification,
 				data : data
 			}, identifier);
 			if (!response.success) {
@@ -89,6 +88,7 @@ TrialServer = {
 				"party" : Interface.buildParty(),
 				"money" : 10000
 			}));
+			Relay.identification = Game.player.identification;
 			Game.player.bag.add("Key Stones => Mega Bracelet");
 			Game.player.bag.add("Balls => Master");
 			Game.player.bag.add("Berries => Sitrus");

@@ -28,7 +28,16 @@ Relay = {
 						}
 					}
 				*/
-				var battle = BattleContext(true);
+				var battle;
+				if (typeof Battle !== "undefined" && Battle !== null) {
+					if (Battle.active) {
+						throw new Error("You can't trigger a battle when there is already one in progress!");
+					} else {
+						battle = Battle;
+					}
+				} else {
+					battle = BattleContext(true);
+				}
 				Relay.processes[identifier] = {
 					battle : battle
 				};
@@ -55,7 +64,6 @@ Relay = {
 				Battle = battle;
 				var callback = function (flags, trainers) {
 					data.callback(flags, trainers);
-					battle.destroy();
 				};
 				if (opponent.identification === 0) { /* Code for wild battles */
 					battle.random.seed = data.data.seed;

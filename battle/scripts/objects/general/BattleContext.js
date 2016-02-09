@@ -951,6 +951,7 @@ function BattleContext (client) {
 				battleContext.state = {
 					kind : "inactive"
 				};
+				battleContext.draw();
 				battleContext.complete();
 			}
 		},

@@ -103,6 +103,7 @@ Supervisor = {
 						Supervisor.countdown(identifier, true);
 						var timer = Supervisor.processes[identifier].timer;
 						data.callback(flags, trainers, Supervisor.record(identifier));
+						battle.destroy();
 						delete Supervisor.processes[identifier];
 					};
 					if (!data.data.hasOwnProperty("seed"))

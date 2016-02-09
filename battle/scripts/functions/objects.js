@@ -66,6 +66,7 @@ FunctionObject = {
 					if (details.drawing.canvas.hasOwnProperty("selector"))
 						canvas = document.querySelector(details.drawing.canvas.selector);
 					if (canvas === null) {
+						delete details.drawing.canvas.selector;
 						canvas = document.createElement("canvas");
 						if (document.body.childNodes.length > 0)
 							document.body.insertBefore(canvas, document.body.childNodes[0]);
