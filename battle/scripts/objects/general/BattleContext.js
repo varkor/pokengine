@@ -1793,6 +1793,10 @@ function BattleContext (client) {
 				});
 				targets.reverse();
 			}
+			targets = targets.filter(poke => poke.egg === null);
+			if (item.use === "healing") {
+				targets = targets.filter(poke => poke.conscious());
+			}
 			return targets;
 		},
 		targetsForMove : function (user, move, excludeAlliesIfPossible) {
