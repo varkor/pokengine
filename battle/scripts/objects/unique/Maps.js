@@ -1,6 +1,6 @@
 "use strict";
 
-const Maps = {
+let Maps = {
 	"Route 1 (Kanto)" : {
 		"name" : "Route 1",
 		"flags" : ["Cave", "Indoor"],

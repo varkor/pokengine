@@ -1,6 +1,6 @@
 "use strict";
 
-const Relay = {
+let Relay = {
 	identification : null,
 	processes : {},
 	pass : function (message, data, identifier) {

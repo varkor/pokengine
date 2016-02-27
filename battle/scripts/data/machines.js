@@ -1,9 +1,9 @@
 "use strict";
 
-const TMs = [
+let TMs = [
 ];
 
-const HMs = [
+let HMs = [
 	"Flash",
 	"Cut"
 ];

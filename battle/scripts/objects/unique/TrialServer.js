@@ -6,7 +6,7 @@
 		TrialServer.begin();
 		TrialServer.trigger.NPCBattle();
 */
-const TrialServer = {
+let TrialServer = {
 	begin : function () {
 		// Initialise the Supervisor
 		Supervisor.send = function (party, message, data, identifier) {

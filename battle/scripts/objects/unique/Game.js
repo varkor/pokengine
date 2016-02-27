@@ -1,6 +1,6 @@
 "use strict";
 
-const Game = {
+let Game = {
 	zoom : 1,
 	focused : true,
 	increment : 0,

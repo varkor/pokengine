@@ -1,6 +1,6 @@
 "use strict";
 
-const FileData = {
+let FileData = {
 	images : {
 		"pokemon/Nintendo/Bulbasaur" : {
 			animated : true,

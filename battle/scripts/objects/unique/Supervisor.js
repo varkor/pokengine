@@ -1,6 +1,6 @@
 "use strict";
 
-const Supervisor = {
+let Supervisor = {
 	identification : 0,
 	processes : {},
 	send : function (party, message, data, identifier) {

@@ -1,6 +1,6 @@
 "use strict";
 
-const Move = {
+let Move = {
 	category : {
 		physical : q = 0,
 		special : ++ q,
@@ -59,7 +59,7 @@ const Move = {
 		move = Moves._(move);
 		if (target instanceof pokemon)
 			target = mover.trainer.battle.placeOfPokemon(target);
-		var constant = {},
+		var letant = {},
 			affectsEntireSideOrBothSides = [Battles.side.near, Battles.side.far, Battles.side.both].contains(target),
 			targetPokemon = (target !== NoPokemon && !affectsEntireSideOrBothSides ? mover.trainer.battle.pokemonInPlace(target) : NoPokemon),
 			affected = (targetPokemon !== NoPokemon ? mover.trainer.battle.affectedByMove(mover, targetPokemon, move).filter(onlyPokemon) : []),
@@ -81,24 +81,24 @@ const Move = {
 		if (!mover.trainer.battle.process) {
 			if (finalStage && (!move.classification.contains("_") || moveName === "Struggle")) {
 				if (affected.notEmpty() || affectsEntireSideOrBothSides)
-					animationEffect = Textbox.state(mover.name() + " used " + moveName + (!affectsEntireSideOrBothSides && move.affects === Move.targets.directTarget && affected.notEmpty() ? " on " + (targetPokemon !== mover ? targetPokemon.name() : mover.selfPronoun()) : "") + "!", function () { return Move.animate(mover, move, stage, targetPokemon, constant); });
+					animationEffect = Textbox.state(mover.name() + " used " + moveName + (!affectsEntireSideOrBothSides && move.affects === Move.targets.directTarget && affected.notEmpty() ? " on " + (targetPokemon !== mover ? targetPokemon.name() : mover.selfPronoun()) : "") + "!", function () { return Move.animate(mover, move, stage, targetPokemon, letant); });
 				else
 					Textbox.state(mover.name() + " tried to use " + moveName + "...");
 			} else
-				animationEffect = Textbox.effect(function () { return Move.animate(mover, move, stage, targetPokemon, constant); });
+				animationEffect = Textbox.effect(function () { return Move.animate(mover, move, stage, targetPokemon, letant); });
 			// Makes sure any Display states after the move has been used takes into consideration any movements by any of the Pokémon
 			if (targetPokemon !== NoPokemon || affectsEntireSideOrBothSides) {
-				Move.renderAnimation(mover, move, stage, targetPokemon, constant);
+				Move.renderAnimation(mover, move, stage, targetPokemon, letant);
 				var displayRendered = Display.state.save();
 				stateEffect = Textbox.effect(function (displayRendered) { return function () { Display.state.load(displayRendered); }; }(displayRendered));
 			}
 		}
-		if (move.effects.hasOwnProperty("constant") && (targetPokemon !== NoPokemon || affectsEntireSideOrBothSides)) {
-			var constantData = move.effects.constant(mover, targetPokemon !== NoPokemon ? targetPokemon : target);
-			if (typeof constantData === "object")
-				constant = constantData;
+		if (move.effects.hasOwnProperty("letant") && (targetPokemon !== NoPokemon || affectsEntireSideOrBothSides)) {
+			var letantData = move.effects.letant(mover, targetPokemon !== NoPokemon ? targetPokemon : target);
+			if (typeof letantData === "object")
+				letant = letantData;
 		}
-		if (!constant.hasOwnProperty("failed") || !constant.failed) {
+		if (!letant.hasOwnProperty("failed") || !letant.failed) {
 			if (affected.notEmpty()) {
 				var missEffect = false;
 				foreach(affected, function (targeted) {
@@ -136,7 +136,7 @@ const Move = {
 								missEffect = true;
 							} else {
 								// Actually use the move
-								var response = move.effects.use[stage].effect(mover, targeted, constant, 1);
+								var response = move.effects.use[stage].effect(mover, targeted, letant, 1);
 								if (response) {
 									if (response.hasOwnProperty("failed") && response.failed)
 										failed = true;
@@ -170,7 +170,7 @@ const Move = {
 						completelyFailed = false;
 				});
 			} else if (affectsEntireSideOrBothSides) {
-				var response = move.effects.use[stage].effect(mover, target, constant), failed = false;
+				var response = move.effects.use[stage].effect(mover, target, letant), failed = false;
 				if (response) {
 					if (response.hasOwnProperty("failed") && response.failed)
 						failed = true;
@@ -214,7 +214,7 @@ const Move = {
 			modifiedMove : modifiedMove
 		};
 	},
-	renderAnimation : function (mover, move, stage, target, constant, track, last) {
+	renderAnimation : function (mover, move, stage, target, letant, track, last) {
 		if (move.animation.length - 1 < stage || move.animation[stage].length === 0)
 			return;
 		var events = JSONCopy(move.animation[stage], true), from = Display.state.save();
@@ -238,7 +238,7 @@ const Move = {
 					display : target.battler.display
 				} : null, {
 					display : View
-				}, constant);
+				}, letant);
 			} else {
 				event.transition({
 					display : mover.battler.display,
@@ -249,12 +249,12 @@ const Move = {
 				} : null, {
 					display : View,
 					from : JSONCopy(View)
-				}, constant, 1);
+				}, letant, 1);
 			}
 		});
 		View.reset();
 	},
-	animate : function (mover, move, stage, target, constant, track, last) {
+	animate : function (mover, move, stage, target, letant, track, last) {
 		if (arguments.length < 6) {
 			track = {
 				completed : false,
@@ -269,7 +269,7 @@ const Move = {
 		var affectsEntireSideOrBothSides = (target === Battles.side.far || target === Battles.side.near);
 		var start = move.animation[stage][track.progress].hasOwnProperty("time") ? move.animation[stage][track.progress].time : move.animation[stage][track.progress].from;
 		if (arguments.length < 6 && start > 0) {
-			setTimeout(function () { Move.animate(mover, move, stage, target, constant, track, last); }, Time.second * start / 100);
+			setTimeout(function () { Move.animate(mover, move, stage, target, letant, track, last); }, Time.second * start / 100);
 			return track;
 		}
 		if (move.animation[stage][track.progress].hasOwnProperty("time")) {
@@ -280,10 +280,10 @@ const Move = {
 				display : Display.pokemonInState(target).battler.display
 			} : null, {
 				display : View
-			}, constant);
+			}, letant);
 		} else {
 			last = Math.max(move.animation[stage][track.progress].to, last);
-			Move.transition(mover, move, stage, target, constant, track.progress, 0, Display.state.save(Display.state.current));
+			Move.transition(mover, move, stage, target, letant, track.progress, 0, Display.state.save(Display.state.current));
 		}
 		++ track.progress;
 		var completed = (track.progress === move.animation[stage].length);
@@ -292,11 +292,11 @@ const Move = {
 		}
 		else {
 			var startOfNext = move.animation[stage][track.progress].hasOwnProperty("time") ? move.animation[stage][track.progress].time : move.animation[stage][track.progress].from;
-			setTimeout(function () { Move.animate(mover, move, stage, target, constant, track, last); }, Time.second * (startOfNext - start) / 100);
+			setTimeout(function () { Move.animate(mover, move, stage, target, letant, track, last); }, Time.second * (startOfNext - start) / 100);
 		}
 		return track;
 	},
-	transition : function (mover, move, stage, target, constant, start, progress, from) {
+	transition : function (mover, move, stage, target, letant, start, progress, from) {
 		var affectsEntireSideOrBothSides = (target === Battles.side.far || target === Battles.side.near);
 		// There are 100 "duration steps" for every second
 		var duration = (move.animation[stage][start].to - move.animation[stage][start].from) / 100, frames = duration * Time.framerate;
@@ -309,9 +309,9 @@ const Move = {
 		} : null, {
 			display : View,
 			from : JSONCopy(View)
-		}, constant, Math.min(1, progress));
+		}, letant, Math.min(1, progress));
 		if (progress < 1)
-			setTimeout(function () { Move.transition(mover, move, stage, target, constant, start, progress + 1 / frames, from); }, Time.refresh);
+			setTimeout(function () { Move.transition(mover, move, stage, target, letant, start, progress + 1 / frames, from); }, Time.refresh);
 		else {
 			View.reset();
 		}
@@ -405,7 +405,7 @@ Move.targets = {
 	noone : [],
 	closeBy : [Move.target.self, Move.target.directOpponent, Move.target.adjacentAlly, Move.target.adjacentOpponent],
 
-	 // Special constants
+	 // Special letants
 	party : {},
 	opposingSide : {},
 	alliedSide : {},

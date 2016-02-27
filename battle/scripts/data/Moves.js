@@ -1,6 +1,6 @@
 "use strict";
 
-const Moves = {
+let Moves = {
 	Confused : {
 		type : "Typeless",
 		category : Move.category.physical,
@@ -68,7 +68,7 @@ const Moves = {
 			{
 				start : 0,
 				duration : 30,
-				transition : function (self, target, view, constant, progress) {
+				transition : function (self, target, view, letant, progress) {
 					self.display.position.x = self.from.position.x + (-20 - self.from.position.x) * progress;
 					self.display.angle = self.from.angle + (-0.3 - self.from.angle) * progress;
 				}
@@ -76,7 +76,7 @@ const Moves = {
 			{
 				delay : 10,
 				duration : 10,
-				transition : function (self, target, view, constant, progress) {
+				transition : function (self, target, view, letant, progress) {
 					self.display.position.x = self.from.position.x + (140 - self.from.position.x) * progress;
 					self.display.position.z = self.from.position.z + (95 - self.from.position.z) * progress;
 					self.display.angle = self.from.angle + (0.5 - self.from.angle) * progress;
@@ -85,7 +85,7 @@ const Moves = {
 			{
 				delay : -5,
 				duration : 10,
-				transition : function (self, target, view, constant, progress) {
+				transition : function (self, target, view, letant, progress) {
 					target.display.position.x = target.from.position.x + (-50 - target.from.position.x) * progress;
 					target.display.position.z = target.from.position.z + (-20 - target.from.position.z) * progress;
 					target.display.angle = target.from.angle + (-0.2 - target.from.angle) * progress;
@@ -94,7 +94,7 @@ const Moves = {
 			{
 				delay : 5,
 				duration : 30,
-				transition : function (self, target, view, constant, progress) {
+				transition : function (self, target, view, letant, progress) {
 					self.display.position.x = self.from.position.x + (0 - self.from.position.x) * progress;
 					self.display.position.z = self.from.position.z + (0 - self.from.position.z) * progress;
 					self.display.angle = self.from.angle + (0 - self.from.angle) * progress;
@@ -103,7 +103,7 @@ const Moves = {
 			{
 				delay : 10,
 				duration : 50,
-				transition : function (self, target, view, constant, progress) {
+				transition : function (self, target, view, letant, progress) {
 					target.display.position.x = target.from.position.x + (0 - target.from.position.x) * progress;
 					target.display.position.z = target.from.position.z + (0 - target.from.position.z) * progress;
 					target.display.angle = target.from.angle + (0 - target.from.angle) * progress;
@@ -129,7 +129,7 @@ const Moves = {
 		"effects" : {
 			"use" : [
 				{
-					"effect" : function (self, target, constant, repetitions) {
+					"effect" : function (self, target, letant, repetitions) {
 						if (!self.battler.battle.infatuate(target, self)) {
 							return {
 								failed : true
@@ -415,17 +415,17 @@ const Moves = {
 		affects : Move.targets.adjacentToUser,
 		targets : Move.targets.adjacentToUser,
 		effects : {
-			constant : function (self) {
-				var constant = {
+			letant : function (self) {
+				var letant = {
 					magnitude : self.battler.battle.random.chooseWeighted({value : 4, probability: 0.05}, {value : 5, probability: 0.1}, {value : 6, probability: 0.2}, {value : 7, probability: 0.3}, {value : 8, probability: 0.2}, {value : 9, probability: 0.1}, {value : 10, probability: 0.05})
 				};
-				if (!self.battler.battle.process) Textbox.state("It's Magnitude " + constant.magnitude + "!");
-				return constant;
+				if (!self.battler.battle.process) Textbox.state("It's Magnitude " + letant.magnitude + "!");
+				return letant;
 			},
 			use : [
 				{
-					effect : function (self, target, constant) {
-						self.battler.battle.damage(target, Move.damage(self, target, "Magnitude", ((constant.magnitude !== 10 ? (constant.magnitude - 3) * 20 - 10 : 150)) * (target.invulnerable === "Dig" ? 2 : 1)));
+					effect : function (self, target, letant) {
+						self.battler.battle.damage(target, Move.damage(self, target, "Magnitude", ((letant.magnitude !== 10 ? (letant.magnitude - 3) * 20 - 10 : 150)) * (target.invulnerable === "Dig" ? 2 : 1)));
 					},
 					targets : true
 				}
@@ -435,9 +435,9 @@ const Moves = {
 		{
 			start : 0,
 			duration : 100,
-			transition : function (self, target, view, progress, constant) {
-				View.position.x = random(-constant.magnitude, constant.magnitude);
-				View.position.y = random(-constant.magnitude, constant.magnitude);
+			transition : function (self, target, view, progress, letant) {
+				View.position.x = random(-letant.magnitude, letant.magnitude);
+				View.position.y = random(-letant.magnitude, letant.magnitude);
 			}
 		}
 		]]
@@ -627,7 +627,7 @@ const Moves = {
 		affects : Move.targets.opposingSide,
 		targets : Move.targets.opposingSide,
 		effects : {
-			constant : function (self, target) {
+			letant : function (self, target) {
 				if (!self.battler.battle.hasEffectOnSide("Heal Block", target)) {
 					if (!self.battler.battle.process) Textbox.state(self.name() + " put a Heal Block into effect.");
 					self.battler.battle.bringIntoEffect("Heal Block", Moves._("Heal Block"), Battles.when.afterFiveTurns, target);
@@ -742,7 +742,7 @@ const Moves = {
 		affects : Move.targets.everyone,
 		targets : Move.targets.everyone,
 		effects : {
-			constant : function (self) {
+			letant : function (self) {
 				if (!self.battler.battle.process) Textbox.state("All Pokémon who hear the song will perish in 3 turns!");
 			},
 			use : [
@@ -994,7 +994,7 @@ const Moves = {
 		{
 			start : 0,
 			duration : 30,
-			transition : function (self, target, view, constant, progress) {
+			transition : function (self, target, view, letant, progress) {
 				self.display.position.x = self.from.position.x + (30 - self.from.position.y) * progress;
 				self.display.position.y = self.from.position.y + ((Battle.canvas.height / Game.zoom / 2) - self.from.position.y) * progress;
 				self.display.position.z = self.from.position.z + (30 - self.from.position.z) * progress;
@@ -1012,7 +1012,7 @@ const Moves = {
 		{
 			delay : 0,
 			duration : 30,
-			transition : function (self, target, view, constant, progress) {
+			transition : function (self, target, view, letant, progress) {
 				self.display.position.y = self.from.position.y + (20 - self.from.position.y) * progress;
 				self.display.position.z = self.from.position.z + (115 - self.from.position.z) * progress;
 			}
@@ -1020,7 +1020,7 @@ const Moves = {
 		{
 			delay : -5,
 			duration : 10,
-			transition : function (self, target, view, constant, progress) {
+			transition : function (self, target, view, letant, progress) {
 				target.display.position.x = target.from.position.x + (-50 - target.from.position.x) * progress;
 				target.display.position.z = target.from.position.z + (-20 - target.from.position.z) * progress;
 				target.display.angle = target.from.angle + (-0.2 - target.from.angle) * progress;
@@ -1029,7 +1029,7 @@ const Moves = {
 		{
 			delay : 0,
 			duration : 30,
-			transition : function (self, target, view, constant, progress) {
+			transition : function (self, target, view, letant, progress) {
 				self.display.position.x = self.from.position.x + (0 - self.from.position.x) * progress;
 				self.display.position.y = self.from.position.y + (0 - self.from.position.y) * progress;
 				self.display.position.z = self.from.position.z + (0 - self.from.position.z) * progress;
@@ -1038,7 +1038,7 @@ const Moves = {
 		{
 			delay : 10,
 			duration : 30,
-			transition : function (self, target, view, constant, progress) {
+			transition : function (self, target, view, letant, progress) {
 				target.display.position.x = target.from.position.x + (0 - target.from.position.x) * progress;
 				target.display.position.z = target.from.position.z + (0 - target.from.position.z) * progress;
 				target.display.angle = target.from.angle + (0 - target.from.angle) * progress;
@@ -1084,7 +1084,7 @@ const Moves = {
 		{
 			start : 0,
 			duration : 30,
-			transition : function (self, target, view, constant, progress) {
+			transition : function (self, target, view, letant, progress) {
 				self.display.height = self.from.height + (0 - self.from.height) * progress;
 			}
 		}
@@ -1093,7 +1093,7 @@ const Moves = {
 		{
 			start : 0,
 			duration : 30,
-			transition : function (self, target, view, constant, progress) {
+			transition : function (self, target, view, letant, progress) {
 				self.display.height = self.from.height + (1 - self.from.height) * progress;
 			}
 		}
@@ -1137,7 +1137,7 @@ const Moves = {
 		{
 			start : 0,
 			duration : 30,
-			transition : function (self, target, view, constant, progress) {
+			transition : function (self, target, view, letant, progress) {
 				self.display.height = self.from.height + (0 - self.from.height) * progress;
 			}
 		}
@@ -1146,7 +1146,7 @@ const Moves = {
 		{
 			start : 0,
 			duration : 30,
-			transition : function (self, target, view, constant, progress) {
+			transition : function (self, target, view, letant, progress) {
 				self.display.height = self.from.height + (1 - self.from.height) * progress;
 			}
 		}
@@ -1167,13 +1167,13 @@ const Moves = {
 		effects : {
 			use : [
 				{
-					effect : function (self, target, constant, repetitions) {
+					effect : function (self, target, letant, repetitions) {
 						var finalRepetition = !(target !== NoPokemon && !target.fainted() && (repetitions < 2 || (repetitions <= 3 && self.battler.battle.random.chance(3)) || (repetitions <= 5 && self.battler.battle.random.chance(6))));
 						if (finalRepetition)
 							if (!self.battler.battle.process) Textbox.state("Hit " + target.name() + " " + quantityWord(repetitions) + "!");
 						self.battler.battle.damage(target, Move.damage(self, target, "Pin Missile"), finalRepetition);
 						if (!finalRepetition) {
-							Moves._("Pin Missile").effects.use[0].effect(self, target, constant, ++ repetitions); // Not the standard Move.use() form, so that it can take advantage of repetitions
+							Moves._("Pin Missile").effects.use[0].effect(self, target, letant, ++ repetitions); // Not the standard Move.use() form, so that it can take advantage of repetitions
 						}
 					},
 					targets : true

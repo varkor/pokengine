@@ -10,7 +10,7 @@ var paths = [
 	"scripts/functions/Sound.js",
 	"scripts/functions/Font.js",
 	"scripts/objects/unique/FileData.js",
-	"scripts/data/constants.js",
+	"scripts/data/letants.js",
 	"scripts/objects/unique/Input.js",
 	"scripts/objects/unique/Types.js",
 	"scripts/objects/unique/Move.js",

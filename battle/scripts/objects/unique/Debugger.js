@@ -1,6 +1,6 @@
 "use strict";
 
-const Debugger = FunctionObject.new({
+let Debugger = FunctionObject.new({
 	previousFrame : performance.now(),
 	fps : {
 		statistics : function () {

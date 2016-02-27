@@ -5,7 +5,7 @@ foreach([Pokedex, Moves, Items, Abilities], function (obj) {
 });
 
 // Calculate the inverse type chart
-const InverseTypes = {};
+let InverseTypes = {};
 forevery(Types, function (effectivenesses, type) {
 	InverseTypes[type] = {};
 	if (effectivenesses.hasOwnProperty("strong")) {

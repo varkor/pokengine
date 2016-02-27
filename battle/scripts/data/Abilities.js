@@ -1,6 +1,6 @@
 "use strict";
 
-const Abilities = {
+let Abilities = {
 	"Intimidate" : {
 		effects : [
 			{

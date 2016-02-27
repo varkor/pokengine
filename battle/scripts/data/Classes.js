@@ -1,6 +1,6 @@
 "use strict";
 
-const Classes = {
+let Classes = {
 	"Ace Trainer" : {
 		"payout" : 100
 	},

@@ -1,6 +1,6 @@
 "use strict";
 
-const Font = {
+let Font = {
 	load : function (size, weight, style, typeface) {
 		size *= window.devicePixelRatio;
 		if (!["px", "pt", "em", "rem"].contains(("" + size).substr(-2)))

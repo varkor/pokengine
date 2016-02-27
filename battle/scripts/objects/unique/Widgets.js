@@ -1,6 +1,6 @@
 "use strict";
 
-const Widgets = {};
+let Widgets = {};
 
 Widgets.FlowGrid = {
 	templates : {

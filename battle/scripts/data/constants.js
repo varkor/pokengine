@@ -2,15 +2,15 @@
 
 var q;
 
-const Stats = {
+let Stats = {
 	permanent : ["health", "attack", "defence", "special attack", "special defence", "speed"],
 	transient : ["accuracy", "evasion", "critical"],
 };
 Stats.all = [].concat(Stats.permanent, Stats.transient);
 
-const Experiences = ["erratic", "fast", "medium fast", "medium slow", "slow", "fluctuating"];
+let Experiences = ["erratic", "fast", "medium fast", "medium slow", "slow", "fluctuating"];
 
-const Evolution = {
+let Evolution = {
 	// Ways to trigger an evolution
 	methods : [
 		"level", // Triggered when the Pokémon levels up (often used in conjunction with other properties)
@@ -25,7 +25,7 @@ const Evolution = {
 	]
 };
 
-const Natures = {
+let Natures = {
 	"Hardy" : {
 	},
 	"Docile" : {
@@ -118,11 +118,11 @@ const Natures = {
 	}
 };
 
-const Weathers = ["clear skies", "intense sunlight", "extremely harsh sunlight", "rain", "heavy rain", "sandstorm", "hail", "diamond dust", "shadowy aura", "fog", "strong winds"];
+let Weathers = ["clear skies", "intense sunlight", "extremely harsh sunlight", "rain", "heavy rain", "sandstorm", "hail", "diamond dust", "shadowy aura", "fog", "strong winds"];
 
-const Development = ["complete", "incomplete", "unstarted"];
+let Development = ["complete", "incomplete", "unstarted"];
 
-const Statuses = ["none", "burned", "frozen", "paralysed", "poisoned", "badly poisoned", "asleep"];
+let Statuses = ["none", "burned", "frozen", "paralysed", "poisoned", "badly poisoned", "asleep"];
 Statuses.Volatile = ["confused", "infatuated"];
 
 /*
@@ -132,7 +132,7 @@ Statuses.Volatile = ["confused", "infatuated"];
 		data:
 			oneself : Whether the Pokémon that triggered the event is itself
 */
-const Triggers = {
+let Triggers = {
 	/*
 		Triggered when the Pokémon is sent out.
 	*/
@@ -211,9 +211,9 @@ const Triggers = {
 	status : ++ q
 };
 
-const Genders = ["male", "female", "neuter"];
+let Genders = ["male", "female", "neuter"];
 
-const Time = {
+let Time = {
 	framerate : Settings._("framerate"),
 	speed : Settings._("speed"),
 	millisecond : 1,
@@ -223,9 +223,9 @@ const Time = {
 };
 Time.refresh = Time.second / Time.framerate;
 
-const Nationalities = ["British"];
+let Nationalities = ["British"];
 
-const Item = {
+let Item = {
 	use : [
 		"healing", // Restore health
 		"curing", // Cure a status effect
@@ -235,7 +235,7 @@ const Item = {
 	]
 };
 
-const Battles = {
+let Battles = {
 	style : ["normal", "double", "sky"],
 	side : {
 		// These are empty objects simply so they're unique from one another. They even conserve uniqueness after being transformed to JSON and back, which is rather handy. They do ~not~, however, need to be identified after being transferred by JSON — just distinguished, because getPokemonInPlace does not actually use the `side` parameter — it just checks for it.
@@ -257,7 +257,7 @@ const Battles = {
 	}
 };
 
-const Trainers = {
+let Trainers = {
 	type : {
 		NPC : q = 0,
 		local : ++ q,
@@ -265,7 +265,7 @@ const Trainers = {
 	}
 };
 
-const Directions = {
+let Directions = {
 	up : q = 0,
 	right : ++ q,
 	down : ++ q,
@@ -280,15 +280,15 @@ Scenes.addData({
 	"Forest Trail" : {}
 });
 
-const Creators = {
+let Creators = {
 	"Nintendo" : {
 		"games" : ["RSE"]
 	}
 };
 
-const Games = {
+let Games = {
 	"RSE" : {
-		"constituents" : ["Ruby", "Sapphire", "Emerald"],
+		"letituents" : ["Ruby", "Sapphire", "Emerald"],
 		"region" : "Hoenn",
 		"Pokedex" : ["Treeko"],
 		"player" : {
@@ -297,7 +297,7 @@ const Games = {
 		}
 	},
 	"B2W2" : {
-		"constituents" : ["Black 2", "White 2"],
+		"letituents" : ["Black 2", "White 2"],
 		"region" : "Unova",
 		"Pokedex" : [],
 		"player" : {
@@ -307,18 +307,18 @@ const Games = {
 	}
 };
 
-const Regions = ["Hoenn", "Kanto"];
+let Regions = ["Hoenn", "Kanto"];
 
-const Pokerus = ["uninfected", "infected", "immune"];
+let Pokerus = ["uninfected", "infected", "immune"];
 
-const Tiles = ["grass", "long grass", "dark grass", "seaweed"];
+let Tiles = ["grass", "long grass", "dark grass", "seaweed"];
 
-const NoPokemon = {};
+let NoPokemon = {};
 
-const onlyPokemon = function (poke) {
+let onlyPokemon = function (poke) {
 	return poke !== NoPokemon;
 };
 
-const onlyNoPokemon = function (poke) {
+let onlyNoPokemon = function (poke) {
 	return poke === NoPokemon;
 };

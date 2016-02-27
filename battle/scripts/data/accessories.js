@@ -1,6 +1,6 @@
 "use strict";
 
-const Badges = {
+let Badges = {
 	"Boulder" : {
 		enabled : [HMs.indexOf(Moves.Flash)],
 		obediance : null
@@ -12,6 +12,6 @@ const Badges = {
 };
 _method(Badges);
 
-const Ribbons = {
+let Ribbons = {
 };
 _method(Ribbons);

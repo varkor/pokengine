@@ -1,6 +1,6 @@
 "use strict";
 
-const Items = {
+let Items = {
 	"Medicines" : {
 		standard : {
 			use : "healing",

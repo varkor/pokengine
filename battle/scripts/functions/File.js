@@ -1,6 +1,6 @@
 "use strict";
 
-const File = {
+let File = {
 	loadFileOfType : function (_store, object, loadEvent, dataForFile, directory, filetype, _paths, uponLoad, uponError, _redirectedPaths) {
 		var store = _store;
 		if (!Files.hasOwnProperty(store))
@@ -86,6 +86,6 @@ const File = {
 		}
 	}
 };
-const Files = {
+let Files = {
 	nonexistent : []
 };

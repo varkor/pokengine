@@ -1,6 +1,6 @@
 "use strict";
 
-const Display = {
+let Display = {
 	store : {
 		pokemon : function (poke) {
 			if (poke === NoPokemon)

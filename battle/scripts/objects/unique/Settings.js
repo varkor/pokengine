@@ -52,7 +52,7 @@ Settings.addData({
 	},
 	"animated moves" : false, // Whether moves display an animation when used [true]
 	"animated sprites" : false, // Whether sprites animate when they can (slower) [true]
-	"visual weather effects" : true, // Whether weather constantly displays visually, or just at the end of each turn
+	"visual weather effects" : true, // Whether weather letantly displays visually, or just at the end of each turn
 	"particle collision-testing" : false, // Whether weather particles should implement proper collision testing
 	"sound effects" : false, // Whether sounds play or not
 	"text speed" : 4,

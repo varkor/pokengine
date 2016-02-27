@@ -403,7 +403,7 @@ function quantityWord (times) {
 	return numberword(times) + " times";
 }
 
-const Vector = function (vector) {
+let Vector = function (vector) {
 	var self = this;
 	if (arguments.length)
 		self.vector = vector;
@@ -411,7 +411,7 @@ const Vector = function (vector) {
 		self.vector = [0, 0];
 };
 
-const Matrix = function (matrix) {
+let Matrix = function (matrix) {
 	/*
 		Matrices in <canvas> contexts are represented by:
 		[a c e]

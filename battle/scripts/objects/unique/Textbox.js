@@ -1,6 +1,6 @@
 "use strict";
 
-const Textbox = FunctionObject.new({
+let Textbox = FunctionObject.new({
 	active : false,
 	slide : 0,
 	displayed : "",

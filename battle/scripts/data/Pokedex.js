@@ -1,6 +1,6 @@
 ﻿"use strict";
 
-const Pokedex = {
+let Pokedex = {
 	"Missingno. (Nintendo)" : {
 		"types" : ["Bird", "Normal"],
 		"experience" : "fast",

@@ -1,6 +1,6 @@
 "use strict";
 
-const Types = {
+let Types = {
 	"Typeless" : {},
 	"Normal" : {
 		"weak": ["Rock", "Steel"],
