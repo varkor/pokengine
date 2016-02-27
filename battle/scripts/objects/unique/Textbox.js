@@ -195,8 +195,9 @@ const Textbox = FunctionObject.new({
 			text = "" + text.trim();
 			var replacements = Settings._("text replacements").data;
 			forevery(Settings._("text replacements"), function (replacement, original) {
-				var symbolReplacement = /^\W*$/.test(original);
-				if (symbolReplacement) {
+				var wordReplacement = /^\w+$/.test(original);
+				// Word replacements are not allowed to occur if they are part of a larger word — otherwise, matches inside a word may be replaced
+				if (!wordReplacement) {
 					text = text.replace(new RegExp("(\\\\)?(" + original + ")", "g"), function (match, escaped, text) {
 						return escaped ? original : replacement;
 					});
