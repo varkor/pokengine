@@ -2142,15 +2142,18 @@ function BattleContext (client) {
 		endTurn : function () {
 			if (!battleContext.active || battleContext.finished)
 				return;
-			foreach(battleContext.effects.near, function (effect, i, deletion) {
-				if (battleContext.turns >= Math.floor(effect.expiration)) {
-					if (!battleContext.process) Textbox.state(battleContext.alliedTrainers[0].possessivePronoun(true) + " " + effect.type + " ran out.");
-					deletion.push(i);
-				}
+			foreach([battleContext.effects.near, battleContext.effects.far], side => {
+				foreach(side, function (effect, i, deletion) {
+					if (battleContext.turns >= Math.floor(effect.expiration)) {
+						if (!battleContext.process) Textbox.state((battleContext.isWildBattle() ? "The wild Pokémon's" : battleContext.alliedTrainers[0].possessivePronoun(true)) + " " + effect.name + " ran out.");
+						deletion.push(i);
+					}
+				});
 			});
+			
 			foreach(battleContext.effects.far, function (effect, i, deletion) {
 				if (battleContext.turns >= Math.floor(effect.expiration)) {
-					if (!battleContext.process) Textbox.state(battleContext.opposingTrainers[0].possessivePronoun(true) + " " + effect.type + " ran out.");
+					if (!battleContext.process) Textbox.state((battleContext.isWildBattle() ? "The wild Pokémon's" : battleContext.alliedTrainers[0].possessivePronoun(true)) + " " + effect.name + " ran out.");
 					deletion.push(i);
 				}
 			});
@@ -3231,7 +3234,7 @@ function BattleContext (client) {
 				});
 			return !maxedOut;
 		},
-		bringIntoEffect : function (effect, duration, side) {
+		bringIntoEffect : function (name, effect, duration, side) {
 			var effectSide = (side === Battles.side.near ? battleContext.effects.near : battleContext.effects.far);
 			if (!foreach(effectSide, function (which) {
 				if (which.type === effect) {
@@ -3240,6 +3243,7 @@ function BattleContext (client) {
 				}
 			}))
 				effectSide.push({
+					name,
 					type : effect,
 					expiration : battleContext.turns + duration
 				});

@@ -628,9 +628,9 @@ const Moves = {
 		targets : Move.targets.opposingSide,
 		effects : {
 			constant : function (self, target) {
-				if (!self.battler.battle.hasEffectOnSide(Moves._("Heal Block"), target)) {
+				if (!self.battler.battle.hasEffectOnSide("Heal Block", target)) {
 					if (!self.battler.battle.process) Textbox.state(self.name() + " put a Heal Block into effect.");
-					self.battler.battle.bringIntoEffect(Moves._("Heal Block"), Battles.when.afterFiveTurns, target);
+					self.battler.battle.bringIntoEffect("Heal Block", Moves._("Heal Block"), Battles.when.afterFiveTurns, target);
 				} else {
 					return {
 						failed : true
