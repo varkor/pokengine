@@ -1,4 +1,6 @@
-Types = {
+"use strict";
+
+const Types = {
 	"Typeless" : {},
 	"Normal" : {
 		"weak": ["Rock", "Steel"],

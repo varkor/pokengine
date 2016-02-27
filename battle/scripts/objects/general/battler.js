@@ -1,3 +1,5 @@
+"use strict";
+
 battler.resetDisplay = function (self) {
 	self.display = {
 		transition : 1,

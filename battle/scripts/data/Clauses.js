@@ -1,3 +1,5 @@
+"use strict";
+
 Clauses = {
 	"Baton Pass" : {
 		description : "Only one Pokémon in each party may know Baton Pass.",

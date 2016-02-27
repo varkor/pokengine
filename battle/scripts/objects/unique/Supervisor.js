@@ -1,4 +1,6 @@
-Supervisor = {
+"use strict";
+
+const Supervisor = {
 	identification : 0,
 	processes : {},
 	send : function (party, message, data, identifier) {

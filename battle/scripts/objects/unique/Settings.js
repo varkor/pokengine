@@ -1,3 +1,5 @@
+"use strict";
+
 Settings.addData({
 	"screen dimensions" : { width : 356, height : 288 },
 	"framerate" : 60, // The framerate—does not affect the game speed at all

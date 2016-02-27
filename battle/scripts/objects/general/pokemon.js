@@ -1,3 +1,5 @@
+"use strict";
+
 function pokemon (data, validate) {
 	var self = this;
 

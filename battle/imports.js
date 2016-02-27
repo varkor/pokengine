@@ -1,3 +1,5 @@
+"use strict";
+
 var paths = [
 	"scripts/functions/objects.js",
 	"scripts/functions/random.js",

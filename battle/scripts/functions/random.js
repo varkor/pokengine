@@ -1,3 +1,5 @@
+"use strict";
+
 function srandom (seed) {
 	var self = this;
 	

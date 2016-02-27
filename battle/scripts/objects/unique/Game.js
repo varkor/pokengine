@@ -1,4 +1,6 @@
-Game = {
+"use strict";
+
+const Game = {
 	zoom : 1,
 	focused : true,
 	increment : 0,

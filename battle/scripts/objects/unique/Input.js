@@ -1,4 +1,6 @@
-Input = FunctionObject.new({
+"use strict";
+
+const Input = FunctionObject.new({
 	controlScheme : "keyboard",
 	priority : "keyboard"
 }, {
@@ -53,7 +55,7 @@ Input = FunctionObject.new({
 	}
 });
 
-Keys = {
+const Keys = {
 	name : function (key) {
 		if (typeof key === "string")
 			return key;
@@ -223,7 +225,7 @@ window.addEventListener("keyup", function (event) {
 	 	event.preventDefault();
 });
 
-Cursor = {
+const Cursor = {
 	x : null,
 	y : null,
 	lastMoved : 0,

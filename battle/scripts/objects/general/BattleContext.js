@@ -1,3 +1,5 @@
+"use strict";
+
 function BattleContext (client) {
 	if (arguments.length < 1)
 		client = false;
@@ -666,7 +668,6 @@ function BattleContext (client) {
 		},
 		beginOnline : function (seed, alliedTrainers, opposingTrainers, settings, callback) {
 			battleContext.random.seed = seed;
-			settings.flags.pushIfNotAlreadyContained("competitive");
 			battleContext.initiate(alliedTrainers, opposingTrainers, settings, callback);
 		},
 		beginWildBattle : function (alliedTrainers, pokes, settings, callback) {

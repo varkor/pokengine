@@ -1,4 +1,6 @@
-Display = {
+"use strict";
+
+const Display = {
 	store : {
 		pokemon : function (poke) {
 			if (poke === NoPokemon)
@@ -51,7 +53,7 @@ Display = {
 		}
 	},
 	pokemonInState : function (poke, _state) {
-		state = _state;
+		let state = _state;
 		if (arguments.length < 2)
 			state = Display.state.current;
 		else

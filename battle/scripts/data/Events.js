@@ -1,2 +1,4 @@
-Events = [
+"use strict";
+
+const Events = [
 ];

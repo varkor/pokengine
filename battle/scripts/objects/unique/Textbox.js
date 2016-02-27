@@ -1,4 +1,6 @@
-Textbox = FunctionObject.new({
+"use strict";
+
+const Textbox = FunctionObject.new({
 	active : false,
 	slide : 0,
 	displayed : "",

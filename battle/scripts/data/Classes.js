@@ -1,4 +1,6 @@
-Classes = {
+"use strict";
+
+const Classes = {
 	"Ace Trainer" : {
 		"payout" : 100
 	},

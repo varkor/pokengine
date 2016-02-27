@@ -1,4 +1,6 @@
-File = {
+"use strict";
+
+const File = {
 	loadFileOfType : function (_store, object, loadEvent, dataForFile, directory, filetype, _paths, uponLoad, uponError, _redirectedPaths) {
 		var store = _store;
 		if (!Files.hasOwnProperty(store))
@@ -84,6 +86,6 @@ File = {
 		}
 	}
 };
-Files = {
+const Files = {
 	nonexistent : []
 };

@@ -1,3 +1,5 @@
+"use strict";
+
 function storage (initial) {
 	var self = this;
 

@@ -1,4 +1,6 @@
-Sprite = FunctionObject.new({
+"use strict";
+
+const Sprite = FunctionObject.new({
 	canvases : [],
 	load : function (_paths, uponLoad, uponError, _filetype) {
 		var paths = wrapArray(_paths).slice(0), filetype = arguments.length >= 4 && typeof _filetype !== "undefined" ? _filetype : null;

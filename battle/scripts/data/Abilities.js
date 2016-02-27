@@ -1,4 +1,6 @@
-Abilities = {
+"use strict";
+
+const Abilities = {
 	"Intimidate" : {
 		effects : [
 			{

@@ -1,4 +1,6 @@
-Debugger = FunctionObject.new({
+"use strict";
+
+const Debugger = FunctionObject.new({
 	previousFrame : performance.now(),
 	fps : {
 		statistics : function () {

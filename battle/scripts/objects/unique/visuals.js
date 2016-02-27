@@ -1,4 +1,6 @@
-Lighting = {
+"use strict";
+
+const Lighting = {
 	shadows : {
 		opacity : function () {
 			switch (Weather.weather) {
@@ -20,7 +22,7 @@ Lighting = {
 	}
 };
 
-Weather = {
+const Weather = {
 	weather : "clear skies",
 	time : 1,
 	skyHeight : 64,
@@ -198,7 +200,7 @@ Weather = {
 	}
 };
 
-Particles = {
+const Particles = {
 	all : [],
 	create : function (particle, number) {
 		/* Particle {x, y, z, image / draw()} */

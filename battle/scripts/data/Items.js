@@ -1,4 +1,6 @@
-Items = {
+"use strict";
+
+const Items = {
 	"Medicines" : {
 		standard : {
 			use : "healing",

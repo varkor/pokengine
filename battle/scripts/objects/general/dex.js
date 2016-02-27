@@ -1,3 +1,5 @@
+"use strict";
+
 function dex (data) {
 	var self = this;
 

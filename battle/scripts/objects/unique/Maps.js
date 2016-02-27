@@ -1,4 +1,6 @@
-Maps = {
+"use strict";
+
+const Maps = {
 	"Route 1 (Kanto)" : {
 		"name" : "Route 1",
 		"flags" : ["Cave", "Indoor"],

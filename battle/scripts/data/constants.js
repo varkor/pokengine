@@ -1,14 +1,16 @@
+"use strict";
+
 var q;
 
-Stats = {
+const Stats = {
 	permanent : ["health", "attack", "defence", "special attack", "special defence", "speed"],
 	transient : ["accuracy", "evasion", "critical"],
 };
 Stats.all = [].concat(Stats.permanent, Stats.transient);
 
-Experiences = ["erratic", "fast", "medium fast", "medium slow", "slow", "fluctuating"];
+const Experiences = ["erratic", "fast", "medium fast", "medium slow", "slow", "fluctuating"];
 
-Evolution = {
+const Evolution = {
 	// Ways to trigger an evolution
 	methods : [
 		"level", // Triggered when the Pokémon levels up (often used in conjunction with other properties)
@@ -23,7 +25,7 @@ Evolution = {
 	]
 };
 
-Natures = {
+const Natures = {
 	"Hardy" : {
 	},
 	"Docile" : {
@@ -116,11 +118,11 @@ Natures = {
 	}
 };
 
-Weathers = ["clear skies", "intense sunlight", "extremely harsh sunlight", "rain", "heavy rain", "sandstorm", "hail", "diamond dust", "shadowy aura", "fog", "strong winds"];
+const Weathers = ["clear skies", "intense sunlight", "extremely harsh sunlight", "rain", "heavy rain", "sandstorm", "hail", "diamond dust", "shadowy aura", "fog", "strong winds"];
 
-Development = ["complete", "incomplete", "unstarted"];
+const Development = ["complete", "incomplete", "unstarted"];
 
-Statuses = ["none", "burned", "frozen", "paralysed", "poisoned", "badly poisoned", "asleep"];
+const Statuses = ["none", "burned", "frozen", "paralysed", "poisoned", "badly poisoned", "asleep"];
 Statuses.Volatile = ["confused", "infatuated"];
 
 /*
@@ -130,7 +132,7 @@ Statuses.Volatile = ["confused", "infatuated"];
 		data:
 			oneself : Whether the Pokémon that triggered the event is itself
 */
-Triggers = {
+const Triggers = {
 	/*
 		Triggered when the Pokémon is sent out.
 	*/
@@ -209,9 +211,9 @@ Triggers = {
 	status : ++ q
 };
 
-Genders = ["male", "female", "neuter"];
+const Genders = ["male", "female", "neuter"];
 
-Time = {
+const Time = {
 	framerate : Settings._("framerate"),
 	speed : Settings._("speed"),
 	millisecond : 1,
@@ -221,9 +223,9 @@ Time = {
 };
 Time.refresh = Time.second / Time.framerate;
 
-Nationalities = ["British"];
+const Nationalities = ["British"];
 
-Item = {
+const Item = {
 	use : [
 		"healing", // Restore health
 		"curing", // Cure a status effect
@@ -233,7 +235,7 @@ Item = {
 	]
 };
 
-Battles = {
+const Battles = {
 	style : ["normal", "double", "sky"],
 	side : {
 		// These are empty objects simply so they're unique from one another. They even conserve uniqueness after being transformed to JSON and back, which is rather handy. They do ~not~, however, need to be identified after being transferred by JSON — just distinguished, because getPokemonInPlace does not actually use the `side` parameter — it just checks for it.
@@ -255,7 +257,7 @@ Battles = {
 	}
 };
 
-Trainers = {
+const Trainers = {
 	type : {
 		NPC : q = 0,
 		local : ++ q,
@@ -263,7 +265,7 @@ Trainers = {
 	}
 };
 
-Directions = {
+const Directions = {
 	up : q = 0,
 	right : ++ q,
 	down : ++ q,
@@ -278,13 +280,13 @@ Scenes.addData({
 	"Forest Trail" : {}
 });
 
-Creators = {
+const Creators = {
 	"Nintendo" : {
 		"games" : ["RSE"]
 	}
 };
 
-Games = {
+const Games = {
 	"RSE" : {
 		"constituents" : ["Ruby", "Sapphire", "Emerald"],
 		"region" : "Hoenn",
@@ -305,18 +307,18 @@ Games = {
 	}
 };
 
-Regions = ["Hoenn", "Kanto"];
+const Regions = ["Hoenn", "Kanto"];
 
-Pokerus = ["uninfected", "infected", "immune"];
+const Pokerus = ["uninfected", "infected", "immune"];
 
-Tiles = ["grass", "long grass", "dark grass", "seaweed"];
+const Tiles = ["grass", "long grass", "dark grass", "seaweed"];
 
-NoPokemon = {};
+const NoPokemon = {};
 
-onlyPokemon = function (poke) {
+const onlyPokemon = function (poke) {
 	return poke !== NoPokemon;
 };
 
-onlyNoPokemon = function (poke) {
+const onlyNoPokemon = function (poke) {
 	return poke === NoPokemon;
 };

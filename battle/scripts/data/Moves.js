@@ -1,4 +1,6 @@
-Moves = {
+"use strict";
+
+const Moves = {
 	Confused : {
 		type : "Typeless",
 		category : Move.category.physical,

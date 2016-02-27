@@ -1,4 +1,6 @@
-FileData = {
+"use strict";
+
+const FileData = {
 	images : {
 		"pokemon/Nintendo/Bulbasaur" : {
 			animated : true,

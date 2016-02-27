@@ -1,4 +1,6 @@
-Relay = {
+"use strict";
+
+const Relay = {
 	identification : null,
 	processes : {},
 	pass : function (message, data, identifier) {

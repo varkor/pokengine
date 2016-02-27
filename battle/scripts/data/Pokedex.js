@@ -1,4 +1,6 @@
-﻿Pokedex = {
+﻿"use strict";
+
+const Pokedex = {
 	"Missingno. (Nintendo)" : {
 		"types" : ["Bird", "Normal"],
 		"experience" : "fast",

@@ -1,4 +1,6 @@
-Sound = {
+"use strict";
+
+const Sound = {
 	load : function (_paths, uponLoad, uponError, filetype, playImmediately) {
 		var paths = wrapArray(_paths).slice(0), filetype = arguments.length >= 4 && typeof _filetype !== "undefined" ? _filetype : null;
 		if (filetype === null) {

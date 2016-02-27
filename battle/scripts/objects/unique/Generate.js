@@ -1,4 +1,6 @@
-Generate = {
+"use strict";
+
+const Generate = {
 	random : new srandom(),
 	pokemon : {
 		forCompetition : function (species, level) {

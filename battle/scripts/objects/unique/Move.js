@@ -1,4 +1,6 @@
-Move = {
+"use strict";
+
+const Move = {
 	category : {
 		physical : q = 0,
 		special : ++ q,
@@ -53,7 +55,7 @@ Move = {
 		return Moves[move].PP * (1 + 0.2 * PPUps);
 	},
 	use : function (move, stage, mover, target, inception) {
-		moveName = move;
+		let moveName = move;
 		move = Moves._(move);
 		if (target instanceof pokemon)
 			target = mover.trainer.battle.placeOfPokemon(target);
@@ -218,6 +220,7 @@ Move = {
 		var events = JSONCopy(move.animation[stage], true), from = Display.state.save();
 		var affectsEntireSideOrBothSides = (target === Battles.side.far || target === Battles.side.near);
 		foreach(events.sort(function (a, b) {
+			let aLast, bLast;
 			if (a.hasOwnProperty("time"))
 				aLast = a.time;
 			else

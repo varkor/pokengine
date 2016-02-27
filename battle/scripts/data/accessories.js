@@ -1,4 +1,6 @@
-Badges = {
+"use strict";
+
+const Badges = {
 	"Boulder" : {
 		enabled : [HMs.indexOf(Moves.Flash)],
 		obediance : null
@@ -10,6 +12,6 @@ Badges = {
 };
 _method(Badges);
 
-Ribbons = {
+const Ribbons = {
 };
 _method(Ribbons);

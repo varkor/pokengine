@@ -1,4 +1,6 @@
-DataObject = {
+"use strict";
+
+const DataObject = {
 	new : function () {
 		var object = {
 			data : {},
@@ -46,7 +48,7 @@ DataObject = {
 	}
 };
 
-FunctionObject = {
+const FunctionObject = {
 	objects : [],
 	initialised : false,
 	new : function (object, details) {

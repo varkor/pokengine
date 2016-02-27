@@ -1,4 +1,6 @@
-Widgets = {};
+"use strict";
+
+const Widgets = {};
 
 Widgets.FlowGrid = {
 	templates : {

@@ -1,3 +1,5 @@
+"use strict";
+
 function trainer (data) {
 	var self = this;
 

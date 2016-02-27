@@ -87,9 +87,11 @@
 		<ul id="team" class="zebra"></ul>
 		<ul id="users"></ul>
 		<script>
-		Battle = null;
+		"use strict";
 
-		Interface = {
+		let Battle = null;
+
+		const Interface = {
 			random : new srandom(172),
 			initialise : function () {
 				document.querySelector("#connect").addEventListener("mousedown", function (event) {

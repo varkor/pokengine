@@ -1,7 +1,9 @@
-TMs = [
+"use strict";
+
+const TMs = [
 ];
 
-HMs = [
+const HMs = [
 	"Flash",
 	"Cut"
 ];

@@ -1,10 +1,12 @@
+"use strict";
+
 /*
 	An object used to test out multiplayer battles, locally
 	To use:
 		TrialServer.begin();
 		TrialServer.trigger.NPCBattle();
 */
-TrialServer = {
+const TrialServer = {
 	begin : function () {
 		// Initialise the Supervisor
 		Supervisor.send = function (party, message, data, identifier) {

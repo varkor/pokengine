@@ -1,3 +1,5 @@
+"use strict";
+
 function foreach (array, fn) {
 	var deletion = [], i, broke = false;
 	for (i = 0; i < array.length; ++ i) {
@@ -401,7 +403,7 @@ function quantityWord (times) {
 	return numberword(times) + " times";
 }
 
-Vector = function (vector) {
+const Vector = function (vector) {
 	var self = this;
 	if (arguments.length)
 		self.vector = vector;
@@ -409,7 +411,7 @@ Vector = function (vector) {
 		self.vector = [0, 0];
 };
 
-Matrix = function (matrix) {
+const Matrix = function (matrix) {
 	/*
 		Matrices in <canvas> contexts are represented by:
 		[a c e]
