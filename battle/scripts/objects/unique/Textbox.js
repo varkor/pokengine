@@ -787,13 +787,16 @@ const Textbox = FunctionObject.new({
 						if (majorResponses > maxResponses) {
 							responseOffset = Math.max(0, Math.ceil(Math.min(majorResponses - maxResponses, Math.floor(Textbox.response - maxResponses / 2)) / style.responsesPerRow) * style.responsesPerRow);
 						}
-						for (var response = responseOffset, responsesOfKind, relativeResponse, selected, hovered, isMajor; (response - responseOffset < maxResponses || response >= majorResponses) && response < responses; ++ response) {
+						for (var response = responseOffset, responsesOfKind, relativeResponse, selected, hovered, isMajor; response < responses; ++ response) {
 							isMajor = response < majorResponses;
+							if (!(response - responseOffset < maxResponses || response >= majorResponses) && isMajor) {
+								continue;
+							}
 							responsesOfKind = isMajor ? majorResponses : minorResponses;
-							relativeResponse = (response - responseOffset) - (isMajor ? 0 : majorResponses);
+							relativeResponse = isMajor ? response - responseOffset : response - majorResponses;
 							responseMetrics.width = Math.ceil(metrics.width / (responsesOfKind % style.responsesPerRow !== 0 && relativeResponse >= responsesOfKind - (responsesOfKind % style.responsesPerRow) ? responsesOfKind % style.responsesPerRow : style.responsesPerRow));
 							responseMetrics.x = Math.ceil(metrics.left + (relativeResponse % style.responsesPerRow) * responseMetrics.width);
-							responseMetrics.y = metrics.top + metrics.height + (isMajor ? Math.floor(relativeResponse / style.responsesPerRow) * metrics.response.major.height : Math.ceil(majorResponses / style.responsesPerRow) * metrics.response.major.height + Math.floor(relativeResponse / style.responsesPerRow) * metrics.response.minor.height);
+							responseMetrics.y = metrics.top + metrics.height + (isMajor ? Math.floor(relativeResponse / style.responsesPerRow) * metrics.response.major.height : Math.min(Math.ceil(majorResponses / style.responsesPerRow), style.maxRows) * metrics.response.major.height + Math.floor(relativeResponse / style.responsesPerRow) * metrics.response.minor.height);
 							responseMetrics.height = (isMajor ? metrics.response.major : metrics.response.minor).height;
 							selected = (hovered = Cursor.inArea(canvas, responseMetrics.x * Game.zoom, responseMetrics.y * Game.zoom, responseMetrics.width * Game.zoom, responseMetrics.height * Game.zoom) && Input.priority === "mouse") || (Input.controlScheme === "keyboard" && Textbox.response === response && (!cursorIsOverAResponse || Input.priority === "keyboard"));
 							context.fillStyle = (selected ? "hsla(0, 0%, 100%, 0.8)" : "hsla(0, 0%, 0%, 0.6)");
@@ -824,7 +827,7 @@ const Textbox = FunctionObject.new({
 								context.fill();
 							}
 							if (responseOffset + maxResponses < majorResponses) {
-								var responseHeight = Math.ceil(Math.min(majorResponses, style.maxRows * style.responsesPerRow) / style.responsesPerRow) * metrics.response.major.height + Math.ceil(minorResponses / style.responsesPerRow) * metrics.response.minor.height;
+								var responseHeight = Math.ceil(Math.min(majorResponses, style.maxRows * style.responsesPerRow) / style.responsesPerRow) * metrics.response.major.height;
 								context.beginPath();
 								context.moveToHD((metrics.left + metrics.width / 2) * Game.zoom, (metrics.top + metrics.height + responseHeight + triangleHeight / 2 - bob) * Game.zoom);
 								context.lineToHD((metrics.left + metrics.width / 2 + triangleWidth / 2) * Game.zoom, (metrics.top + metrics.height + responseHeight - triangleHeight / 2 - bob) * Game.zoom);
