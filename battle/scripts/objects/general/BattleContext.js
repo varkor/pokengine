@@ -2144,13 +2144,13 @@ function BattleContext (client) {
 				return;
 			foreach(battleContext.effects.near, function (effect, i, deletion) {
 				if (battleContext.turns >= Math.floor(effect.expiration)) {
-					if (!battleContext.process) Textbox.state(battleContext.alliedTrainers[0].possessivePronoun(true) + effect.type + " ran out.");
+					if (!battleContext.process) Textbox.state(battleContext.alliedTrainers[0].possessivePronoun(true) + " " + effect.type + " ran out.");
 					deletion.push(i);
 				}
 			});
 			foreach(battleContext.effects.far, function (effect, i, deletion) {
 				if (battleContext.turns >= Math.floor(effect.expiration)) {
-					if (!battleContext.process) Textbox.state(battleContext.opposingTrainers[0].possessivePronoun(true) + effect.type + " ran out.");
+					if (!battleContext.process) Textbox.state(battleContext.opposingTrainers[0].possessivePronoun(true) + " " + effect.type + " ran out.");
 					deletion.push(i);
 				}
 			});
@@ -2506,8 +2506,8 @@ function BattleContext (client) {
 								} else {
 									foreach(healthyEligiblePokemon, function (poke, which) {
 										battleContext.enter(poke, true, emptyPlaces.shift());
-										battleContext.continueToNextTurn(false);
 									});
+									battleContext.continueToNextTurn(false);
 								}
 							};
 							if (battleContext.isWildBattle()) {
