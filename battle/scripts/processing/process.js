@@ -90,7 +90,7 @@ forevery(Items, function (category) {
 				return contracted;
 			},
 			icon (includeFiletype) {
-				return item.paths.convert(Settings._("paths => items => image"), includeFiletype, "icon");
+				return [Settings._("paths => items => image"), Settings._("paths => items => special").replace("{special}", "fallback")].map(path => item.paths.convert(path), includeFiletype);
 			}
 		};
 		item.fullname = name + (["Berry", "Ball"].contains(item.category) ? " " + item.category : "");

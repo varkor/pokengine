@@ -25,7 +25,8 @@ Settings.addData({
 		"sounds" : "sounds",
 		"Pokemon" : {
 			"image" : "pokemon/{region}/{species}{whichform(e)}{which}{filetype=png}",
-			"sound" : "pokemon/{region}/{species}{whichmega}{filetype=mp3}"
+			"sound" : "pokemon/{region}/{species}{whichmega}{filetype=mp3}",
+			"special" : "pokemon/{special}{which}{filetype=png}"
 		},
 		"characters" : {
 			"image" : "characters/{game}/{who}{filetype=png}"
@@ -34,7 +35,8 @@ Settings.addData({
 			"image" : "scenes/{name}{filetype=png}"
 		},
 		"items" : {
-			"image" : "items/{name}{filetype=png}"
+			"image" : "items/{name}{filetype=png}",
+			"special" : "items/{special}{filetype=png}"
 		}
 	}
 }, true);

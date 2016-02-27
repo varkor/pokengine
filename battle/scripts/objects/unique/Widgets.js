@@ -38,9 +38,11 @@ Widgets.FlowGrid = {
 				context.setFontHD("Arial", 10);
 				context.fillTextHD(poke.name(), position.x + size.width / 2, position.y + size.height - 4);
 				// Level
-				context.textBaseline = "top";
-				context.setFontHD("Arial", 8);
-				context.fillTextHD("Lv. " + poke.level, position.x + size.width / 2, position.y + 4);
+				if (poke.egg === null) {
+					context.textBaseline = "top";
+					context.setFontHD("Arial", 8);
+					context.fillTextHD("Lv. " + poke.level, position.x + size.width / 2, position.y + 4);
+				}
 				// Health
 				var radius, startAngle = 3 / 4 * Math.PI, endAngle;
 				var percentageHealth = poke.health / poke.maximumHealth();

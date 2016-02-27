@@ -306,11 +306,14 @@ function pokemon (data, validate) {
 			contracted = contracted.replace("{animation}", Sprite.shouldAnimate(contracted) ? "animated" : "static");
 			return contracted;
 		},
+		special : function (special) {
+			return Settings._("paths => Pokemon => special").replace("{special}", special);
+		},
 		sprite : function (which, includeFiletype) {
-			return self.paths.convert(Settings._("paths => Pokemon => image"), includeFiletype, which);
+			return self.paths.convert(self.egg === null ? Settings._("paths => Pokemon => image") : self.paths.special("egg"), includeFiletype, which);
 		},
 		icon : function (includeFiletype) {
-			return self.paths.convert(Settings._("paths => Pokemon => image"), includeFiletype, "icon");
+			return [self.egg === null ? Settings._("paths => Pokemon => image") : self.paths.special("egg"), self.paths.special("fallback")].map(path => self.paths.convert(path, includeFiletype, "icon"));
 		},
 		cry : function (includeFiletype) {
 			return self.paths.convert(Settings._("paths => Pokemon => sound"), includeFiletype);
