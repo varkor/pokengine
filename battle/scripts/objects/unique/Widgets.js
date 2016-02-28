@@ -42,40 +42,40 @@ Widgets.FlowGrid = {
 					context.textBaseline = "top";
 					context.setFontHD("Arial", 8);
 					context.fillTextHD("Lv. " + poke.level, position.x + size.width / 2, position.y + 4);
-				}
-				// Health
-				var radius, startAngle = 3 / 4 * Math.PI, endAngle;
-				var percentageHealth = poke.health / poke.maximumHealth();
-				radius = { outer : 22, inner : 19 };
-				endAngle = startAngle + percentageHealth * 2 * Math.PI;
-				context.fillStyle = (percentageHealth > 0.5 ? "hsl(110, 100%, 40%)" : percentageHealth > 0.2 ? "hsl(40, 100%, 50%)" : "hsl(0, 100%, 50%)");
-				context.beginPath();
-				context.arcHD(position.x + size.width / 2, position.y + size.height / 2, radius.inner, 2 * Math.PI - startAngle, 2 * Math.PI - endAngle, true);
-				context.arcHD(position.x + size.width / 2, position.y + size.height / 2, radius.outer, 2 * Math.PI - endAngle, 2 * Math.PI - startAngle, false);
-				context.fill();
-				// Experience
-				var percentageExperience = poke.experience / poke.experienceFromLevelToNextLevel();
-				radius = { outer : 17, inner : 15 };
-				endAngle = startAngle + percentageExperience * 2 * Math.PI;
-				context.fillStyle = poke.health > 0 ? "hsl(190, 100%, 50%)" : "hsl(190, 0%, 50%)";
-				context.beginPath();
-				context.arcHD(position.x + size.width / 2, position.y + size.height / 2, radius.inner, 2 * Math.PI - startAngle, 2 * Math.PI - endAngle, true);
-				context.arcHD(position.x + size.width / 2, position.y + size.height / 2, radius.outer, 2 * Math.PI - endAngle, 2 * Math.PI - startAngle, false);
-				context.fill();
-				// Status
-				if (poke.status !== "none") {
-					var offset = 2, cornerRadius = 4;
+					// Health
+					var radius, startAngle = 3 / 4 * Math.PI, endAngle;
+					var percentageHealth = poke.health / poke.maximumHealth();
+					radius = { outer : 22, inner : 19 };
+					endAngle = startAngle + percentageHealth * 2 * Math.PI;
+					context.fillStyle = (percentageHealth > 0.5 ? "hsl(110, 100%, 40%)" : percentageHealth > 0.2 ? "hsl(40, 100%, 50%)" : "hsl(0, 100%, 50%)");
 					context.beginPath();
-					context.lineToHD(position.x, position.y + size.height / 4);
-					for (var angle = 0; angle <= 1; angle += 1 / 8) {
-						context.lineToHD(
-							position.x + size.width / 2 + (size.width / 2 - cornerRadius) * Math.sign(Math.cos((offset + 0.5) * Math.PI / 2)) + cornerRadius * Math.cos((angle + offset) * Math.PI / 2),
-							position.y + size.height / 2 + (size.height / 2 - cornerRadius) * Math.sign(Math.sin((offset + 0.5) * Math.PI / 2)) + cornerRadius * Math.sin((angle + offset) * Math.PI / 2)
-						);
-					}
-					context.lineToHD(position.x + size.width / 4, position.y);
-					context.fillStyle = "hsl(" + ["0, 50%, 50%", "185, 50%, 70%", "55, 70%, 50%", "280, 50%, 50%", "265, 70%, 50%", "0, 0%, 70%"][["burned", "frozen", "paralysed", "poisoned", "badly poisoned", "asleep"].indexOf(poke.status)] + ")";
+					context.arcHD(position.x + size.width / 2, position.y + size.height / 2, radius.inner, 2 * Math.PI - startAngle, 2 * Math.PI - endAngle, true);
+					context.arcHD(position.x + size.width / 2, position.y + size.height / 2, radius.outer, 2 * Math.PI - endAngle, 2 * Math.PI - startAngle, false);
 					context.fill();
+					// Experience
+					var percentageExperience = poke.experience / poke.experienceFromLevelToNextLevel();
+					radius = { outer : 17, inner : 15 };
+					endAngle = startAngle + percentageExperience * 2 * Math.PI;
+					context.fillStyle = poke.health > 0 ? "hsl(190, 100%, 50%)" : "hsl(190, 0%, 50%)";
+					context.beginPath();
+					context.arcHD(position.x + size.width / 2, position.y + size.height / 2, radius.inner, 2 * Math.PI - startAngle, 2 * Math.PI - endAngle, true);
+					context.arcHD(position.x + size.width / 2, position.y + size.height / 2, radius.outer, 2 * Math.PI - endAngle, 2 * Math.PI - startAngle, false);
+					context.fill();
+					// Status
+					if (poke.status !== "none") {
+						var offset = 2, cornerRadius = 4;
+						context.beginPath();
+						context.lineToHD(position.x, position.y + size.height / 4);
+						for (var angle = 0; angle <= 1; angle += 1 / 8) {
+							context.lineToHD(
+								position.x + size.width / 2 + (size.width / 2 - cornerRadius) * Math.sign(Math.cos((offset + 0.5) * Math.PI / 2)) + cornerRadius * Math.cos((angle + offset) * Math.PI / 2),
+								position.y + size.height / 2 + (size.height / 2 - cornerRadius) * Math.sign(Math.sin((offset + 0.5) * Math.PI / 2)) + cornerRadius * Math.sin((angle + offset) * Math.PI / 2)
+							);
+						}
+						context.lineToHD(position.x + size.width / 4, position.y);
+						context.fillStyle = "hsl(" + ["0, 50%, 50%", "185, 50%, 70%", "55, 70%, 50%", "280, 50%, 50%", "265, 70%, 50%", "0, 0%, 70%"][["burned", "frozen", "paralysed", "poisoned", "badly poisoned", "asleep"].indexOf(poke.status)] + ")";
+						context.fill();
+					}
 				}
 				// Icon
 				var redrawOnceLoaded = path => {

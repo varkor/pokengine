@@ -405,7 +405,7 @@ Move.targets = {
 	noone : [],
 	closeBy : [Move.target.self, Move.target.directOpponent, Move.target.adjacentAlly, Move.target.adjacentOpponent],
 
-	 // Special letants
+	 // Special constants
 	party : {},
 	opposingSide : {},
 	alliedSide : {},
