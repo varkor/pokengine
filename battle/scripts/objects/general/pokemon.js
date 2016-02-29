@@ -112,6 +112,9 @@ function pokemon (data, validate) {
 		return initialisingRandom.chance(4096);
 	});
 	setProperty("egg", null); // Number of egg cycles, or null (for not an egg)
+	if (self.egg === true) {
+		self.egg = Pokedex._(self.species)["egg cycles"];
+	}
 	setProperty("caught", null);
 	setProperty("ribbons", []);
 	setProperty("Pokerus", function () {

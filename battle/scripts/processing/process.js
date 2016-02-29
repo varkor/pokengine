@@ -24,6 +24,8 @@ forevery(Types, function (effectivenesses, type) {
 forevery(Pokedex, function (poke, name) {
 	if (!poke.hasOwnProperty("preevolutions"))
 			poke.preevolutions = [];
+	if (!poke.hasOwnProperty("egg cycles"))
+			poke["egg cycles"] = 1;
 	foreach(poke.evolutions, function (evo) {
 		var into = Pokedex._(evo.species);
 		if (!into.hasOwnProperty("preevolutions"))
