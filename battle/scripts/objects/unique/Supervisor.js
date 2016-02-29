@@ -117,12 +117,16 @@ let Supervisor = {
 					if (typeof data.data.parameters !== "object")
 						return unsuccessful("The parameter `data.data.parameters` should have been an object, but had type `" + (typeof data.data.parameters) + "`.");
 					battle.random.seed = data.data.seed;
+					var illegalBattle;
 					if (teamA.identification === 0) { /* Code for wild battles */
-						battle.beginWildBattle(teamB, teamA.party.pokemon, data.data.parameters, callback);
+						illegalBattle = !battle.beginWildBattle(teamB, teamA.party.pokemon, data.data.parameters, callback);
 					} else if (teamB.identification === 0) {
-						battle.beginWildBattle(teamA, teamB.party.pokemon, data.data.parameters, callback);
+						illegalBattle = !battle.beginWildBattle(teamA, teamB.party.pokemon, data.data.parameters, callback);
 					} else {
-						battle.beginOnline(data.data.seed, teamA, teamB, data.data.parameters, callback);
+						illegalBattle = !battle.beginOnline(data.data.seed, teamA, teamB, data.data.parameters, callback);
+					}
+					if (illegalBattle) {
+						return unsuccessful("The battle was illegal in some form (probably due to one of the trainers not having any valid Pokémon).");
 					}
 					foreach(data.parties, function (party) {
 						Supervisor.send(party, "initiate", {

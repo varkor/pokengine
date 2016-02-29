@@ -668,14 +668,14 @@ function BattleContext (client) {
 		},
 		beginOnline : function (seed, alliedTrainers, opposingTrainers, settings, callback) {
 			battleContext.random.seed = seed;
-			battleContext.initiate(alliedTrainers, opposingTrainers, settings, callback);
+			return battleContext.initiate(alliedTrainers, opposingTrainers, settings, callback);
 		},
 		beginWildBattle : function (alliedTrainers, pokes, settings, callback) {
 			pokes = wrapArray(pokes);
-			battleContext.initiate(alliedTrainers, trainer.newWildTrainer(pokes), settings, callback);
+			return battleContext.initiate(alliedTrainers, trainer.newWildTrainer(pokes), settings, callback);
 		},
 		beginTrainerBattle : function (alliedTrainers, opposingTrainers, settings, callback) {
-			battleContext.initiate(alliedTrainers, opposingTrainers, settings, callback);
+			return battleContext.initiate(alliedTrainers, opposingTrainers, settings, callback);
 		},
 		initiate : function (alliedTrainers, opposingTrainers, settings, callback) {
 			if (!battleContext.active) {
@@ -726,8 +726,9 @@ function BattleContext (client) {
 							});
 						}
 					}
-				}))
-					return;
+				})) {
+					return false; // The battle was illegal and thus could not be initiated
+				}
 				if (foreach(battleContext.opposingTrainers, function (participant) {
 					participant.display.visible = true;
 					participant.megaEvolution = false;
@@ -752,8 +753,9 @@ function BattleContext (client) {
 								}; }(newPoke)});
 						}
 					}
-				}))
-					return;
+				})) {
+					return false; // The battle was illegal and thus could not be initiated
+				}
 				battleContext.active = true;
 				if (!battleContext.process) {
 					Display.state.load(Display.state.save());
@@ -761,8 +763,10 @@ function BattleContext (client) {
 				} else {
 					battleContext.begin();
 				}
-			} else
+				return true; // The battle could be initiated successfully
+			} else {
 				throw new Error("You've tried to start a battle when one is already in progress!");
+			}
 		},
 		begin : function () {
 			battleContext.state = {
