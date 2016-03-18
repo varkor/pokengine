@@ -1,2 +1,4 @@
-Settings = DataObject.new();
-Scenes = DataObject.new();
+"use strict";
+
+var Settings = DataObject.new();
+var Scenes = DataObject.new();

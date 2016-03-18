@@ -54,6 +54,11 @@ button {
 	font: normal 12pt "Helvetica Neue";
 	-webkit-user-select: none;
 }
+.flow-grid button {
+	width: auto; height: auto;
+	color: auto; background: auto;
+	margin: auto;
+}
 button.small {
 	width: 40pt;
 	font-size: 16pt;

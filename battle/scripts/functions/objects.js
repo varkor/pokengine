@@ -1,6 +1,6 @@
 "use strict";
 
-let DataObject = {
+var DataObject = {
 	new : function () {
 		var object = {
 			data : {},
@@ -48,7 +48,7 @@ let DataObject = {
 	}
 };
 
-let FunctionObject = {
+var FunctionObject = {
 	objects : [],
 	initialised : false,
 	new : function (object, details) {

@@ -404,7 +404,10 @@ Widgets.Bag = {
 		columns : 5,
 		contrainToBounds : false,
 		selection : "multiple",
-		margin : 5,
+		margin : {
+			all : 5,
+			top : 35
+		},
 		spacing : 6,
 		listeners : {
 			"cell:click" (index, data) {
@@ -472,3 +475,49 @@ Widgets.Bag = {
 	}
 };
 BattleContext.defaultDelegates.Bag = Widgets.Bag.BattleContextDelegate;
+
+var style = document.createElement("style");
+style.appendChild(document.createTextNode(`
+	.flow-grid div {
+		position: absolute;
+		left: 5px; top: 5px;
+		height: 25px;
+	}
+	.flow-grid button {
+		padding: 0 10px;
+		margin-right: 5px;
+		height: 100%;
+		font-size: 10px;
+		color: hsl(0, 0%, 60%);
+		background: hsl(0, 0%, 30%);
+		border: none; outline: none;
+		border-radius: 2px;
+		cursor: pointer;
+	}
+	.flow-grid button.selected {
+		color: hsl(0, 0%, 80%);
+		background: hsl(0, 0%, 40%);
+	}
+`));
+Widgets.Bag.interface.element.appendChild(style);
+
+var buttons = document.createElement("div");
+Widgets.Bag.interface.element.appendChild(buttons);
+
+foreach([
+	{ category: "all", predicate: null },
+	{ category: "key", predicate: item => ["Key Stone", "Mega Stone"].includes(Items._(item.item).category) },
+	{ category: "balls", predicate: item => Items._(item.item).category === "Ball" },
+	{ category: "berries", predicate: item => Items._(item.item).category === "Berry" }
+	], ({ category, predicate }) => {
+	var button = document.createElement("button");
+	button.addEventListener("click", () => {
+		buttons.querySelector("button.selected").classList.remove("selected");
+		button.classList.add("selected");
+		console.log()
+		Widgets.Bag.interface.filter(predicate);
+	});
+	button.appendChild(document.createTextNode(category.toUpperCase()));
+	buttons.appendChild(button);
+});
+buttons.querySelector("button").classList.add("selected");
