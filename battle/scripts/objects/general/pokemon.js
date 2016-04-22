@@ -536,6 +536,8 @@ function pokemon (data, validate) {
 							return self.friendship < (requirement !== null ? requirement : 220);
 						case "item":
 							return self.item !== requirement;
+						case "gender":
+							return self.gender !== requirement;
 					}
 				})) {
 					evolution = evo;
