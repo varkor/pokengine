@@ -1,8 +1,7 @@
 Pokémon Battle System
 =====================
 
-![Blastoise versus Charizard, amist a shower of hail]
-(http://varkor.com/images/battle.gif?pixellated)
+![Blastoise versus Charizard, amist a shower of hail](http://varkor.com/images/battle.gif?pixellated)
 
 A in-progress Pokémon battle system written for the web. Has support for online multiplayer battles via websockets (given a Node.js server to run it on). The goal is to have a feature-complete, true-to-the-games battle system that anyone can adapt and include inside their own games—the battle system has gotten so complex over the years that writing one's own (that even begins to approach the complexity of the actual games) is such a massive endeavour, it seems a waste for people to spend many months (if not years) reimplementing it themselves. Other existing systems out there are either nowhere near feature-complete (and inextensible in places) or have not been built with a focus on emulating the visual side of battles. This project aims to tackle both.
 
@@ -27,7 +26,6 @@ There are also still a number of minors bugs to address, but nothing that should
 Screenshots
 -----------
 (Once more moves / locations / etc. have been added, I'll record a whole collection of screenshots.)
-![Bulbasuar evolving into Ivysaur]
-(http://varkor.com/pokengine/screenshots/evolution.gif)
+![Bulbasuar evolving into Ivysaur](http://varkor.com/pokengine/screenshots/evolution.gif)
 
 The evolution screen in action.
